@@ -1,15 +1,15 @@
 [Unit]
-Description=Quack UI #3
-Documentation=
+Description=MongoDB Database Server #3
+Documentation=https://docs.mongodb.org/manual
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 User=root
 Group=root
-Environment="UI_NO=3"
-ExecStart=/usr/local/bin/startup_quack_ui.sh $UI_NO
-PIDFile=/run/quack/quack_ui_3.pid
+EnvironmentFile=
+ExecStart=/usr/bin/mongod --config /etc/mongod3.conf
+PIDFile=/run/mongod/mongod3.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
@@ -25,6 +25,9 @@ LimitMEMLOCK=infinity
 # total threads (user+kernel)
 TasksMax=infinity
 TasksAccounting=false
+
+# Recommended limits for mongod as specified in
+# https://docs.mongodb.com/manual/reference/ulimit/#recommended-ulimit-settings
 
 [Install]
 WantedBy=multi-user.target
