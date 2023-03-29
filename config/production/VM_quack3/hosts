@@ -1,6 +1,6 @@
 127.0.0.1 localhost 
 
-#10.3.0.138 quack.psonet quack
+#127.0.0.1 quack3.psonet quack3
 
 
 # The following lines are desirable for IPv6 capable hosts
