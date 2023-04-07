@@ -1,0 +1,11 @@
+127.0.0.1	localhost
+#127.0.0.1	quack.psonet quack
+10.3.0.139      quackbackend.psonet
+#10.3.0.213      quackbackend.psonet
+#10.3.0.145      quackbackend.psonet
+::1		localhost ip6-localhost ip6-loopback
+ff02::1		ip6-allnodes
+ff02::2		ip6-allrouters
+# --- BEGIN PVE ---
+127.0.1.1 quack.psonet quack
+# --- END PVE ---
