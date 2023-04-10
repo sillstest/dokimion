@@ -9,7 +9,6 @@ import platform
 VM_common_configFiles = [
    [ "quack/config/production/VM_common"                 ],
    [ "rsyslog.conf",          "/etc"                     ],
-   [ "25-quack.conf",         "/etc/rsyslog.d"           ],
    [ "rsyslog.service",       "/etc/systemd/system/multi-user.target.wants" ],
    [ "nginx.conf",            "/etc/nginx"               ]
 ]
@@ -21,6 +20,7 @@ VM_quack_configFiles = [
 
 VM_quack1_configFiles = [
    [ "quack/config/production/VM_quack1"                 ],
+   [ "25-quack.conf",         "/etc/rsyslog.d"           ],
    [ "mongod1.conf",          "/etc"                     ],
    [ "mongod1.service",       "/etc/systemd/system"      ],
    [ "quack.properties",      "/etc/quack"               ],
@@ -31,6 +31,7 @@ VM_quack1_configFiles = [
 
 VM_quack2_configFiles = [
    [ "quack/config/production/VM_quack2"                 ],
+   [ "25-quack.conf",         "/etc/rsyslog.d"           ],
    [ "mongod2.conf",          "/etc"                     ],
    [ "mongod2.service",       "/etc/systemd/system"      ],
    [ "quack.properties",      "/etc/quack"               ],
@@ -41,6 +42,7 @@ VM_quack2_configFiles = [
 
 VM_quack3_configFiles = [
    [ "quack/config/production/VM_quack3"                 ],
+   [ "25-quack.conf",         "/etc/rsyslog.d"           ],
    [ "mongod3.conf",          "/etc"                     ],
    [ "mongod3.service",       "/etc/systemd/system"      ],
    [ "quack.properties",      "/etc/quack"               ],
