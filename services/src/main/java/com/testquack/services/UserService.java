@@ -1,8 +1,21 @@
 package com.testquack.services;
 
+import org.passay.CharacterCharacteristicsRule;
+import org.passay.CharacterRule;
+import org.passay.EnglishCharacterData;
+import org.passay.LengthRule;
+import org.passay.PasswordData;
+import org.passay.PasswordValidator;
+import org.passay.Rule;
+import org.passay.RuleResult;
+import org.passay.WhitespaceRule;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.testquack.beans.Filter;
 import com.testquack.dal.OrganizationRepository;
 import com.testquack.services.errors.EntityAccessDeniedException;
+import com.testquack.services.errors.EntityValidationException;
 import com.testquack.services.errors.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -92,6 +105,43 @@ public class UserService extends BaseService<User> {
         return !isEmpty(ent.getLogin());
     }
 
+    public boolean validatePassword(String passwordStr) {
+
+      //Rule 1: Password length should be in between 
+      //8 and 16 characters
+      Rule rule1 = new LengthRule(8, 16);        
+      //Rule 2: No whitespace allowed
+      Rule rule2 = new WhitespaceRule();        
+      CharacterCharacteristicsRule rule3 = new CharacterCharacteristicsRule();        
+
+      //M - Mandatory characters count
+      rule3.setNumberOfCharacteristics(3);        
+      //Rule 3.a: One Upper-case character
+      rule3.getRules().add(new CharacterRule(EnglishCharacterData.UpperCase, 1));        
+      //Rule 3.b: One Lower-case character
+      rule3.getRules().add(new CharacterRule(EnglishCharacterData.LowerCase, 1));        
+      //Rule 3.c: One digit
+      rule3.getRules().add(new CharacterRule(EnglishCharacterData.Digit, 1));        
+      //Rule 3.d: One special character
+      rule3.getRules().add(new CharacterRule(EnglishCharacterData.Special, 1));
+
+      PasswordValidator validator = new PasswordValidator(rule1, rule2, rule3);        
+      PasswordData password = new PasswordData(passwordStr);
+      RuleResult result = validator.validate(password);
+
+      if (result.isValid() == false) {
+	 List<String> messages = validator.getMessages(result);
+	 String newMessage = "";
+	 for (String message : messages) {
+	   newMessage = newMessage + message;
+	 }
+													       System.out.flush();
+         return false;
+      }
+      return true;
+   }
+
+
     public static String encryptPassword(String password, String salt) {
         try {
             return StringUtils.getMd5String(password + salt);
@@ -103,9 +153,13 @@ public class UserService extends BaseService<User> {
     public void changePassword(Session session, String login, String oldPassword, String newPassword) {
         if (userCanSave(session, login)){
             User user = findOne(getCurrOrganizationId(session), new Filter().withField("login", login));
-            user.setPassword(encryptPassword(newPassword, user.getLogin()));
-            user.setPasswordChangeRequired(false);
-            save(session, null, user);
+	    if (validatePassword(user.getPassword())) {
+               user.setPassword(encryptPassword(user.getPassword(), user.getLogin()));
+               user.setPasswordChangeRequired(true);
+               save(session, null, user);
+            } else {
+               throw new EntityValidationException(format("User %s password validation error", session.getPerson().getLogin()));
+	    }
         } else {
             throw new EntityAccessDeniedException(format("User %s doesn't have permissions to modify %s account", session.getPerson().getLogin(), login));
         }
