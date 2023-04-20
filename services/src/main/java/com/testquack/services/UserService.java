@@ -3,12 +3,17 @@ package com.testquack.services;
 import org.passay.CharacterCharacteristicsRule;
 import org.passay.CharacterRule;
 import org.passay.EnglishCharacterData;
+import org.passay.EnglishSequenceData;
 import org.passay.LengthRule;
 import org.passay.PasswordData;
 import org.passay.PasswordValidator;
 import org.passay.Rule;
 import org.passay.RuleResult;
 import org.passay.WhitespaceRule;
+import org.passay.IllegalCharacterRule;
+import org.passay.IllegalSequenceRule;
+import org.passay.RepeatCharacterRegexRule;
+import org.passay.UsernameRule;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +33,7 @@ import ru.greatbit.whoru.auth.Session;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -107,25 +113,32 @@ public class UserService extends BaseService<User> {
 
     public boolean validatePassword(String passwordStr) {
 
+      List<Rule> rules = new ArrayList<>();
+
       //Rule 1: Password length should be in between 
       //8 and 16 characters
-      Rule rule1 = new LengthRule(8, 16);        
+      rules.add(new LengthRule(8, 16));
+
       //Rule 2: No whitespace allowed
-      Rule rule2 = new WhitespaceRule();        
-      CharacterCharacteristicsRule rule3 = new CharacterCharacteristicsRule();        
+      rules.add(new WhitespaceRule());
 
-      //M - Mandatory characters count
-      rule3.setNumberOfCharacteristics(4);        
       //Rule 3.a: One Upper-case character
-      rule3.getRules().add(new CharacterRule(EnglishCharacterData.UpperCase, 1));        
+      rules.add(new CharacterRule(EnglishCharacterData.UpperCase, 1));        
       //Rule 3.b: One Lower-case character
-      rule3.getRules().add(new CharacterRule(EnglishCharacterData.LowerCase, 1));        
+      rules.add(new CharacterRule(EnglishCharacterData.LowerCase, 1));        
       //Rule 3.c: One digit
-      rule3.getRules().add(new CharacterRule(EnglishCharacterData.Digit, 1));        
+      rules.add(new CharacterRule(EnglishCharacterData.Digit, 1));        
       //Rule 3.d: One special character
-      rule3.getRules().add(new CharacterRule(EnglishCharacterData.Special, 1));
+      rules.add(new CharacterRule(EnglishCharacterData.Special, 1));
 
-      PasswordValidator validator = new PasswordValidator(rule1, rule2, rule3);        
+      rules.add(new IllegalCharacterRule(new char[] {'&', '<', '>'}));
+      rules.add(new IllegalSequenceRule(EnglishSequenceData.USQwerty));
+      rules.add(new IllegalSequenceRule(EnglishSequenceData.Alphabetical));
+      rules.add(new IllegalSequenceRule(EnglishSequenceData.Numerical));
+      rules.add(new RepeatCharacterRegexRule());
+      rules.add(new UsernameRule(true, true));
+
+      PasswordValidator validator = new PasswordValidator(rules);
       PasswordData password = new PasswordData(passwordStr);
       RuleResult result = validator.validate(password);
 
