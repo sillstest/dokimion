@@ -111,7 +111,7 @@ public class UserService extends BaseService<User> {
         return !isEmpty(ent.getLogin());
     }
 
-    public boolean validatePassword(String passwordStr) {
+    public boolean validatePassword(String passwordStr, StringBuilder exceptionMessage) {
 
       List<Rule> rules = new ArrayList<>();
 
@@ -144,9 +144,8 @@ public class UserService extends BaseService<User> {
 
       if (result.isValid() == false) {
 	 List<String> messages = validator.getMessages(result);
-	 String newMessage = "";
 	 for (String message : messages) {
-	   newMessage = newMessage + message;
+	   exceptionMessage.append(message);
 	 }
 													       System.out.flush();
          return false;
@@ -166,12 +165,13 @@ public class UserService extends BaseService<User> {
     public void changePassword(Session session, String login, String oldPassword, String newPassword) {
         if (userCanSave(session, login)){
             User user = findOne(getCurrOrganizationId(session), new Filter().withField("login", login));
-	    if (validatePassword(user.getPassword())) {
+	    StringBuilder exceptionMessage = new StringBuilder("");
+	    if (validatePassword(user.getPassword(), exceptionMessage)) {
                user.setPassword(encryptPassword(user.getPassword(), user.getLogin()));
                user.setPasswordChangeRequired(true);
                save(session, null, user);
             } else {
-               throw new EntityValidationException(format("User %s password validation error", session.getPerson().getLogin()));
+               throw new EntityValidationException(format("User %s password validation error - %s", session.getPerson().getLogin(), exceptionMessage.toString()));
 	    }
         } else {
             throw new EntityAccessDeniedException(format("User %s doesn't have permissions to modify %s account", session.getPerson().getLogin(), login));
