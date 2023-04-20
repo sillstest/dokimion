@@ -115,7 +115,7 @@ public class UserService extends BaseService<User> {
       CharacterCharacteristicsRule rule3 = new CharacterCharacteristicsRule();        
 
       //M - Mandatory characters count
-      rule3.setNumberOfCharacteristics(3);        
+      rule3.setNumberOfCharacteristics(4);        
       //Rule 3.a: One Upper-case character
       rule3.getRules().add(new CharacterRule(EnglishCharacterData.UpperCase, 1));        
       //Rule 3.b: One Lower-case character
