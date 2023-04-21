@@ -113,41 +113,45 @@ public class UserService extends BaseService<User> {
 
     public boolean validatePassword(String passwordStr, StringBuilder exceptionMessage) {
 
-      List<Rule> rules = new ArrayList<>();
+      System.out.println("password length: " + passwordStr.length());
 
       //Rule 1: Password length should be in between 
       //8 and 16 characters
-      rules.add(new LengthRule(8, 16));
+      Rule rule1 = new LengthRule(8, 16);
 
       //Rule 2: No whitespace allowed
-      rules.add(new WhitespaceRule());
+      Rule rule2 = new WhitespaceRule();
 
       //Rule 3.a: One Upper-case character
-      rules.add(new CharacterRule(EnglishCharacterData.UpperCase, 1));        
+      CharacterCharacteristicsRule rule3 = new CharacterCharacteristicsRule();
+      rule3.setNumberOfCharacteristics(4);
+	      
+      rule3.getRules().add(new CharacterRule(EnglishCharacterData.UpperCase, 1));
       //Rule 3.b: One Lower-case character
-      rules.add(new CharacterRule(EnglishCharacterData.LowerCase, 1));        
+      rule3.getRules().add(new CharacterRule(EnglishCharacterData.LowerCase, 1));        
       //Rule 3.c: One digit
-      rules.add(new CharacterRule(EnglishCharacterData.Digit, 1));        
+      rule3.getRules().add(new CharacterRule(EnglishCharacterData.Digit, 1));        
       //Rule 3.d: One special character
-      rules.add(new CharacterRule(EnglishCharacterData.Special, 1));
+      rule3.getRules().add(new CharacterRule(EnglishCharacterData.Special, 1));
 
-      rules.add(new IllegalCharacterRule(new char[] {'&', '<', '>'}));
-      rules.add(new IllegalSequenceRule(EnglishSequenceData.USQwerty));
-      rules.add(new IllegalSequenceRule(EnglishSequenceData.Alphabetical));
-      rules.add(new IllegalSequenceRule(EnglishSequenceData.Numerical));
-      rules.add(new RepeatCharacterRegexRule());
-      rules.add(new UsernameRule(true, true));
+      IllegalCharacterRule rule4 = new IllegalCharacterRule(new char[] {'&', '<', '>'});
+      IllegalSequenceRule rule5 = new IllegalSequenceRule(EnglishSequenceData.USQwerty);
+      IllegalSequenceRule rule6 = new IllegalSequenceRule(EnglishSequenceData.Alphabetical);
+      IllegalSequenceRule rule7 = new IllegalSequenceRule(EnglishSequenceData.Numerical);
+      RepeatCharacterRegexRule rule8 = new RepeatCharacterRegexRule();
+      UsernameRule rule9 = new UsernameRule(true, true);
 
-      PasswordValidator validator = new PasswordValidator(rules);
+      PasswordValidator validator = new PasswordValidator(rule1, rule2, rule3, rule4, rule5,
+		      rule6, rule7, rule8, rule9);
       PasswordData password = new PasswordData(passwordStr);
       RuleResult result = validator.validate(password);
 
       if (result.isValid() == false) {
 	 List<String> messages = validator.getMessages(result);
 	 for (String message : messages) {
-	   exceptionMessage.append(message);
+	   exceptionMessage.append(message + "; ");
 	 }
-													       System.out.flush();
+													               System.out.flush();
          return false;
       }
       return true;
@@ -166,12 +170,12 @@ public class UserService extends BaseService<User> {
         if (userCanSave(session, login)){
             User user = findOne(getCurrOrganizationId(session), new Filter().withField("login", login));
 	    StringBuilder exceptionMessage = new StringBuilder("");
-	    if (validatePassword(user.getPassword(), exceptionMessage)) {
+	    if (validatePassword(newPassword, exceptionMessage)) {
                user.setPassword(encryptPassword(user.getPassword(), user.getLogin()));
                user.setPasswordChangeRequired(true);
                save(session, null, user);
             } else {
-               throw new EntityValidationException(format("User %s password validation error - %s", session.getPerson().getLogin(), exceptionMessage.toString()));
+               throw new EntityValidationException(format("User %s password %s validation error - %s", login, newPassword, exceptionMessage.toString()));
 	    }
         } else {
             throw new EntityAccessDeniedException(format("User %s doesn't have permissions to modify %s account", session.getPerson().getLogin(), login));
