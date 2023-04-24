@@ -113,8 +113,6 @@ public class UserService extends BaseService<User> {
 
     public boolean validatePassword(String passwordStr, StringBuilder exceptionMessage) {
 
-      System.out.println("password length: " + passwordStr.length());
-
       //Rule 1: Password length should be in between 
       //8 and 16 characters
       Rule rule1 = new LengthRule(8, 16);
@@ -171,7 +169,7 @@ public class UserService extends BaseService<User> {
             User user = findOne(getCurrOrganizationId(session), new Filter().withField("login", login));
 	    StringBuilder exceptionMessage = new StringBuilder("");
 	    if (validatePassword(newPassword, exceptionMessage)) {
-               user.setPassword(encryptPassword(user.getPassword(), user.getLogin()));
+               user.setPassword(encryptPassword(newPassword, user.getLogin()));
                user.setPasswordChangeRequired(true);
                save(session, null, user);
             } else {
