@@ -1,63 +1,63 @@
 export const deleteButton = {
-  background: 'red',
-  padding: '1em',
-  margin: '1em',
+  background: "red",
+  padding: "1em",
+  margin: "1em",
 };
 
 export const updateButton = {
-  background: 'orange',
-  padding: '1em',
-  margin: '1em',
+  background: "orange",
+  padding: "1em",
+  margin: "1em",
 };
 
 export const loginButton = {
-  background: 'royalblue',
-  padding: '1em',
-  margin: '1em',
+  background: "royalblue",
+  padding: "1em",
+  margin: "1em",
 };
 
 export const logoutButton = {
-  padding: '1em',
-  margin: '1em',
+  padding: "1em",
+  margin: "1em",
 };
 
 export const linkStyle = {
-  textDecoration: 'none',
-  color: 'white',
+  textDecoration: "none",
+  color: "white",
 };
 
 export const registerButton = {
-  background: 'green',
-  padding: '1em',
-  margin: '1em',
+  background: "green",
+  padding: "1em",
+  margin: "1em",
 };
 
 export const homeButton = {
-  background: 'mediumpurple',
-  padding: '1em',
-  margin: '1em',
+  background: "mediumpurple",
+  padding: "1em",
+  margin: "1em",
 };
 
 export const saveButton = {
-  background: 'green',
-  padding: '1em',
-  margin: '1em',
+  background: "green",
+  padding: "1em",
+  margin: "1em",
 };
 
 export const cancelButton = {
-  background: 'magenta',
-  padding: '1em',
-  margin: '1em',
+  background: "magenta",
+  padding: "1em",
+  margin: "1em",
 };
 
 export const forgotButton = {
-  background: 'purple',
-  padding: '1em',
-  margin: '1em',
+  background: "purple",
+  padding: "1em",
+  margin: "1em",
 };
 
 export const inputStyle = {
-  margin: '.5em',
+  margin: ".5em",
 };
 
 export default {
