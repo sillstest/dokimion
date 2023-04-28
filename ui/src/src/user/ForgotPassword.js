@@ -37,18 +37,12 @@ class ForgotPassword extends Component {
 	};
 
 	handleSubmit(event) {
-	  const { login, email } = this.state;
-          Backend.post("user/forgot_password?login=" + login + "&email=" + email)
+	  const { login } = this.state;
+          Backend.post("user/forgot_password?login=" + login )
              .then(response => {
-	       var params = qs.parse(this.props.location.search.substring(1));
-	       var retpath = decodeURIComponent(params.retpath || "");
-	       var decodedReptath = decodeURI(retpath);
-	       if (decodedReptath === "") {
-                  decodedReptath = "/";
-	       }
-	       window.location = decodeURI(decodedReptath);
+	       window.location = decodeURI("/" + response.email);
 	     }).catch(error => {
-		Utils.onErrorMessage("Unable to login: ", error);
+		Utils.onErrorMessage("Unable to retrieve email for login: ", error);
              });
 	};
 
@@ -70,18 +64,6 @@ class ForgotPassword extends Component {
 			     required=""
 			     autofocus=""
 			     onChange={this.handleChange}
-			   />
-			   <label for="email" className="sr-only">
-			     Email
-			   </label>
-			   <input
-			    type="email"
-			    id="email"
-			    name="email"
-			    className="form-control"
-			    placeholder="Email"
-			    required=""
-			    onChange={this.handleChange}
 			   />
 			</form>
 			<button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>

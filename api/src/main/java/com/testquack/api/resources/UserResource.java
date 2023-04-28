@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.api.MongoDBInterface;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.ChangePasswordRequest;
 import com.testquack.beans.Filter;
@@ -12,6 +13,7 @@ import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ru.greatbit.whoru.auth.AuthProvider;
+import ru.greatbit.whoru.auth.Person;
 import ru.greatbit.whoru.auth.RedirectResponse;
 import ru.greatbit.whoru.auth.Session;
 import ru.greatbit.whoru.auth.SessionProvider;
@@ -22,6 +24,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
+import java.util.List;
 
 @Path("/user")
 public class UserResource extends BaseResource<User> {
@@ -51,14 +54,30 @@ public class UserResource extends BaseResource<User> {
     @GET
     @Path("/{login}")
     public User getUser(@PathParam("login") String login) {
+	System.out.println("UserResource.getUser()");
         return service.findOne(getSession(), null, login);
     }
 
     @DELETE
     @Path("/{login}")
     public Response delete(@PathParam("login") String login) {
+	System.out.println("UserResource.delete()");
         service.delete(getSession(), null, getUser(login).getId());
         return Response.ok().build();
+    }
+
+    @POST
+    @Path("/forgot_password")
+    public Response getEmail(@QueryParam("login") String login) {
+
+	System.out.println("UserResource.getEmail - login: " + login);
+
+	MongoDBInterface mongoDBInterface = new MongoDBInterface();
+	String email = mongoDBInterface.getEmail(login);
+
+	System.out.println("UserResource.getEmail - email: " + email);
+
+        return Response.ok(email).build();
     }
 
     @POST
