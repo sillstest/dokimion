@@ -47,30 +47,30 @@ class ForgotPassword extends Component {
 	};
 
 	render() {
-		return (
-			<div>
-			<HeaderBar title={title} />
-			<form className="profile-form">
-			   <h1 className="h3 mb-3 font-weight-normal">Send Email with Link</h1>
-			   <label for="login" className="sr-only">
-			     Login
-			   </label>
-			   <input
-			     type="text"
-			     id="login"
-			     name="login"
-			     className="form-control"
-			     placeholder="Login"
-			     required=""
-			     autofocus=""
-			     onChange={this.handleChange}
-			   />
-			</form>
-			<button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
-			 Send Email with Link
-			</button>
-			</div>
-		);
+          return (
+		<div>
+	          <HeaderBar title={title} />
+                    <form className="profile-form">
+		      <h1 className="h3 mb-3 font-weight-normal">Send Email with Link</h1>
+		      <label for="login" className="sr-only">
+	                Login
+		      </label>
+		      <input
+		       type="text"
+		       id="login"
+		       name="login"
+		       className="form-control"
+		       placeholder="Login"
+		       required=""
+		       autofocus=""
+		       onChange={this.handleChange}
+		      />
+	           </form>
+                     <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
+	               Send Email with Link
+		     </button>
+	        </div>
+		  );
 	}
 }
 
