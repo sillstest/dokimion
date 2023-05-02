@@ -1,6 +1,7 @@
 package com.testquack.api.resources;
 
-import com.testquack.api.MongoDBInterface;
+import com.testquack.api.utils.MongoDBInterface;
+import com.testquack.api.utils.SendEmail;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.ChangePasswordRequest;
 import com.testquack.beans.Filter;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 import java.util.List;
+import java.util.Random;
 
 @Path("/user")
 public class UserResource extends BaseResource<User> {
@@ -74,8 +76,29 @@ public class UserResource extends BaseResource<User> {
 	MongoDBInterface mongoDBInterface = new MongoDBInterface();
 	String email = mongoDBInterface.getEmail(login);
 
+	System.out.println("Fetched mongodb emails");
+
         JSONObject jsonObj = new JSONObject();
 	jsonObj.put("email", email);
+
+	Random random = new Random(100000);
+	int randomNo = random.nextInt();
+
+	SendEmail sendEmailObj = new SendEmail();
+	sendEmailObj.send(email, randomNo);
+
+	System.out.println("Sent email to: " + email);
+
+	List<User> listOfUsers = service.findAll();
+	for ( User user : listOfUsers )
+	{
+	   if (login.equals(user.getLogin()))
+           {
+              user.setPassword(service.encryptPassword("" + randomNo, user.getLogin()));
+	      user.setPasswordChangeRequired(true);
+	      System.out.println("Saved temp password");
+           }
+	}
 
         return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
     }

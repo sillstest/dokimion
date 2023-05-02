@@ -1,4 +1,4 @@
-package com.testquack.api;
+package com.testquack.api.utils;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBCursor;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.DBCollection;
 
 import org.json.simple.JSONObject;
@@ -43,23 +44,13 @@ public class MongoDBInterface {
 
       MongoDatabase db = mongoClient.getDatabase("test");
 
-      System.out.println("admin mongo database attached");
-
       MongoCollection<Document> collection = db.getCollection("users");
-
-      System.out.println("users collection retrieved");
-
-      FindIterable<Document> myDocs = collection.find();
-
-      System.out.println("myDocs retrieved from collection");
 
       JSONParser parser = new JSONParser();
 
-      for (Document doc : myDocs)
+      for (Document doc : collection.find())
       {
 	 String jsonStr = doc.toJson();
-
-	 System.out.println("json: " + jsonStr);
 
 	 Object obj = null;
 	 try {
@@ -81,9 +72,10 @@ public class MongoDBInterface {
 
 	 System.out.println(email);
 
-	 if (login == loginToFind)
+	 if (login.equals(loginToFind))
          {
 	    System.out.println("email found: " + email);
+	    System.out.flush();
 	    return email;
 	 }
 
