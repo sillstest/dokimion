@@ -73,10 +73,14 @@ public class UserResource extends BaseResource<User> {
     @Path("/forgot_password")
     public Response getEmail(@QueryParam("login") String login) {
 
+	System.out.println("getEmail - login: " + login);
+	System.out.flush();
+
 	MongoDBInterface mongoDBInterface = new MongoDBInterface();
 	String email = mongoDBInterface.getEmail(login);
 
 	System.out.println("Fetched mongodb emails");
+	System.out.flush();
 
         JSONObject jsonObj = new JSONObject();
 	jsonObj.put("email", email);
@@ -88,6 +92,7 @@ public class UserResource extends BaseResource<User> {
 	sendEmailObj.send(email, randomNo);
 
 	System.out.println("Sent email to: " + email);
+	System.out.flush();
 
 	List<User> listOfUsers = service.findAll();
 	for ( User user : listOfUsers )
@@ -97,6 +102,7 @@ public class UserResource extends BaseResource<User> {
               user.setPassword(service.encryptPassword("" + randomNo, user.getLogin()));
 	      user.setPasswordChangeRequired(true);
 	      System.out.println("Saved temp password");
+	      System.out.flush();
            }
 	}
 

@@ -1,53 +1,89 @@
 package com.testquack.api.utils;
 
-import java.util.*;
-import javax.mail.*;
-import javax.mail.internet.*;
-import javax.activation.*;
+import java.util.Properties;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 public class SendEmail {
 
-   public void send(String to, int code) {    
-      // to: Recipient's email ID needs to be mentioned.
+    public static void send(String emailTo, int code) {
 
-      // from: Sender's email ID needs to be mentioned
-      String from = "bob_beck@sil.org";
+        // Recipient's email ID needs to be mentioned.
+        //String to = "fromaddress@gmail.com";
+	String to = emailTo;
 
-      // Assuming you are sending email from localhost
-      String host = "localhost";
+        // Sender's email ID needs to be mentioned
+        String from = "siltester.bob@gmail.com";
 
-      // Get system properties
-      Properties properties = System.getProperties();
+        // Assuming you are sending email from through gmails smtp
+        String host = "smtp.gmail.com";
 
-      // Setup mail server
-      properties.setProperty("mail.smtp.host", host);
+        // Get system properties
+        Properties properties = new Properties(System.getProperties());
 
-      // Get the default Session object.
-      Session session = Session.getDefaultInstance(properties);
+        // Setup mail server
+	properties.put("mail.transport.protocol", "smtp");
+        properties.put("mail.smtp.host", host);
+        properties.put("mail.smtp.port", "25"); 
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.debug", "true");
+        properties.put("mail.smtp.starttls.enable", "true");
+        properties.put("mail.smtp.ssl.protocols", "TLSv1.2");
 
-      try {
-         // Create a default MimeMessage object.
-         MimeMessage message = new MimeMessage(session);
+	Session session = Session.getInstance(properties, null);
 
-         // Set From: header field of the header.
-         message.setFrom(new InternetAddress(from));
+	System.out.println("After session instantiation"); 
 
-         // Set To: header field of the header.
-         message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+        // Used to debug SMTP issues
+        session.setDebug(true);
 
-         // Set Subject: header field
-         message.setSubject("Forgot Password code for quack.psonet");
+	System.out.println("After session setDebug");
 
-         // Now set the actual message
-         message.setText("This is actual code: " + code);
+        try {
+            // Create a default MimeMessage object.
+            MimeMessage message = new MimeMessage(session);
 
-	 System.out.println("Ready to send email");
+	    System.out.println("After MimeMessage constructor");
 
-         // Send message
-         Transport.send(message);
-         System.out.println("Sent message successfully....");
-      } catch (MessagingException mex) {
-         mex.printStackTrace();
-      }
-   }
+            // Set From: header field of the header.
+            message.setFrom(new InternetAddress(from));
+
+            // Set To: header field of the header.
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+
+            // Set Subject: header field
+            message.setSubject("Quack Forgot Password code");
+
+            // Now set the actual message
+            message.setText("Quack Forgot Password code: " + code);
+
+            System.out.println("sending...");
+            // Send message
+            //Transport.send(message);
+	    Transport tr = session.getTransport("smtp");
+            System.out.println("after getTransport");
+
+	    tr.connect(host, "siltester.bob@gmail.com", "tihkugzmcsohgxix");
+            System.out.println("after transport connect");
+
+	    tr.sendMessage(message, message.getAllRecipients());
+            System.out.println("after transport sendMessage");
+
+	    tr.close();
+            System.out.println("after transport close");
+
+        } catch (MessagingException mex) {
+            mex.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+	}
+
+    }
+
 }
