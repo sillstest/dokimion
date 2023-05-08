@@ -13,7 +13,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
+import ru.greatbit.utils.string.StringUtils;
 import ru.greatbit.whoru.auth.AuthProvider;
 import ru.greatbit.whoru.auth.Person;
 import ru.greatbit.whoru.auth.RedirectResponse;
@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.List;
 import java.util.Random;
+import java.security.NoSuchAlgorithmException;
 
 @Path("/user")
 public class UserResource extends BaseResource<User> {
@@ -89,22 +90,20 @@ public class UserResource extends BaseResource<User> {
 	int randomNo = random.nextInt();
 
 	SendEmail sendEmailObj = new SendEmail();
-	sendEmailObj.send(email, randomNo);
+	String tempPass = "Sil!_" + randomNo;
+	sendEmailObj.send(email, tempPass);
 
 	System.out.println("Sent email to: " + email);
 	System.out.flush();
 
-	List<User> listOfUsers = service.findAll();
-	for ( User user : listOfUsers )
-	{
-	   if (login.equals(user.getLogin()))
-           {
-              user.setPassword(service.encryptPassword("" + randomNo, user.getLogin()));
-	      user.setPasswordChangeRequired(true);
-	      System.out.println("Saved temp password");
-	      System.out.flush();
-           }
+	String encryptedPass = "";
+	try {
+	    encryptedPass = StringUtils.getMd5String(tempPass + login);
+	} catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
 	}
+
+	mongoDBInterface.updatePassword(login, encryptedPass);
 
         return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
     }
