@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.api.utils.PasswordGeneration;
 import com.testquack.api.utils.MongoDBInterface;
 import com.testquack.api.utils.SendEmail;
 import com.testquack.api.utils.FilterUtils;
@@ -86,19 +87,17 @@ public class UserResource extends BaseResource<User> {
         JSONObject jsonObj = new JSONObject();
 	jsonObj.put("email", email);
 
-	Random random = new Random(100000);
-	int randomNo = random.nextInt();
+	String password = PasswordGeneration.generatePassword();
 
 	SendEmail sendEmailObj = new SendEmail();
-	String tempPass = "Sil!_" + randomNo;
-	sendEmailObj.send(email, tempPass);
+	sendEmailObj.send(email, password);
 
 	System.out.println("Sent email to: " + email);
 	System.out.flush();
 
 	String encryptedPass = "";
 	try {
-	    encryptedPass = StringUtils.getMd5String(tempPass + login);
+	    encryptedPass = StringUtils.getMd5String(password + login);
 	} catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
 	}

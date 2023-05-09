@@ -112,12 +112,7 @@ class Main extends Component {
           />
           <Route
             path="/forgot_password"
-            render={props => (
-              <ForgotPassword
-                {...props}
-                onProjectChange={this.onProjectChange.bind(this)}
-              />
-            )}
+            render={props => (<ForgotPassword/>)}
           />
           <Route
             path="/:project/testcases/new"

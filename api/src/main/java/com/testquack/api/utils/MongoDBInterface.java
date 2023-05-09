@@ -92,8 +92,6 @@ public class MongoDBInterface {
 
          System.out.println("MongoDBInterface updatePassword");
 
-
-         //MongoClient mongoClient = MongoClients.create("mongodb://quack1.psonet:27017");
          MongoClient mongoClient = new MongoClient(
 		new MongoClientURI(
 		"mongodb://quack1.psonet:27017,quack2.psonet:27017,quack3.psonet:27017/?replicaSet=rs0"));
@@ -121,15 +119,10 @@ public class MongoDBInterface {
 	 System.out.println("after new doc login");
 	 System.out.flush();
 
-	 //Bson updates = Updates.combine(Updates.set("password", password), 
-			                //Updates.set("passwordChangeRequired", "true"));
-
 	 Document updates = new Document("$set", new Document("password", password));
 
 	 System.out.println("after new doc updates");
 	 System.out.flush();
-
-	 //UpdateOptions options = new UpdateOptions().upsert(true);
 
 	 UpdateResult result = collection.updateOne(query, updates);
 	 System.out.println("after updateOne - modified count: " + result.getModifiedCount());

@@ -17,7 +17,7 @@ import {
 } from './components';
 
 const title = {
-	pageTitle: 'Forgot Password Screen',
+	pageTitle: 'Forgot Password',
 };
 
 class ForgotPassword extends Component {
@@ -40,7 +40,7 @@ class ForgotPassword extends Component {
 	  const { login } = this.state;
           Backend.post("user/forgot_password?login=" + login )
              .then(response => {
-	       window.location = decodeURI("/" + response.email);
+	       window.location = decodeURI("/");
 	     }).catch(error => {
 		Utils.onErrorMessage("Unable to retrieve email for login: ", error);
              });
@@ -51,7 +51,6 @@ class ForgotPassword extends Component {
 		<div>
 	          <HeaderBar title={title} />
                     <form className="profile-form">
-		      <h1 className="h3 mb-3 font-weight-normal">Send Email with Link</h1>
 		      <label for="login" className="sr-only">
 	                Login
 		      </label>
@@ -67,7 +66,7 @@ class ForgotPassword extends Component {
 		      />
 	           </form>
                      <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
-	               Send Email with Link
+	               Send Email with Temporary Password
 		     </button>
 	        </div>
 		  );

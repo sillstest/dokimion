@@ -164,7 +164,12 @@
             <version>1.6.2</version>
         </dependency>
 
-        <!-- Utils -->
+	<!-- Utils -->
+        <dependency>
+	    <groupId>org.passay</groupId>
+            <artifactId>passay</artifactId>
+	    <version>1.6.3</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -201,7 +206,7 @@
 	<dependency>
            <groupId>org.mongodb</groupId>
 	   <artifactId>bson</artifactId>
-	   <version>4.4.0</version>
+	   <version>4.9.1</version>
         </dependency>
 
 	<dependency>
