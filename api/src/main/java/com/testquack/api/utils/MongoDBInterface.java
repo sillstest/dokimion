@@ -1,9 +1,13 @@
 package com.testquack.api.utils;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.ServerAddress;
+//import com.mongodb.MongoClient;
+//import com.mongodb.MongoClientURI;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.FindIterable;
@@ -26,25 +30,48 @@ import com.mongodb.DBCollection;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.*;
 
+import java.net.InetAddress;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class MongoDBInterface {
+
+   private MongoClient getMongoClient()
+   {
+
+      ServerAddress address1 = new ServerAddress("quack1.psonet", 27017);
+      ServerAddress address2 = new ServerAddress("quack2.psonet", 27017);
+      ServerAddress address3 = new ServerAddress("quack3.psonet", 27017);
+
+      ServerAddress[] addresses = new ServerAddress[]{address1, address2, address3};
+      MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
+		 .applyToClusterSettings(builder ->
+				 builder.hosts(new ArrayList<> (Arrays.asList(addresses)))
+		 )
+		 .applyToConnectionPoolSettings(builder -> 
+				 builder.minSize(10)
+				 .maxSize(100)
+				 .maxWaitTime(8, TimeUnit.MINUTES)
+		);
+
+      return MongoClients.create(settingsBuilder.build());
+
+   }
 
    public String getEmail(String loginToFind)
    {
       System.out.println("MongoDBInterface getEmail");
 
-      MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://quack1.psonet:27017"));
-
+      MongoClient mongoClient = getMongoClient();
       MongoDatabase db = mongoClient.getDatabase("test");
 
       MongoCollection<Document> collection = db.getCollection("users");
@@ -80,6 +107,7 @@ public class MongoDBInterface {
 
       }
 
+      mongoClient.close();
 
       return "";
    }
@@ -92,14 +120,12 @@ public class MongoDBInterface {
 
          System.out.println("MongoDBInterface updatePassword");
 
-         MongoClient mongoClient = new MongoClient(
-		new MongoClientURI(
-		"mongodb://quack1.psonet:27017,quack2.psonet:27017,quack3.psonet:27017/?replicaSet=rs0"));
-
-
+         MongoClient mongoClient = getMongoClient();
          MongoDatabase db = mongoClient.getDatabase("test");
 
 	 updateOne(loginToFind, password, db);
+
+         mongoClient.close();
 
       } catch (Exception ex) {
          ex.printStackTrace();
