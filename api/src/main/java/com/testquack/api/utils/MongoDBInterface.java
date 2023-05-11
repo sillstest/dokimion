@@ -6,8 +6,6 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.ServerAddress;
-//import com.mongodb.MongoClient;
-//import com.mongodb.MongoClientURI;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.FindIterable;
@@ -19,7 +17,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import static com.mongodb.internal.connection.ServerAddressHelper.createServerAddress;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -34,6 +32,8 @@ import java.net.InetAddress;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -41,21 +41,48 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.concurrent.TimeUnit;
+import java.util.Scanner;
+
 
 @Configuration
-public class MongoDBInterface {
+public class MongoDBInterface  {
+
+   String replicaSetProperty = "mongo.replicaSet=";
+   String replicaSet;
+   String quackPropertiesFileName="/etc/quack/quack.properties";
 
    private MongoClient getMongoClient()
    {
+      try {
 
-      ServerAddress address1 = new ServerAddress("quack1.psonet", 27017);
-      ServerAddress address2 = new ServerAddress("quack2.psonet", 27017);
-      ServerAddress address3 = new ServerAddress("quack3.psonet", 27017);
+         File myObj = new File(quackPropertiesFileName);
+         Scanner myReader = new Scanner(myObj);
+         while (myReader.hasNextLine()) {
+	   String data = myReader.nextLine();
+	   if (data.startsWith(replicaSetProperty)) {
+              replicaSet = data.substring(replicaSetProperty.length());
+	   }
+         }
+         myReader.close();
+      } catch (FileNotFoundException e) {
+         System.out.println("File Not Found exception");
+      }
 
-      ServerAddress[] addresses = new ServerAddress[]{address1, address2, address3};
+      System.out.println("getMongoClient - replicaSet: " + replicaSet);
+
+      List<ServerAddress> addresses = Stream.of(replicaSet.split(",")).
+		          map(String::trim).
+	                  map(host-> {
+                              String[] tokens = host.split(":");
+                              return tokens.length == 2 ?
+				      createServerAddress(tokens[0], Integer.parseInt(tokens[1])) :
+				      createServerAddress(host);
+			  }).
+	                  collect(Collectors.toList());
+
       MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
 		 .applyToClusterSettings(builder ->
-				 builder.hosts(new ArrayList<> (Arrays.asList(addresses)))
+				 builder.hosts(new ArrayList<>(addresses))
 		 )
 		 .applyToConnectionPoolSettings(builder -> 
 				 builder.minSize(10)
