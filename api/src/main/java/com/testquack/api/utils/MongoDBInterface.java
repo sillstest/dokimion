@@ -172,13 +172,19 @@ public class MongoDBInterface  {
 	 System.out.println("after new doc login");
 	 System.out.flush();
 
-	 Document updates = new Document("$set", new Document("password", password));
+	 Document content = new Document();
+	 content.append("password", password);
+	 content.append("passwordChangeRequired", true);
+
+	 Document updates = new Document("$set", content);
 
 	 System.out.println("after new doc updates");
 	 System.out.flush();
 
-	 UpdateResult result = collection.updateOne(query, updates);
-	 System.out.println("after updateOne - modified count: " + result.getModifiedCount());
+	 UpdateResult result = collection.updateMany(query, updates);
+	 System.out.println("after updateMany - modified count: " + result.getModifiedCount());
+
+
 	 System.out.flush();
 
 
