@@ -5,15 +5,7 @@ import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import TextField from '@material-ui/core/TextField';
 
-import {
-	  LinkButtons,
-	  SubmitButtons,
-	  registerButton,
-	  homeButton,
-	  forgotButton,
-	  inputStyle,
-	  HeaderBar,
-} from './components';
+import { LinkButtons, forgotButton } from './components';
 
 class Login extends Component {
   constructor(props) {
@@ -90,7 +82,7 @@ class Login extends Component {
         </form>
 	<LinkButtons
 	    buttonStyle={forgotButton}
-	    buttonText="Forgot Password?"
+	    buttonText="Forgot Password ?"
 	    link="/forgot_password"
 	/>
       </div>

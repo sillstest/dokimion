@@ -34,11 +34,19 @@ class ChangePassword extends SubComponent {
     this.setState(this.state);
   }
 
+  isPasswordValid(password) {
+    return password && password.length > 4;
+  }
+
   handleSubmit(event) {
+    if (!this.isPasswordValid(this.state.password)) {
+      Utils.onErrorMessage("Password is invalid");
+      event.preventDefault();
+      return;
+    }
     Backend.postPlain("user/change-password", { newPassword: this.state.password, login: this.state.profileId })
       .then(response => {
         Utils.onSuccessMessage("Password successfully updated");
-	window.location = decodeURI("/");
       })
       .catch(error => {
         Utils.onErrorMessage("Couldn't change password: ", error);

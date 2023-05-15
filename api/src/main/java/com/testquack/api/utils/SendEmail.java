@@ -12,7 +12,7 @@ import javax.mail.internet.MimeMessage;
 
 public class SendEmail {
 
-    public static void send(String emailTo, int code) {
+    public static void send(String emailTo, String passwordCode) {
 
         // Recipient's email ID needs to be mentioned.
         //String to = "fromaddress@gmail.com";
@@ -61,7 +61,7 @@ public class SendEmail {
             message.setSubject("Quack Forgot Password code");
 
             // Now set the actual message
-            message.setText("Quack Forgot Password code: " + code);
+            message.setText("Quack Forgot Password code: " + passwordCode);
 
             System.out.println("sending...");
             // Send message

@@ -109,7 +109,7 @@ public class UserService extends BaseService<User> {
 	    StringBuilder exceptionMessage = new StringBuilder("");
 	    if (PasswordValidation.validatePassword(newPassword, exceptionMessage)) {
                user.setPassword(encryptPassword(newPassword, user.getLogin()));
-               user.setPasswordChangeRequired(true);
+               user.setPasswordChangeRequired(false);
                save(session, null, user);
             } else {
                throw new EntityValidationException(format("User %s password %s validation error - %s", login, newPassword, exceptionMessage.toString()));

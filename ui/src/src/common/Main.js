@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router";
 import { Switch, Route } from "react-router-dom";
 import TestCases from "../testcases/TestCases";
 import TestSuites from "../testsuites/TestSuites";
@@ -18,7 +17,6 @@ import TestCase from "../testcases/TestCase";
 import Auth from "../user/Auth";
 import IdpAuth from "../user/IdpAuth";
 import Login from "../user/Login";
-import ForgotPassword from "../user/ForgotPassword";
 import Profile from "../user/Profile";
 import ChangePassword from "../user/ChangePassword";
 import Users from "../user/Users";
@@ -26,6 +24,7 @@ import CreateUser from "../user/CreateUser";
 import OrgSelect from "../user/OrgSelect";
 import Events from "../audit/Events";
 import Redirect from "../common/Redirect";
+import ForgotPassword from "../user/ForgotPassword";
 
 class Main extends Component {
   onProjectChange(project) {
@@ -112,7 +111,10 @@ class Main extends Component {
           />
           <Route
             path="/forgot_password"
-            render={props => (<ForgotPassword/>)}
+            render={props => (
+              <ForgotPassword
+              />
+            )}
           />
           <Route
             path="/:project/testcases/new"
