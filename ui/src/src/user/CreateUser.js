@@ -67,7 +67,7 @@ class CreateUser extends Component {
               </div>
               <div class="form-group col-md-6">
                 <label for="email">Email</label>
-                <input type="text" class="form-control" name="lastName" id="lastName" onChange={this.handleChange} />
+                <input type="text" class="form-control" name="email" id="email" onChange={this.handleChange} />
               </div>
             </div>
             <button onClick={this.handleSubmit} class="btn btn-primary">
