@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.List;
 import java.util.Random;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 
 @Path("/user")
@@ -87,7 +89,27 @@ public class UserResource extends BaseResource<User> {
         JSONObject jsonObj = new JSONObject();
 	jsonObj.put("email", email);
 
-	String password = PasswordGeneration.generatePassword();
+	boolean doneGeneratingPassword = true;
+	String password="";
+	int loopCounter = 0;
+	do {
+
+	   loopCounter += 1;
+
+	   password = PasswordGeneration.generatePassword();
+
+	   String uriStr = "http://quack.com/" + password;
+	   try {
+	      URI uri = new URI(uriStr);
+	   }
+	   catch (URISyntaxException e)
+	   {
+              doneGeneratingPassword = false;
+	      System.out.println("URI Syntax exception for URI: " + uriStr);
+	      System.out.flush();
+	   }
+	} while (doneGeneratingPassword == true || loopCounter > 3);
+
 
 	SendEmail sendEmailObj = new SendEmail();
 	sendEmailObj.send(email, password);
@@ -175,11 +197,13 @@ public class UserResource extends BaseResource<User> {
     @POST
     @Path("/change-password")
     public Response changePassword(ChangePasswordRequest changePasswordRequest){
+
         Session session = getSession();
         String login = changePasswordRequest.getLogin() == null ? getSession().getPerson().getLogin() : changePasswordRequest.getLogin();
         service.changePassword(session, login, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword());
         session.getPerson().setDefaultPassword(false);
         sessionProvider.replaceSession(session);
+
         return Response.ok().build();
     }
 
