@@ -2,12 +2,13 @@ import React from "react";
 import { withRouter } from "react-router";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
-import * as Utils from "../common/Utils";
+import ControlledPopup from '../common/ControlledPopup';
 import Backend from "../services/backend";
 class Profile extends SubComponent {
   state = {
     profile: {},
-    session: {person:{}}
+    session: {person:{}},
+    message: "",
   };
 
   constructor(props) {
@@ -30,7 +31,7 @@ class Profile extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get user: ", error);
+        this.setState({message: "Couldn't get user: " + error});
       });
   }
 
@@ -40,7 +41,7 @@ class Profile extends SubComponent {
                 this.state.session = response;
           })
           .catch(() => {
-            console.log("Unable to fetch session");
+            this.setState({message: "Unable to fetch session"});
           });
   }
 

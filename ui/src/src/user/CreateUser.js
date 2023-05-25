@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { withRouter } from "react-router";
-import * as Utils from "../common/Utils";
+import ControlledPopup from '../common/ControlledPopup';
 import Backend from "../services/backend";
 
 class CreateUser extends Component {
@@ -13,6 +13,7 @@ class CreateUser extends Component {
         firstName: "",
         lastName: "",
       },
+      message: "",
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -29,7 +30,7 @@ class CreateUser extends Component {
         .then(response => {
           window.location = decodeURI("/user/profile/" + response.login);
         }).catch(error => {
-          Utils.onErrorMessage("Couldn't create a user: ", error);
+          this.setState({message: "Couldn't create a user: " + error});
         });
     event.preventDefault();
   }
@@ -37,6 +38,7 @@ class CreateUser extends Component {
   render() {
     return (
       <div>
+	<ControlledPopup popupMessage={this.state.message}/>
         <h1>Create User</h1>
         <div className="create-user-form">
           <form>

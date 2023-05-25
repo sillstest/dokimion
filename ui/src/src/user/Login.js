@@ -6,6 +6,7 @@ import Backend from "../services/backend";
 import TextField from '@material-ui/core/TextField';
 
 import { LinkButtons, forgotButton } from './components';
+import ControlledPopup from '../common/ControlledPopup';
 
 class Login extends Component {
   constructor(props) {
@@ -13,6 +14,7 @@ class Login extends Component {
     this.state = {
       login: "",
       password: "",
+      errorMessage:"",
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -41,7 +43,7 @@ class Login extends Component {
           }
           window.location = decodeURI(decodedReptath);
         }).catch(error => {
-            Utils.onErrorMessage("Unable to login: ", error);
+	    this.setState({errorMessage: "Unable to login: " + error.message});
         });
     event.preventDefault();
   }
@@ -49,6 +51,7 @@ class Login extends Component {
   render() {
     return (
       <div className="text-center">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <form className="form-signin">
           <h1 className="h3 mb-3 font-weight-normal">Please sign in</h1>
           <label for="login" className="sr-only">

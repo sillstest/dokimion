@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 import { withRouter } from "react-router";
 import Backend from "../services/backend";
-import * as Utils from "../common/Utils";
+import ControlledPopup from '../common/ControlledPopup';
 import qs from "qs";
 import TextField from '@material-ui/core/TextField';
 
@@ -26,6 +26,7 @@ class ForgotPassword extends Component {
            this.state = {
              login: "",
 	     email: "",
+             message: "",
 	   };
            this.handleChange = this.handleChange.bind(this);
 	   this.handleSubmit = this.handleSubmit.bind(this);
@@ -42,13 +43,14 @@ class ForgotPassword extends Component {
              .then(response => {
 	       window.location = decodeURI("/");
 	     }).catch(error => {
-		Utils.onErrorMessage("Unable to retrieve email for login: ", error);
+		this.setState({message: "Unable to retrieve email for login: " + error});
              });
 	};
 
 	render() {
           return (
 		<div>
+		  <ControlledPopup popupMessage={this.state.errorMessage}/>
 	          <HeaderBar title={title} />
                     <form className="profile-form">
 		      <label for="login" className="sr-only">

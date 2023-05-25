@@ -49,7 +49,7 @@ class Users extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get users: ", error);
+        console.log("Couldn't get users: " + error);
         this.state.loading = false;
         this.setState(this.state);
       });
