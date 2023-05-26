@@ -6,24 +6,12 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.ServerAddress;
-import com.mongodb.ServerAddress;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
-import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import static com.mongodb.internal.connection.ServerAddressHelper.createServerAddress;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.DBCursor;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.DBCollection;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.*;
