@@ -38,10 +38,11 @@ class ChangePassword extends SubComponent {
   handleSubmit(event) {
     Backend.postPlain("user/change-password", { newPassword: this.state.password, login: this.state.profileId })
       .then(response => {
-	this.setState({message: "Password successfully updated"});
+	this.setState({message: "Success: Password updated"});
+	window.location = decodeURI("/");
       })
       .catch(error => {
-	this.setState({message: "Couldn't change password"});
+	this.setState({message: "Error: Couldn't change password"});
       });
     event.preventDefault();
   }

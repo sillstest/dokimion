@@ -6,12 +6,12 @@ const ControlledPopup = ({popupMessage}) => {
 
   return (
     <div>
-      <div className="outer">
+      <div className="popup-content">
 	  {popupMessage}
       </div>
       <Popup>
-        <div className="inner">
-          <a className="inner">
+        <div className="body">
+          <a className="body">
             &times;
           </a>
         </div>

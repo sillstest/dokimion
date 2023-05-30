@@ -85,7 +85,7 @@ class Login extends Component {
         </form>
 	<LinkButtons
 	    buttonStyle={forgotButton}
-	    buttonText="Forgot Password ?"
+	    buttonText="Forgot Password"
 	    link="/forgot_password"
 	/>
       </div>
