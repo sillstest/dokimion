@@ -3,6 +3,7 @@ import { withRouter } from "react-router";
 import SubComponent from "../common/SubComponent";
 import * as Utils from '../common/Utils';
 import Backend from "../services/backend";
+import ControlledPopup from '../common/ControlledPopup';
 
 class ChangePassword extends SubComponent {
   state = {session: {person:{}}, message: ""}
@@ -48,6 +49,7 @@ class ChangePassword extends SubComponent {
   render() {
     return (
       <div className="text-center">
+	<ControlledPopup popupMessage={this.state.message}/>
         {Utils.isUserOwnerOrAdmin(this.state.session, this.state.session.person.login) && (
             <form className="form-signin">
               <h1 className="h3 mb-3 font-weight-normal">Change Password</h1>
