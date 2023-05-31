@@ -24,7 +24,7 @@ VM_quack1_configFiles = [
    [ "mongod1.conf",          "/etc"                     ],
    [ "mongod1.service",       "/etc/systemd/system"      ],
    [ "quack.properties",      "/etc/quack"               ],
-   [ "quack1.conf",           "/etc/nginx/conf.d"        ],
+   [ "quack1.conf",           "/etc/nginx/sites-enabled" ],
    [ "quack1_server.service", "/etc/systemd/system"      ],
    [ "quack1_ui.service",     "/etc/systemd/system"      ]
 ]
@@ -35,7 +35,7 @@ VM_quack2_configFiles = [
    [ "mongod2.conf",          "/etc"                     ],
    [ "mongod2.service",       "/etc/systemd/system"      ],
    [ "quack.properties",      "/etc/quack"               ],
-   [ "quack2.conf",           "/etc/nginx/conf.d"        ],
+   [ "quack2.conf",           "/etc/nginx/sites-enabled" ],
    [ "quack2_server.service", "/etc/systemd/system"      ],
    [ "quack2_ui.service",     "/etc/systemd/system"      ]
 ]
@@ -46,9 +46,20 @@ VM_quack3_configFiles = [
    [ "mongod3.conf",          "/etc"                     ],
    [ "mongod3.service",       "/etc/systemd/system"      ],
    [ "quack.properties",      "/etc/quack"               ],
-   [ "quack3.conf",           "/etc/nginx/conf.d"        ],
+   [ "quack3.conf",           "/etc/nginx/sites-enabled" ],
    [ "quack3_server.service", "/etc/systemd/system"      ],
    [ "quack3_ui.service",     "/etc/systemd/system"      ]
+]
+
+VM_quack4_configFiles = [
+   [ "quack/config/production/VM_quack4"                 ],
+   [ "25-quack.conf",         "/etc/rsyslog.d"           ],
+   [ "mongod4.conf",          "/etc"                     ],
+   [ "mongod4.service",       "/etc/systemd/system"      ],
+   [ "quack.properties",      "/etc/quack"               ],
+   [ "quack4.conf",           "/etc/nginx/sites-enabled" ],
+   [ "quack4_server.service", "/etc/systemd/system"      ],
+   [ "quack4_ui.service",     "/etc/systemd/system"      ]
 ]
 
 def main():
@@ -111,6 +122,18 @@ def main():
            if i == 0: continue
            configFile = VM_quack3_configFiles[i][0]
            destDir = VM_quack3_configFiles[i][1]
+           print( "\'diff " + configFile + "\'" );
+           print("----------------------------");
+           os.system("/usr/bin/diff " + os.path.join( rootDir, midDir, configFile ) + " " +  destDir );
+
+    # diff quack4 files
+    elif "quack4" == hostname:
+       midDir = VM_quack4_configFiles[0][0]
+
+       for i in range(len(VM_quack4_configFiles)-1):
+           if i == 0: continue
+           configFile = VM_quack4_configFiles[i][0]
+           destDir = VM_quack4_configFiles[i][1]
            print( "\'diff " + configFile + "\'" );
            print("----------------------------");
            os.system("/usr/bin/diff " + os.path.join( rootDir, midDir, configFile ) + " " +  destDir );
