@@ -212,6 +212,9 @@ class Header extends Component {
       );
     }
     return (
+      <>
+      {this.state.session.person.firstName != "Guest" ? (
+      /* only display banner when user is logged in */
       <nav className="navbar navbar-expand-md navbar-dark bg-green">
 
       {/* Google analytics*/}
@@ -229,9 +232,6 @@ class Header extends Component {
             />
         )}
 
-        <Link className="navbar-brand" to="/">
-          <img src="/images/smalllogoquack.png" />
-        </Link>
         <button type="button" className="navbar-toggler" data-toggle="collapse" data-target="#navbarNav">
           <span className="navbar-toggler-icon"></span>
         </button>
@@ -281,6 +281,10 @@ class Header extends Component {
           </ul>
         </div>
       </nav>
+      ) : (
+        <nav style={{height: 60}} className="navbar navbar-expand-md navbar-dark bg-green"/>
+      )}
+      </>
     );
   }
 }
