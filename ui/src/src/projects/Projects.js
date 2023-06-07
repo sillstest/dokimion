@@ -5,11 +5,13 @@ import { faCogs } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
+import ControlledPopup from '../common/ControlledPopup';
 
 class Projects extends Component {
   state = {
     projects: [],
     loading: true,
+    errorMessage:"",
   };
 
   componentDidMount() {
@@ -24,7 +26,7 @@ class Projects extends Component {
         this.setState(newState);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get projects: ", error);
+	this.setState({errorMessage: "Couldn't get projects: " + error.message});
         // eslint-disable-next-line react/no-direct-mutation-state
         this.state.loading = false;
         this.setState(this.state);
@@ -34,6 +36,7 @@ class Projects extends Component {
   render() {
     return (
       <div className="container">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
@@ -70,3 +73,5 @@ class Projects extends Component {
 }
 
 export default Projects;
+
+
