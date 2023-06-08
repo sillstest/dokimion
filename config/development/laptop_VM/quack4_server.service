@@ -26,6 +26,5 @@ LimitMEMLOCK=infinity
 TasksMax=infinity
 TasksAccounting=false
 
-
 [Install]
 WantedBy=multi-user.target
