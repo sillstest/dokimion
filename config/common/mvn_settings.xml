@@ -1,6 +1,0 @@
-<mirror>
-  <id>maven-default-http-blocker</id>
-  <url>http://127.0.0.1/dont-go-here</url>
-  <mirrorOf>dummy</mirrorOf>
-  <blocked>false</blocked>
-</mirror>

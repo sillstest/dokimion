@@ -1,0 +1,10 @@
+<settings>
+  <mirrors>
+    <mirror>
+      <id>maven-default-http-blocker</id>
+      <url>http://repo.maven.apache.org/maven</url>
+      <mirrorOf>external:*</mirrorOf>
+    </mirror>
+  <mirrors>
+</settings>
+
