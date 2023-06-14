@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+	<TestRunParameters>
+		<Parameter name="ActorName" value="TestActor" />
+		<Parameter name="Logger" value="new NoOpLogger()" />
+		<Parameter name="Username" value="Tester" />
+		<Parameter name="Password" value="Tester1!!!" />
+		<Parameter name="InvalidUser" value="Test" />
+		<Parameter name="InvalidPassword" value="Not a valid password" />
+		<Parameter name="DisplayUserName" value="Tester Tester" />
+		<Parameter name="TestManagerProject" value="Test Manager" />
+	</TestRunParameters>
+
+
+	<LoggerRunSettings>
+		<Loggers>
+			<Logger friendlyName="console" enabled="True">
+				<Configuration>
+					<Verbosity>2</Verbosity>
+				</Configuration>
+			</Logger>
+			
+			<Logger friendlyName="html" enabled="True">
+				<Configuration>
+					<LogFileName>LogsRunSettings.html</LogFileName>
+				</Configuration>
+			</Logger>
+		</Loggers>
+	</LoggerRunSettings>
+
+	<NUnit>
+		<Verbosity>2</Verbosity>
+		<DumpXmlTestResults>true</DumpXmlTestResults>
+		<DumpXmlTestDiscovery>true</DumpXmlTestDiscovery>
+		<DiscoveryMethod>Current</DiscoveryMethod>
+		<!--   <TestOutputXml>C:\Workspace\TestQuAck\TestResults</TestOutputXml> -->
+		<!-- 		<DisplayName>FullNameSep</DisplayName> -->
+
+	</NUnit>
+
+
+
+</RunSettings>
