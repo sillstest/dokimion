@@ -1,0 +1,36 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "nunit3-console/3.15.4": {
+        "dependencies": {
+          "nunit.engine.api": "3.15.4"
+        },
+        "runtime": {
+          "nunit3-console.dll": {}
+        }
+      },
+      "nunit.engine.api/3.15.4": {
+        "runtime": {
+          "nunit.engine.api.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "nunit3-console/3.15.4": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "nunit.engine.api/3.15.4": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
