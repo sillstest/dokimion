@@ -5,10 +5,10 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-User=root
-Group=root
+User=quack
+Group=quack
 Environment="SERVER_NO=4"
-ExecStart=/usr/local/bin/startup_quack_server.sh $SERVER_NO
+ExecStart=/home/quack/bin/startup_quack_server.sh $SERVER_NO
 PIDFile=/run/quack/quack_server_4.pid
 # file size
 LimitFSIZE=infinity
