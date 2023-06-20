@@ -1,0 +1,34 @@
+2023-06-07 16:35:04Z [TRACE] Screenplay Actor 'Roopa' attempts to Boa.Constrictor.Quack.Interactions.LoginUser
+2023-06-07 16:35:04Z [TRACE] Screenplay Actor 'Roopa' attempts to clear using backspaces, then send keys 'Tester' to Quack Login Page : Name
+2023-06-07 16:35:04Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Quack Login Page : Name' is equal to 'True'
+2023-06-07 16:35:04Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Quack Login Page : Name' is equal to 'True' for up to 30s was True
+2023-06-07 16:35:04Z [INFO] Screenplay Actor 'Roopa' successfully did clear using backspaces, then send keys 'Tester' to Quack Login Page : Name
+2023-06-07 16:35:04Z [TRACE] Screenplay Actor 'Roopa' attempts to clear using backspaces, then send keys 'Tester1!!!' to Quack Login Page : Password
+2023-06-07 16:35:04Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Quack Login Page : Password' is equal to 'True'
+2023-06-07 16:35:04Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Quack Login Page : Password' is equal to 'True' for up to 30s was True
+2023-06-07 16:35:04Z [INFO] Screenplay Actor 'Roopa' successfully did clear using backspaces, then send keys 'Tester1!!!' to Quack Login Page : Password
+2023-06-07 16:35:04Z [TRACE] Screenplay Actor 'Roopa' attempts to click on 'Sign In button '
+2023-06-07 16:35:04Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Sign In button ' is equal to 'True'
+2023-06-07 16:35:04Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Sign In button ' is equal to 'True' for up to 30s was True
+2023-06-07 16:35:04Z [INFO] Screenplay Actor 'Roopa' successfully did click on 'Sign In button '
+2023-06-07 16:35:04Z [INFO] Screenplay Actor 'Roopa' successfully did Boa.Constrictor.Quack.Interactions.LoginUser
+2023-06-07 16:35:04Z [TRACE] Screenplay Actor 'Roopa' attempts to click on 'Profile Link'
+2023-06-07 16:35:04Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Profile Link' is equal to 'True'
+2023-06-07 16:35:05Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Profile Link' is equal to 'True' for up to 30s was True
+2023-06-07 16:35:05Z [INFO] Screenplay Actor 'Roopa' successfully did click on 'Profile Link'
+2023-06-07 16:35:05Z [TRACE] Screenplay Actor 'Roopa' asking for appearance of 'Profile Link'
+2023-06-07 16:35:05Z [INFO] Screenplay Actor 'Roopa' observed that the appearance of 'Profile Link' was True
+2023-06-07 16:35:05Z [TRACE] Screenplay Actor 'Roopa' asking for appearance of 'Profile Link'
+2023-06-07 16:35:05Z [INFO] Screenplay Actor 'Roopa' observed that the appearance of 'Profile Link' was True
+2023-06-07 16:35:05Z [TRACE] Screenplay Actor 'Roopa' attempts to refresh the web page
+2023-06-07 16:35:05Z [INFO] Screenplay Actor 'Roopa' successfully did refresh the web page
+2023-06-07 16:35:05Z [TRACE] Screenplay Actor 'Roopa' attempts to Boa.Constrictor.Quack.Interactions.Logout
+2023-06-07 16:35:05Z [TRACE] Screenplay Actor 'Roopa' attempts to click on 'Display User Name'
+2023-06-07 16:35:05Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Display User Name' is equal to 'True'
+2023-06-07 16:35:05Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Display User Name' is equal to 'True' for up to 30s was True
+2023-06-07 16:35:06Z [INFO] Screenplay Actor 'Roopa' successfully did click on 'Display User Name'
+2023-06-07 16:35:06Z [TRACE] Screenplay Actor 'Roopa' attempts to click on 'Logout Link'
+2023-06-07 16:35:06Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Logout Link' is equal to 'True'
+2023-06-07 16:35:06Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Logout Link' is equal to 'True' for up to 30s was True
+2023-06-07 16:35:06Z [INFO] Screenplay Actor 'Roopa' successfully did click on 'Logout Link'
+2023-06-07 16:35:06Z [INFO] Screenplay Actor 'Roopa' successfully did Boa.Constrictor.Quack.Interactions.Logout

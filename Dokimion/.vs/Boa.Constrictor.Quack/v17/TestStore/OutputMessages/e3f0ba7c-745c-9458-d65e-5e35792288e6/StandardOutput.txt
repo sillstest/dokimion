@@ -1,0 +1,34 @@
+2023-06-06 21:28:51Z [INFO] Adding Ability for Screenplay Actor 'Roopa' to browse the Web with OpenQA.Selenium.Chrome.ChromeDriver
+2023-06-06 21:28:51Z [TRACE] Screenplay Actor 'Roopa' attempts to navigate browser to 'http://quack4.psonet/login?retpath=%2F'
+2023-06-06 21:28:52Z [INFO] Screenplay Actor 'Roopa' successfully did navigate browser to 'http://quack4.psonet/login?retpath=%2F'
+2023-06-06 21:28:52Z [TRACE] Screenplay Actor 'Roopa' asking for HTML attribute of 'value' for 'Quack Login Page : Name'
+2023-06-06 21:28:52Z [TRACE] Screenplay Actor 'Roopa' asks for wait until existence of 'Quack Login Page : Name' is equal to 'True'
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' observed that the wait until existence of 'Quack Login Page : Name' is equal to 'True' for up to 30s was True
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' observed that the HTML attribute of 'value' for 'Quack Login Page : Name' was 
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' asking for HTML attribute of 'value' for 'Quack Login Page : Password'
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' asks for wait until existence of 'Quack Login Page : Password' is equal to 'True'
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' observed that the wait until existence of 'Quack Login Page : Password' is equal to 'True' for up to 30s was True
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' observed that the HTML attribute of 'value' for 'Quack Login Page : Password' was 
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' attempts to Boa.Constrictor.Quack.Interactions.LoginUser
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' attempts to clear using backspaces, then send keys 'Tester' to Quack Login Page : Name
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Quack Login Page : Name' is equal to 'True'
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Quack Login Page : Name' is equal to 'True' for up to 30s was True
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' successfully did clear using backspaces, then send keys 'Tester' to Quack Login Page : Name
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' attempts to clear using backspaces, then send keys 'Tester1!!!' to Quack Login Page : Password
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Quack Login Page : Password' is equal to 'True'
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Quack Login Page : Password' is equal to 'True' for up to 30s was True
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' successfully did clear using backspaces, then send keys 'Tester1!!!' to Quack Login Page : Password
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' attempts to click on 'Sign In button '
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Sign In button ' is equal to 'True'
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Sign In button ' is equal to 'True' for up to 30s was True
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' successfully did click on 'Sign In button '
+2023-06-06 21:28:53Z [INFO] Screenplay Actor 'Roopa' successfully did Boa.Constrictor.Quack.Interactions.LoginUser
+2023-06-06 21:28:53Z [TRACE] Screenplay Actor 'Roopa' asks for wait until appearance of 'Display User Name' is equal to 'True'
+2023-06-06 21:28:54Z [INFO] Screenplay Actor 'Roopa' observed that the wait until appearance of 'Display User Name' is equal to 'True' for up to 30s was True
+2023-06-06 21:28:54Z [TRACE] Screenplay Actor 'Roopa' asking for text of 'Display User Name'
+2023-06-06 21:28:54Z [TRACE] Screenplay Actor 'Roopa' asks for wait until existence of 'Display User Name' is equal to 'True'
+2023-06-06 21:28:54Z [INFO] Screenplay Actor 'Roopa' observed that the wait until existence of 'Display User Name' is equal to 'True' for up to 30s was True
+2023-06-06 21:28:54Z [INFO] Screenplay Actor 'Roopa' observed that the text of 'Display User Name' was Tester Tester
+Tester Tester
+2023-06-06 21:28:54Z [TRACE] Screenplay Actor 'Roopa' attempts to quit the WebDriver
+2023-06-06 21:28:54Z [INFO] Screenplay Actor 'Roopa' successfully did quit the WebDriver
