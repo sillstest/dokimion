@@ -18,10 +18,11 @@ Defaults	secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/b
 
 # User privilege specification
 root	ALL=(ALL:ALL) ALL
-quack   ALL = NOPASSWD: /bin/systemctl restart quack1_server.service
-quack   ALL = NOPASSWD: /bin/systemctl restart quack1_ui.service
-quack   ALL = NOPASSWD: /bin/systemctl status quack1_server.service
-quack   ALL = NOPASSWD: /bin/systemctl status quack1_ui.service
+
+dokimion   ALL = NOPASSWD: /bin/systemctl restart dokimion4_server.service
+dokimion   ALL = NOPASSWD: /bin/systemctl status dokimion4_server.service
+dokimion   ALL = NOPASSWD: /bin/systemctl restart dokimion4_ui.service
+dokimion   ALL = NOPASSWD: /bin/systemctl status dokimion4_ui.service
 
 # Members of the admin group may gain root privileges
 %admin ALL=(ALL) ALL
