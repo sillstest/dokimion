@@ -9,7 +9,7 @@
 		<Parameter name="InvalidPassword" value="Not a valid password" />
 		<Parameter name="DisplayUserName" value="Tester Tester" />
 		<Parameter name="TestManagerProject" value="Test Manager" />
-		<Parameter name="Url" value="http://quack4.psonet" />
+		<Parameter name="Url" value="http://dokimion4.psonet" />
 	</TestRunParameters>
 
 
