@@ -5,8 +5,8 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-User=dokimion
-Group=dokimion
+User=root
+Group=root
 Environment="SERVER_NO=4"
 ExecStart=/home/dokimion/bin/startup_dokimion_server.sh $SERVER_NO
 PIDFile=/run/dokimion/dokimion_server_4.pid
