@@ -6,8 +6,8 @@
       <settings>
          <setting name='SynchronousEvents' value='False' />
          <setting name='InternalTraceLevel' value='Off' />
-         <setting name='RandomSeed' value='845244344' />
-         <setting name='TestParametersDictionary' value='[ActorName, TestActor], [Logger, new NoOpLogger()], [Username, Tester], [Password, Tester1!!!], [InvalidUser, Test], [InvalidPassword, Not a valid password], [DisplayUserName, Tester Tester], [TestManagerProject, Test Manager]'>
+         <setting name='RandomSeed' value='742788804' />
+         <setting name='TestParametersDictionary' value='[ActorName, TestActor], [Logger, new NoOpLogger()], [Username, Tester], [Password, Tester1!!!], [InvalidUser, Test], [InvalidPassword, Not a valid password], [DisplayUserName, Tester Tester], [TestManagerProject, Test Manager], [Url, http://quack4.psonet]'>
             <item key='ActorName' value='TestActor' />
             <item key='Logger' value='new NoOpLogger()' />
             <item key='Username' value='Tester' />
@@ -16,8 +16,9 @@
             <item key='InvalidPassword' value='Not a valid password' />
             <item key='DisplayUserName' value='Tester Tester' />
             <item key='TestManagerProject' value='Test Manager' />
+            <item key='Url' value='http://quack4.psonet' />
          </setting>
-         <setting name='TestParameters' value='ActorName=TestActor;Logger=new NoOpLogger();Username=Tester;Password=Tester1!!!;InvalidUser=Test;InvalidPassword=Not a valid password;DisplayUserName=Tester Tester;TestManagerProject=Test Manager' />
+         <setting name='TestParameters' value='ActorName=TestActor;Logger=new NoOpLogger();Username=Tester;Password=Tester1!!!;InvalidUser=Test;InvalidPassword=Not a valid password;DisplayUserName=Tester Tester;TestManagerProject=Test Manager;Url=http://quack4.psonet' />
          <setting name='SkipNonTestAssemblies' value='True' />
          <setting name='ProcessModel' value='InProcess' />
          <setting name='DomainUsage' value='Single' />
@@ -26,20 +27,20 @@
          <setting name='NumberOfTestWorkers' value='12' />
       </settings>
       <properties>
-         <property name='_PID' value='25620' />
+         <property name='_PID' value='31832' />
          <property name='_APPDOMAIN' value='testhost' />
       </properties>
       <test-suite type='TestSuite' id='0-1009' name='Dokimion' fullname='Dokimion' runstate='Runnable' testcasecount='6'>
          <test-suite type='TestSuite' id='0-1010' name='Tests' fullname='Dokimion.Tests' runstate='Runnable' testcasecount='6'>
             <test-suite type='TestFixture' id='0-1000' name='HeaderUserAccessTests' fullname='Dokimion.Tests.HeaderUserAccessTests' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' testcasecount='4'>
-               <test-case id='0-1001' name='TC3UserOptions' fullname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions' methodname='TC3UserOptions' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1875989815' />
-               <test-case id='0-1002' name='TC4UserClickOnProfile' fullname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile' methodname='TC4UserClickOnProfile' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1134820649' />
-               <test-case id='0-1003' name='TC5UserClickOnProjects' fullname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects' methodname='TC5UserClickOnProjects' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1997662129' />
-               <test-case id='0-1004' name='TC6UserClickOnLogout' fullname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout' methodname='TC6UserClickOnLogout' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='2071968836' />
+               <test-case id='0-1001' name='TC3UserOptions' fullname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions' methodname='TC3UserOptions' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1887035122' />
+               <test-case id='0-1002' name='TC4UserClickOnProfile' fullname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile' methodname='TC4UserClickOnProfile' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='585057305' />
+               <test-case id='0-1003' name='TC5UserClickOnProjects' fullname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects' methodname='TC5UserClickOnProjects' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='221438166' />
+               <test-case id='0-1004' name='TC6UserClickOnLogout' fullname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout' methodname='TC6UserClickOnLogout' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='4840669' />
             </test-suite>
             <test-suite type='TestFixture' id='0-1005' name='LoginPageTest' fullname='Dokimion.Tests.LoginPageTest' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' testcasecount='2'>
-               <test-case id='0-1006' name='TC1LoginValidPage' fullname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage' methodname='TC1LoginValidPage' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='824520047' />
-               <test-case id='0-1007' name='TC2LoginInvalidUser' fullname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser' methodname='TC2LoginInvalidUser' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='668185988' />
+               <test-case id='0-1006' name='TC1LoginValidPage' fullname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage' methodname='TC1LoginValidPage' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='181926348' />
+               <test-case id='0-1007' name='TC2LoginInvalidUser' fullname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser' methodname='TC2LoginInvalidUser' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='212221484' />
             </test-suite>
          </test-suite>
       </test-suite>

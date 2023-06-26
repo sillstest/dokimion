@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v6.0": {
-      "Dokimion/1.0.0": {
+      "Dokimion_Tests/1.0.0": {
         "dependencies": {
           "Boa.Constrictor": "4.0.0",
           "Boa.Constrictor.Screenplay": "4.0.0",
@@ -21,7 +21,7 @@
           "coverlet.collector": "3.2.0"
         },
         "runtime": {
-          "Dokimion.dll": {}
+          "Dokimion_Tests.dll": {}
         }
       },
       "Boa.Constrictor/4.0.0": {
@@ -486,7 +486,7 @@
     }
   },
   "libraries": {
-    "Dokimion/1.0.0": {
+    "Dokimion_Tests/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
