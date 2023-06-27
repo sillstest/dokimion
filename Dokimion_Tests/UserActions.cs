@@ -5,7 +5,7 @@ namespace Dokimion
 {
     public class UserActions
     {
-        public string? QuackUrl = TestContext.Parameters.Get("Url");
+        public string? DokimionUrl = TestContext.Parameters.Get("Url");
         
         public string? ActorName = TestContext.Parameters.Get("ActorName");
         public string? Username = TestContext.Parameters["Username"];

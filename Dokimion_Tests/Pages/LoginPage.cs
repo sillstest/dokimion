@@ -11,11 +11,11 @@ namespace Dokimion.Pages
         public const string UnableToLoginError = "Unable to login";
         
         public static IWebLocator NameInput => L(
-          "Quack Login Page : Name",
+          "Dokimion Login Page : Name",
           By.Id("login"));
 
         public static IWebLocator PasswordInput => L(
-            "Quack Login Page : Password",
+            "Dokimion Login Page : Password",
             By.Id("password"));
 
         public static IWebLocator SingInButton => L("Sign In button ", By.XPath("//button[text()='Sign in']"));
