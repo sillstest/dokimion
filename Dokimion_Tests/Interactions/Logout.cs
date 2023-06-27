@@ -13,7 +13,10 @@ namespace Dokimion.Interactions
 
         public void PerformAs(IActor actor)
         {
+            actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout:60);
             actor.AttemptsTo(Click.On(Header.UserInfo));
+
+            actor.WaitsUntil(Appearance.Of(Header.LogoutLink), IsEqualTo.True(), timeout: 60);
             actor.AttemptsTo(Click.On(Header.LogoutLink));
         }
     }

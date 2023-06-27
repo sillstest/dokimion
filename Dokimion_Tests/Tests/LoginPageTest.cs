@@ -19,11 +19,11 @@ namespace Dokimion.Tests
 
             userActions = new UserActions();
             userActions.LogConsoleMessage("In one time Set up :" + TestContext.CurrentContext.Test.ClassName);
-            userActions.LogConsoleMessage("Register Driver & Open the QuAck website");
+            userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
             Actor.Can(BrowseTheWeb.With(new ChromeDriver(userActions.GetChromeOptions())));
-            Actor.AttemptsTo(Navigate.ToUrl(userActions.QuackUrl));
+            Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
 
         }
 
@@ -48,13 +48,17 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Enter the Username : ");
-            userActions.LogConsoleMessage("Enter the password : ");
-            userActions.LogConsoleMessage("Click Sign in button");
-
+            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True());
             Actor.AttemptsTo(Clear.On(LoginPage.NameInput));
             Actor.AttemptsTo(SendKeys.To(LoginPage.NameInput, userActions.Username));
+
+            userActions.LogConsoleMessage("Enter the password : ");
+            Actor.WaitsUntil(Appearance.Of(LoginPage.PasswordInput), IsEqualTo.True());
             Actor.AttemptsTo(Clear.On(LoginPage.PasswordInput));
             Actor.AttemptsTo(SendKeys.To(LoginPage.PasswordInput, userActions.Password));
+
+
+            userActions.LogConsoleMessage("Click Sign in button");
             Actor.AttemptsTo(Click.On(LoginPage.SingInButton));
 
 
@@ -62,7 +66,8 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Verify : Username is on top right menu");
                 Actor.AttemptsTo(Refresh.Browser());
-                Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName));
+                Actor.WaitsUntil(Text.Of(Header.UserInfo),ContainsSubstring.Text(userActions.DisplayUserName), 
+                    timeout:60) ;
 
             }
             finally

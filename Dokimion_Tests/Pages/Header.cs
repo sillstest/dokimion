@@ -26,23 +26,10 @@ namespace Dokimion.Pages
 
         public static IWebLocator Dokimion => L("Dokimion", By.XPath("//a[contains(text(),'Dokimion')]"));
 
+        public static string Profile = "Profile";
+        public static string Logout = "Log out";
+
+
     }
-
-
-
-    //public string xpathProfileLink = "//a[contains(text(),'Profile')]";
-
-
-
-
-    //public string xpathProjectLink = "//*[@id='bd-projects']";
-
-    //public string xpathAllLink = "//a[contains(text(),'All')]";
-
-    //public string xpathTestManager = "//a[contains(text(),'Test Manager')]";
-
-    //public string xpathLogout = "//a[contains(text(),'Log out')]";
-
-
 
 }
