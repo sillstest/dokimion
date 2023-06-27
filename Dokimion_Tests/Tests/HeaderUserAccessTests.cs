@@ -3,6 +3,7 @@ using Dokimion.Pages;
 using Boa.Constrictor.Screenplay;
 using Boa.Constrictor.Selenium;
 using OpenQA.Selenium.Chrome;
+using FluentAssertions;
 
 namespace Dokimion.Tests
 {
@@ -17,11 +18,11 @@ namespace Dokimion.Tests
 
             userActions = new UserActions();
             userActions.LogConsoleMessage("In one time Set up :" + TestContext.CurrentContext.Test.ClassName);
-            userActions.LogConsoleMessage("Register Driver & Open the QuAck website");
+            userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
             Actor.Can(BrowseTheWeb.With(new ChromeDriver(userActions.GetChromeOptions())));
-            Actor.AttemptsTo(Navigate.ToUrl(userActions.QuackUrl));
+            Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
 
         }
         [TearDown]
@@ -43,20 +44,19 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
             userActions.LogConsoleMessage("Login as User");
+            
             Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
 
             try
             {
                 userActions.LogConsoleMessage("Action steps : ");
-                userActions.LogConsoleMessage("Click on left side on User link");
+                userActions.LogConsoleMessage("Click on right side on User link");
                 Actor.AttemptsTo(Click.On(Header.UserInfo));
 
                 userActions.LogConsoleMessage("Verify : Profile and Logout links displayed");
-                bool profileExists = Actor.AskingFor(Existence.Of(Header.ProfileLink));
-                bool logoutExists = Actor.AskingFor(Existence.Of(Header.LogoutLink));
+                Actor.WaitsUntil(Text.Of(Header.ProfileLink), IsEqualTo.Value(Header.Profile)).Should().NotBeNullOrEmpty();
+                Actor.WaitsUntil(Text.Of(Header.LogoutLink), IsEqualTo.Value(Header.Logout)).Should().NotBeNullOrEmpty();
 
-                Assert.That((profileExists && logoutExists), Is.True);
-                
             }
             finally
             {
@@ -78,7 +78,7 @@ namespace Dokimion.Tests
             try
             {
                 userActions.LogConsoleMessage("Action steps : ");
-                userActions.LogConsoleMessage("Click on left side on User link");
+                userActions.LogConsoleMessage("Click on right side on User link");
                 Actor.AttemptsTo(Click.On(Header.UserInfo));
 
                 userActions.LogConsoleMessage("Click on Profile link");
@@ -107,11 +107,11 @@ namespace Dokimion.Tests
             try
             {
                 userActions.LogConsoleMessage("Action steps : ");
-                userActions.LogConsoleMessage("Click on right side Projects link");
+                userActions.LogConsoleMessage("Click on left side Projects link");
                 Actor.AttemptsTo(Click.On(Header.ProjectsLink));
 
                 //permission granted only for this project for user (Tester & User : Roopa)
-                userActions.LogConsoleMessage("Verify : All and Test Manager project links are in dropdown");
+                userActions.LogConsoleMessage("Verify : All and Dokimion project links are in dropdown");
                 bool allExists = Actor.AskingFor(Appearance.Of(Header.AllLink));
                 bool dokimionExists = Actor.AskingFor(Appearance.Of(Header.Dokimion));
                 Assert.That((allExists && dokimionExists), Is.True);
@@ -135,7 +135,7 @@ namespace Dokimion.Tests
 
 
             userActions.LogConsoleMessage("Action steps : ");
-            userActions.LogConsoleMessage("Click on left side on User link");
+            userActions.LogConsoleMessage("Click on right side on User link");
             Actor.AttemptsTo(Click.On(Header.UserInfo));
 
             userActions.LogConsoleMessage("Click on Logout link");
