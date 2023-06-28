@@ -21,7 +21,6 @@ namespace Dokimion
 
             var options = new ChromeOptions();
             options.AddArgument(Headless);
-            options.AddArgument("--site-per-process");
             return options;
         }
 
