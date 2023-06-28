@@ -26,6 +26,8 @@ namespace Dokimion.Tests
             driver.Manage().Window.Maximize();
             driver.SwitchTo().DefaultContent();
             driver.SwitchTo().ActiveElement();
+            driver.Manage().Timeouts().PageLoad.Seconds.Equals(60);
+            driver.Manage().Timeouts().AsynchronousJavaScript.Equals(60);
 
             Actor.Can(BrowseTheWeb.With(driver));
             Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
