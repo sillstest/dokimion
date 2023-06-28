@@ -4,6 +4,7 @@ using Boa.Constrictor.Screenplay;
 using Boa.Constrictor.Selenium;
 using OpenQA.Selenium.Chrome;
 using FluentAssertions;
+using OpenQA.Selenium;
 
 namespace Dokimion.Tests
 {
@@ -21,13 +22,23 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            ChromeDriver driver = new ChromeDriver(userActions.GetChromeOptions());
-            driver.Manage().Window.Maximize();
-            driver.SwitchTo().DefaultContent();
-            driver.SwitchTo().ActiveElement();
+            WebDriver driver = new ChromeDriver(userActions.GetChromeOptions());
 
-            Actor.Can(BrowseTheWeb.With(driver));
-            Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
+            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+
+            //driver.Manage().Window.Maximize();
+            //driver.SwitchTo().DefaultContent();
+            //driver.SwitchTo().ActiveElement();
+
+            try
+            {
+                Actor.Can(BrowseTheWeb.With(driver));
+                Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
+            }catch (Exception ex)
+            {
+                userActions.LogConsoleMessage("Unable to load page : " + ex.ToString());
+
+            }
 
         }
         [TearDown]
