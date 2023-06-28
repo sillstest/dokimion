@@ -21,7 +21,7 @@ namespace Dokimion
 
             var options = new ChromeOptions();
             options.AddArgument(Headless);
-            options.AddArgument("--disable-site-isolation-trials");
+            options.AddArgument("--site-per-process");
             return options;
         }
 
