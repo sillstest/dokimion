@@ -21,7 +21,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            ChromeDriver driver = new ChromeDriver(userActions.GetChromeOptions());
+            ChromeDriver driver = new ChromeDriver("..\\..\\Drivers\\chromedriver", userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad.Seconds.Equals(30);
 
             Actor.Can(BrowseTheWeb.With(driver));
