@@ -3,6 +3,7 @@ using Dokimion.Pages;
 using Boa.Constrictor.Screenplay;
 using Boa.Constrictor.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium;
 
 namespace Dokimion.Tests
 {
@@ -22,16 +23,19 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            ChromeDriver driver = new ChromeDriver(userActions.GetChromeOptions());
-            driver.Manage().Window.Maximize();
-            driver.SwitchTo().DefaultContent();
-            driver.SwitchTo().ActiveElement();
-            driver.Manage().Timeouts().PageLoad.Seconds.Equals(60);
-            driver.Manage().Timeouts().AsynchronousJavaScript.Equals(60);
+            WebDriver driver = new ChromeDriver(userActions.GetChromeOptions());
+            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
 
-            Actor.Can(BrowseTheWeb.With(driver));
-            Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
+            try
+            {
+                Actor.Can(BrowseTheWeb.With(driver));
+                Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
+            }
+            catch (Exception ex)
+            {
+                userActions.LogConsoleMessage("Unable to load page : " + ex.ToString());
 
+            }
         }
 
 
@@ -72,7 +76,8 @@ namespace Dokimion.Tests
             try
             {
                 userActions.LogConsoleMessage("Verify : Username is on top right menu");
-                Actor.AttemptsTo(Refresh.Browser());
+                // Actor.AttemptsTo(Refresh.Browser());
+                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
                 Actor.WaitsUntil(Text.Of(Header.UserInfo),ContainsSubstring.Text(userActions.DisplayUserName), 
                     timeout:60) ;
 
@@ -80,7 +85,8 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                Actor.AttemptsTo(Refresh.Browser());
+                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                // Actor.AttemptsTo(Refresh.Browser());
                 Actor.AttemptsTo(Logout.For());
             }
 
