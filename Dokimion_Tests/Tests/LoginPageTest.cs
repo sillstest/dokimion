@@ -24,7 +24,7 @@ namespace Dokimion.Tests
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
             WebDriver driver = new ChromeDriver(userActions.GetChromeOptions());
-            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(45);
 
             try
             {
@@ -59,7 +59,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Enter the Username : ");
-            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True());
+            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True() , timeout: 60);
             Actor.AttemptsTo(Clear.On(LoginPage.NameInput));
             Actor.AttemptsTo(SendKeys.To(LoginPage.NameInput, userActions.Username));
 

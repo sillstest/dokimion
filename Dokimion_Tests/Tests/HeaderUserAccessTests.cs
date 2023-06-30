@@ -23,7 +23,7 @@ namespace Dokimion.Tests
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
             WebDriver driver = new ChromeDriver(userActions.GetChromeOptions());
-            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(45);
 
             try
             {
@@ -62,7 +62,8 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click on right side on User link");
-                Actor.AttemptsTo(Click.On(Header.UserInfo));
+                Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Click.On(Header.UserInfo) );
 
                 userActions.LogConsoleMessage("Verify : Profile and Logout links displayed");
                 Actor.WaitsUntil(Text.Of(Header.ProfileLink), IsEqualTo.Value(Header.Profile)).Should().NotBeNullOrEmpty();

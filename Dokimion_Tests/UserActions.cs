@@ -15,12 +15,14 @@ namespace Dokimion
         public string? DisplayUserName = TestContext.Parameters.Get("DisplayUserName");
 
         public readonly string Headless = "--headless=new";
-
+        public readonly string WindowSize =  "--window-size=1920,1080";
         public ChromeOptions GetChromeOptions()
         {
 
             var options = new ChromeOptions();
             options.AddArgument(Headless);
+            options.AddArgument(WindowSize);
+            options.AddArgument("--disable-site-isolation-trials");
             return options;
         }
 
