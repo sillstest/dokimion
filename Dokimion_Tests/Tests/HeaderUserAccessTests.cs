@@ -25,6 +25,17 @@ namespace Dokimion.Tests
             WebDriver driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(45);
 
+            ICapabilities capabilities = driver.Capabilities;
+            var browserName = capabilities.GetCapability("browserName");
+            var browserVersion = capabilities.GetCapability("browserVersion");
+            var SeleniumWebDriverVersion = (capabilities.GetCapability("chrome") as Dictionary<string, object>)!["chromedriverVersion"];
+
+            userActions.LogConsoleMessage("BrowserName : " + browserName);
+            userActions.LogConsoleMessage("browserVersion : " + browserVersion);
+            userActions.LogConsoleMessage("ChromeDriver : " + driver.GetType().ToString());
+            userActions.LogConsoleMessage("SeleniumWebDriverVersion " + SeleniumWebDriverVersion);
+
+
             try
             {
                 Actor.Can(BrowseTheWeb.With(driver));
@@ -55,7 +66,8 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
             userActions.LogConsoleMessage("Login as User");
-            
+
+            Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
             Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
 
             try
