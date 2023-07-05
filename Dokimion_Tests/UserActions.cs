@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework.Interfaces;
+using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
 namespace Dokimion
@@ -20,8 +21,11 @@ namespace Dokimion
         {
 
             var options = new ChromeOptions();
+            options.PageLoadStrategy = PageLoadStrategy.Normal;
+
             options.AddArgument(Headless);
             options.AddArgument(WindowSize);
+            options.AddArgument("--disable-gpu"); //helps with headless 
             options.AddArgument("--disable-site-isolation-trials");
             return options;
         }
