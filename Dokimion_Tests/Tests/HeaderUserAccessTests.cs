@@ -22,7 +22,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            WebDriver driver = new ChromeDriver(userActions.GetChromeOptions());
+            ChromeDriver driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(45);
 
             ICapabilities capabilities = driver.Capabilities;
@@ -35,16 +35,24 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("ChromeDriver : " + driver.GetType().ToString());
             userActions.LogConsoleMessage("SeleniumWebDriverVersion " + SeleniumWebDriverVersion);
 
-
+            var count = 1;
             try
             {
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
-            }catch (Exception ex)
-            {
-                userActions.LogConsoleMessage("Unable to load page : " + ex.ToString());
-
+                //Page is redirected after initial URL
+                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
             }
+            catch (Exception ex)
+            {
+                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput).ForAnAdditional(3));
+                count++;
+                userActions.LogConsoleMessage("Unable to load page : retried with addtionatime on " + count + " " + ex.ToString());
+            }
+
+            Actor.WaitsUntil(Appearance.Of(LoginPage.LoginPageWelcomeMsg), IsEqualTo.True());
+            var welcomeMessage = Actor.AskingFor(Text.Of(LoginPage.LoginPageWelcomeMsg));
+            userActions.LogConsoleMessage("Login Page is loaded successfully on count " + count + " " + welcomeMessage);
 
         }
         [TearDown]
@@ -67,7 +75,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Set Up : ");
             userActions.LogConsoleMessage("Login as User");
 
-            Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
+           // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
             Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
 
             try
