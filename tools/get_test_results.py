@@ -1,7 +1,11 @@
-from xml.parsers.expat import ExpatError
-import xml.etree.ElementTree as ElementTree
+#
+# Utility to copy surefire test results files to stdout
+# so the files can be parsed by team city's XML report parsing
+# build feature
+#
+
 import os, fnmatch
-import shutil
+import sys
 
 def locate(pattern, root=os.curdir):
    for path, dirs, files in os.walk(os.path.abspath(root)):
@@ -10,16 +14,22 @@ def locate(pattern, root=os.curdir):
 
 def main():
 
+   if len(sys.argv) != 2:
+      print("Unsupported number of arguments: ", len(sys.argv));
+      sys.exit(-1);
+
+   testResultsDir = sys.argv[1];
+
    for xmlFile in locate("TEST-*.xml"):
       try:
-         tree = ElementTree.parse(xmlFile);
          filename = os.path.basename(xmlFile);
+         with open(xmlFile, 'r') as fin:
+            sys.stdout = open(filename, "w+")
+            print(fin.read());
+            fin.close();
 
-         shutil.copy2(xmlFile, os.curdir);
-
-
-      except (SyntaxError, ExpatError):
-          print (xml, "\tBADLY FORMED!");
+      except:
+          print (xmlFile, "File write error");
 
 
 if __name__ == "__main__":
