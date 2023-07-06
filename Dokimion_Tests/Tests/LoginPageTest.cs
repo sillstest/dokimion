@@ -36,18 +36,26 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("ChromeDriver : " + driver.GetType().ToString());
             userActions.LogConsoleMessage("SeleniumWebDriverVersion " + SeleniumWebDriverVersion);
 
-
+            var count = 1;
 
             try
             {
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
+                //Page is redirected after initial URL
+                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
             }
             catch (Exception ex)
             {
-                userActions.LogConsoleMessage("Unable to load page : " + ex.ToString());
-
+                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput).ForAnAdditional(3));
+                count++;
+                userActions.LogConsoleMessage("Unable to load page : retried with addtionatime on " + count + " " + ex.ToString());
+                
             }
+
+            Actor.WaitsUntil(Appearance.Of(LoginPage.LoginPageWelcomeMsg), IsEqualTo.True());
+            var welcomeMessage = Actor.AskingFor(Text.Of(LoginPage.LoginPageWelcomeMsg));
+            userActions.LogConsoleMessage("Login Page is loaded successfully on count " + count + " " + welcomeMessage);
         }
 
 
@@ -73,8 +81,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Enter the Username : ");
 
 
-            Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
-
+           // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
            // Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True() , timeout: 60);
             Actor.AttemptsTo(Clear.On(LoginPage.NameInput));
             Actor.AttemptsTo(SendKeys.To(LoginPage.NameInput, userActions.Username));
