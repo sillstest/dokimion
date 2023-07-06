@@ -7,6 +7,7 @@
 
 import os, fnmatch
 import sys
+import glob
 
 def locate(pattern, root=os.curdir):
    for path, dirs, files in os.walk(os.path.abspath(root)):
@@ -20,6 +21,9 @@ def main():
       sys.exit(-1);
 
    testResultsDir = sys.argv[1];
+
+   for f in glob.glob(os.path.join(testResultsDir, "TEST-*.xml")):
+      os.remove(f);
 
    for xmlFile in locate("TEST-*.xml"):
       try:
