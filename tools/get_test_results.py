@@ -9,11 +9,12 @@ import os, fnmatch
 import sys
 import glob
 import shutil
+import random
 
 def locate(pattern, root=os.curdir):
    for path, dirs, files in os.walk(os.path.abspath(root)):
       for filename in fnmatch.filter(files, pattern):
-         yield os.path.join(path, filename)
+         return os.path.join(path, filename)
 
 def main():
 
@@ -24,26 +25,29 @@ def main():
    quackAbsHomeDir = os.path.join(os.path.dirname(__file__), "../");
    testResultsDir = sys.argv[1];
 
-   # delete all test result files in test results dir
    testResultsFileNamePattern = "TEST-*.xml";
-   for f in glob.glob(os.path.join(quackAbsHomeDir, testResultsDir, testResultsFileNamePattern)):
-      os.remove(f);
+   for xmlFile in glob.glob(os.path.join(testResultsDir, testResultsFileNamePattern), recursive=True):
+       os.system("/usr/bin/git rm " + xmlFile);
 
    # copy all surefire test results file to test results dir
-   for xmlFile in locate(testResultsFileNamePattern):
-      try:
-         srcXmlFileName = os.path.basename(xmlFile);
-         destXmlFileName = os.path.join(quackAbsHomeDir, testResultsDir, srcXmlFileName);
+   for xmlFile in glob.glob("**/" + testResultsFileNamePattern, recursive=True):
+       srcXmlFileName = os.path.basename(xmlFile);
+       destXmlDir = os.path.join(quackAbsHomeDir, testResultsDir);
+       shutil.copy(xmlFile, destXmlDir);
 
-         shutil.copy(xmlFile, destXmlFileName);
 
-      except:
-          print (xmlFile, "File write error");
-
+   for xmlFile in glob.glob(testResultsDir + "/**/" + testResultsFileNamePattern, recursive=True):
+       srcXmlFileName = os.path.basename(xmlFile);
+       destXmlDir = os.path.join(quackAbsHomeDir, testResultsDir);
+       os.system("/usr/bin/git add " + os.path.abspath(os.path.join(destXmlDir, srcXmlFileName)));
 
    # save new test results files to test results dir
-   os.chdir(os.path.join(quackAbsHomeDir, testResultsDir));
-   os.system("/usr/bin/git add *");
+   n = random.randint(0, 1000000);
+   with open( os.path.join(testResultsDir, "__test"), "w+") as fout:
+      fout.write(str(n));
+      fout.close();
+      os.system("/usr/bin/git add " + os.path.join(testResultsDir, "__test"));
+
    os.system("/usr/bin/git commit -m \"new test results files\"");
    os.system("/usr/bin/git pull");
    os.system("/usr/bin/git push");
