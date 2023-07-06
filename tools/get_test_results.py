@@ -27,7 +27,7 @@ def main():
 
    testResultsFileNamePattern = "TEST-*.xml";
    for xmlFile in glob.glob(os.path.join(testResultsDir, testResultsFileNamePattern), recursive=True):
-       os.system("/usr/bin/git rm " + xmlFile);
+       os.remove(xmlFile);
 
    # copy all surefire test results file to test results dir
    for xmlFile in glob.glob("**/" + testResultsFileNamePattern, recursive=True):
@@ -39,18 +39,13 @@ def main():
    for xmlFile in glob.glob(testResultsDir + "/**/" + testResultsFileNamePattern, recursive=True):
        srcXmlFileName = os.path.basename(xmlFile);
        destXmlDir = os.path.join(quackAbsHomeDir, testResultsDir);
-       os.system("/usr/bin/git add " + os.path.abspath(os.path.join(destXmlDir, srcXmlFileName)));
 
    # save new test results files to test results dir
    n = random.randint(0, 1000000);
    with open( os.path.join(testResultsDir, "__test"), "w+") as fout:
       fout.write(str(n));
       fout.close();
-      os.system("/usr/bin/git add " + os.path.join(testResultsDir, "__test"));
 
-   os.system("/usr/bin/git commit -m \"new test results files\"");
-   os.system("/usr/bin/git pull");
-   os.system("/usr/bin/git push");
 
 if __name__ == "__main__":
    main()
