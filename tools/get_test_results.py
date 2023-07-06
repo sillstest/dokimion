@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 #
 # Utility to copy surefire test results files to stdout
 # so the files can be parsed by team city's XML report parsing
@@ -24,7 +25,7 @@ def main():
       try:
          filename = os.path.basename(xmlFile);
          with open(xmlFile, 'r') as fin:
-            sys.stdout = open(filename, "w+")
+            sys.stdout = open(os.path.join(testResultsDir, filename), "w+")
             print(fin.read());
             fin.close();
 
