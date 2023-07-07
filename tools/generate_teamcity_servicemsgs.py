@@ -30,10 +30,6 @@ def main():
          print("##teamcity[testStarted name='" + "test" + str(i+1) + "']");
          print("##teamcity[testFinished name='" + "test" + str(i+1) + "']");
 
-      for i in range(0, int(noErrors)):
-         print("##teamcity[testStarted name='" + "test" + str(i+1) + "']");
-         print("##teamcity[testErrors name='" + "test" + str(i+1) + "']");
-
       for i in range(0, int(noFailures)):
          print("##teamcity[testStarted name='" + "test" + str(i+1) + "']");
          print("##teamcity[testFailed name='" + "test" + str(i+1) + "']");
@@ -41,6 +37,10 @@ def main():
 
       print("##teamcity[testSuiteFinished name='" + root.get("name") + "']");
 
+      print("noTests = ", noTests);
+      print("noErrors = ", noErrors);
+      print("noSkipped = ", noSkipped);
+      print("noFailures = ", noFailures);
 
 
 if __name__ == "__main__":
