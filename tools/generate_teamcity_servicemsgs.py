@@ -12,8 +12,8 @@ import glob
 def main():
 
    # find all test results xml files
-   for xmlFile in glob.glob("**/TEST-*.xml" + testResultsFileNamePattern, recursive=True):
-      print("##teamcity[importData type='surefire' path='xmlFile' parseOutOfDate='true']");
+   for xmlFile in glob.glob(os.path.join("**/", "TEST-*.xml"), recursive=True):
+      print("##teamcity[importData type='surefire' path='" + xmlFile + "' parseOutOfDate='true']");
 
 
 
