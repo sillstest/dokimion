@@ -12,13 +12,14 @@ class CreateUser extends Component {
         password: "",
         firstName: "",
         lastName: "",
+        role: "Tester",
       },
       message: "",
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
+ 
   handleChange(event) {
     // eslint-disable-next-line react/no-direct-mutation-state
     this.state.user[event.target.name] = event.target.value;
@@ -67,11 +68,25 @@ class CreateUser extends Component {
                 <label for="lastName">Last Name</label>
                 <input type="text" class="form-control" name="lastName" id="lastName" onChange={this.handleChange} />
               </div>
+           </div>
+           <div class="form-row">
               <div class="form-group col-md-6">
                 <label for="email">Email</label>
                 <input type="text" class="form-control" name="email" id="email" onChange={this.handleChange} />
               </div>
-            </div>
+              <div class="form-group col-md-6">
+                <label for="user_role">User Role</label>
+                <br></br>
+                <select
+                  name="role"
+                  value={this.state.user.role}
+                  onChange={this.handleChange}
+                >
+                  <option key="role" value="Tester">Tester</option>
+		  <option key="role" value="Admin">Administrator</option>
+                </select>
+              </div>
+           </div>
             <button onClick={this.handleSubmit} class="btn btn-primary">
               Create
             </button>
