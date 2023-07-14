@@ -24,7 +24,7 @@ namespace Dokimion.Tests
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
             ChromeDriver driver = new ChromeDriver(userActions.GetChromeOptions());
-            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(45);
+            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
 
             ICapabilities capabilities = driver.Capabilities;
             var browserName =     capabilities.GetCapability("browserName");

@@ -86,6 +86,18 @@ public class MongoDBInterface  {
    {
       System.out.println("MongoDBInterface getEmail");
 
+      return getUserCollectionAttribute(loginToFind, "email");
+   }
+
+   public String getRole(String loginToFind)
+   {
+      System.out.println("MongoDBInterface getEmail");
+
+      return getUserCollectionAttribute(loginToFind, "role");
+   }
+
+   private String getUserCollectionAttribute(String loginToFind, String userAttribute)
+   {
       MongoClient mongoClient = getMongoClient();
       MongoDatabase db = mongoClient.getDatabase("test");
 
@@ -108,6 +120,7 @@ public class MongoDBInterface  {
 
 	 String login = (String)jsonObj.get("login");
 	 String email = (String)jsonObj.get("email");
+	 String role = (String)jsonObj.get("role");
 
 	 System.out.println("login: " + login);
 	 System.out.println("email: " + email);
@@ -117,7 +130,12 @@ public class MongoDBInterface  {
          {
 	    System.out.println("email found: " + email);
 	    System.out.flush();
-	    return email;
+            if (userAttribute == "email")
+            {
+	       return email;
+            } else {
+               return role;
+            }
 	 }
 
       }

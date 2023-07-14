@@ -75,7 +75,17 @@ public class UserService extends BaseService<User> {
 
     @Override
     public User findOne(Session session, String projectId, String id) {
-        return cleanUserSesitiveData(super.findOne(session, projectId, id));
+
+System.out.println("UserService.findOne - projectId, id: " + projectId + "," + id);
+System.out.flush();
+
+        //return cleanUserSesitiveData(super.findOne(session, projectId, id));
+        User user = cleanUserSesitiveData(super.findOne(session, projectId, id));
+
+System.out.println("UserService.findOne - user: " + user);
+System.out.flush();
+
+        return user;
     }
 
     @Override
@@ -134,7 +144,13 @@ public class UserService extends BaseService<User> {
     }
 
     public List<User> findAll() {
-        return StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
+        List<User> usersList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
+        for (User user : usersList) {
+           System.out.println("UserService.findAll() - user: " + user);
+           System.out.flush();
+        }
+        return usersList;
+        //return StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
     }
 
     public List<User> suggestUsers(String organizationId, String literal) {
