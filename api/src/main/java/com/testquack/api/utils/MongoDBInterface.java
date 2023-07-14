@@ -37,7 +37,7 @@ public class MongoDBInterface  {
 
    String replicaSetProperty = "mongo.replicaSet=";
    String replicaSet;
-   String quackPropertiesFileName="/etc/quack/quack.properties";
+   String quackPropertiesFileName="/etc/dokimion/quack.properties";
 
    private MongoClient getMongoClient()
    {
