@@ -108,8 +108,15 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                // Actor.AttemptsTo(Refresh.Browser());
+                try 
+                {
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                }catch (Exception e)
+                {
+                    userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
+                }
+                
                 Actor.AttemptsTo(Logout.For());
             }
 

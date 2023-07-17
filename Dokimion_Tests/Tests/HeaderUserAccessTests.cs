@@ -151,7 +151,8 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                Actor.AttemptsTo(Refresh.Browser());
+                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+               // Actor.AttemptsTo(Refresh.Browser());
                 Actor.AttemptsTo(Logout.For());
             }
         }
