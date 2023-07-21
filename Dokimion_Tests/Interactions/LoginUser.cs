@@ -22,11 +22,11 @@ namespace Dokimion.Interactions
         {
             actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True());
             actor.AttemptsTo(Clear.On(LoginPage.NameInput));
-            actor.AttemptsTo(SendKeys.To(LoginPage.NameInput, Name).ThenHitEnter());
+            actor.AttemptsTo(SendKeys.To(LoginPage.NameInput, Name));
 
             actor.WaitsUntil(Appearance.Of(LoginPage.PasswordInput), IsEqualTo.True());
             actor.AttemptsTo(Clear.On(LoginPage.PasswordInput));
-            actor.AttemptsTo(SendKeys.To(LoginPage.PasswordInput,Password).ThenHitEnter());
+            actor.AttemptsTo(SendKeys.To(LoginPage.PasswordInput,Password));
 
             actor.AttemptsTo(Click.On(LoginPage.SingInButton));
         }
