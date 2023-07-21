@@ -81,16 +81,13 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Enter the Username : ");
 
 
-           // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
-           // Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True() , timeout: 60);
             Actor.AttemptsTo(Clear.On(LoginPage.NameInput));
-            Actor.AttemptsTo(SendKeys.To(LoginPage.NameInput, userActions.Username));
+            Actor.AttemptsTo(SendKeys.To(LoginPage.NameInput, userActions.Username).ThenHitEnter());
 
             userActions.LogConsoleMessage("Enter the password : ");
             Actor.WaitsUntil(Appearance.Of(LoginPage.PasswordInput), IsEqualTo.True());
             Actor.AttemptsTo(Clear.On(LoginPage.PasswordInput));
-            Actor.AttemptsTo(SendKeys.To(LoginPage.PasswordInput, userActions.Password));
-
+            Actor.AttemptsTo(SendKeys.To(LoginPage.PasswordInput, userActions.Password).ThenHitEnter());
 
             userActions.LogConsoleMessage("Click Sign in button");
             Actor.AttemptsTo(Click.On(LoginPage.SingInButton));
@@ -99,8 +96,8 @@ namespace Dokimion.Tests
             try
             {
                 userActions.LogConsoleMessage("Verify : Username is on top right menu");
-                // Actor.AttemptsTo(Refresh.Browser());
-                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                Actor.AttemptsTo(Refresh.Browser());
+                //Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
                 Actor.WaitsUntil(Text.Of(Header.UserInfo),ContainsSubstring.Text(userActions.DisplayUserName), 
                     timeout:60) ;
 
@@ -108,15 +105,17 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                try 
+                try
                 {
-                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                }catch (Exception e)
+                    Actor.AttemptsTo(Refresh.Browser());
+                    // Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                }
+                catch (Exception e)
                 {
                     userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
                     Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
                 }
-                
+
                 Actor.AttemptsTo(Logout.For());
             }
 
