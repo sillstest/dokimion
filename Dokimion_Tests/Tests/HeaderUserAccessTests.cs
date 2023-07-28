@@ -169,6 +169,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on right side on User link");
+            Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
             Actor.AttemptsTo(Click.On(Header.UserInfo));
 
             userActions.LogConsoleMessage("Click on Logout link");
