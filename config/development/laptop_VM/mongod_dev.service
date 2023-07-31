@@ -1,5 +1,5 @@
 [Unit]
-Description=MongoDB Database Server #3
+Description=MongoDB Database Server #_dev
 Documentation=https://docs.mongodb.org/manual
 After=network-online.target
 Wants=network-online.target
@@ -8,8 +8,8 @@ Wants=network-online.target
 User=root
 Group=root
 EnvironmentFile=
-ExecStart=/usr/bin/mongod --config /etc/mongod3.conf
-PIDFile=/run/mongod/mongod3.pid
+ExecStart=/usr/bin/mongod --config /etc/mongod_dev.conf
+PIDFile=/run/mongod/mongod_dev.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
@@ -17,9 +17,9 @@ LimitCPU=infinity
 # virtual memory size
 LimitAS=infinity
 # open files
-LimitNOFILE=64000
+LimitNOFILE=6_dev000
 # processes/threads
-LimitNPROC=64000
+LimitNPROC=6_dev000
 # locked memory
 LimitMEMLOCK=infinity
 # total threads (user+kernel)

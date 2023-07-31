@@ -1,15 +1,15 @@
 [Unit]
-Description=MongoDB Database Server #2
-Documentation=https://docs.mongodb.org/manual
+Description=Dokimion Dev Server
+Documentation=
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 User=root
 Group=root
-EnvironmentFile=
-ExecStart=/usr/bin/mongod --config /etc/mongod2.conf
-PIDFile=/run/mongod/mongod2.pid
+Environment="SERVER_NO=4"
+ExecStart=/home/bob/bin/startup_dokimion_server.sh $SERVER_NO
+PIDFile=/run/dokimion/dokimion_dev_server.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
@@ -25,9 +25,6 @@ LimitMEMLOCK=infinity
 # total threads (user+kernel)
 TasksMax=infinity
 TasksAccounting=false
-
-# Recommended limits for mongod as specified in
-# https://docs.mongodb.com/manual/reference/ulimit/#recommended-ulimit-settings
 
 [Install]
 WantedBy=multi-user.target

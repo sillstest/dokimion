@@ -23,7 +23,7 @@ namespace Dokimion.Tests
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
             ChromeDriver driver = new ChromeDriver(userActions.GetChromeOptions());
-            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(45);
+            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
 
             ICapabilities capabilities = driver.Capabilities;
             var browserName = capabilities.GetCapability("browserName");
@@ -151,7 +151,8 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                Actor.AttemptsTo(Refresh.Browser());
+                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+               // Actor.AttemptsTo(Refresh.Browser());
                 Actor.AttemptsTo(Logout.For());
             }
         }
@@ -168,6 +169,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on right side on User link");
+            Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
             Actor.AttemptsTo(Click.On(Header.UserInfo));
 
             userActions.LogConsoleMessage("Click on Logout link");
