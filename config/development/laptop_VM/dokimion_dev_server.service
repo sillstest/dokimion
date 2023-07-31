@@ -1,5 +1,5 @@
 [Unit]
-Description=Quack Server #4
+Description=Dokimion Dev Server
 Documentation=
 After=network-online.target
 Wants=network-online.target
@@ -8,8 +8,8 @@ Wants=network-online.target
 User=root
 Group=root
 Environment="SERVER_NO=4"
-ExecStart=/home/bob/bin/startup_quack_server.sh $SERVER_NO
-PIDFile=/run/quack/quack_server_4.pid
+ExecStart=/home/bob/bin/startup_dokimion_server.sh $SERVER_NO
+PIDFile=/run/dokimion/dokimion_dev_server.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
