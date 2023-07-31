@@ -52,6 +52,20 @@ class Profile extends SubComponent {
           {this.state.profile.firstName} {this.state.profile.lastName}{" "}
           <span className="text-muted">({this.state.profile.login})</span>{" "}
         </h1>
+        <table>
+          <tr>
+            <th>Attribute</th>
+            <th>Value</th>
+          </tr>
+          <tr>
+            <td>email</td>
+            <td>{this.state.profile.email}</td>
+          </tr>
+          <tr>
+            <td>role</td>
+            <td>{this.state.profile.role}</td>
+          </tr>
+        </table>
         {!this.state.session.metainfo || !this.state.session.metainfo.organizationsEnabled && (
 
             <div>
