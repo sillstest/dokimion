@@ -64,6 +64,8 @@ public class UserResource extends BaseResource<User> {
     @GET
     @Path("/{login}")
     public User getUser(@PathParam("login") String login) {
+System.out.println("UserResource::getUser - login: " + login);
+System.out.flush();
         return service.findOne(getSession(), null, login);
     }
 
@@ -256,7 +258,13 @@ public class UserResource extends BaseResource<User> {
     @GET
     @Path("/users")
     public Set<String> getUsers(){
-        return authProvider.getAllUsers(request);
+        Set<String> users = authProvider.getAllUsers(request);
+System.out.println("UserResource::getUsers");
+for (String user : users) {
+System.out.println("user: " + user);
+System.out.flush();
+}
+        return users;
     }
 
     @GET

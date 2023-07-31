@@ -11,8 +11,9 @@
 
         "env": {
             "NODE_OPTIONS": "--openssl-legacy-provider",
-        }
-
+        },
+        "webRoot": "${workspaceFolder}/ui/src",
+        "url":"http://192.168.56.102"
     }
     ]
 }

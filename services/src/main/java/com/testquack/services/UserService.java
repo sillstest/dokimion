@@ -77,6 +77,7 @@ public class UserService extends BaseService<User> {
     public User findOne(Session session, String projectId, String id) {
 
 System.out.println("UserService.findOne - projectId, id: " + projectId + "," + id);
+System.out.println("UserService.findOne - session: " + session);
 System.out.flush();
 
         //return cleanUserSesitiveData(super.findOne(session, projectId, id));
