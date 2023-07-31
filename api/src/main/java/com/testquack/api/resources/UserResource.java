@@ -186,12 +186,6 @@ public class UserResource extends BaseResource<User> {
         System.out.println("UserResource.login - session.person: " + session.getPerson());
         System.out.flush();
 
-Person person = session.getPerson();
-person.setPassword("");
-List<String> list = new ArrayList<String>();
-list.add("ADMIN");
-person.setRoles(list);
-
         return session;
         //return authProvider.doAuth(request, response);
     }

@@ -13,6 +13,7 @@ namespace Dokimion.Tests
 
         private IActor Actor;
         UserActions userActions;
+        ChromeDriver driver;
 
         [OneTimeSetUp]
         public void Setup()
@@ -23,7 +24,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            ChromeDriver driver = new ChromeDriver(userActions.GetChromeOptions());
+            driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
 
             ICapabilities capabilities = driver.Capabilities;
@@ -80,9 +81,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Enter the Username : ");
 
-
-           // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
-           // Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True() , timeout: 60);
+            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True());
             Actor.AttemptsTo(Clear.On(LoginPage.NameInput));
             Actor.AttemptsTo(SendKeys.To(LoginPage.NameInput, userActions.Username));
 
@@ -91,26 +90,47 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Clear.On(LoginPage.PasswordInput));
             Actor.AttemptsTo(SendKeys.To(LoginPage.PasswordInput, userActions.Password));
 
-
             userActions.LogConsoleMessage("Click Sign in button");
-            Actor.AttemptsTo(Click.On(LoginPage.SingInButton));
-
+            //Actor.AttemptsTo(Click.On(LoginPage.SingInButton));
+            LoginPage.SingInButton.FindElement(driver).Click();
+            userActions.LogConsoleMessage("Submit clicked");
 
             try
             {
                 userActions.LogConsoleMessage("Verify : Username is on top right menu");
-                // Actor.AttemptsTo(Refresh.Browser());
+                //Actor.AttemptsTo(Refresh.Browser());
                 Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
                 Actor.WaitsUntil(Text.Of(Header.UserInfo),ContainsSubstring.Text(userActions.DisplayUserName), 
                     timeout:60) ;
+                userActions.LogConsoleMessage("Page redirected after click");
+            }catch  (Exception e) {
+
+                userActions.LogConsoleMessage("Page Not redirected , try to login again" + e);
+                //Refresh and login again
+                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.LoginPageWelcomeMsg).ForUpTo(4));
+               // Actor.AttemptsTo(Refresh.Browser());
+                Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+
+                Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName),
+                timeout: 60);
 
             }
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                // Actor.AttemptsTo(Refresh.Browser());
+                try
+                {
+                    Actor.AttemptsTo(Refresh.Browser());
+                    // Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                }
+                catch (Exception e)
+                {
+                    userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
+                }
+
                 Actor.AttemptsTo(Logout.For());
+               userActions.LogConsoleMessage("Logged out successfully!! ");
             }
 
         }
