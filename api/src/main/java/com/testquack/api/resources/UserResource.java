@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Random;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -63,6 +64,8 @@ public class UserResource extends BaseResource<User> {
     @GET
     @Path("/{login}")
     public User getUser(@PathParam("login") String login) {
+System.out.println("UserResource::getUser - login: " + login);
+System.out.flush();
         return service.findOne(getSession(), null, login);
     }
 
@@ -132,6 +135,11 @@ public class UserResource extends BaseResource<User> {
     @POST
     @Path("/")
     public User createUser(User user){
+
+        
+	System.out.println("UserResource: createUser: " + user);
+	System.out.flush();
+
         return service.save(getSession(), null, user);
     }
 
@@ -144,7 +152,15 @@ public class UserResource extends BaseResource<User> {
     @GET
     @Path("/")
     public Collection<User> findFiltered() {
-        return getService().findFiltered(getSession(), null, initFilter(request));
+        //return getService().findFiltered(getSession(), null, initFilter(request));
+        Collection<User> collUsers = getService().findFiltered(getSession(), null, initFilter(request));
+
+        for (User user : collUsers) {
+           System.out.println("UserResource.findFiltered - user: " + user);
+           System.out.flush();
+        }
+
+        return collUsers;
     }
 
     @GET
@@ -167,7 +183,13 @@ public class UserResource extends BaseResource<User> {
     @Path("/login")
     public Session login(@QueryParam("login") String login,
                          @QueryParam("password") String password) {
-        return authProvider.doAuth(request, response);
+        Session session = authProvider.doAuth(request, response);
+        System.out.println("UserResource.login - session: " + session);
+        System.out.println("UserResource.login - session.person: " + session.getPerson());
+        System.out.flush();
+
+        return session;
+        //return authProvider.doAuth(request, response);
     }
 
     @GET
@@ -236,7 +258,13 @@ public class UserResource extends BaseResource<User> {
     @GET
     @Path("/users")
     public Set<String> getUsers(){
-        return authProvider.getAllUsers(request);
+        Set<String> users = authProvider.getAllUsers(request);
+System.out.println("UserResource::getUsers");
+for (String user : users) {
+System.out.println("user: " + user);
+System.out.flush();
+}
+        return users;
     }
 
     @GET

@@ -37,7 +37,6 @@
         <xs:restriction base="xs:string">
             <xs:enumeration value="ADMIN"/>
             <xs:enumeration value="USER"/>
-            <xs:enumeration value="GUEST"/>
         </xs:restriction>
     </xs:simpleType>
 

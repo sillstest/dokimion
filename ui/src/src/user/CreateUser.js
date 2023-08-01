@@ -12,7 +12,7 @@ class CreateUser extends Component {
         password: "",
         firstName: "",
         lastName: "",
-        role: "Tester",
+        role: "User",
       },
       message: "",
     };
@@ -82,7 +82,7 @@ class CreateUser extends Component {
                   value={this.state.user.role}
                   onChange={this.handleChange}
                 >
-                  <option key="role" value="Tester">Tester</option>
+                  <option key="role" value="User">User</option>
 		  <option key="role" value="Admin">Administrator</option>
                 </select>
               </div>
