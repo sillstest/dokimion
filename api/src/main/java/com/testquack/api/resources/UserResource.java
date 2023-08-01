@@ -58,6 +58,8 @@ public class UserResource extends BaseResource<User> {
 
     @Override
     protected BaseService<User> getService() {
+System.out.println("UserResource::getService - service: " + service);
+System.out.flush();
         return service;
     }
 
@@ -186,6 +188,11 @@ System.out.flush();
         Session session = authProvider.doAuth(request, response);
         System.out.println("UserResource.login - session: " + session);
         System.out.println("UserResource.login - session.person: " + session.getPerson());
+
+        List<String> roles = session.getPerson().getRoles();
+        for ( String role : roles )
+        System.out.println("role: " + role);
+
         System.out.flush();
 
         return session;

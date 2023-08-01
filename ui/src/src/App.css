@@ -378,16 +378,5 @@ a.link-black, a.link-black:link, a.link-black:link:visited {
     margin-right: 15px;
 }
 
-table {
-   border: 2px solid forestgreen;
-}
-
-th {
-   border-bottom: 1px solid black;
-}
-
-td {
-   text-align: left;
-}
 
 
