@@ -132,9 +132,24 @@ public abstract class BaseService<E extends Entity> {
 
     }
     protected boolean userCanReadProject(Session session, String projectId){
+System.out.println("BaseService:userCanReadProject - session.person: " + session.getPerson());
+System.out.println("BaseService:userCanReadProject - session.isIsAdmin: " + session.isIsAdmin());
+System.out.flush();
         if (session.isIsAdmin()){
             return true;
         }
+        List<String> roles = session.getPerson().getRoles();
+        for (String role : roles)
+        {
+System.out.println("role: " + role);
+System.out.flush();
+           if (role.equals("Admin")) {
+              return true;
+           }
+        }
+System.out.println("BaseService::userCanReadProject - role != Admin");
+System.out.flush();
+
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
         if (!isUserInOrganization(session, organization)){
             return false;
@@ -210,11 +225,21 @@ public abstract class BaseService<E extends Entity> {
     }
 
     protected E create(Session session, String projectId, E entity){
+System.out.println("BaseService::create - session: " + session);
+System.out.println("BaseService::create - projectId: " + projectId);
+System.out.println("BaseService::create - entity: " + entity);
+System.out.flush();
+
         beforeCreate(session, projectId, entity);
+System.out.println("BaseService::create - after beforeCreate call");
+System.out.flush();
+
         if (!userCanCreate(session, projectId, entity)){
             throw new EntityAccessDeniedException(getAccessDeniedMessage(session, entity, "CREATE"));
         }
+System.out.println("BaseService::create - after userCanCreate call");
         entity = doSave(session, projectId, entity);
+System.out.println("BaseService::create - after doSave call");
         afterCreate(session, projectId, entity);
         return entity;
     }

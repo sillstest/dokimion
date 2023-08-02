@@ -61,6 +61,9 @@ public class ProjectResource extends BaseResource<Project> {
     })
     public Project create(@ApiParam(value = "Entity", required = true) Project entity) {
         ProjectService service = (ProjectService) getService();
+System.out.println("ProjectResource:create - service: " + service);
+System.out.println("ProjectResource.create - getUserSession: " + getUserSession());
+System.out.flush();
         return service.createProject(getUserSession(), entity);
     }
 

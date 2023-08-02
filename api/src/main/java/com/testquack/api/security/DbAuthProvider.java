@@ -57,11 +57,11 @@ System.out.flush();
 
     @Override
     protected Person findPersonByLogin(String login) {
-        //return convertUser(userService.findOne(null, new Filter().withField("login", login)));
         Person person = convertUser(userService.findOne(null, new Filter().withField("login", login)));
-
         System.out.println("DbAuthProvider.findPersonByLogin - person: " + person);
         System.out.flush();
+        //return convertUser(userService.findOne(null, new Filter().withField("login", login)));
+
 
         return person;
     }

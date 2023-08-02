@@ -4,6 +4,8 @@ import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import ControlledPopup from '../common/ControlledPopup';
 import Backend from "../services/backend";
+import "./Profile.css";
+
 class Profile extends SubComponent {
   state = {
     profile: {},
@@ -49,8 +51,7 @@ class Profile extends SubComponent {
     return (
       <div>
         <h1>
-          {this.state.profile.firstName} {this.state.profile.lastName}{" "}
-          <span className="text-muted">({this.state.profile.login})</span>{" "}
+          <span className="text-muted">{this.state.profile.login}</span>{" "}
         </h1>
         <table>
           <tr>
@@ -58,11 +59,19 @@ class Profile extends SubComponent {
             <th>Value</th>
           </tr>
           <tr>
-            <td>email</td>
+            <td>First Name</td>
+            <td>{this.state.profile.firstName}</td>
+          </tr>
+          <tr>
+            <td>Last Name</td>
+            <td>{this.state.profile.lastName}</td>
+          </tr>
+          <tr>
+            <td>Email</td>
             <td>{this.state.profile.email}</td>
           </tr>
           <tr>
-            <td>role</td>
+            <td>Role</td>
             <td>{this.state.profile.role}</td>
           </tr>
         </table>

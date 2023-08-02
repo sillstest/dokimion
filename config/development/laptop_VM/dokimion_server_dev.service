@@ -1,15 +1,15 @@
 [Unit]
-Description=MongoDB Database Server #_dev
-Documentation=https://docs.mongodb.org/manual
+Description=Dokimion Dev Server
+Documentation=
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 User=root
 Group=root
-EnvironmentFile=
-ExecStart=/usr/bin/mongod --config /etc/mongod_dev.conf
-PIDFile=/run/mongod/mongod_dev.pid
+Environment="SERVER_NO=dev"
+ExecStart=/home/bob/bin/startup_dokimion_server.sh $SERVER_NO
+PIDFile=/run/dokimion/dokimion_server_dev.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
@@ -17,17 +17,14 @@ LimitCPU=infinity
 # virtual memory size
 LimitAS=infinity
 # open files
-LimitNOFILE=6000
+LimitNOFILE=64000
 # processes/threads
-LimitNPROC=6000
+LimitNPROC=64000
 # locked memory
 LimitMEMLOCK=infinity
 # total threads (user+kernel)
 TasksMax=infinity
 TasksAccounting=false
-
-# Recommended limits for mongod as specified in
-# https://docs.mongodb.com/manual/reference/ulimit/#recommended-ulimit-settings
 
 [Install]
 WantedBy=multi-user.target
