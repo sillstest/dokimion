@@ -68,8 +68,8 @@ public class ExceptionHandler implements ExceptionMapper<Exception> {
     private Response createResponse(Response.StatusType status, Exception e, boolean logWarn) {
         if (logWarn){
 
-System.out.println("ExceptinHandler::createResponse - status: " + status);
-System.out.println("ExceptinHandler::createResponse - exception: " + e);
+System.out.println("ExceptionHandler::createResponse - status: " + status);
+System.out.println("ExceptionHandler::createResponse - exception: " + e);
 System.out.flush();
 
             logger.warn("Exception has occurred for user {} : {}",

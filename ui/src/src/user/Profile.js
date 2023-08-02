@@ -51,12 +51,16 @@ class Profile extends SubComponent {
     return (
       <div>
         <h1>
-          <span className="text-muted">{this.state.profile.login}</span>{" "}
+          <span className="text-muted">User Profile</span>{" "}
         </h1>
         <table>
           <tr>
             <th>Attribute</th>
             <th>Value</th>
+          </tr>
+          <tr>
+            <td>Login</td>
+            <td>{this.state.profile.login}</td>
           </tr>
           <tr>
             <td>First Name</td>

@@ -139,8 +139,11 @@ System.out.flush();
     public User createUser(User user){
 
         
-	System.out.println("UserResource: createUser: " + user);
+	System.out.println("UserResource::createUser - " + user);
 	System.out.flush();
+
+        System.out.println("UserResource::createUser: session - " + getSession());
+        System.out.flush();
 
         return service.save(getSession(), null, user);
     }

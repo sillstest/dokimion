@@ -83,24 +83,36 @@ public abstract class BaseService<E extends Entity> {
     }
 
     public E save(Session user, String projectId, E entity){
+System.out.println("BaseService::save 1 - session: " + user);
+System.out.flush();
         if (!userCanSave(user, projectId, entity)){
+System.out.println("user CANNOT save: " + user);
+System.out.flush();
             throw new EntityAccessDeniedException(
                     format("User %s can't save entity %s", user.getPerson().getLogin(), entity.getId())
             );
         }
+System.out.println("user CAN save: " + user);
+System.out.flush();
         return isEmpty(entity.getId()) ?
                 create(user, projectId, entity) :
                 update(user, projectId, entity, (origEnt, newEnt) -> newEnt);
     }
 
     public Collection<E> save(Session user, String projectId, Collection<E> entities){
+System.out.println("BaseService::save 2 - session: " + user);
+System.out.flush();
         if (!userCanSave(user, projectId, entities)){
+System.out.println("user CANNOT save: " + user);
+System.out.flush();
             throw new EntityAccessDeniedException(
                     format("User %s can't save entities %s",
                             user.getPerson().getLogin(),
                             entities.stream().map(obj -> obj == null ? "null" : obj.toString()).collect(joining(", ")))
             );
         }
+System.out.println("user CAN save: " + user);
+System.out.flush();
         return getRepository().save(getCurrOrganizationId(user), projectId, entities);
     }
 
@@ -135,18 +147,10 @@ public abstract class BaseService<E extends Entity> {
 System.out.println("BaseService:userCanReadProject - session.person: " + session.getPerson());
 System.out.println("BaseService:userCanReadProject - session.isIsAdmin: " + session.isIsAdmin());
 System.out.flush();
-        if (session.isIsAdmin()){
+        if (isAdmin(session)) {
             return true;
         }
-        List<String> roles = session.getPerson().getRoles();
-        for (String role : roles)
-        {
-System.out.println("role: " + role);
-System.out.flush();
-           if (role.equals("Admin")) {
-              return true;
-           }
-        }
+        
 System.out.println("BaseService::userCanReadProject - role != Admin");
 System.out.flush();
 
@@ -166,19 +170,23 @@ System.out.flush();
 
     }
     protected boolean userCanSave(Session session, String projectId, E entity){
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+System.out.println("BaseService::userCanSave 1 - session: " + session);
+System.out.flush();
+        return isAdmin(session)|| userCanUpdateProject(session, projectId);
     }
     protected boolean userCanSave(Session session, String projectId, Collection<E> entities) {
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+System.out.println("BaseService::userCanSave 2 - session, role: " + session);
+System.out.flush();
+        return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
     protected boolean userCanDelete(Session session, String projectId, String id){
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+        return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
     protected boolean userCanCreate(Session session, String projectId, E entity){
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+        return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
     protected boolean userCanUpdate(Session session, String projectId, E entity){
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+        return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
 
     protected void beforeCreate(Session session, String projectId, E entity){
@@ -350,4 +358,28 @@ System.out.println("BaseService::create - after doSave call");
             return organization.getAdmins().stream().anyMatch(session.getPerson().getLogin()::equals);
         } return false;
     }
+
+    protected boolean isAdmin(Session session)
+    {
+       return session.isIsAdmin() || isRoleAdmin(session);
+    }
+
+    protected boolean isRoleAdmin(Session session)
+    {
+System.out.println("BaseService::isRoleAdmin - session: " + session);
+System.out.flush();
+
+       List<String> roles = session.getPerson().getRoles();
+
+       for (String role : roles)
+       {
+System.out.println("role: " + role);
+System.out.flush();
+          if (role.equals("Admin")) {
+             return true;
+          }
+       }
+       return false;
+    }
+
 }
