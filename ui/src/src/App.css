@@ -378,5 +378,15 @@ a.link-black, a.link-black:link, a.link-black:link:visited {
     margin-right: 15px;
 }
 
+table.tableUserProfile {
+   border: 1px solid black;
+}
 
+th.headerUserProfile {
+   border: 2px solid black;
+}
+
+td.cellUserProfile {
+   border: 1px solid black;
+}
 
