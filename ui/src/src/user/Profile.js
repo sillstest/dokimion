@@ -4,7 +4,7 @@ import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import ControlledPopup from '../common/ControlledPopup';
 import Backend from "../services/backend";
-import "./Profile.css";
+import "../App.css";
 
 class Profile extends SubComponent {
   state = {
@@ -50,29 +50,33 @@ class Profile extends SubComponent {
   render() {
     return (
       <div>
-        <h1>
-          <span className="text-muted">{this.state.profile.login}</span>{" "}
-        </h1>
-        <table>
+        <h3>
+          <span className="text-muted">User: {this.state.profile.login}</span>{" "}
+        </h3>
+        <table className="tableUserProfile">
           <tr>
-            <th>Attribute</th>
-            <th>Value</th>
+            <th className="headerUserProfile">Attribute</th>
+            <th className="headerUserProfile">Value</th>
           </tr>
           <tr>
-            <td>First Name</td>
-            <td>{this.state.profile.firstName}</td>
+            <td className="cellUserProfile">Login</td>
+            <td className="cellUserProfile">{this.state.profile.login}</td>
           </tr>
           <tr>
-            <td>Last Name</td>
-            <td>{this.state.profile.lastName}</td>
+            <td className="cellUserProfile">First Name</td>
+            <td className="cellUserProfile">{this.state.profile.firstName}</td>
+	  </tr>
+          <tr>
+            <td className="cellUserProfile">Last Name</td>
+            <td className="cellUserProfile">{this.state.profile.lastName}</td>
           </tr>
           <tr>
-            <td>Email</td>
-            <td>{this.state.profile.email}</td>
+            <td className="cellUserProfile">Email</td>
+            <td className="cellUserProfile">{this.state.profile.email}</td>
           </tr>
           <tr>
-            <td>Role</td>
-            <td>{this.state.profile.role}</td>
+            <td className="cellUserProfile">Role</td>
+            <td className="cellUserProfile">{this.state.profile.role}</td>
           </tr>
         </table>
         {!this.state.session.metainfo || !this.state.session.metainfo.organizationsEnabled && (

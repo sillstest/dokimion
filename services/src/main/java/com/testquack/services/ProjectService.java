@@ -60,7 +60,7 @@ System.out.flush();
     @Override
     public List<Project> findFiltered(Session session, String projectId, Filter filter) {
         return getRepository().find(getCurrOrganizationId(session), projectId, filter).stream().filter(
-                project -> session.isIsAdmin() || isUserOrganizationAdmin(session) ||  
+                project -> session.isIsAdmin() || isRoleAdmin(session) || isUserOrganizationAdmin(session) ||  
                         project.getReadWriteGroups().stream().anyMatch(session.getPerson().getGroups()::contains) ||
                         project.getReadWriteUsers().stream().anyMatch(session.getPerson().getLogin()::equals)
         ).collect(toList());
@@ -92,7 +92,7 @@ System.out.flush();
             return super.userCanCreate(session, projectId, project);
         }
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
-        return session.isIsAdmin() || (organization != null && organization.getAdmins().contains(session.getPerson().getLogin()));
+        return session.isIsAdmin() || isRoleAdmin(session) || (organization != null && organization.getAdmins().contains(session.getPerson().getLogin()));
     }
 
 }

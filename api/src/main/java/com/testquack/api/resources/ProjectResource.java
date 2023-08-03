@@ -74,6 +74,8 @@ System.out.flush();
             @ApiResponse(code = 200, message = "Updated entity")
     })
     public Project update(@ApiParam(value = "Entity", required = true) Project entity) {
+System.out.println("ProjectResource::update - project: " + entity);
+System.out.flush();
         return getService().save(getUserSession(), null, entity);
     }
 
