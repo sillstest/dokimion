@@ -4,6 +4,7 @@ import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Highcharts from "highcharts";
 import Backend from "../services/backend";
+import ControlledPopup from "../common/ControlledPopup";
 
 class LaunchesTrendWidget extends SubComponent {
   state = {
@@ -16,6 +17,7 @@ class LaunchesTrendWidget extends SubComponent {
       includedFields: "launchStats,createdTime",
     },
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -52,7 +54,7 @@ class LaunchesTrendWidget extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get launches: ", error);
+        this.setState({errorMessage: "Couldn't get launches: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -131,6 +133,7 @@ class LaunchesTrendWidget extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div id="trend"></div>
         <div id="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />

@@ -2,14 +2,16 @@
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import * as Utils from "../common/Utils";
-
 import Backend from "../services/backend";
+import ControlledPopup from "../common/ControlledPopup";
+
 class LauncherForm extends SubComponent {
   state = {
     launcherDescriptors: [],
     launcherConfig: {},
     configIndex: 0,
     selectableType: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -55,7 +57,7 @@ class LauncherForm extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get project: ", error);
+        this.setState({errorMessage: "Couldn't get project: " + error});
       });
   }
 
@@ -66,6 +68,7 @@ class LauncherForm extends SubComponent {
     var descriptor = Utils.getLaunchDescriptor(this.state.launcherDescriptors, config.launcherId) || {};
     return (
       <p className="card-text">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <form>
           {this.state.selectableType && (
             <div>
