@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { withRouter } from "react-router";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
@@ -19,7 +20,8 @@ class OrganizationForm extends Component {
       },
       administratorsEdit: "",
       usersEdit: "",
-      readonly: false // ToDo set to true if not admin and id is not null
+      readonly: false, // ToDo set to true if not admin and id is not null
+      errorMessage: "",
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -125,7 +127,7 @@ class OrganizationForm extends Component {
         this.props.history.push("/organizations/" + response.id);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't create organization: ", error);
+        this.setState({errorMessage: "Couldn't create organization: " + error});
       });
     event.preventDefault();
   }
@@ -136,7 +138,7 @@ class OrganizationForm extends Component {
           this.props.history.push("/organizations/" + response.id);
         })
         .catch(error => {
-          Utils.onErrorMessage("Couldn't update organization: ", error);
+          this.setState({errorMessage: "Couldn't update organization: " + error});
         });
       event.preventDefault();
     }
@@ -151,6 +153,7 @@ class OrganizationForm extends Component {
   render() {
     return (
       <div className='org-form'>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         {this.props.editCurrent &&
               (
               <div>
