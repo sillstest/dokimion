@@ -8,6 +8,7 @@ import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
+import ControlledPopup from "../common/ControlledPopup";
 
 class Comments extends SubComponent {
   constructor(props) {
@@ -18,7 +19,8 @@ class Comments extends SubComponent {
     this.state = {
       comments: [],
       commentToEdit: {},
-      session: {person:{}}
+      session: {person:{}},
+      errorMessage: "",
     };
 
     this.projectId = props.projectId;
@@ -137,7 +139,7 @@ class Comments extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't delete a comment: ", error);
+        this.setState({errorMessage: "Couldn't delete a comment: " + error});
       });
   }
 
@@ -152,7 +154,7 @@ class Comments extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't create a comment: ", error);
+        this.setState({errorMessage: "Couldn't create a comment: " + error});
       });
     event.preventDefault();
   }
@@ -171,13 +173,14 @@ class Comments extends SubComponent {
         this.cancelEdit(index, event);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't update comment: ", error);
+        this.setState({errorMessage: "Couldn't update comment: " + error});
       });
   }
 
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div id="comments">
           {this.state.comments.map(
             function (comment, i) {
