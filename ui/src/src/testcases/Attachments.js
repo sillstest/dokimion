@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend, { getApiBaseUrl } from "../services/backend";
 require("popper.js/dist/umd/popper.min.js");
 require("bootstrap-fileinput/css/fileinput.min.css");
@@ -23,6 +24,7 @@ class Attachments extends SubComponent {
       projectId: props.projectId,
       // eslint-disable-next-line no-dupe-keys
       testcase: props.testcase,
+      errorMessage: "",
     };
     this.getAttachmentUrl = this.getAttachmentUrl.bind(this);
     this.removeAttachment = this.removeAttachment.bind(this);
@@ -72,7 +74,7 @@ class Attachments extends SubComponent {
         this.onTestcaseUpdated();
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't remove attachment: ", error);
+        this.setState({errorMessage: "Couldn't remove attachment: " + error});
       });
   }
 
@@ -120,6 +122,7 @@ class Attachments extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div id="files" className="attachments-list">
           {(this.state.testcase.attachments || []).map(this.getAttachmentUrl)}
         </div>

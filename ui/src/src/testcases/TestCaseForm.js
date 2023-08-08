@@ -5,6 +5,7 @@ import CreatableSelect from "react-select/lib/Creatable";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
 class TestCaseForm extends SubComponent {
@@ -14,6 +15,7 @@ class TestCaseForm extends SubComponent {
     this.state = {
       testcase: props.testcase,
       projectAttributes: [],
+      errorMessage: "",
     };
     this.onTestCaseAdded = props.onTestCaseAdded;
     this.handleChange = this.handleChange.bind(this);
@@ -43,7 +45,7 @@ class TestCaseForm extends SubComponent {
         this.onTestCaseAdded(response);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't create testcase: ", error);
+        this.setState({errorMessage: "Couldn't create testcase: " + error});
       });
     event.preventDefault();
   }
@@ -119,6 +121,7 @@ class TestCaseForm extends SubComponent {
   render() {
     return (
       <div className="modal-dialog" role="document" id="testcase-creation-form">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title" id="editAttributeLabel">
