@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCogs } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
+import ControllePopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
+
 class Organizations extends Component {
   state = {
     organizations: [],
     loading: true,
+    errorMessage: "",
   };
 
   componentDidMount() {
@@ -23,7 +26,7 @@ class Organizations extends Component {
         this.setState(newState);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get organizations: ", error);
+        this.setState({errorMessage: "Couldn't get organizations: " + error});
         // eslint-disable-next-line react/no-direct-mutation-state
         this.state.loading = false;
         this.setState(this.state);
@@ -33,6 +36,7 @@ class Organizations extends Component {
   render() {
     return (
       <div className="container">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
         </div>

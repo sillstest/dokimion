@@ -7,6 +7,7 @@ import { FadeLoader } from "react-spinners";
 import DatePicker from "react-date-picker";
 import Select from "react-select";
 import Backend from "../services/backend";
+import ControlledPopup from "../common/ControlledPopup";
 
 class Events extends SubComponent {
   state = {
@@ -29,6 +30,7 @@ class Events extends SubComponent {
       itemsOnPage: 20,
     },
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -64,7 +66,7 @@ class Events extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get events: ", error);
+        this.setState({errorMessage: "Couldn't get events: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -149,6 +151,7 @@ class Events extends SubComponent {
   render() {
     return (
       <div className="row">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="col-sm-3 events-filter">
           <form>
             <div class="form-group">

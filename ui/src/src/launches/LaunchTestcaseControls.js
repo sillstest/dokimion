@@ -3,12 +3,15 @@
 import React, { Component } from "react";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+
 class LaunchTestcaseControls extends Component {
   defaultFailureDetails = { text: "" };
 
   state = {
     failureDetails: Object.assign({}, this.defaultFailureDetails),
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -48,7 +51,7 @@ class LaunchTestcaseControls extends Component {
         }
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't save launch testcase status: ", error);
+        this.setState({errorMessage: "Couldn't save launch testcase status: " + error});
       });
     event.preventDefault();
   }
@@ -64,6 +67,7 @@ class LaunchTestcaseControls extends Component {
   renderRunning() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <button type="button" class="btn btn-success" onClick={e => this.handleStatusSubmit("PASSED", e)}>
           Pass
         </button>

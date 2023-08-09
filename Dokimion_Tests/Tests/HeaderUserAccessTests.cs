@@ -22,18 +22,37 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            WebDriver driver = new ChromeDriver(userActions.GetChromeOptions());
-            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(45);
+            ChromeDriver driver = new ChromeDriver(userActions.GetChromeOptions());
+            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
 
+            ICapabilities capabilities = driver.Capabilities;
+            var browserName = capabilities.GetCapability("browserName");
+            var browserVersion = capabilities.GetCapability("browserVersion");
+            var SeleniumWebDriverVersion = (capabilities.GetCapability("chrome") as Dictionary<string, object>)!["chromedriverVersion"];
+
+            userActions.LogConsoleMessage("BrowserName : " + browserName);
+            userActions.LogConsoleMessage("browserVersion : " + browserVersion);
+            userActions.LogConsoleMessage("ChromeDriver : " + driver.GetType().ToString());
+            userActions.LogConsoleMessage("SeleniumWebDriverVersion " + SeleniumWebDriverVersion);
+
+            var count = 1;
             try
             {
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
-            }catch (Exception ex)
-            {
-                userActions.LogConsoleMessage("Unable to load page : " + ex.ToString());
-
+                //Page is redirected after initial URL
+                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
             }
+            catch (Exception ex)
+            {
+                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput).ForAnAdditional(3));
+                count++;
+                userActions.LogConsoleMessage("Unable to load page : retried with addtionatime on " + count + " " + ex.ToString());
+            }
+
+            Actor.WaitsUntil(Appearance.Of(LoginPage.LoginPageWelcomeMsg), IsEqualTo.True());
+            var welcomeMessage = Actor.AskingFor(Text.Of(LoginPage.LoginPageWelcomeMsg));
+            userActions.LogConsoleMessage("Login Page is loaded successfully on count " + count + " " + welcomeMessage);
 
         }
         [TearDown]
@@ -55,7 +74,8 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
             userActions.LogConsoleMessage("Login as User");
-            
+
+           // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
             Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
 
             try
@@ -131,7 +151,8 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                Actor.AttemptsTo(Refresh.Browser());
+                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+               // Actor.AttemptsTo(Refresh.Browser());
                 Actor.AttemptsTo(Logout.For());
             }
         }
@@ -148,6 +169,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on right side on User link");
+            Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
             Actor.AttemptsTo(Click.On(Header.UserInfo));
 
             userActions.LogConsoleMessage("Click on Logout link");

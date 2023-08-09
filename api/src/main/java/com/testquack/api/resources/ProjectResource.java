@@ -61,6 +61,9 @@ public class ProjectResource extends BaseResource<Project> {
     })
     public Project create(@ApiParam(value = "Entity", required = true) Project entity) {
         ProjectService service = (ProjectService) getService();
+System.out.println("ProjectResource:create - service: " + service);
+System.out.println("ProjectResource.create - getUserSession: " + getUserSession());
+System.out.flush();
         return service.createProject(getUserSession(), entity);
     }
 
@@ -71,6 +74,8 @@ public class ProjectResource extends BaseResource<Project> {
             @ApiResponse(code = 200, message = "Updated entity")
     })
     public Project update(@ApiParam(value = "Entity", required = true) Project entity) {
+System.out.println("ProjectResource::update - project: " + entity);
+System.out.flush();
         return getService().save(getUserSession(), null, entity);
     }
 

@@ -1,0 +1,30 @@
+[Unit]
+Description=Dokimion Dev UI
+Documentation=
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=root
+Group=root
+Environment="UI_NO=dev"
+ExecStart=/home/bob/bin/startup_dokimion_ui.sh $UI_NO
+PIDFile=/run/dokimion/dokimion_ui_dev.pid
+# file size
+LimitFSIZE=infinity
+# cpu time
+LimitCPU=infinity
+# virtual memory size
+LimitAS=infinity
+# open files
+LimitNOFILE=64000
+# processes/threads
+LimitNPROC=64000
+# locked memory
+LimitMEMLOCK=infinity
+# total threads (user+kernel)
+TasksMax=infinity
+TasksAccounting=false
+
+[Install]
+WantedBy=multi-user.target

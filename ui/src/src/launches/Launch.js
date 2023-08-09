@@ -9,6 +9,7 @@ import LaunchForm from "../launches/LaunchForm";
 import { Link } from "react-router-dom";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
 import $ from "jquery";
@@ -36,6 +37,7 @@ class Launch extends SubComponent {
     },
     attributesStatus: {},
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -92,7 +94,7 @@ class Launch extends SubComponent {
       })
       .catch(error => {
         console.log(error);
-        Utils.onErrorMessage("Couldn't get launch: ", error);
+        this.setState({errorMessage: "Couldn't get launch: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -287,6 +289,7 @@ class Launch extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="launch-title">
           <h3>
             <Link to={"/" + this.state.projectId + "/launch/" + this.state.launch.id} onClick={this.showLaunchStats}>

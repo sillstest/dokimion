@@ -8,7 +8,9 @@ import Select from "react-select";
 import AsyncSelect from "react-select/lib/Async";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+
 class Issues extends SubComponent {
   constructor(props) {
     super(props);
@@ -32,6 +34,7 @@ class Issues extends SubComponent {
       suggestTrackerProjects: [],
       issueTypes: [],
       issuePriorities: [],
+      errorMessage: "",
     };
 
     this.unlinkIssue = this.unlinkIssue.bind(this);
@@ -67,7 +70,7 @@ class Issues extends SubComponent {
           this.refreshIssues();
         })
         .catch(error => {
-          Utils.onErrorMessage("Couldn't fetch projects from tracker: ", error);
+          this.setState({errorMessage: "Couldn't fetch projects from tracker: " + error});
         });
     }
     if (nextProps.testcase && (nextProps.testcase.issues || []).length != this.state.testcase.issues) {
@@ -98,7 +101,7 @@ class Issues extends SubComponent {
         this.onTestcaseUpdated();
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't unlink issue: ", error);
+        this.setState({errorMessage: "Couldn't unlink issue: " + error});
       });
   }
 
@@ -110,7 +113,7 @@ class Issues extends SubComponent {
         this.onTestcaseUpdated();
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't create issue: ", error);
+        this.setState({errorMessage: "Couldn't create issue: " + error});
       });
     event.preventDefault();
   }
@@ -127,7 +130,7 @@ class Issues extends SubComponent {
         this.onTestcaseUpdated();
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't link issue: ", error);
+        this.setState({errorMessage: "Couldn't link issue: " + error});
       });
     event.preventDefault();
   }
@@ -261,6 +264,7 @@ class Issues extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div id="issues" className="issues-list">
           <table className="table table-striped">
             <tbody>{(this.state.testcase.issues || []).map(this.getIssueUrl)}</tbody>

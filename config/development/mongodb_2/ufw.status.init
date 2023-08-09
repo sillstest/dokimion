@@ -1,7 +1,0 @@
-Status: active
-
-To                         Action      From
---                         ------      ----
-192.168.1.227 27017/tcp    ALLOW       192.168.1.228             
-22                         ALLOW       192.168.1.228             
-
