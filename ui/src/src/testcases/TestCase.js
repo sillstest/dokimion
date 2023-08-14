@@ -15,6 +15,7 @@ import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
 import CreatableSelect from "react-select/lib/Creatable";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 import { faPlug } from "@fortawesome/free-solid-svg-icons";
 import { Checkbox } from "semantic-ui-react";
@@ -57,6 +58,7 @@ class TestCase extends SubComponent {
       propertiesInEdit: new Set(),
       commentsCount: 0,
       loading: true,
+      errorMessage: "",
     };
     this.getTestCase = this.getTestCase.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -146,7 +148,7 @@ class TestCase extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't fetch testcase: ", error);
+        this.setState({errorMessage: "Couldn't fetch testcase: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -158,7 +160,7 @@ class TestCase extends SubComponent {
               window.location.href = window.location.href.replace('testcase=' + this.state.testcase.id, 'testcase=' + response.id)
             })
             .catch(error => {
-              Utils.onErrorMessage("Couldn't clone testcase: ", error);
+              this.setState({errorMessage: "Couldn't clone testcase: " + error});
               this.state.loading = false;
               this.setState(this.state);
             });
@@ -204,7 +206,7 @@ class TestCase extends SubComponent {
         }
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't save testcase: ", error);
+        this.setState({errorMessage: "Couldn't save testcase: " + error});
       });
     if (event) {
       event.preventDefault();
@@ -218,7 +220,7 @@ class TestCase extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't fetch attributes: ", error);
+        this.setState({errorMessage: "Couldn't fetch attributes: " + error});
       });
   }
 
@@ -397,7 +399,7 @@ class TestCase extends SubComponent {
         window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't remove testcase: ", error);
+        this.setState({errorMessage: "Couldn't remove testcase: " + error});
       });
   }
 
@@ -409,6 +411,7 @@ class TestCase extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <ul className="nav nav-tabs" id="tcTabs" role="tablist">
           <li className="nav-item">
             <a

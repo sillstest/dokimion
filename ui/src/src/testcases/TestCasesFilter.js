@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle, faFilter, faSave, faPlay, faPlus, faBars, faFileCsv } from "@fortawesome/free-solid-svg-icons";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
 class TestCasesFilter extends Component {
@@ -38,6 +39,7 @@ class TestCasesFilter extends Component {
         },
       },
       testSuiteNameToDisplay: "",
+      errorMessage: "",
     };
 
     this.changeGrouping = this.changeGrouping.bind(this);
@@ -93,7 +95,7 @@ class TestCasesFilter extends Component {
           this.props.onFilter(this.state.testSuite.filter);
         })
         .catch(error => {
-          Utils.onErrorMessage("Couldn't fetch testsuite: ", error);
+          this.setState({errorMessage: "Couldn't fetch testsuite: " + error});
         });
     } else {
       if (params.groups) {
@@ -237,7 +239,7 @@ class TestCasesFilter extends Component {
         );
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't save testsuite: ", error);
+        this.setState({errorMessage: "Couldn't save testsuite: " + error});
       });
     event.preventDefault();
   }
@@ -266,6 +268,7 @@ class TestCasesFilter extends Component {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <h2>{this.state.testSuiteNameToDisplay}</h2>
         <div>
           <div className="row filter-control-row">

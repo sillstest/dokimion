@@ -6,12 +6,14 @@ import { Link } from "react-router-dom";
 import { FadeLoader } from "react-spinners";
 import * as Utils from "../common/Utils";
 import { Checkbox } from "semantic-ui-react";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
 class LaunchTestcasesHeatmap extends SubComponent {
   state = {
     heatmap: [],
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -37,7 +39,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get launch testcases heatmap: ", error);
+        this.setState({errorMessage: "Couldn't get launch testcases heatmap: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -72,7 +74,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
         }
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't update testcase status: ", error);
+        this.setState({errorMessage: "Couldn't update testcase status: " + error});
       });
   }
 
@@ -86,13 +88,14 @@ class LaunchTestcasesHeatmap extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't update testcase status: ", error);
+        this.setState({errorMessage: "Couldn't update testcase status: " + error});
       });
   }
 
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <table class="table">
           <thead>
             <tr>

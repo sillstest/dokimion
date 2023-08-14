@@ -8,8 +8,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import $ from "jquery";
-import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
+import ControlledPopup from '../common/ControlledPopup';
+import * as Utils from "../common/Utils";
+
 class ProjectSettings extends SubComponent {
   constructor(props) {
     super(props);
@@ -36,6 +38,7 @@ class ProjectSettings extends SubComponent {
       groupsToDisplay: [],
       launcherDescriptors: [],
       launcherIndexToRemove: null,
+      errorMessage: "",
     };
     this.state.projectId = this.props.match.params.project;
     this.changeGroups = this.changeGroups.bind(this);
@@ -69,7 +72,7 @@ class ProjectSettings extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get project: ", error);
+        this.setState({errorMessage: "Couldn't get project: " + error});
       });
 
     Backend.get("launcher/descriptors")
@@ -78,7 +81,7 @@ class ProjectSettings extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get launcher descriptors: ", error);
+        this.setState({errorMessage: "Couldn't get launcher descriptors: " + error});
       });
   }
 
@@ -143,10 +146,10 @@ class ProjectSettings extends SubComponent {
         }
         this.refreshGroupsToDisplay();
         this.setState(this.state);
-        Utils.onSuccessMessage("Project Settings successfully saved");
+        this.setState({errorMessage: "Project Settings successfully saved"});
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't save project: ", error);
+        this.setState({errorMessage: "Couldn't save project: " + error});
       });
     if (event) {
       event.preventDefault();
@@ -159,7 +162,7 @@ class ProjectSettings extends SubComponent {
         window.location.href = "/";
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't delete project: ", error);
+        this.setState({errorMessage: "Couldn't delete project: " + error});
       });
     event.preventDefault();
   }
@@ -269,6 +272,7 @@ class ProjectSettings extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div id="name" className="project-header">
           <div id="name-display" className="inplace-display">
             {this.state.project.deleted && (

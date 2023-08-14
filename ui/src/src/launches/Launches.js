@@ -8,7 +8,7 @@ import { FadeLoader } from "react-spinners";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlug } from "@fortawesome/free-solid-svg-icons";
 import Backend from "../services/backend";
-
+import ControlledPopup from "../common/ControlledPopup";
 import DatePicker from "react-date-picker";
 
 class Launches extends SubComponent {
@@ -29,6 +29,7 @@ class Launches extends SubComponent {
     },
     launcherDescriptors: [],
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -69,7 +70,7 @@ class Launches extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get launches: ", error);
+        this.setState({errorMessage: "Couldn't get launches: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -99,7 +100,7 @@ class Launches extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get launcher descriptors: ", error);
+        this.setState({errorMessage: "Couldn't get launcher descriptors: " + error});
       });
   }
 
@@ -154,6 +155,7 @@ class Launches extends SubComponent {
   getProgressBar(launch) {
     return (
       <div class="progress">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div
           class="progress-bar progress-bar-striped"
           role="progressbar"

@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
+import ControlledPopup from "../common/ControlledPopup";
 
 class EventsWidget extends Component {
   constructor(props) {
@@ -11,6 +12,7 @@ class EventsWidget extends Component {
     this.state = {
       events: [],
       projectId: "",
+      errorMessage: "",
     };
   }
 
@@ -22,7 +24,7 @@ class EventsWidget extends Component {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get events: ", error);
+        this.setState({errorMessage: "Couldn't get events: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -43,6 +45,7 @@ class EventsWidget extends Component {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="col-sm-9">
           <div className="sweet-loading">
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />

@@ -4,6 +4,7 @@ import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Highcharts from "highcharts";
 import Backend from "../services/backend";
+import ControlledPopup from "../common/ControlledPopup";
 
 class LaunchesByStatusesPieWidget extends SubComponent {
   state = {
@@ -16,6 +17,7 @@ class LaunchesByStatusesPieWidget extends SubComponent {
       includedFields: "launchStats,createdTime",
     },
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -53,7 +55,7 @@ class LaunchesByStatusesPieWidget extends SubComponent {
         this.statusPieChartRender();
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get launch statistics: ", error);
+        this.setState({errorMessage:"Couldn't get launch statistics: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -128,6 +130,7 @@ class LaunchesByStatusesPieWidget extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div id="pie-by-statuses"></div>
         <div id="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />

@@ -8,6 +8,7 @@ import TestCase from "../testcases/TestCase";
 import $ from "jquery";
 import qs from "qs";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 
@@ -42,6 +43,7 @@ class TestCases extends SubComponent {
     },
     loading: true,
     showCasesSelectCheckboxes: false,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -84,7 +86,7 @@ class TestCases extends SubComponent {
         this.refreshTree();
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't fetch attributes: ", error);
+        this.setState({errorMessage: "Couldn't fetch attributes: " + error});
       });
   }
 
@@ -142,7 +144,7 @@ class TestCases extends SubComponent {
         this.updateCount();
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't fetch testcases tree: ", error);
+        this.setState({errorMessage: "Couldn't fetch testcases tree: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -160,7 +162,7 @@ class TestCases extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't fetch testcases number: ", error);
+        this.setState({errorMessage: "Couldn't fetch testcases number: " + error});
       });
   }
 
@@ -178,7 +180,7 @@ class TestCases extends SubComponent {
         }
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't fetch testcases: ", error);
+        this.setState({errorMessage: "Couldn't fetch testcases: " + error});
       });
     event.preventDefault();
   }
@@ -342,6 +344,7 @@ class TestCases extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div>
           <TestCasesFilter
             projectAttributes={this.state.projectAttributes}

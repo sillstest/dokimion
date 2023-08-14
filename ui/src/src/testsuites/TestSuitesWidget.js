@@ -2,6 +2,7 @@ import React from "react";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 
@@ -10,6 +11,7 @@ class TestSuitesWidget extends SubComponent {
     testSuites: [],
     testSuitesToDisplay: [],
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -45,7 +47,7 @@ class TestSuitesWidget extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get testsuites: ", error);
+        this.setState({errorMessage: "Couldn't get testsuites: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -62,6 +64,7 @@ class TestSuitesWidget extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="row">
           <form className="col-sm-5">
             <div class="form-group">

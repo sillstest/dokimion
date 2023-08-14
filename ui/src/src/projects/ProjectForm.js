@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { withRouter } from "react-router";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
+import ControlledPopup from '../common/ControlledPopup';
 
 class ProjectForm extends Component {
   constructor(props) {
@@ -13,7 +14,9 @@ class ProjectForm extends Component {
         description: "",
         allowedGroups: [],
       },
+      errorMessage: "",
     };
+    
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -38,7 +41,7 @@ class ProjectForm extends Component {
         this.props.history.push("/projects/" + response.id);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't save project: ", error);
+        this.setState({errorMessage: "Couldn't save project: " + error});
       });
     event.preventDefault();
   }
@@ -53,7 +56,7 @@ class ProjectForm extends Component {
           this.setState(newState);
         })
         .catch(error => {
-          Utils.onErrorMessage("Couldn't get project: ", error);
+          this.setState({errorMessage: "Couldn't get project: " + error});
         });
     }
   }
@@ -68,6 +71,7 @@ class ProjectForm extends Component {
   render() {
     return (
       <div className="project-form">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="project-form-title">
             <h1>Create Project</h1>
         </div>
