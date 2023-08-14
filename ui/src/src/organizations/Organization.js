@@ -5,7 +5,9 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCogs } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+
 class Organization extends SubComponent {
   constructor(props) {
     super(props);
@@ -18,6 +20,7 @@ class Organization extends SubComponent {
         allowedUsers: [],
         admins: [],
       },
+      errorMessage: "",
     };
     this.getOrganization = this.getOrganization.bind(this);
     this.onOrganizationChange = props.onOrganizationChange;
@@ -45,13 +48,14 @@ class Organization extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get organization: ", error);
+        this.setState({errorMessage: "Couldn't get organization: " + error});
       });
   }
 
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="organization-header">
           <h1>
             {this.state.organization.name}

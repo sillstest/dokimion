@@ -58,12 +58,16 @@ public class UserResource extends BaseResource<User> {
 
     @Override
     protected BaseService<User> getService() {
+System.out.println("UserResource::getService - service: " + service);
+System.out.flush();
         return service;
     }
 
     @GET
     @Path("/{login}")
     public User getUser(@PathParam("login") String login) {
+System.out.println("UserResource::getUser - login: " + login);
+System.out.flush();
         return service.findOne(getSession(), null, login);
     }
 
@@ -135,8 +139,11 @@ public class UserResource extends BaseResource<User> {
     public User createUser(User user){
 
         
-	System.out.println("UserResource: createUser: " + user);
+	System.out.println("UserResource::createUser - " + user);
 	System.out.flush();
+
+        System.out.println("UserResource::createUser: session - " + getSession());
+        System.out.flush();
 
         return service.save(getSession(), null, user);
     }
@@ -184,6 +191,11 @@ public class UserResource extends BaseResource<User> {
         Session session = authProvider.doAuth(request, response);
         System.out.println("UserResource.login - session: " + session);
         System.out.println("UserResource.login - session.person: " + session.getPerson());
+
+        List<String> roles = session.getPerson().getRoles();
+        for ( String role : roles )
+        System.out.println("role: " + role);
+
         System.out.flush();
 
         return session;
@@ -256,7 +268,13 @@ public class UserResource extends BaseResource<User> {
     @GET
     @Path("/users")
     public Set<String> getUsers(){
-        return authProvider.getAllUsers(request);
+        Set<String> users = authProvider.getAllUsers(request);
+System.out.println("UserResource::getUsers");
+for (String user : users) {
+System.out.println("user: " + user);
+System.out.flush();
+}
+        return users;
     }
 
     @GET

@@ -45,6 +45,12 @@ public class ProjectService extends BaseService<Project> {
     }
 
     public Project createProject(Session user, Project entity) {
+System.out.println("ProjectService::createProject - entity: " + entity);
+System.out.flush();
+System.out.println("ProjectService::createProject - id: " + entity.getId());
+System.out.flush();
+System.out.println("ProjectService::createProject - rep exists: " + repository.exists(getCurrOrganizationId(user), null, entity.getId()));
+System.out.flush();
         if (entity.getId() != null && repository.exists(getCurrOrganizationId(user), null, entity.getId())) {
             throw new EntityValidationException(format("Project with id %s already exists", entity.getId()));
         }
@@ -54,7 +60,7 @@ public class ProjectService extends BaseService<Project> {
     @Override
     public List<Project> findFiltered(Session session, String projectId, Filter filter) {
         return getRepository().find(getCurrOrganizationId(session), projectId, filter).stream().filter(
-                project -> session.isIsAdmin() || isUserOrganizationAdmin(session) ||  
+                project -> session.isIsAdmin() || isRoleAdmin(session) || isUserOrganizationAdmin(session) ||  
                         project.getReadWriteGroups().stream().anyMatch(session.getPerson().getGroups()::contains) ||
                         project.getReadWriteUsers().stream().anyMatch(session.getPerson().getLogin()::equals)
         ).collect(toList());
@@ -75,11 +81,18 @@ public class ProjectService extends BaseService<Project> {
 
     @Override
     protected boolean userCanCreate(Session session, String projectId, Project project){
+System.out.println("ProjectService::userCanCreate - session: " + session);
+System.out.flush();
+System.out.println("ProjectService::userCanCreate - projectId: " + projectId);
+System.out.flush();
+System.out.println("ProjectService::userCanCreate - project: " + project);
+System.out.flush();
+
         if (!organizationsEnabled){
             return super.userCanCreate(session, projectId, project);
         }
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
-        return session.isIsAdmin() || (organization != null && organization.getAdmins().contains(session.getPerson().getLogin()));
+        return session.isIsAdmin() || isRoleAdmin(session) || (organization != null && organization.getAdmins().contains(session.getPerson().getLogin()));
     }
 
 }

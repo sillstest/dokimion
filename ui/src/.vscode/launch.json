@@ -8,10 +8,9 @@
         "skipFiles": [
             "<node_internals>/**"
         ],
-
         "env": {
             "NODE_OPTIONS": "--openssl-legacy-provider",
-        }
+        },
 
     }
     ]

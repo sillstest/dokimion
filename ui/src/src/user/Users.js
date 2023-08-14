@@ -13,7 +13,7 @@ class Users extends SubComponent {
       limit: 20,
       orderby: "firstName",
       orderdir: "ASC",
-      includedFields: "firstName,lastName,login,id",
+      includedFields: "firstName,lastName,login,id,email,role",
     },
     pager: {
       total: 0,

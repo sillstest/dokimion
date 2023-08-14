@@ -2,6 +2,7 @@ import React from "react";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import $ from "jquery";
@@ -15,6 +16,7 @@ class TestSuites extends SubComponent {
     testSuites: [],
     testSuitesToDisplay: [],
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -40,7 +42,7 @@ class TestSuites extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get testsuites: ", error);
+        this.setState({errorMessage: "Couldn't get testsuites: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -75,13 +77,14 @@ class TestSuites extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't delete testsuite: ", error);
+        this.setState({errorMessage: "Couldn't delete testsuite: " + error});
       });
   }
 
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="row">
           <form className="col-sm-5">
             <div class="form-group">

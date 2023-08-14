@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCogs } from "@fortawesome/free-solid-svg-icons";
-import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
@@ -26,7 +25,7 @@ class Projects extends Component {
         this.setState(newState);
       })
       .catch(error => {
-	this.setState({errorMessage: "Couldn't get projects: " + error.message});
+	this.setState({errorMessage: "Couldn't get projects: " + error});
         // eslint-disable-next-line react/no-direct-mutation-state
         this.state.loading = false;
         this.setState(this.state);
@@ -44,7 +43,7 @@ class Projects extends Component {
         {(this.state.projects || []).length == 0 && (
             <div class="alert alert-light center-text" role="alert">
               You do not have any projects yet <br/>
-              Ask your admin to grant you permission or <Link to={"/projects/new"}>create a new one</Link>
+              Ask your admin to grant you permission to access a project.
             </div>
         )}
 
