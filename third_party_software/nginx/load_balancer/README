@@ -1,0 +1,6 @@
+
+nginx 1.14.2 - http://nginx.org/en/download.html
+
+Reason for using version 1.14.2 - supports 3rd party module for "sticky" option
+
+

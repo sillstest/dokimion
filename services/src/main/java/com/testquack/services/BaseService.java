@@ -83,24 +83,36 @@ public abstract class BaseService<E extends Entity> {
     }
 
     public E save(Session user, String projectId, E entity){
+System.out.println("BaseService::save 1 - session: " + user);
+System.out.flush();
         if (!userCanSave(user, projectId, entity)){
+System.out.println("user CANNOT save: " + user);
+System.out.flush();
             throw new EntityAccessDeniedException(
                     format("User %s can't save entity %s", user.getPerson().getLogin(), entity.getId())
             );
         }
+System.out.println("user CAN save: " + user);
+System.out.flush();
         return isEmpty(entity.getId()) ?
                 create(user, projectId, entity) :
                 update(user, projectId, entity, (origEnt, newEnt) -> newEnt);
     }
 
     public Collection<E> save(Session user, String projectId, Collection<E> entities){
+System.out.println("BaseService::save 2 - session: " + user);
+System.out.flush();
         if (!userCanSave(user, projectId, entities)){
+System.out.println("user CANNOT save: " + user);
+System.out.flush();
             throw new EntityAccessDeniedException(
                     format("User %s can't save entities %s",
                             user.getPerson().getLogin(),
                             entities.stream().map(obj -> obj == null ? "null" : obj.toString()).collect(joining(", ")))
             );
         }
+System.out.println("user CAN save: " + user);
+System.out.flush();
         return getRepository().save(getCurrOrganizationId(user), projectId, entities);
     }
 
@@ -132,9 +144,16 @@ public abstract class BaseService<E extends Entity> {
 
     }
     protected boolean userCanReadProject(Session session, String projectId){
-        if (session.isIsAdmin()){
+System.out.println("BaseService:userCanReadProject - session.person: " + session.getPerson());
+System.out.println("BaseService:userCanReadProject - session.isIsAdmin: " + session.isIsAdmin());
+System.out.flush();
+        if (isAdmin(session)) {
             return true;
         }
+        
+System.out.println("BaseService::userCanReadProject - role != Admin");
+System.out.flush();
+
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
         if (!isUserInOrganization(session, organization)){
             return false;
@@ -151,19 +170,23 @@ public abstract class BaseService<E extends Entity> {
 
     }
     protected boolean userCanSave(Session session, String projectId, E entity){
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+System.out.println("BaseService::userCanSave 1 - session: " + session);
+System.out.flush();
+        return isAdmin(session)|| userCanUpdateProject(session, projectId);
     }
     protected boolean userCanSave(Session session, String projectId, Collection<E> entities) {
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+System.out.println("BaseService::userCanSave 2 - session, role: " + session);
+System.out.flush();
+        return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
     protected boolean userCanDelete(Session session, String projectId, String id){
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+        return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
     protected boolean userCanCreate(Session session, String projectId, E entity){
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+        return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
     protected boolean userCanUpdate(Session session, String projectId, E entity){
-        return session.isIsAdmin() || userCanUpdateProject(session, projectId);
+        return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
 
     protected void beforeCreate(Session session, String projectId, E entity){
@@ -210,11 +233,21 @@ public abstract class BaseService<E extends Entity> {
     }
 
     protected E create(Session session, String projectId, E entity){
+System.out.println("BaseService::create - session: " + session);
+System.out.println("BaseService::create - projectId: " + projectId);
+System.out.println("BaseService::create - entity: " + entity);
+System.out.flush();
+
         beforeCreate(session, projectId, entity);
+System.out.println("BaseService::create - after beforeCreate call");
+System.out.flush();
+
         if (!userCanCreate(session, projectId, entity)){
             throw new EntityAccessDeniedException(getAccessDeniedMessage(session, entity, "CREATE"));
         }
+System.out.println("BaseService::create - after userCanCreate call");
         entity = doSave(session, projectId, entity);
+System.out.println("BaseService::create - after doSave call");
         afterCreate(session, projectId, entity);
         return entity;
     }
@@ -325,4 +358,28 @@ public abstract class BaseService<E extends Entity> {
             return organization.getAdmins().stream().anyMatch(session.getPerson().getLogin()::equals);
         } return false;
     }
+
+    protected boolean isAdmin(Session session)
+    {
+       return session.isIsAdmin() || isRoleAdmin(session);
+    }
+
+    protected boolean isRoleAdmin(Session session)
+    {
+System.out.println("BaseService::isRoleAdmin - session: " + session);
+System.out.flush();
+
+       List<String> roles = session.getPerson().getRoles();
+
+       for (String role : roles)
+       {
+System.out.println("role: " + role);
+System.out.flush();
+          if (role.equals("Admin")) {
+             return true;
+          }
+       }
+       return false;
+    }
+
 }

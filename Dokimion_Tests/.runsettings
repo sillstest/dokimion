@@ -7,7 +7,7 @@
 		<Parameter name="Password" value="Tester1!!!" />
 		<Parameter name="InvalidUser" value="Test" />
 		<Parameter name="InvalidPassword" value="Not a valid password" />
-		<Parameter name="DisplayUserName" value="Tester Tester" />
+		<Parameter name="DisplayUserName" value="Tester" />
 		<Parameter name="TestManagerProject" value="Dokimion" />
 		<Parameter name="Url" value="http://dokimion4.psonet" />
 	</TestRunParameters>

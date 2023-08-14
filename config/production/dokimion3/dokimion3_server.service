@@ -1,0 +1,30 @@
+[Unit]
+Description=Dokimion Server #3
+Documentation=
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=dokimion
+Group=dokimion
+Environment="SERVER_NO=3"
+ExecStart=/home/dokimion/bin/startup_dokimion_server.sh $SERVER_NO
+PIDFile=/run/dokimion/dokimion_server_3.pid
+# file size
+LimitFSIZE=infinity
+# cpu time
+LimitCPU=infinity
+# virtual memory size
+LimitAS=infinity
+# open files
+LimitNOFILE=64000
+# processes/threads
+LimitNPROC=64000
+# locked memory
+LimitMEMLOCK=infinity
+# total threads (user+kernel)
+TasksMax=infinity
+TasksAccounting=false
+
+[Install]
+WantedBy=multi-user.target

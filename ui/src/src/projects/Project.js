@@ -8,6 +8,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCogs } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
+import ControlledPopup from '../common/ControlledPopup';
+
 class Project extends SubComponent {
   constructor(props) {
     super(props);
@@ -18,6 +20,7 @@ class Project extends SubComponent {
         description: "",
         allowedGroups: [],
       },
+      errorMessage: "",
     };
     this.getProject = this.getProject.bind(this);
     this.onProjectChange = props.onProjectChange;
@@ -46,13 +49,14 @@ class Project extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get project: ", error);
+        this.setState({errorMessage: "Couldn't get project: " + error});
       });
   }
 
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="project-header">
           <h1>
             {this.state.project.name}

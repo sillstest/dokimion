@@ -21,6 +21,7 @@
                     <xs:element name="lastName" type="xs:string"/>
                     <xs:element name="middleName" type="xs:string"/>
                     <xs:element name="email" type="xs:string"/>
+                    <xs:element name="role" type="xs:string"/>
                     <xs:element name="token" type="xs:string"/>
                     <xs:element name="groups" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="passwordChangeRequired" type="xs:boolean"/>
@@ -36,7 +37,6 @@
         <xs:restriction base="xs:string">
             <xs:enumeration value="ADMIN"/>
             <xs:enumeration value="USER"/>
-            <xs:enumeration value="GUEST"/>
         </xs:restriction>
     </xs:simpleType>
 

@@ -8,6 +8,7 @@ import LauncherForm from "../launches/LauncherForm";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
 class LaunchForm extends SubComponent {
@@ -31,6 +32,7 @@ class LaunchForm extends SubComponent {
       restart: props.restart || false,
       failedOnly: props.failedOnly || false,
       loading: false,
+      errorMessage: "",
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -75,7 +77,7 @@ class LaunchForm extends SubComponent {
       .catch(error => {
         this.state.loading = false;
         this.setState(this.state);
-        Utils.onErrorMessage("Couldn't save launch: ", error);
+        this.setState({errorMessage: "Couldn't save launch: " + error});
       });
     event.preventDefault();
   }
@@ -101,7 +103,7 @@ class LaunchForm extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get project: ", error);
+        this.setState({errorMessage: "Couldn't get project: " + error});
       });
 
     Backend.get("launcher/descriptors")
@@ -110,7 +112,7 @@ class LaunchForm extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get launcher descriptors: ", error);
+        this.setState({errorMessage: "Couldn't get launcher descriptors: " + error});
       });
   }
 
@@ -245,6 +247,7 @@ class LaunchForm extends SubComponent {
 
     return (
       <div className="modal-dialog" role="document">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Create Launch</h5>

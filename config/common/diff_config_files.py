@@ -13,8 +13,8 @@ VM_common_configFiles = [
    [ "nginx.conf",            "/etc/nginx"               ]
 ]
 
-VM_quack_configFiles = [
-   [ "quack/config/production/VM_quack"                  ],
+VM_dokimion_configFiles = [
+   [ "dokimion/config/production/dokimion"                  ],
    [ "load_balancer.conf",    "/etc/nginx/conf.d"        ]
 ]
 
@@ -79,7 +79,7 @@ def main():
     hostname = platform.node()
 
     # diff quack files
-    if "quack" == hostname:
+    if "dokimion" == hostname:
        midDir = VM_quack_configFiles[0][0]
 
        for i in range(len(VM_quack_configFiles)-1):

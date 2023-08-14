@@ -4,11 +4,13 @@ import { Link } from "react-router-dom";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
+import ControlledPopup from "../common/ControlledPopup";
 
 class LaunchesWidget extends SubComponent {
   state = {
     launches: [],
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -44,7 +46,7 @@ class LaunchesWidget extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get launch: ", error);
+        this.setState({errorMessage: "Couldn't get launch: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -53,6 +55,7 @@ class LaunchesWidget extends SubComponent {
   getProgressBar(launch) {
     return (
       <div class="progress">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div
           class="progress-bar progress-bar-striped"
           role="progressbar"

@@ -6,6 +6,7 @@ import LaunchesByStatusesPieWidget from "../launches/LaunchesByStatusesPieWidget
 import LaunchesByUsersPieWidget from "../launches/LaunchesByUsersPieWidget";
 import { FadeLoader } from "react-spinners";
 import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
 class LaunchesStatisticsOverview extends SubComponent {
@@ -16,6 +17,7 @@ class LaunchesStatisticsOverview extends SubComponent {
       },
     },
     loading: true,
+    errorMessage: "",
   };
 
   constructor(props) {
@@ -38,7 +40,7 @@ class LaunchesStatisticsOverview extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't get launch statistics: ", error);
+        this.setState({errorMessage: "Couldn't get launch statistics: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -47,6 +49,7 @@ class LaunchesStatisticsOverview extends SubComponent {
   render() {
     return (
       <div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
         </div>

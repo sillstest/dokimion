@@ -49,12 +49,12 @@ public class UserService extends BaseService<User> {
     }
 
     protected boolean userCanSave(Session session, String login) {
-        return session.isIsAdmin() || login.equals(session.getPerson().getLogin());
+        return isAdmin(session) || login.equals(session.getPerson().getLogin());
     }
 
     @Override
     protected boolean userCanSave(Session session, String projectId, Collection<User> entities) {
-        return session.isIsAdmin();
+        return isAdmin(session);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class UserService extends BaseService<User> {
 
     @Override
     protected boolean userCanCreate(Session session, String projectId, User entity) {
-        return session.isIsAdmin();
+        return isAdmin(session);
     }
 
     @Override
@@ -75,7 +75,18 @@ public class UserService extends BaseService<User> {
 
     @Override
     public User findOne(Session session, String projectId, String id) {
-        return cleanUserSesitiveData(super.findOne(session, projectId, id));
+
+System.out.println("UserService.findOne - projectId, id: " + projectId + "," + id);
+System.out.println("UserService.findOne - session: " + session);
+System.out.flush();
+
+        //return cleanUserSesitiveData(super.findOne(session, projectId, id));
+        User user = cleanUserSesitiveData(super.findOne(session, projectId, id));
+
+System.out.println("UserService.findOne - user: " + user);
+System.out.flush();
+
+        return user;
     }
 
     @Override
@@ -134,7 +145,13 @@ public class UserService extends BaseService<User> {
     }
 
     public List<User> findAll() {
-        return StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
+        List<User> usersList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
+        for (User user : usersList) {
+           System.out.println("UserService.findAll() - user: " + user);
+           System.out.flush();
+        }
+        return usersList;
+        //return StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
     }
 
     public List<User> suggestUsers(String organizationId, String literal) {

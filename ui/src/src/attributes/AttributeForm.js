@@ -2,7 +2,7 @@
 import React, { Component } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
-import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
 class AttributeForm extends Component {
@@ -10,6 +10,7 @@ class AttributeForm extends Component {
     super(props);
     this.state = {
       attribute: props.attribute,
+      errorMessage: "",
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -51,7 +52,7 @@ class AttributeForm extends Component {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't save attributes: ", error);
+        this.setState({errorMessage: "Couldn't save attributes: " + error});
       });
     event.preventDefault();
   }
@@ -68,7 +69,7 @@ class AttributeForm extends Component {
         this.setState(this.state);
       })
       .catch(error => {
-        Utils.onErrorMessage("Couldn't remove attribute: ", error);
+        this.setState({errorMessage: "Couldn't remove attribute: " + error});
       });
     event.preventDefault();
   }
@@ -94,6 +95,7 @@ class AttributeForm extends Component {
   render() {
     return (
       <div className="modal-dialog" role="document">
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title" id="editAttributeLabel">

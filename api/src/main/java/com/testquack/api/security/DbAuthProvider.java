@@ -1,5 +1,6 @@
 package com.testquack.api.security;
 
+import com.testquack.api.utils.MongoDBInterface;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
 import com.testquack.services.UserService;
@@ -33,7 +34,14 @@ public class DbAuthProvider extends BaseDbAuthProvider {
 
     @Override
     protected Person getAdminPerson(String login, String password) {
+System.out.println("DbAuthProvider.getAdminPerson() - login, password: " + login + ", " + password);
+System.out.flush();
         if (!isEmpty(login) && !isEmpty(password) && login.equals(adminLogin) && password.equals(adminPassword)){
+
+System.out.println("DbAuthProvider.getAdminPerson() - admin validated successfully");
+System.out.flush();
+
+
             return new Person().withLogin(adminLogin).withFirstName("admin");
         }
         throw new UnauthorizedException();
@@ -49,7 +57,13 @@ public class DbAuthProvider extends BaseDbAuthProvider {
 
     @Override
     protected Person findPersonByLogin(String login) {
-        return convertUser(userService.findOne(null, new Filter().withField("login", login)));
+        Person person = convertUser(userService.findOne(null, new Filter().withField("login", login)));
+        System.out.println("DbAuthProvider.findPersonByLogin - person: " + person);
+        System.out.flush();
+        //return convertUser(userService.findOne(null, new Filter().withField("login", login)));
+
+
+        return person;
     }
 
     @Override
@@ -59,9 +73,18 @@ public class DbAuthProvider extends BaseDbAuthProvider {
 
     @Override
     public Set<String> getAllUsers(HttpServletRequest request) {
-        return userService.findAll().stream().
+        /*return userService.findAll().stream().
+                map(User::getLogin).
+                collect(Collectors.toSet()); */
+        Set<String> usersSet = userService.findAll().stream().
                 map(User::getLogin).
                 collect(Collectors.toSet());
+        for (String user : usersSet) {
+           System.out.println("UserResource.getAllUsers() - user: " + user);
+           System.out.flush();
+        }
+
+        return usersSet;
     }
 
     @Override
@@ -84,11 +107,19 @@ public class DbAuthProvider extends BaseDbAuthProvider {
     }
 
     private Person convertUser(User user){
+
+        MongoDBInterface mongoDBInterface = new MongoDBInterface();
+        String role = mongoDBInterface.getRole(user.getLogin());
+
+        System.out.println("DBAuthProvider.convertUser - login, role: " + user.getLogin() + ", " + role);
+        System.out.flush();
+
         return new Person().withFirstName(user.getFirstName()).
                 withLastName(user.getLastName()).
                 withLogin(user.getLogin()).
                 withActive(true).
                 withDefaultPassword(user.isPasswordChangeRequired()).
-                withPassword(user.getPassword());
+                withPassword(user.getPassword()).
+                withRoles(user.getRole());
     }
 }

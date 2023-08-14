@@ -223,9 +223,19 @@ export function getDatepickerTime(timeMillis) {
 }
 
 export function isUserOwnerOrAdmin(userSession, createdById) {
-  return (
-    userSession && (userSession.isAdmin || userSession.person.login === createdById)
-  );
+    if (userSession)
+    {
+       if (userSession.isAdmin)
+       {
+          return (true);
+       } else  {
+          if ((userSession.person.login === createdById) || (userSession.person.roles[0] == 'Admin'))
+          {
+             return (true);
+          }
+       }
+    }
+    return (false);
 }
 
 export function onErrorMessage(message, error) {
