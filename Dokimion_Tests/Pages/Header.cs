@@ -9,7 +9,7 @@ namespace Dokimion.Pages
     public class Header
     {
         public static IWebLocator UserInfo => L(
-                    "Display User Name",
+                    "UserNameOnHeader",
                     By.XPath("//a[@id = 'bd-login']"));
 
         public static IWebLocator ProfileLink => L("Profile Link", By.XPath("//a[contains(text(),'Profile')]"));
