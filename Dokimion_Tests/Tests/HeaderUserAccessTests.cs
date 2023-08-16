@@ -5,6 +5,7 @@ using Boa.Constrictor.Selenium;
 using OpenQA.Selenium.Chrome;
 using FluentAssertions;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Interactions;
 
 namespace Dokimion.Tests
 {
@@ -12,6 +13,9 @@ namespace Dokimion.Tests
     {
         private IActor Actor;
         UserActions userActions;
+        Actions actions;
+        ChromeDriver driver;
+
 
         [OneTimeSetUp]
         public void Setup()
@@ -22,8 +26,10 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            ChromeDriver driver = new ChromeDriver(userActions.GetChromeOptions());
+            driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
+            actions = new Actions(driver);
+
 
             ICapabilities capabilities = driver.Capabilities;
             var browserName = capabilities.GetCapability("browserName");
@@ -45,6 +51,8 @@ namespace Dokimion.Tests
             }
             catch (Exception ex)
             {
+                //Open Dokimion again 
+                Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
                 Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput).ForAnAdditional(3));
                 count++;
                 userActions.LogConsoleMessage("Unable to load page : retried with addtionatime on " + count + " " + ex.ToString());
@@ -93,8 +101,15 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                Actor.AttemptsTo(Refresh.Browser());
-                Actor.AttemptsTo(Logout.For());
+                //Added actions to perform logout to remove flakyness
+                actions.ClickAndHold(Header.UserInfo.FindElement(driver));
+                actions.SendKeys(Keys.Down + Keys.Down);
+                actions.Build();
+                actions.Perform();
+                actions.Click(Header.LogoutLink.FindElement(driver)).Perform();
+
+                //Actor.AttemptsTo(Refresh.Browser());
+                // Actor.AttemptsTo(Logout.For());
             }
         }
 
@@ -122,7 +137,8 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                Actor.AttemptsTo(Refresh.Browser());
+                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+               // Actor.AttemptsTo(Refresh.Browser());
                 Actor.AttemptsTo(Logout.For());
             }
         }
