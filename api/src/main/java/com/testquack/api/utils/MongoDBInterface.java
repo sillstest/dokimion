@@ -37,7 +37,7 @@ import java.util.Scanner;
 public class MongoDBInterface  {
 
    String replicaSetProperty = "mongo.replicaSet=";
-   String mongoUsernameProperty = "mongo.user=";
+   String mongoUsernameProperty = "mongo.username=";
    String mongoPasswdProperty = "mongo.password=";
    String mongoDBnameProperty = "mongo.dbname=";
    String replicaSet, mongoUsername, mongoPasswd, mongoDBname;
@@ -85,7 +85,7 @@ public class MongoDBInterface  {
 			  }).
 	                  collect(Collectors.toList());
 
-      MongoCredential credential = MongoCredential.createCredential(mongoUsername, "admin",
+      MongoCredential credential = MongoCredential.createCredential(mongoUsername, mongoDBname,
                                    mongoPasswd.toCharArray());
 
       MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
@@ -120,7 +120,7 @@ public class MongoDBInterface  {
    private String getUserCollectionAttribute(String loginToFind, String userAttribute)
    {
       MongoClient mongoClient = getMongoClient();
-      MongoDatabase db = mongoClient.getDatabase("test");
+      MongoDatabase db = mongoClient.getDatabase(mongoDBname);
 
       MongoCollection<Document> collection = db.getCollection("users");
 
@@ -174,8 +174,8 @@ public class MongoDBInterface  {
 
          System.out.println("MongoDBInterface updatePassword");
 
-         MongoClient mongoClient = getMongoClient();
-         MongoDatabase db = mongoClient.getDatabase("test");
+	 MongoClient mongoClient = getMongoClient();
+	 MongoDatabase db = mongoClient.getDatabase(mongoDBname);
 
 	 updateOne(loginToFind, password, db);
 
