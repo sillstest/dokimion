@@ -2,6 +2,7 @@ package com.testquack.api.utils;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCredential;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -36,27 +37,43 @@ import java.util.Scanner;
 public class MongoDBInterface  {
 
    String replicaSetProperty = "mongo.replicaSet=";
-   String replicaSet;
-   String quackPropertiesFileName="/etc/dokimion/quack.properties";
+   String mongoUsernameProperty = "mongo.user=";
+   String mongoPasswdProperty = "mongo.password=";
+   String mongoDBnameProperty = "mongo.dbname=";
+   String replicaSet, mongoUsername, mongoPasswd, mongoDBname;
+   String propertiesFilename="/etc/dokimion/quack.properties";
 
    private MongoClient getMongoClient()
    {
       try {
 
-         File myObj = new File(quackPropertiesFileName);
+         // read properties from file
+         File myObj = new File(propertiesFilename);
          Scanner myReader = new Scanner(myObj);
          while (myReader.hasNextLine()) {
 	   String data = myReader.nextLine();
 	   if (data.startsWith(replicaSetProperty)) {
               replicaSet = data.substring(replicaSetProperty.length());
 	   }
+	   if (data.startsWith(mongoUsernameProperty)) {
+              mongoUsername = data.substring(mongoUsernameProperty.length());
+	   }
+	   if (data.startsWith(mongoPasswdProperty)) {
+              mongoPasswd = data.substring(mongoPasswdProperty.length());
+	   }
+	   if (data.startsWith(mongoDBnameProperty)) {
+              mongoDBname = data.substring(mongoDBnameProperty.length());
+	   }
          }
          myReader.close();
       } catch (FileNotFoundException e) {
          System.out.println("File Not Found exception");
       }
-
       System.out.println("getMongoClient - replicaSet: " + replicaSet);
+      System.out.println("getMongoClient - mongoUsername: " + mongoUsername);
+      System.out.println("getMongoClient - mongoPasswd: " + mongoPasswd);
+      System.out.println("getMongoClient - mongoDBname: " + mongoDBname);
+      System.out.flush();
 
       List<ServerAddress> addresses = Stream.of(replicaSet.split(",")).
 		          map(String::trim).
@@ -68,10 +85,14 @@ public class MongoDBInterface  {
 			  }).
 	                  collect(Collectors.toList());
 
+      MongoCredential credential = MongoCredential.createCredential(mongoUsername, "admin",
+                                   mongoPasswd.toCharArray());
+
       MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
 		 .applyToClusterSettings(builder ->
 				 builder.hosts(new ArrayList<>(addresses))
 		 )
+                 .credential(credential)
 		 .applyToConnectionPoolSettings(builder -> 
 				 builder.minSize(10)
 				 .maxSize(100)
