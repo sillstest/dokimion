@@ -6,6 +6,9 @@ using OpenQA.Selenium.Chrome;
 using FluentAssertions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
+using WebDriverManager;
+using WebDriverManager.DriverConfigs.Impl;
+
 
 namespace Dokimion.Tests
 {
@@ -26,6 +29,9 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
+
+            new DriverManager().SetUpDriver(new ChromeConfig());
+
             driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
             actions = new Actions(driver);
