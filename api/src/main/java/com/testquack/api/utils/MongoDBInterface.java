@@ -85,10 +85,24 @@ public class MongoDBInterface  {
 			  }).
 	                  collect(Collectors.toList());
 
-      MongoCredential credential = MongoCredential.createCredential(mongoUsername, mongoDBname,
+      if (mongoUsername == null || mongoUsername.isEmpty()) {
+
+         MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
+		 .applyToClusterSettings(builder ->
+				 builder.hosts(new ArrayList<>(addresses))
+		 )
+		 .applyToConnectionPoolSettings(builder -> 
+				 builder.minSize(10)
+				 .maxSize(100)
+				 .maxWaitTime(8, TimeUnit.MINUTES)
+		);
+         return MongoClients.create(settingsBuilder.build());
+
+      } else {
+         MongoCredential credential = MongoCredential.createCredential(mongoUsername, mongoDBname,
                                    mongoPasswd.toCharArray());
 
-      MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
+         MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
 		 .applyToClusterSettings(builder ->
 				 builder.hosts(new ArrayList<>(addresses))
 		 )
@@ -98,8 +112,10 @@ public class MongoDBInterface  {
 				 .maxSize(100)
 				 .maxWaitTime(8, TimeUnit.MINUTES)
 		);
+         return MongoClients.create(settingsBuilder.build());
 
-      return MongoClients.create(settingsBuilder.build());
+      }
+
 
    }
 
