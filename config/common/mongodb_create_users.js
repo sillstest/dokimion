@@ -11,8 +11,8 @@ db.createUser(
    ]
 })
 
-//use test
-db = db.getSiblingDB('test')
+//use dokimion
+db = db.getSiblingDB('dokimion')
 
 db.createUser(
 {
