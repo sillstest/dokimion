@@ -11,16 +11,23 @@ import com.testquack.beans.TestcaseFilter;
 import com.testquack.launcher.Launcher;
 import com.testquack.services.BaseService;
 import com.testquack.services.LaunchService;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.greatbit.plow.PluginsContainer;
 import ru.greatbit.whoru.jaxrs.Authenticable;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,12 +62,20 @@ public class LaunchResource extends BaseCrudResource<Launch> {
             @ApiParam(value = "Launch TestCase UUID", required = true) @PathParam("testcaseUUID") String testcaseUUID,
             @ApiParam(value = "New Status", required = true) @PathParam("status") LaunchStatus status,
             FailureDetails failureDetails) throws Exception {
+
+System.out.println("updateLaunchTestCaseStatus - launch id: " + launchId);
+System.out.flush();
+
         return service.updateLaunchTestCaseStatus(request, getUserSession(), projectId, launchId, testcaseUUID, status, failureDetails);
     }
 
     @GET
     @Path("/statistics")
     public Map<String, LaunchStatistics> getLaunchesStatistics(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId) throws Exception {
+
+System.out.println("getLaunchesStatistics - project id: " + projectId);
+System.out.flush();
+
         return service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
     }
 
@@ -69,12 +84,20 @@ public class LaunchResource extends BaseCrudResource<Launch> {
     public Collection<LaunchTestcaseStats> getLaunchTestcasesHeatMap(@ApiParam(value = "Project Id", required = true)
                                                                      @PathParam("projectId") String projectId,
                                                                      @QueryParam("statsTopLimit") int statsTopLimit) throws Exception {
+
+System.out.println("getLaunchTestcasesHeatMap - project id: " + projectId);
+System.out.flush();
+
         return service.getTestCasesHeatMap(getUserSession(), projectId, initFilter(request), statsTopLimit);
     }
 
 
     @Override
     public Launch create(String projectId, Launch launch) {
+
+System.out.println("create - project id, launch: " + projectId + ", " + launch);
+System.out.flush();
+
         if (launch.getEnvironments().isEmpty()) {
             return create(projectId, Collections.singletonList(launch)).get(0);
         }
@@ -126,4 +149,6 @@ public class LaunchResource extends BaseCrudResource<Launch> {
             Launch launch) {
         return create(projectId, service.cleanLaunchForRestart(getUserSession(), projectId, launch, failedOnly));
     }
+
 }
+

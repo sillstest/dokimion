@@ -47,8 +47,7 @@ public abstract class CommonRepositoryImpl<E extends EntityPreview> implements C
     @Override
     public void delete(String organizationId, String projectId, String entityId) {
         E entity = findOne(organizationId, projectId, entityId);
-        entity.setDeleted(true);
-        mongoOperations.save(entity, getCollectionName(organizationId, projectId));
+        mongoOperations.remove(entity, getCollectionName(organizationId, projectId));
     }
 
     public static String getCollectionName(String organizationId, String projectId, Class clazz) {
@@ -82,5 +81,8 @@ public abstract class CommonRepositoryImpl<E extends EntityPreview> implements C
         Query query = DBUtils.getQuery(getEntityClass(), filter);
         Update update = new Update().set("deleted", true);
         mongoOperations.updateMulti(query, update, getCollectionName(organizationId, projectId));
+        //mongoOperations.remove(entity, getCollectionName(organizationId, projectId));
+System.out.println("CommonRepositoryImpl - end of delete without entity");
+System.out.flush();
     }
 }
