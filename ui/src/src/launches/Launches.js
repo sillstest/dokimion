@@ -5,8 +5,9 @@ import { Link } from "react-router-dom";
 import Pager from "../pager/Pager";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
+import Button from "@material-ui/core/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlug } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faPlug } from "@fortawesome/free-solid-svg-icons";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 import DatePicker from "react-date-picker";
@@ -43,6 +44,7 @@ class Launches extends SubComponent {
     this.handleFromDateFilterChange = this.handleFromDateFilterChange.bind(this);
     this.handleToDateFilterChange = this.handleToDateFilterChange.bind(this);
     this.getLauncherDescriptors = this.getLauncherDescriptors.bind(this);
+    this.deleteLaunch = this.deleteLaunch.bind(this);
   }
 
   componentDidMount() {
@@ -73,6 +75,16 @@ class Launches extends SubComponent {
         this.setState({errorMessage: "Couldn't get launches: " + error});
         this.state.loading = false;
         this.setState(this.state);
+      });
+  }
+
+  deleteLaunch(launchId) {
+    Backend.delete("launcher/" + this.props.match.params.project + "/" + launchId)
+      .then(response => {
+        this.getLaunches();
+      })
+      .catch(error => {
+        this.setState({errorMessage: "Couldn't delete launch: " + error});
       });
   }
 
@@ -185,6 +197,7 @@ class Launches extends SubComponent {
     );
   }
 
+
   render() {
     return (
       <div className="row">
@@ -283,6 +296,7 @@ class Launches extends SubComponent {
                 <th scope="col">Created</th>
                 <th scope="col">Started</th>
                 <th scope="col">Finished</th>
+                <th scope="col">Remove</th>
                 <th></th>
               </tr>
             </thead>
@@ -298,6 +312,11 @@ class Launches extends SubComponent {
                       <td>{Utils.timeToDate(launch.createdTime)}</td>
                       <td>{Utils.timeToDate(launch.startTime)}</td>
                       <td>{Utils.timeToDate(launch.finishTime)}</td>
+                      <td>
+                        <button onClick={() => this.deleteLaunch(launch.id)}>
+                          <i class="bi-trash" aria-hidden="true"></i>
+                        </button>
+                      </td>
                       <td>
                         {launch.launcherConfig && launch.launcherConfig.launcherId && <FontAwesomeIcon icon={faPlug} />}
                       </td>
