@@ -43,6 +43,7 @@
                         <arguments>
                             <argument>install</argument>
                             <argument>--frozen-lockfile</argument>
+                            <argument>--network-timeout 300000</argument>
                         </arguments>
                         <workingDirectory>src</workingDirectory>
                     </configuration>
