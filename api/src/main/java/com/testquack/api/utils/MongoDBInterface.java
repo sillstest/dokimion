@@ -1,5 +1,7 @@
 package com.testquack.api.utils;
 
+import com.testquack.dal.aes;
+
 import com.mongodb.client.MongoCollection;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
@@ -87,6 +89,9 @@ public class MongoDBInterface  {
 
       if (mongoUsername == null || mongoUsername.isEmpty()) {
 
+         System.out.println("MongoDBInterface - mongoUsername = null");
+         System.out.flush();
+
          MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
 		 .applyToClusterSettings(builder ->
 				 builder.hosts(new ArrayList<>(addresses))
@@ -99,8 +104,15 @@ public class MongoDBInterface  {
          return MongoClients.create(settingsBuilder.build());
 
       } else {
-         MongoCredential credential = MongoCredential.createCredential(mongoUsername, mongoDBname,
-                                   mongoPasswd.toCharArray());
+
+         final String secretKey = "al;jf;lda1_+_!!()!!!!";
+         String decryptedPasswd = aes.decrypt(mongoPasswd, secretKey) ;
+
+         System.out.println("MongoDBInterface - decryptedPasswd: " + decryptedPasswd);
+         System.out.flush();
+
+         MongoCredential credential = MongoCredential.createCredential(mongoUsername, "admin",
+                                   decryptedPasswd.toCharArray());
 
          MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
 		 .applyToClusterSettings(builder ->
