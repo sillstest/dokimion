@@ -108,7 +108,9 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
                 //Added actions to perform logout to remove flakyness
-                actions.Pause(TimeSpan.FromSeconds(1)).Perform();
+                Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
+
+               // actions.Pause(TimeSpan.FromSeconds(1)).Perform();
                 actions.ClickAndHold(Header.UserInfo.FindElement(driver));
                 actions.SendKeys(Keys.Down + Keys.Down);
                 actions.Build();
@@ -133,6 +135,7 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click on right side on User link");
+                Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
                 Actor.AttemptsTo(Click.On(Header.UserInfo));
 
                 userActions.LogConsoleMessage("Click on Profile link");
