@@ -159,7 +159,10 @@ def main():
               destDir = destDir.replace("sites-available", "sites-enabled");
               if os.path.exists(destDir) == False:
                  os.mkdir(destDir);
-              os.symlink( srcPathname, os.path.join(destDir, configFile) );
+              try:
+                 os.symlink( srcPathname, os.path.join(destDir, configFile) );
+              except FileExistsError:
+                 pass;
 
 
 

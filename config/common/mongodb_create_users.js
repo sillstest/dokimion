@@ -1,4 +1,3 @@
-//use admin
 db = db.getSiblingDB('admin')
 
 db.createUser(
@@ -11,13 +10,12 @@ db.createUser(
    ]
 })
 
-//use dokimion
-db = db.getSiblingDB('dokimion')
+db = db.getSiblingDB('admin')
 
 db.createUser(
 {
    user: "dokimion",
-   pwd: "$2b$12$XouFVDvizUZOgqkKQlwG2.4.Cmdc1025smEd5rOGoUWDC3IzZiB1q",
+   pwd: "AZY5gV305EZQxDYp4l4ob4cLiKK7QEnLtP9Hcui5GYg=",
    roles: [
       { role: "userAdmin", db: "dokimion" },
       { role: "readWrite", db: "dokimion" }
