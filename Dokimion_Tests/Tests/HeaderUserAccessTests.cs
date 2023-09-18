@@ -58,7 +58,7 @@ namespace Dokimion.Tests
             catch (Exception ex)
             {
                 //Open Dokimion again 
-                Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
+                //Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
                 Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput).ForAnAdditional(3));
                 count++;
                 userActions.LogConsoleMessage("Unable to load page : retried with addtionatime on " + count + " " + ex.ToString());
@@ -108,6 +108,9 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
                 //Added actions to perform logout to remove flakyness
+                Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
+
+               // actions.Pause(TimeSpan.FromSeconds(1)).Perform();
                 actions.ClickAndHold(Header.UserInfo.FindElement(driver));
                 actions.SendKeys(Keys.Down + Keys.Down);
                 actions.Build();
@@ -132,6 +135,7 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click on right side on User link");
+                Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
                 Actor.AttemptsTo(Click.On(Header.UserInfo));
 
                 userActions.LogConsoleMessage("Click on Profile link");
@@ -162,8 +166,10 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click on left side Projects link");
-                Actor.AttemptsTo(Click.On(Header.ProjectsLink));
-
+                //Actor.AttemptsTo(Click.On(Header.ProjectsLink));
+                actions.Pause(TimeSpan.FromSeconds(1)).Perform();
+                IWebElement projectLink = Header.ProjectsLink.FindElement((IWebDriver)driver);
+                actions.Click(projectLink).Perform();
                 //permission granted only for this project for user (Tester & User : Roopa)
                 userActions.LogConsoleMessage("Verify : All and Dokimion project links are in dropdown");
                 bool allExists = Actor.AskingFor(Appearance.Of(Header.AllLink));
@@ -174,7 +180,7 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
                 Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-               // Actor.AttemptsTo(Refresh.Browser());
+                // Actor.AttemptsTo(Refresh.Browser());
                 Actor.AttemptsTo(Logout.For());
             }
         }

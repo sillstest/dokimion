@@ -1,5 +1,7 @@
 package com.testquack.api.utils;
 
+import com.testquack.dal.aes;
+
 import com.mongodb.client.MongoCollection;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
@@ -85,10 +87,34 @@ public class MongoDBInterface  {
 			  }).
 	                  collect(Collectors.toList());
 
-      MongoCredential credential = MongoCredential.createCredential(mongoUsername, mongoDBname,
-                                   mongoPasswd.toCharArray());
+      if (mongoUsername == null || mongoUsername.isEmpty()) {
 
-      MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
+         System.out.println("MongoDBInterface - mongoUsername = null");
+         System.out.flush();
+
+         MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
+		 .applyToClusterSettings(builder ->
+				 builder.hosts(new ArrayList<>(addresses))
+		 )
+		 .applyToConnectionPoolSettings(builder -> 
+				 builder.minSize(10)
+				 .maxSize(100)
+				 .maxWaitTime(8, TimeUnit.MINUTES)
+		);
+         return MongoClients.create(settingsBuilder.build());
+
+      } else {
+
+         final String secretKey = "al;jf;lda1_+_!!()!!!!";
+         String decryptedPasswd = aes.decrypt(mongoPasswd, secretKey) ;
+
+         System.out.println("MongoDBInterface - decryptedPasswd: " + decryptedPasswd);
+         System.out.flush();
+
+         MongoCredential credential = MongoCredential.createCredential(mongoUsername, "admin",
+                                   decryptedPasswd.toCharArray());
+
+         MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
 		 .applyToClusterSettings(builder ->
 				 builder.hosts(new ArrayList<>(addresses))
 		 )
@@ -98,8 +124,10 @@ public class MongoDBInterface  {
 				 .maxSize(100)
 				 .maxWaitTime(8, TimeUnit.MINUTES)
 		);
+         return MongoClients.create(settingsBuilder.build());
 
-      return MongoClients.create(settingsBuilder.build());
+      }
+
 
    }
 

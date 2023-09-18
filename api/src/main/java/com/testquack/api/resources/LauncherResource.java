@@ -5,22 +5,39 @@ import com.testquack.beans.LauncherConfigDescriptor;
 import com.testquack.beans.Project;
 import com.testquack.launcher.Launcher;
 import com.testquack.services.BaseService;
+import com.testquack.services.LaunchService;
+import com.testquack.api.utils.FilterUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.greatbit.plow.PluginsContainer;
 import ru.greatbit.whoru.jaxrs.Authenticable;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Set;
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import ru.greatbit.plow.PluginsContainer;
+import ru.greatbit.whoru.jaxrs.Authenticable;
 
 import static java.util.stream.Collectors.toList;
 
 @Authenticable
 @Path("/launcher")
 public class LauncherResource extends BaseResource<Project> {
+
+
+    @Autowired
+    private LaunchService service;
 
     @Autowired
     private PluginsContainer pluginsContainer;
@@ -53,4 +70,21 @@ public class LauncherResource extends BaseResource<Project> {
     protected BaseService<Project> getService() {
         throw new UnsupportedOperationException();
     }
+
+    @DELETE
+    @Path("/{projectId}/{launchId}")
+    public Response delete(@PathParam("projectId") String projectId,
+                           @PathParam("launchId") String launchId) {
+
+System.out.println("LauncherResource - delete: projectId, launchId: " + projectId + ", " + launchId);
+System.out.flush();
+
+       service.delete(getUserSession(), projectId, launchId);
+
+System.out.println("LauncherResource - delete: - after service.delete call");
+System.out.flush();
+
+        return Response.ok().build();
+    }
+
 }

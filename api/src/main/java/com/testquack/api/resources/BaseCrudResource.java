@@ -76,7 +76,15 @@ public abstract class BaseCrudResource<E extends Entity> extends BaseResource<E>
     })
     public Response delete(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
             @ApiParam(value = "Id", required = true) @PathParam("id") String id) {
+
+System.out.println("BaseCrudResource:delete - projectId, launchId: " + projectId + ", " + id);
+System.out.flush();
+
         getService().delete(getUserSession(), projectId, id);
+
+System.out.println("BaseCrudResource:delete - after call to service.delete");
+System.out.flush();
+
         return ok().build();
     }
 

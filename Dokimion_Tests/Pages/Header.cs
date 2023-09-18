@@ -19,7 +19,7 @@ namespace Dokimion.Pages
         public static IWebLocator ProfileName => L("Profile Name", By.XPath("//a[contains(text(),'Tester')]"));
 
 
-        public static IWebLocator ProjectsLink => L("Project Link", By.XPath("//*[@id='bd-projects']"));
+        public static IWebLocator ProjectsLink => L("Project Link", By.XPath("//a[@id='bd-projects']"));
 
 
         public static IWebLocator AllLink => L("All Link", By.XPath("//a[contains(text(),'All')]"));

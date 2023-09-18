@@ -1,16 +1,5 @@
-use admin
-
-db.createUser(
-{
-   user: "admin",
-   pwd: passwordPrompt(),
-   roles: [
-      { role: "userAdminAnyDatabase", db: "admin" },
-      { role: "readWriteAnyDatabase", db: "admin" }
-   ]
-})
-
-use dokimion
+//use dokimion
+db = db.getSiblingDB('dokimion')
 
 db.createUser(
 {

@@ -58,6 +58,8 @@ public abstract class BaseService<E extends Entity> {
     }
 
     public List<E> findFiltered(Session session, String projectId, Filter filter){
+System.out.println("BaseService:findFiltered - projectId: " + projectId);
+System.out.flush();
         return userCanReadProject(session, projectId) ?
                 getRepository().find(getCurrOrganizationId(session), projectId, filter).stream()
                         .map(entity -> beforeReturn(session, projectId, entity)).collect(Collectors.toList()) :
@@ -65,6 +67,8 @@ public abstract class BaseService<E extends Entity> {
     }
 
     public E findOneUnfiltered(Session session, String projectId, String id){
+System.out.println("BaseService:findOneUnfiltered - projectId, id: " + projectId + ", " + id);
+System.out.flush();
         E entity = getRepository().findOne(getCurrOrganizationId(session), projectId, id);
         if (entity == null){
             throw new EntityNotFoundException();
@@ -74,6 +78,8 @@ public abstract class BaseService<E extends Entity> {
                     format("User %s can't read entity %s", session.getPerson().getLogin(), id)
             );
         }
+System.out.println("BaseService:findOneUnfiltered - after userCanRead call");
+System.out.flush();
         return entity;
     }
 
@@ -118,16 +124,25 @@ System.out.flush();
 
 
     public void delete(Session session, String projectId, String id){
+System.out.println("BaseService:delete - projectId, id: " + projectId + ", " + id);
+System.out.flush();
         beforeDelete(session, projectId, id);
+System.out.println("BaseService:delete - after beforeDelete");
+System.out.flush();
         if (!userCanDelete(session, projectId, id)){
             throw new EntityAccessDeniedException(
                     format("User %s can't delete entity %s", session.getPerson().getLogin(), id)
             );
         }
+System.out.println("BaseService:delete - after  userCanDelete");
+System.out.flush();
         E entity = findOne(session, projectId, id);
-        entity.setDeleted(true);
-        getRepository().save(getCurrOrganizationId(session), projectId, entity);
+System.out.println("BaseService:delete - after findOne");
+System.out.flush();
+        getRepository().delete(getCurrOrganizationId(session), projectId, entity.getId());
         afterDelete(session, projectId, id);
+System.out.println("BaseService:delete - after afterDelete");
+System.out.flush();
     }
 
     public long count(Session session, String projectId, Filter filter){
@@ -180,6 +195,8 @@ System.out.flush();
         return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
     protected boolean userCanDelete(Session session, String projectId, String id){
+System.out.println("BaseService::userCanDelete - session, projectId, id: " + session + "," + projectId + ", " + id);
+System.out.flush();
         return isAdmin(session) || userCanUpdateProject(session, projectId);
     }
     protected boolean userCanCreate(Session session, String projectId, E entity){
@@ -247,7 +264,7 @@ System.out.flush();
         }
 System.out.println("BaseService::create - after userCanCreate call");
         entity = doSave(session, projectId, entity);
-System.out.println("BaseService::create - after doSave call");
+System.out.println("BaseService::create - after doSave call - entity: " + entity);
         afterCreate(session, projectId, entity);
         return entity;
     }
@@ -283,6 +300,8 @@ System.out.println("BaseService::create - after doSave call");
         beforeSave(session, projectId, entity);
         if (validateEntity(entity)){
             entity = getRepository().save(getCurrOrganizationId(session), projectId, entity);
+System.out.println("BaseService::doSave - entity: " + entity);
+System.out.flush();
             afterSave(session, projectId, entity);
             return entity;
         } else throw new EntityValidationException(getAccessDeniedMessage(session, entity, "SAVE"));
@@ -299,7 +318,11 @@ System.out.println("BaseService::create - after doSave call");
     }
 
     public void delete(Session session, String projectId, Filter filter) {
+System.out.println("BaseService.delete - projectId: " + projectId);
+System.out.flush();
         if (userCanUpdateProject(session, projectId)) {
+System.out.println("BaseService.delete - after call of userCanUpdateProject");
+System.out.flush();
             findFiltered(session, projectId, filter).forEach(entity -> {
                 entity.setDeleted(true);
                 getRepository().save(getCurrOrganizationId(session), projectId, entity);
