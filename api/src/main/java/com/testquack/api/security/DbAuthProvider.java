@@ -86,7 +86,24 @@ public class DbAuthProvider extends BaseDbAuthProvider {
             return authAs(login, response, person);
         } else throw new UnauthorizedException("Incorrect login or password");
     }
-*/
+
+    private Session authAs(String login, HttpServletResponse response, Person person) {
+        if (person.getPasswordExpirationTime() > 0 && System.currentTimeMillis() > person.getPasswordExpirationTime()){
+            throw new UnauthorizedException(format("Temporary password has expired for user %s. Please contact administrator to set a new one.", person.getLogin()));
+        }
+        Session session = (Session) new Session().withId(UUID.randomUUID().toString()).withTimeout(sessionTtl).withName(login).withPerson(person);
+        Session existedSession = sessionProvider.getSessionIfExists(session);
+        if (existedSession == null) {
+            sessionProvider.addSession(session);
+            response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, session.getId(), authDomain, sessionTtl));
+            return session;
+        }
+        else
+            response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, existedSession.getId(), authDomain, sessionTtl));
+        return existedSession;
+    }
+    */
+
 
     @Override
     protected Person getAdminPerson(String login, String password) {
