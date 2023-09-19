@@ -31,6 +31,54 @@ public class DbAuthProvider extends BaseDbAuthProvider {
     protected Person getAdminPerson(String token) {
         return null;
     }
+/*
+
+    @Override
+    public Session authImpl(HttpServletRequest request, HttpServletResponse response) {
+        if (isTokenAccessRequest(request)) {
+            return authByToken(request, response);
+        }
+
+        try {
+            Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
+            if (sid == null || !sessionProvider.sessionExists(sid.getValue())
+                    || !sessionProvider.getSessionById(sid.getValue()).getPerson().getLogin().equals(request.getParameter(PARAM_LOGIN))) {
+                logger.info("No session found. Auth by login/password ip={}", HttpUtils.getRemoteAddr(request, IP_HEADER));
+                return dbAuthByLoginPassword(request, response);
+            } else {
+                logger.info("Updating session for user with ip={}", HttpUtils.getRemoteAddr(request, IP_HEADER));
+                response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, sid.getValue(), authDomain, sessionTtl));
+            }
+            sendRedirect(request, response);
+            return sessionProvider.getSessionById(sid.getValue());
+        } catch (UnauthorizedException e){
+            throw e;
+        } catch (Exception e){
+            logger.error("Can't authenticate user", e);
+            throw new UnauthorizedException(e);
+        }
+    }
+
+    private Session dbAuthByLoginPassword(HttpServletRequest request, HttpServletResponse response) throws NoSuchAlgorithmException {
+        final String login = request.getParameter(PARAM_LOGIN);
+        final String password = request.getParameter(PARAM_PASSWORD);
+
+        Person person;
+        if (login.equalsIgnoreCase(this.adminLogin) && getMd5(password, login).equals(getMd5(this.adminPassword, this.adminLogin))) {
+            person = getAdminPerson(login, password);
+        } else {
+            person = findPersonByLogin(login);
+        }
+
+        if (person!= null
+                && login.equals(person.getLogin())
+                && person.isActive()
+                && getMd5(password, login).equals(person.getPassword())){
+
+            return authAs(login, response, person);
+        } else throw new UnauthorizedException("Incorrect login or password");
+    }
+    */
 
     @Override
     protected Person getAdminPerson(String login, String password) {
