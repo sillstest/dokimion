@@ -2,6 +2,7 @@ package com.testquack.api.resources;
 
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.Entity;
+import com.testquack.beans.Event;
 import com.testquack.beans.Filter;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -39,7 +40,21 @@ public abstract class BaseCrudResource<E extends Entity> extends BaseResource<E>
     })
     public E findOne(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
             @ApiParam(value = "Entity Id", required = true) @PathParam("id") String id) {
-        return getService().findOne(getUserSession(), projectId, id);
+System.out.println("BaseCrudResource::findOne() - projectId: " + projectId);
+System.out.println("BaseCrudResource::findOne() - entity id: " + id);
+        //return getService().findOne(getUserSession(), projectId, id);
+
+        E entity = getService().findOne(getUserSession(), projectId, id);
+System.out.println("BaseCrudResource::findOne - entity: " + entity);
+System.out.flush();
+
+        if (entity.getCreatedBy() != null)
+        {
+System.out.println("BaseCrudResource::findOne - getCreatedBY != null");
+System.out.flush();
+           //service.event.setUser(entity.getCreatedBy());
+        }
+        return entity;
     }
 
     @POST
@@ -51,7 +66,15 @@ public abstract class BaseCrudResource<E extends Entity> extends BaseResource<E>
     })
     public E create(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
             @ApiParam(value = "Entity", required = true) E entity) {
-        return getService().save(getUserSession(), projectId, entity);
+System.out.println("BaseCrudResource::create() - projectId: " + projectId);
+System.out.flush();
+        //return getService().save(getUserSession(), projectId, entity);
+System.out.println("BaseCrudResource::create - user session: " + getUserSession());
+System.out.flush();
+        E new_entity = getService().save(getUserSession(), projectId, entity);
+System.out.println("BaseCrudResource::create - entity: " + entity);
+System.out.flush();
+        return new_entity;
     }
 
     @PUT
