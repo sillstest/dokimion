@@ -84,6 +84,8 @@ System.out.flush();
     }
 
     public E findOne(Session session, String projectId, String id){
+System.out.println("BaseService::findOne");
+System.out.flush();
         E entity = findOneUnfiltered(session, projectId, id);
         return beforeReturn(session, projectId, entity);
     }
@@ -162,26 +164,57 @@ System.out.flush();
 System.out.println("BaseService:userCanReadProject - session.person: " + session.getPerson());
 System.out.println("BaseService:userCanReadProject - session.isIsAdmin: " + session.isIsAdmin());
 System.out.flush();
+
         if (isAdmin(session)) {
             return true;
         }
         
-System.out.println("BaseService::userCanReadProject - role != Admin");
+        Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
+System.out.println("BaseService::userCanReadProject - after findOne");
 System.out.flush();
 
-        Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
         if (!isUserInOrganization(session, organization)){
             return false;
         }
+System.out.println("BaseService::userCanReadProject - after isUserOrganization");
+System.out.flush();
+
         if (isUserOrganizationAdmin(session, organization)){
             return true;
         }
+System.out.println("BaseService::userCanReadProject - after isUserOrganizationAdmin");
+System.out.flush();
+
         Project project = projectRepository.findOne(getCurrOrganizationId(session), null, projectId);
+System.out.println("BaseService::userCanReadProject - after findOne: project: " + project);
+System.out.flush();
+
         if (project.isDeleted()) {
             throw new EntityNotFoundException(format("Project %s does not exist", projectId));
         }
-        return project.getReadWriteGroups().stream().anyMatch(session.getPerson().getGroups()::contains) ||
-                project.getReadWriteUsers().stream().anyMatch(session.getPerson().getLogin()::equals);
+System.out.println("BaseService::userCanReadProject - after project.isDeleted");
+System.out.flush();
+
+        List<String> contains_groups = session.getPerson().getGroups();
+
+System.out.println("BaseService::userCanReadProject - after contains: " + contains_groups);
+System.out.flush();
+
+        String contains_login = session.getPerson().getLogin();
+System.out.println("BaseService::userCanReadProject - after equals: " + contains_login);
+System.out.flush();
+
+
+        if (contains_groups.isEmpty() == false)
+        {
+           return project.getReadWriteGroups().stream().anyMatch(contains_groups::contains) || 
+                  project.getReadWriteUsers().stream().anyMatch(contains_login::equals);
+        } else {
+           return project.getReadWriteGroups().stream().anyMatch(contains_groups::contains) || 
+                  project.getReadWriteUsers().stream().anyMatch(contains_login::equals);
+        }
+
+        //return project.getReadWriteGroups().stream().anyMatch(session.getPerson().getGroups()::contains) || project.getReadWriteUsers().stream().anyMatch(session.getPerson().getLogin()::equals);
 
     }
     protected boolean userCanSave(Session session, String projectId, E entity){

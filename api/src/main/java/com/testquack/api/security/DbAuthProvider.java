@@ -30,6 +30,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.greatbit.utils.string.StringUtils.emptyIfNull;
 import static ru.greatbit.whoru.auth.utils.HttpUtils.isTokenAccessRequest;
 import static ru.greatbit.whoru.auth.utils.AuthUtil.getMd5;
+import static ru.greatbit.whoru.auth.utils.HttpUtils.TOKEN_KEY;
 
 @Service
 public class DbAuthProvider extends BaseDbAuthProvider {
@@ -120,8 +121,16 @@ System.out.flush();
     public Session doAuth(HttpServletRequest request, HttpServletResponse response){
         final String login = emptyIfNull(request.getParameter(PARAM_LOGIN));
         final String password = emptyIfNull(request.getParameter(PARAM_PASSWORD));
+System.out.println("DbAuthProvider::doAuth - login: " + login);
+System.out.println("DbAuthProvider::doAuth - password: " + password);
+System.out.flush();
+
+
+        final String secretKey = "al;jf;lda1_+_!!()!!!!";
+        String decryptedAdminPassword = aes.decrypt(adminPassword, secretKey) ;
+
         final String token = emptyIfNull(request.getHeader(TOKEN_KEY));
-        if ((login.equals(adminLogin) && password.equals(adminPassword)) || token.equals(adminToken)){
+        if ((login.equals(adminLogin) && password.equals(decryptedAdminPassword)) || token.equals(adminToken)){
             Session adminSession = (Session) new Session().withIsAdmin(true).
                     withId(
                             isEmpty(token) ? UUID.randomUUID().toString() : token
