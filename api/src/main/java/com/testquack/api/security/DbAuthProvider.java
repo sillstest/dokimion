@@ -1,6 +1,6 @@
 package com.testquack.api.security;
 
-
+import com.testquack.dal.aes;
 import com.testquack.api.utils.MongoDBInterface;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
@@ -40,7 +41,7 @@ public class DbAuthProvider extends BaseDbAuthProvider {
     protected Person getAdminPerson(String token) {
         return null;
     }
-/*
+
     @Override
     public Session authImpl(HttpServletRequest request, HttpServletResponse response) {
         if (isTokenAccessRequest(request)) {
@@ -68,11 +69,22 @@ public class DbAuthProvider extends BaseDbAuthProvider {
     }
 
     private Session dbAuthByLoginPassword(HttpServletRequest request, HttpServletResponse response) throws NoSuchAlgorithmException {
+
         final String login = request.getParameter(PARAM_LOGIN);
         final String password = request.getParameter(PARAM_PASSWORD);
+System.out.println("dbAuthByLoginPassword - login: " + login);
+System.out.println("dbAuthByLoginPassword - password: " + password);
+System.out.println("dbAuthByLoginPassword - this.adminPassword: " + this.adminPassword);
+System.out.flush();
 
         Person person;
-        if (login.equalsIgnoreCase(this.adminLogin) && getMd5(password, login).equals(getMd5(this.adminPassword, this.adminLogin))) {
+        final String secretKey = "al;jf;lda1_+_!!()!!!!";
+        String decryptedAdminPassword = aes.decrypt(this.adminPassword, secretKey) ;
+
+System.out.println("dbAuthByLoginPassword - decrypted Admin password: " + decryptedAdminPassword);
+System.out.flush();
+
+        if (login.equalsIgnoreCase(this.adminLogin) && getMd5(password, login).equals(getMd5(decryptedAdminPassword, this.adminLogin))) {
             person = getAdminPerson(login, password);
         } else {
             person = findPersonByLogin(login);
@@ -83,11 +95,11 @@ public class DbAuthProvider extends BaseDbAuthProvider {
                 && person.isActive()
                 && getMd5(password, login).equals(person.getPassword())){
 
-            return authAs(login, response, person);
+            return dbAuthAs(login, response, person);
         } else throw new UnauthorizedException("Incorrect login or password");
     }
 
-    private Session authAs(String login, HttpServletResponse response, Person person) {
+    private Session dbAuthAs(String login, HttpServletResponse response, Person person) {
         if (person.getPasswordExpirationTime() > 0 && System.currentTimeMillis() > person.getPasswordExpirationTime()){
             throw new UnauthorizedException(format("Temporary password has expired for user %s. Please contact administrator to set a new one.", person.getLogin()));
         }
@@ -102,14 +114,17 @@ public class DbAuthProvider extends BaseDbAuthProvider {
             response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, existedSession.getId(), authDomain, sessionTtl));
         return existedSession;
     }
-    */
 
 
     @Override
     protected Person getAdminPerson(String login, String password) {
 System.out.println("DbAuthProvider.getAdminPerson() - login, password: " + login + ", " + password);
 System.out.flush();
-        if (!isEmpty(login) && !isEmpty(password) && login.equals(adminLogin) && password.equals(adminPassword)){
+
+         final String secretKey = "al;jf;lda1_+_!!()!!!!";
+         String decryptedAdminPassword = aes.decrypt(adminPassword, secretKey) ;
+
+        if (!isEmpty(login) && !isEmpty(password) && login.equals(adminLogin) && password.equals(decryptedAdminPassword)){
 
 System.out.println("DbAuthProvider.getAdminPerson() - admin validated successfully");
 System.out.flush();
