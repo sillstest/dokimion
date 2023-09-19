@@ -117,6 +117,32 @@ System.out.flush();
 
 
     @Override
+    public Session doAuth(HttpServletRequest request, HttpServletResponse response){
+        final String login = emptyIfNull(request.getParameter(PARAM_LOGIN));
+        final String password = emptyIfNull(request.getParameter(PARAM_PASSWORD));
+        final String token = emptyIfNull(request.getHeader(TOKEN_KEY));
+        if ((login.equals(adminLogin) && password.equals(adminPassword)) || token.equals(adminToken)){
+            Session adminSession = (Session) new Session().withIsAdmin(true).
+                    withId(
+                            isEmpty(token) ? UUID.randomUUID().toString() : token
+                    ).
+                    withLogin(adminLogin).withName(adminLogin).
+                    withPerson(
+                            new Person().withActive(true).withId(adminLogin).withFirstName(adminLogin)
+                    );
+            sessionProvider.addSession(adminSession);
+            if (response != null){
+                response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, adminSession.getId(), authDomain, sessionTtl));
+            }
+            return adminSession;
+        } else {
+            Session session = authImpl(request, response);
+            response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, session.getId(), authDomain, sessionTtl));
+            return session;
+        }
+    }
+
+    @Override
     protected Person getAdminPerson(String login, String password) {
 System.out.println("DbAuthProvider.getAdminPerson() - login, password: " + login + ", " + password);
 System.out.flush();
