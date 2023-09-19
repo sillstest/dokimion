@@ -6,7 +6,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
-
+using WebDriverManager.Helpers;
 
 namespace Dokimion.Tests
 {
@@ -27,7 +27,8 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            new DriverManager().SetUpDriver(new ChromeConfig());
+            //This will match ChromeDriver and web browser versions
+            new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
 
             driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
