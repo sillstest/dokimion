@@ -8,7 +8,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
-
+using WebDriverManager.Helpers;
 
 namespace Dokimion.Tests
 {
@@ -29,8 +29,8 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-
-            new DriverManager().SetUpDriver(new ChromeConfig());
+            //This will match ChromeDriver and web browser versions
+            new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
 
             driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
@@ -96,9 +96,12 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click on right side on User link");
-                Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
-                Actor.AttemptsTo(Click.On(Header.UserInfo) );
-
+                var elementAppreared = Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
+                if (!elementAppreared)
+                {
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                }
+                Actor.AttemptsTo(Click.On(Header.UserInfo));
                 userActions.LogConsoleMessage("Verify : Profile and Logout links displayed");
                 Actor.WaitsUntil(Text.Of(Header.ProfileLink), IsEqualTo.Value(Header.Profile)).Should().NotBeNullOrEmpty();
                 Actor.WaitsUntil(Text.Of(Header.LogoutLink), IsEqualTo.Value(Header.Logout)).Should().NotBeNullOrEmpty();
@@ -135,9 +138,12 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click on right side on User link");
-                Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
+                var elementAppreared=  Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
+                if (!elementAppreared)
+                {
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                }
                 Actor.AttemptsTo(Click.On(Header.UserInfo));
-
                 userActions.LogConsoleMessage("Click on Profile link");
                 Actor.AttemptsTo(Click.On(Header.ProfileLink));
 
