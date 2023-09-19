@@ -1,25 +1,34 @@
 package com.testquack.api.security;
 
+
 import com.testquack.api.utils.MongoDBInterface;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
 import com.testquack.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import ru.greatbit.whoru.auth.utils.HttpUtils;
+import ru.greatbit.whoru.auth.Session;
 import ru.greatbit.whoru.auth.Person;
 import ru.greatbit.whoru.auth.RedirectResponse;
 import ru.greatbit.whoru.auth.error.UnauthorizedException;
 import ru.greatbit.whoru.auth.providers.BaseDbAuthProvider;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.security.NoSuchAlgorithmException;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.greatbit.utils.string.StringUtils.emptyIfNull;
+import static ru.greatbit.whoru.auth.utils.HttpUtils.isTokenAccessRequest;
+import static ru.greatbit.whoru.auth.utils.AuthUtil.getMd5;
 
 @Service
 public class DbAuthProvider extends BaseDbAuthProvider {
@@ -32,7 +41,6 @@ public class DbAuthProvider extends BaseDbAuthProvider {
         return null;
     }
 /*
-
     @Override
     public Session authImpl(HttpServletRequest request, HttpServletResponse response) {
         if (isTokenAccessRequest(request)) {
@@ -78,7 +86,7 @@ public class DbAuthProvider extends BaseDbAuthProvider {
             return authAs(login, response, person);
         } else throw new UnauthorizedException("Incorrect login or password");
     }
-    */
+*/
 
     @Override
     protected Person getAdminPerson(String login, String password) {
