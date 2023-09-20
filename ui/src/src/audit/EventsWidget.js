@@ -60,11 +60,19 @@ class EventsWidget extends Component {
             </thead>
             <tbody>
               {this.state.events.map(function (event, i) {
+                let eventUser = "";
+                if (event.createdBy) {
+                  eventUser = event.createdBy;
+                } else if (event.lastModifiedBy) {
+                  eventUser = event.lastModifiedBy;
+                } else {
+                  eventUser = event.user;
+                }
                 return (
                   <tr key={i} className={Utils.getStatusColorClass(event.eventType)}>
                     <td>{event.eventType}</td>
                     <td>{Utils.timeToDate(event.createdTime)}</td>
-                    <td>{event.user}</td>
+                    <td>{eventUser}</td>
                   </tr>
                 );
               })}
