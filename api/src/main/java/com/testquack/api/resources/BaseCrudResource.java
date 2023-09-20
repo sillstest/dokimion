@@ -48,12 +48,6 @@ System.out.println("BaseCrudResource::findOne() - entity id: " + id);
 System.out.println("BaseCrudResource::findOne - entity: " + entity);
 System.out.flush();
 
-        if (entity.getCreatedBy() != null)
-        {
-System.out.println("BaseCrudResource::findOne - getCreatedBY != null");
-System.out.flush();
-           //service.event.setUser(entity.getCreatedBy());
-        }
         return entity;
     }
 

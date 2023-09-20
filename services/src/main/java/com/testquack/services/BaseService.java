@@ -210,12 +210,8 @@ System.out.flush();
            return project.getReadWriteGroups().stream().anyMatch(contains_groups::contains) || 
                   project.getReadWriteUsers().stream().anyMatch(contains_login::equals);
         } else {
-           return project.getReadWriteGroups().stream().anyMatch(contains_groups::contains) || 
-                  project.getReadWriteUsers().stream().anyMatch(contains_login::equals);
+           return project.getReadWriteUsers().stream().anyMatch(contains_login::equals);
         }
-
-        //return project.getReadWriteGroups().stream().anyMatch(session.getPerson().getGroups()::contains) || project.getReadWriteUsers().stream().anyMatch(session.getPerson().getLogin()::equals);
-
     }
     protected boolean userCanSave(Session session, String projectId, E entity){
 System.out.println("BaseService::userCanSave 1 - session: " + session);
