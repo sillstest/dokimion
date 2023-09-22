@@ -20,8 +20,8 @@ mv /deploy/jetty-runner.jar .
 tar xvzf ui.tgz
 
 # restart relevant system services
-systemctl restart dokimion_server$1.service
-systemctl restart dokimion_ui$1.service
-systemctl status dokimion_server$1.service
-systemctl status dokimion_ui$1.service
+systemctl restart dokimion$1_server.service
+systemctl restart dokimion$1_ui.service
+systemctl status dokimion$1_server.service
+systemctl status dokimion$1_ui.service
 

@@ -105,20 +105,28 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Verify : Username is on top right menu");
                 //Actor.AttemptsTo(Refresh.Browser());
-                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                Actor.WaitsUntil(Text.Of(Header.UserInfo),ContainsSubstring.Text(userActions.DisplayUserName), 
-                    timeout:60) ;
+                // Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                var displayNameAppeared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
+                if (!displayNameAppeared)
+                {
+                    //If the user name is not displayed refresh the page
+                    userActions.LogConsoleMessage("Refreshed to display user name");
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                }
+
+                Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName), timeout: 60
+                   );
                 userActions.LogConsoleMessage("Page redirected after click");
             }catch  (Exception e) {
 
                 userActions.LogConsoleMessage("Page Not redirected , try to login again" + e);
-                //Refresh and login again
-                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.LoginPageWelcomeMsg).ForUpTo(4));
-               // Actor.AttemptsTo(Refresh.Browser());
-                Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+               // //Refresh and login again
+               // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.LoginPageWelcomeMsg).ForUpTo(4));
+               //// Actor.AttemptsTo(Refresh.Browser());
+               // Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
 
-                Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName),
-                timeout: 60);
+               // var displayNameAppeared =   Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName),
+               // timeout: 60);
 
             }
             finally
