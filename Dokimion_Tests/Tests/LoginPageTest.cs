@@ -7,6 +7,7 @@ using OpenQA.Selenium;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 using WebDriverManager.Helpers;
+using OpenQA.Selenium.Interactions;
 
 namespace Dokimion.Tests
 {
@@ -34,7 +35,7 @@ namespace Dokimion.Tests
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
 
             ICapabilities capabilities = driver.Capabilities;
-            var browserName =     capabilities.GetCapability("browserName");
+            var browserName = capabilities.GetCapability("browserName");
             var browserVersion = capabilities.GetCapability("browserVersion");
             var SeleniumWebDriverVersion = (capabilities.GetCapability("chrome") as Dictionary<string, object>)!["chromedriverVersion"];
 
@@ -100,33 +101,34 @@ namespace Dokimion.Tests
             //Actor.AttemptsTo(Click.On(LoginPage.SingInButton));
             LoginPage.SingInButton.FindElement(driver).Click();
             userActions.LogConsoleMessage("Submit clicked");
-
             try
             {
                 userActions.LogConsoleMessage("Verify : Username is on top right menu");
                 //Actor.AttemptsTo(Refresh.Browser());
                 // Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                var displayNameAppeared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
-                if (!displayNameAppeared)
-                {
-                    //If the user name is not displayed refresh the page
-                    userActions.LogConsoleMessage("Refreshed to display user name");
-                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                }
+                //var displayNameAppeared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
+                //if (!displayNameAppeared)
+                //{
+                //    //If the user name is not displayed refresh the page
+                //    userActions.LogConsoleMessage("Refreshed to display user name");
+                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                //}
 
                 Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName), timeout: 60
                    );
                 userActions.LogConsoleMessage("Page redirected after click");
             }catch  (Exception e) {
 
-                userActions.LogConsoleMessage("Page Not redirected , try to login again" + e);
-               // //Refresh and login again
-               // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.LoginPageWelcomeMsg).ForUpTo(4));
-               //// Actor.AttemptsTo(Refresh.Browser());
-               // Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+                userActions.LogConsoleMessage("Page Not redirected , try to login again , Click did not work" + e);
+                // //Refresh and login again
+                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.LoginPageWelcomeMsg).ForUpTo(4));
+                // Actor.AttemptsTo(Refresh.Browser());
+                Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
 
-               // var displayNameAppeared =   Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName),
-               // timeout: 60);
+                Actions actions = new Actions(driver);
+                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName),
+                timeout: 60);
 
             }
             finally
@@ -134,8 +136,8 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Clean up : Logout User");
                 try
                 {
-                    Actor.AttemptsTo(Refresh.Browser());
-                    // Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                    //Actor.AttemptsTo(Refresh.Browser());
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
                 }
                 catch (Exception e)
                 {
