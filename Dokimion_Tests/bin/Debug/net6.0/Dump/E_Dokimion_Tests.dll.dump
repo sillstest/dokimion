@@ -5,12 +5,7 @@
 <VSTest input/>
 
 <VS_Input_TestCases>   (DisplayName : FQN : Id)
-   TC3UserOptions : Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions : 63cea305-6f94-1f38-4e0d-5eb36484e505
-   TC4UserClickOnProfile : Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile : d539b8c7-1e9a-5d04-1333-2ed91390ce58
-   TC5UserClickOnProjects : Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects : c08b1b3a-123d-7bb1-aa09-a614c719c455
-   TC6UserClickOnLogout : Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout : 3f32699d-e573-28e6-0089-e26aa71f6339
    TC1LoginValidPage : Dokimion.Tests.LoginPageTest.TC1LoginValidPage : 1cf7a123-9590-5fd5-70f2-93a47095e5b2
-   TC2LoginInvalidUser : Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser : 09c5e816-badc-f419-a68c-ee7acaab4de1
 </VS_Input_TestCases>
 
 <TestPackage>: Dokimion_Tests.dll
@@ -19,237 +14,72 @@
 </TestPackage>
 
 <TestFilter>
-   <filter><or><test>Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions</test><test>Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile</test><test>Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects</test><test>Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout</test><test>Dokimion.Tests.LoginPageTest.TC1LoginValidPage</test><test>Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser</test></or></filter>
+   <filter><test>Dokimion.Tests.LoginPageTest.TC1LoginValidPage</test></filter>
 </TestFilter>
 
 </VSTest input/>
 
-<NUnitDiscoveryInExecution>C:\Repos\quack\Dokimion\bin\Debug\net6.0\Dokimion_Tests.dll</NUnitDiscoveryInExecution>
+<NUnitDiscoveryInExecution>C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0\Dokimion_Tests.dll</NUnitDiscoveryInExecution>
 
-<test-run id='0' name='Dokimion_Tests.dll' fullname='C:\Repos\quack\Dokimion\bin\Debug\net6.0\Dokimion_Tests.dll' runstate='Runnable' testcasecount='6'>
-   <test-suite type='Assembly' id='0-1011' name='Dokimion_Tests.dll' fullname='C:/Repos/quack/Dokimion/bin/Debug/net6.0/Dokimion_Tests.dll' runstate='Runnable' testcasecount='6'>
-      <environment framework-version='3.13.3.0' clr-version='6.0.16' os-version='Microsoft Windows 10.0.22621' platform='Win32NT' cwd='C:\Repos\quack\Dokimion\bin\Debug\net6.0' machine-name='ROOPA_SIL' user='rupa_' user-domain='ROOPA_SIL' culture='en-US' uiculture='en-US' os-architecture='x64' />
+<test-run id='0' name='Dokimion_Tests.dll' fullname='C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0\Dokimion_Tests.dll' runstate='Runnable' testcasecount='1'>
+   <test-suite type='Assembly' id='0-1011' name='Dokimion_Tests.dll' fullname='C:/Repos/quack/Dokimion_Tests/bin/Debug/net6.0/Dokimion_Tests.dll' runstate='Runnable' testcasecount='1'>
+      <environment framework-version='3.13.3.0' clr-version='6.0.22' os-version='Microsoft Windows 10.0.22621' platform='Win32NT' cwd='C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0' machine-name='ROOPA_SIL' user='rupa_' user-domain='ROOPA_SIL' culture='en-US' uiculture='en-US' os-architecture='x64' />
       <settings>
          <setting name='SynchronousEvents' value='False' />
          <setting name='InternalTraceLevel' value='Off' />
-         <setting name='RandomSeed' value='954653509' />
-         <setting name='TestParametersDictionary' value='[ActorName, TestActor], [Logger, new NoOpLogger()], [Username, Tester], [Password, Tester1!!!], [InvalidUser, Test], [InvalidPassword, Not a valid password], [DisplayUserName, Tester Tester], [TestManagerProject, Test Manager], [Url, http://dokimion4.psonet]'>
+         <setting name='RandomSeed' value='402146550' />
+         <setting name='TestParametersDictionary' value='[ActorName, TestActor], [Logger, new NoOpLogger()], [Username, Tester], [Password, Tester1!!!], [InvalidUser, Test], [InvalidPassword, Not a valid password], [DisplayUserName, Tester], [TestManagerProject, Dokimion], [Url, http://dokimion4.psonet]'>
             <item key='ActorName' value='TestActor' />
             <item key='Logger' value='new NoOpLogger()' />
             <item key='Username' value='Tester' />
             <item key='Password' value='Tester1!!!' />
             <item key='InvalidUser' value='Test' />
             <item key='InvalidPassword' value='Not a valid password' />
-            <item key='DisplayUserName' value='Tester Tester' />
-            <item key='TestManagerProject' value='Test Manager' />
+            <item key='DisplayUserName' value='Tester' />
+            <item key='TestManagerProject' value='Dokimion' />
             <item key='Url' value='http://dokimion4.psonet' />
          </setting>
-         <setting name='TestParameters' value='ActorName=TestActor;Logger=new NoOpLogger();Username=Tester;Password=Tester1!!!;InvalidUser=Test;InvalidPassword=Not a valid password;DisplayUserName=Tester Tester;TestManagerProject=Test Manager;Url=http://dokimion4.psonet' />
+         <setting name='TestParameters' value='ActorName=TestActor;Logger=new NoOpLogger();Username=Tester;Password=Tester1!!!;InvalidUser=Test;InvalidPassword=Not a valid password;DisplayUserName=Tester;TestManagerProject=Dokimion;Url=http://dokimion4.psonet' />
          <setting name='SkipNonTestAssemblies' value='True' />
          <setting name='ProcessModel' value='InProcess' />
          <setting name='DomainUsage' value='Single' />
          <setting name='DefaultTestNamePattern' value='{m}{a}' />
-         <setting name='WorkDirectory' value='C:\Repos\quack\Dokimion\bin\Debug\net6.0' />
+         <setting name='WorkDirectory' value='C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0' />
          <setting name='NumberOfTestWorkers' value='12' />
       </settings>
       <properties>
-         <property name='_PID' value='35060' />
+         <property name='_PID' value='31724' />
          <property name='_APPDOMAIN' value='testhost' />
       </properties>
-      <test-suite type='TestSuite' id='0-1012' name='Dokimion' fullname='Dokimion' runstate='Runnable' testcasecount='6'>
-         <test-suite type='TestSuite' id='0-1013' name='Tests' fullname='Dokimion.Tests' runstate='Runnable' testcasecount='6'>
-            <test-suite type='TestFixture' id='0-1014' name='HeaderUserAccessTests' fullname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' testcasecount='4'>
-               <test-case id='0-1001' name='TC3UserOptions' fullname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions' methodname='TC3UserOptions' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='441954367' />
-               <test-case id='0-1002' name='TC4UserClickOnProfile' fullname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile' methodname='TC4UserClickOnProfile' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1888321537' />
-               <test-case id='0-1003' name='TC5UserClickOnProjects' fullname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects' methodname='TC5UserClickOnProjects' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1047149552' />
-               <test-case id='0-1004' name='TC6UserClickOnLogout' fullname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout' methodname='TC6UserClickOnLogout' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='971999368' />
-            </test-suite>
-            <test-suite type='TestFixture' id='0-1015' name='LoginPageTest' fullname='Dokimion.Tests.LoginPageTest' runstate='Runnable' testcasecount='2'>
-               <test-case id='0-1006' name='TC1LoginValidPage' fullname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage' methodname='TC1LoginValidPage' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='1756870554' />
-               <test-case id='0-1007' name='TC2LoginInvalidUser' fullname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser' methodname='TC2LoginInvalidUser' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='722633162' />
+      <test-suite type='TestSuite' id='0-1012' name='Dokimion' fullname='Dokimion' runstate='Runnable' testcasecount='1'>
+         <test-suite type='TestSuite' id='0-1013' name='Tests' fullname='Dokimion.Tests' runstate='Runnable' testcasecount='1'>
+            <test-suite type='TestFixture' id='0-1014' name='LoginPageTest' fullname='Dokimion.Tests.LoginPageTest' runstate='Runnable' testcasecount='1'>
+               <test-case id='0-1006' name='TC1LoginValidPage' fullname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage' methodname='TC1LoginValidPage' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='736143201' />
             </test-suite>
          </test-suite>
       </test-suite>
    </test-suite>
 </test-run><TestFilter>
- (At Execution)  <filter><or><test>Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions</test><test>Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile</test><test>Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects</test><test>Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout</test><test>Dokimion.Tests.LoginPageTest.TC1LoginValidPage</test><test>Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser</test></or></filter>
+ (At Execution)  <filter><test>Dokimion.Tests.LoginPageTest.TC1LoginValidPage</test></filter>
 </TestFilter>
 
 
 
-<NUnitExecution>C:\Repos\quack\Dokimion\bin\Debug\net6.0\Dokimion_Tests.dll</NUnitExecution>
+<NUnitExecution>C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0\Dokimion_Tests.dll</NUnitExecution>
 
 <NUnitTestEvent>
-<start-run count='6' start-time='2023-06-26 16:02:14Z' engine-version='3.15.4.0' clr-version='6.0.16'>
-   <command-line><![CDATA[C:\Repos\quack\Dokimion\bin\Debug\net6.0\testhost.dll --port 64451 --endpoint 127.0.0.1:064451 --role client --parentprocessid 9432 --telemetryoptedin true]]></command-line>
+<start-run count='1' start-time='2023-09-25 14:12:34Z' engine-version='3.15.4.0' clr-version='6.0.22'>
+   <command-line><![CDATA[C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0\testhost.dll --port 59870 --endpoint 127.0.0.1:059870 --role client --parentprocessid 7724 --telemetryoptedin true]]></command-line>
 </start-run>
 </NUnitTestEvent>
 <NUnitTestEvent>
-<start-suite id='0-1008' parentId='' name='Dokimion_Tests.dll' fullname='C:/Repos/quack/Dokimion/bin/Debug/net6.0/Dokimion_Tests.dll' type='Assembly' framework-version='3.13.3.0' />
+<start-suite id='0-1008' parentId='' name='Dokimion_Tests.dll' fullname='C:/Repos/quack/Dokimion_Tests/bin/Debug/net6.0/Dokimion_Tests.dll' type='Assembly' framework-version='3.13.3.0' />
 </NUnitTestEvent>
 <NUnitTestEvent>
 <start-suite id='0-1009' parentId='0-1008' name='Dokimion' fullname='Dokimion' type='TestSuite' />
 </NUnitTestEvent>
 <NUnitTestEvent>
 <start-suite id='0-1010' parentId='0-1009' name='Tests' fullname='Dokimion.Tests' type='TestSuite' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<start-suite id='0-1000' parentId='0-1010' name='HeaderUserAccessTests' fullname='Dokimion.Tests.HeaderUserAccessTests' type='TestFixture' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1000' testname='Dokimion.Tests.HeaderUserAccessTests'><![CDATA[In one time Set up :Dokimion.Tests.HeaderUserAccessTests
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1000' testname='Dokimion.Tests.HeaderUserAccessTests'><![CDATA[Register Driver & Open the QuAck website
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<start-test id='0-1001' parentId='0-1000' name='TC3UserOptions' fullname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions' type='TestMethod' classname='Dokimion.Tests.HeaderUserAccessTests' methodname='TC3UserOptions' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1001' testname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions'><![CDATA[TC3UserOptions
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1001' testname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions'><![CDATA[Set Up : 
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1001' testname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions'><![CDATA[Login as User
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1001' testname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions'><![CDATA[Action steps : 
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1001' testname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions'><![CDATA[Click on left side on User link
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1001' testname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions'><![CDATA[Verify : Profile and Logout links displayed
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1001' testname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions'><![CDATA[Clean up : Logout User
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-case id='0-1001' name='TC3UserOptions' fullname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions' methodname='TC3UserOptions' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='441954367' result='Passed' start-time='2023-06-26T16:02:18.6974804Z' end-time='2023-06-26T16:02:23.0670649Z' duration='4.369675' asserts='1' parentId='0-1000' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<start-test id='0-1002' parentId='0-1000' name='TC4UserClickOnProfile' fullname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile' type='TestMethod' classname='Dokimion.Tests.HeaderUserAccessTests' methodname='TC4UserClickOnProfile' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1002' testname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile'><![CDATA[TC4UserClickOnProfile
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1002' testname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile'><![CDATA[Set Up : 
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1002' testname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile'><![CDATA[Login as User
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1002' testname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile'><![CDATA[Action steps : 
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1002' testname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile'><![CDATA[Click on left side on User link
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1002' testname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile'><![CDATA[Click on Profile link
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1002' testname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile'><![CDATA[Verify : User name is displayed
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1002' testname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile'><![CDATA[Clean up : Logout User
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-case id='0-1002' name='TC4UserClickOnProfile' fullname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile' methodname='TC4UserClickOnProfile' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1888321537' result='Passed' start-time='2023-06-26T16:02:23.1337436Z' end-time='2023-06-26T16:02:26.9051449Z' duration='3.771400' asserts='0' parentId='0-1000' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<start-test id='0-1003' parentId='0-1000' name='TC5UserClickOnProjects' fullname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects' type='TestMethod' classname='Dokimion.Tests.HeaderUserAccessTests' methodname='TC5UserClickOnProjects' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1003' testname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects'><![CDATA[TC5UserClickOnProjects
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1003' testname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects'><![CDATA[Set Up : 
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1003' testname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects'><![CDATA[Login as User
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1003' testname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects'><![CDATA[Action steps : 
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1003' testname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects'><![CDATA[Click on right side Projects link
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1003' testname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects'><![CDATA[Verify : All and Test Manager project links are in dropdown
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1003' testname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects'><![CDATA[Clean up : Logout User
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-case id='0-1003' name='TC5UserClickOnProjects' fullname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects' methodname='TC5UserClickOnProjects' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1047149552' result='Passed' start-time='2023-06-26T16:02:26.9052131Z' end-time='2023-06-26T16:02:29.9471756Z' duration='3.041964' asserts='1' parentId='0-1000' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<start-test id='0-1004' parentId='0-1000' name='TC6UserClickOnLogout' fullname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout' type='TestMethod' classname='Dokimion.Tests.HeaderUserAccessTests' methodname='TC6UserClickOnLogout' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1004' testname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout'><![CDATA[TC6UserClickOnLogout
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1004' testname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout'><![CDATA[Set Up : 
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1004' testname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout'><![CDATA[Login as User
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1004' testname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout'><![CDATA[Action steps : 
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1004' testname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout'><![CDATA[Click on left side on User link
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1004' testname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout'><![CDATA[Click on Logout link
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1004' testname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout'><![CDATA[Verify : User logged out
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1004' testname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout'><![CDATA[Clean up :
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-case id='0-1004' name='TC6UserClickOnLogout' fullname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout' methodname='TC6UserClickOnLogout' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='971999368' result='Passed' start-time='2023-06-26T16:02:29.9472230Z' end-time='2023-06-26T16:02:32.9554139Z' duration='3.008192' asserts='0' parentId='0-1000' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-suite type='TestFixture' id='0-1000' name='HeaderUserAccessTests' fullname='Dokimion.Tests.HeaderUserAccessTests' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' testcasecount='4' result='Passed' start-time='2023-06-26T16:02:14.4250709Z' end-time='2023-06-26T16:02:33.0473949Z' duration='18.622325' total='4' passed='4' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='2' parentId='0-1010' />
 </NUnitTestEvent>
 <NUnitTestEvent>
 <start-suite id='0-1005' parentId='0-1010' name='LoginPageTest' fullname='Dokimion.Tests.LoginPageTest' type='TestFixture' />
@@ -259,7 +89,27 @@
 ]]></test-output>
 </NUnitTestEvent>
 <NUnitTestEvent>
-<test-output stream='Progress' testid='0-1005' testname='Dokimion.Tests.LoginPageTest'><![CDATA[Register Driver & Open the QuAck website
+<test-output stream='Progress' testid='0-1005' testname='Dokimion.Tests.LoginPageTest'><![CDATA[Register Driver & Open the Dokimion website
+]]></test-output>
+</NUnitTestEvent>
+<NUnitTestEvent>
+<test-output stream='Progress' testid='0-1005' testname='Dokimion.Tests.LoginPageTest'><![CDATA[BrowserName : chrome
+]]></test-output>
+</NUnitTestEvent>
+<NUnitTestEvent>
+<test-output stream='Progress' testid='0-1005' testname='Dokimion.Tests.LoginPageTest'><![CDATA[browserVersion : 117.0.5938.89
+]]></test-output>
+</NUnitTestEvent>
+<NUnitTestEvent>
+<test-output stream='Progress' testid='0-1005' testname='Dokimion.Tests.LoginPageTest'><![CDATA[ChromeDriver : OpenQA.Selenium.Chrome.ChromeDriver
+]]></test-output>
+</NUnitTestEvent>
+<NUnitTestEvent>
+<test-output stream='Progress' testid='0-1005' testname='Dokimion.Tests.LoginPageTest'><![CDATA[SeleniumWebDriverVersion 117.0.5938.92 (67649b10b92bb182fba357831ef7dd6a1baa5648-refs/branch-heads/5938_62@{#14})
+]]></test-output>
+</NUnitTestEvent>
+<NUnitTestEvent>
+<test-output stream='Progress' testid='0-1005' testname='Dokimion.Tests.LoginPageTest'><![CDATA[Login Page is loaded successfully on count 1 Please sign in
 ]]></test-output>
 </NUnitTestEvent>
 <NUnitTestEvent>
@@ -290,7 +140,15 @@
 ]]></test-output>
 </NUnitTestEvent>
 <NUnitTestEvent>
+<test-output stream='Progress' testid='0-1006' testname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage'><![CDATA[Submit clicked
+]]></test-output>
+</NUnitTestEvent>
+<NUnitTestEvent>
 <test-output stream='Progress' testid='0-1006' testname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage'><![CDATA[Verify : Username is on top right menu
+]]></test-output>
+</NUnitTestEvent>
+<NUnitTestEvent>
+<test-output stream='Progress' testid='0-1006' testname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage'><![CDATA[Page redirected after click
 ]]></test-output>
 </NUnitTestEvent>
 <NUnitTestEvent>
@@ -298,116 +156,68 @@
 ]]></test-output>
 </NUnitTestEvent>
 <NUnitTestEvent>
-<test-case id='0-1006' name='TC1LoginValidPage' fullname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage' methodname='TC1LoginValidPage' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='1756870554' result='Passed' start-time='2023-06-26T16:02:37.8258671Z' end-time='2023-06-26T16:02:40.9818392Z' duration='3.155972' asserts='0' parentId='0-1005' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<start-test id='0-1007' parentId='0-1005' name='TC2LoginInvalidUser' fullname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser' type='TestMethod' classname='Dokimion.Tests.LoginPageTest' methodname='TC2LoginInvalidUser' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1007' testname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser'><![CDATA[TC2LoginInvalidUser
+<test-output stream='Progress' testid='0-1006' testname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage'><![CDATA[Logged out successfully!! 
 ]]></test-output>
 </NUnitTestEvent>
 <NUnitTestEvent>
-<test-output stream='Progress' testid='0-1007' testname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser'><![CDATA[Set Up : 
-]]></test-output>
+<test-case id='0-1006' name='TC1LoginValidPage' fullname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage' methodname='TC1LoginValidPage' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='736143201' result='Passed' start-time='2023-09-25T14:12:37.1990786Z' end-time='2023-09-25T14:12:38.9366617Z' duration='1.737694' asserts='0' parentId='0-1005' />
 </NUnitTestEvent>
 <NUnitTestEvent>
-<test-output stream='Progress' testid='0-1007' testname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser'><![CDATA[Action steps : 
-]]></test-output>
+<test-suite type='TestFixture' id='0-1005' name='LoginPageTest' fullname='Dokimion.Tests.LoginPageTest' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' testcasecount='2' result='Passed' start-time='2023-09-25T14:12:34.1679055Z' end-time='2023-09-25T14:12:39.0085625Z' duration='4.840658' total='1' passed='1' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0' parentId='0-1010' />
 </NUnitTestEvent>
 <NUnitTestEvent>
-<test-output stream='Progress' testid='0-1007' testname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser'><![CDATA[Enter the Invalid Username : 
-]]></test-output>
+<test-suite type='TestSuite' id='0-1010' name='Tests' fullname='Dokimion.Tests' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-09-25T14:12:34.1673864Z' end-time='2023-09-25T14:12:39.0087842Z' duration='4.841398' total='1' passed='1' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0' parentId='0-1009' />
 </NUnitTestEvent>
 <NUnitTestEvent>
-<test-output stream='Progress' testid='0-1007' testname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser'><![CDATA[Enter the Invalid password : 
-]]></test-output>
+<test-suite type='TestSuite' id='0-1009' name='Dokimion' fullname='Dokimion' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-09-25T14:12:34.1672452Z' end-time='2023-09-25T14:12:39.0087935Z' duration='4.841548' total='1' passed='1' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0' parentId='0-1008' />
 </NUnitTestEvent>
 <NUnitTestEvent>
-<test-output stream='Progress' testid='0-1007' testname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser'><![CDATA[Click Sign in button
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1007' testname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser'><![CDATA[Verify : Error message is displayed 
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-output stream='Progress' testid='0-1007' testname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser'><![CDATA[Clean up :
-]]></test-output>
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-case id='0-1007' name='TC2LoginInvalidUser' fullname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser' methodname='TC2LoginInvalidUser' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='722633162' result='Passed' start-time='2023-06-26T16:02:40.9818882Z' end-time='2023-06-26T16:02:42.2164069Z' duration='1.234519' asserts='0' parentId='0-1005' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-suite type='TestFixture' id='0-1005' name='LoginPageTest' fullname='Dokimion.Tests.LoginPageTest' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' testcasecount='2' result='Passed' start-time='2023-06-26T16:02:33.0483941Z' end-time='2023-06-26T16:02:42.2992405Z' duration='9.250847' total='2' passed='2' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0' parentId='0-1010' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-suite type='TestSuite' id='0-1010' name='Tests' fullname='Dokimion.Tests' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-06-26T16:02:14.4241123Z' end-time='2023-06-26T16:02:42.2992834Z' duration='27.875171' total='6' passed='6' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='2' parentId='0-1009' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-suite type='TestSuite' id='0-1009' name='Dokimion' fullname='Dokimion' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-06-26T16:02:14.4238945Z' end-time='2023-06-26T16:02:42.2992866Z' duration='27.875392' total='6' passed='6' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='2' parentId='0-1008' />
-</NUnitTestEvent>
-<NUnitTestEvent>
-<test-suite type='Assembly' id='0-1008' name='Dokimion_Tests.dll' fullname='C:/Repos/quack/Dokimion/bin/Debug/net6.0/Dokimion_Tests.dll' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-06-26T16:02:14.4209139Z' end-time='2023-06-26T16:02:42.2992893Z' duration='27.878350' total='6' passed='6' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='2' parentId=''>
+<test-suite type='Assembly' id='0-1008' name='Dokimion_Tests.dll' fullname='C:/Repos/quack/Dokimion_Tests/bin/Debug/net6.0/Dokimion_Tests.dll' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-09-25T14:12:34.1650262Z' end-time='2023-09-25T14:12:39.0087961Z' duration='4.843755' total='1' passed='1' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0' parentId=''>
    <properties>
-      <property name='_PID' value='35060' />
+      <property name='_PID' value='31724' />
       <property name='_APPDOMAIN' value='testhost' />
    </properties>
 </test-suite>
 </NUnitTestEvent>
 <NUnitTestEvent>
-<test-run id='0' name='Dokimion_Tests.dll' fullname='C:\Repos\quack\Dokimion\bin\Debug\net6.0\Dokimion_Tests.dll' runstate='Runnable' testcasecount='6' result='Passed' total='6' passed='6' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='2' engine-version='3.15.4.0' clr-version='6.0.16' start-time='2023-06-26 16:02:14Z' end-time='2023-06-26 16:02:42Z' duration='27.893753'>
-   <command-line><![CDATA[C:\Repos\quack\Dokimion\bin\Debug\net6.0\testhost.dll --port 64451 --endpoint 127.0.0.1:064451 --role client --parentprocessid 9432 --telemetryoptedin true]]></command-line>
+<test-run id='0' name='Dokimion_Tests.dll' fullname='C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0\Dokimion_Tests.dll' runstate='Runnable' testcasecount='6' result='Passed' total='1' passed='1' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0' engine-version='3.15.4.0' clr-version='6.0.22' start-time='2023-09-25 14:12:34Z' end-time='2023-09-25 14:12:39Z' duration='4.853491'>
+   <command-line><![CDATA[C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0\testhost.dll --port 59870 --endpoint 127.0.0.1:059870 --role client --parentprocessid 7724 --telemetryoptedin true]]></command-line>
    <filter>
-      <or>
-         <test>Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions</test>
-         <test>Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile</test>
-         <test>Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects</test>
-         <test>Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout</test>
-         <test>Dokimion.Tests.LoginPageTest.TC1LoginValidPage</test>
-         <test>Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser</test>
-      </or>
+      <test>Dokimion.Tests.LoginPageTest.TC1LoginValidPage</test>
    </filter>
-   <test-suite type='Assembly' id='0-1008' name='Dokimion_Tests.dll' fullname='C:/Repos/quack/Dokimion/bin/Debug/net6.0/Dokimion_Tests.dll' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-06-26T16:02:14.4209139Z' end-time='2023-06-26T16:02:42.2992893Z' duration='27.878350' total='6' passed='6' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='2'>
-      <environment framework-version='3.13.3.0' clr-version='6.0.16' os-version='Microsoft Windows 10.0.22621' platform='Win32NT' cwd='C:\Repos\quack\Dokimion\bin\Debug\net6.0' machine-name='ROOPA_SIL' user='rupa_' user-domain='ROOPA_SIL' culture='en-US' uiculture='en-US' os-architecture='x64' />
+   <test-suite type='Assembly' id='0-1008' name='Dokimion_Tests.dll' fullname='C:/Repos/quack/Dokimion_Tests/bin/Debug/net6.0/Dokimion_Tests.dll' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-09-25T14:12:34.1650262Z' end-time='2023-09-25T14:12:39.0087961Z' duration='4.843755' total='1' passed='1' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0'>
+      <environment framework-version='3.13.3.0' clr-version='6.0.22' os-version='Microsoft Windows 10.0.22621' platform='Win32NT' cwd='C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0' machine-name='ROOPA_SIL' user='rupa_' user-domain='ROOPA_SIL' culture='en-US' uiculture='en-US' os-architecture='x64' />
       <settings>
          <setting name='SynchronousEvents' value='False' />
          <setting name='InternalTraceLevel' value='Off' />
-         <setting name='RandomSeed' value='954653509' />
-         <setting name='TestParametersDictionary' value='[ActorName, TestActor], [Logger, new NoOpLogger()], [Username, Tester], [Password, Tester1!!!], [InvalidUser, Test], [InvalidPassword, Not a valid password], [DisplayUserName, Tester Tester], [TestManagerProject, Test Manager], [Url, http://dokimion4.psonet]'>
+         <setting name='RandomSeed' value='402146550' />
+         <setting name='TestParametersDictionary' value='[ActorName, TestActor], [Logger, new NoOpLogger()], [Username, Tester], [Password, Tester1!!!], [InvalidUser, Test], [InvalidPassword, Not a valid password], [DisplayUserName, Tester], [TestManagerProject, Dokimion], [Url, http://dokimion4.psonet]'>
             <item key='ActorName' value='TestActor' />
             <item key='Logger' value='new NoOpLogger()' />
             <item key='Username' value='Tester' />
             <item key='Password' value='Tester1!!!' />
             <item key='InvalidUser' value='Test' />
             <item key='InvalidPassword' value='Not a valid password' />
-            <item key='DisplayUserName' value='Tester Tester' />
-            <item key='TestManagerProject' value='Test Manager' />
+            <item key='DisplayUserName' value='Tester' />
+            <item key='TestManagerProject' value='Dokimion' />
             <item key='Url' value='http://dokimion4.psonet' />
          </setting>
-         <setting name='TestParameters' value='ActorName=TestActor;Logger=new NoOpLogger();Username=Tester;Password=Tester1!!!;InvalidUser=Test;InvalidPassword=Not a valid password;DisplayUserName=Tester Tester;TestManagerProject=Test Manager;Url=http://dokimion4.psonet' />
+         <setting name='TestParameters' value='ActorName=TestActor;Logger=new NoOpLogger();Username=Tester;Password=Tester1!!!;InvalidUser=Test;InvalidPassword=Not a valid password;DisplayUserName=Tester;TestManagerProject=Dokimion;Url=http://dokimion4.psonet' />
          <setting name='SkipNonTestAssemblies' value='True' />
          <setting name='ProcessModel' value='InProcess' />
          <setting name='DomainUsage' value='Single' />
          <setting name='DefaultTestNamePattern' value='{m}{a}' />
-         <setting name='WorkDirectory' value='C:\Repos\quack\Dokimion\bin\Debug\net6.0' />
+         <setting name='WorkDirectory' value='C:\Repos\quack\Dokimion_Tests\bin\Debug\net6.0' />
          <setting name='NumberOfTestWorkers' value='12' />
       </settings>
       <properties>
-         <property name='_PID' value='35060' />
+         <property name='_PID' value='31724' />
          <property name='_APPDOMAIN' value='testhost' />
       </properties>
-      <test-suite type='TestSuite' id='0-1009' name='Dokimion' fullname='Dokimion' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-06-26T16:02:14.4238945Z' end-time='2023-06-26T16:02:42.2992866Z' duration='27.875392' total='6' passed='6' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='2'>
-         <test-suite type='TestSuite' id='0-1010' name='Tests' fullname='Dokimion.Tests' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-06-26T16:02:14.4241123Z' end-time='2023-06-26T16:02:42.2992834Z' duration='27.875171' total='6' passed='6' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='2'>
-            <test-suite type='TestFixture' id='0-1000' name='HeaderUserAccessTests' fullname='Dokimion.Tests.HeaderUserAccessTests' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' testcasecount='4' result='Passed' start-time='2023-06-26T16:02:14.4250709Z' end-time='2023-06-26T16:02:33.0473949Z' duration='18.622325' total='4' passed='4' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='2'>
-               <test-case id='0-1001' name='TC3UserOptions' fullname='Dokimion.Tests.HeaderUserAccessTests.TC3UserOptions' methodname='TC3UserOptions' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='441954367' result='Passed' start-time='2023-06-26T16:02:18.6974804Z' end-time='2023-06-26T16:02:23.0670649Z' duration='4.369675' asserts='1' />
-               <test-case id='0-1002' name='TC4UserClickOnProfile' fullname='Dokimion.Tests.HeaderUserAccessTests.TC4UserClickOnProfile' methodname='TC4UserClickOnProfile' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1888321537' result='Passed' start-time='2023-06-26T16:02:23.1337436Z' end-time='2023-06-26T16:02:26.9051449Z' duration='3.771400' asserts='0' />
-               <test-case id='0-1003' name='TC5UserClickOnProjects' fullname='Dokimion.Tests.HeaderUserAccessTests.TC5UserClickOnProjects' methodname='TC5UserClickOnProjects' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='1047149552' result='Passed' start-time='2023-06-26T16:02:26.9052131Z' end-time='2023-06-26T16:02:29.9471756Z' duration='3.041964' asserts='1' />
-               <test-case id='0-1004' name='TC6UserClickOnLogout' fullname='Dokimion.Tests.HeaderUserAccessTests.TC6UserClickOnLogout' methodname='TC6UserClickOnLogout' classname='Dokimion.Tests.HeaderUserAccessTests' runstate='Runnable' seed='971999368' result='Passed' start-time='2023-06-26T16:02:29.9472230Z' end-time='2023-06-26T16:02:32.9554139Z' duration='3.008192' asserts='0' />
-            </test-suite>
-            <test-suite type='TestFixture' id='0-1005' name='LoginPageTest' fullname='Dokimion.Tests.LoginPageTest' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' testcasecount='2' result='Passed' start-time='2023-06-26T16:02:33.0483941Z' end-time='2023-06-26T16:02:42.2992405Z' duration='9.250847' total='2' passed='2' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0'>
-               <test-case id='0-1006' name='TC1LoginValidPage' fullname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage' methodname='TC1LoginValidPage' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='1756870554' result='Passed' start-time='2023-06-26T16:02:37.8258671Z' end-time='2023-06-26T16:02:40.9818392Z' duration='3.155972' asserts='0' />
-               <test-case id='0-1007' name='TC2LoginInvalidUser' fullname='Dokimion.Tests.LoginPageTest.TC2LoginInvalidUser' methodname='TC2LoginInvalidUser' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='722633162' result='Passed' start-time='2023-06-26T16:02:40.9818882Z' end-time='2023-06-26T16:02:42.2164069Z' duration='1.234519' asserts='0' />
+      <test-suite type='TestSuite' id='0-1009' name='Dokimion' fullname='Dokimion' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-09-25T14:12:34.1672452Z' end-time='2023-09-25T14:12:39.0087935Z' duration='4.841548' total='1' passed='1' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0'>
+         <test-suite type='TestSuite' id='0-1010' name='Tests' fullname='Dokimion.Tests' runstate='Runnable' testcasecount='6' result='Passed' start-time='2023-09-25T14:12:34.1673864Z' end-time='2023-09-25T14:12:39.0087842Z' duration='4.841398' total='1' passed='1' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0'>
+            <test-suite type='TestFixture' id='0-1005' name='LoginPageTest' fullname='Dokimion.Tests.LoginPageTest' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' testcasecount='2' result='Passed' start-time='2023-09-25T14:12:34.1679055Z' end-time='2023-09-25T14:12:39.0085625Z' duration='4.840658' total='1' passed='1' failed='0' warnings='0' inconclusive='0' skipped='0' asserts='0'>
+               <test-case id='0-1006' name='TC1LoginValidPage' fullname='Dokimion.Tests.LoginPageTest.TC1LoginValidPage' methodname='TC1LoginValidPage' classname='Dokimion.Tests.LoginPageTest' runstate='Runnable' seed='736143201' result='Passed' start-time='2023-09-25T14:12:37.1990786Z' end-time='2023-09-25T14:12:38.9366617Z' duration='1.737694' asserts='0' />
             </test-suite>
          </test-suite>
       </test-suite>
