@@ -30,11 +30,11 @@ namespace Dokimion.Tests
             //This will match ChromeDriver and web browser versions
             new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
 
-            driver = new ChromeDriver();  //userActions.GetChromeOptions());
+            driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
 
             ICapabilities capabilities = driver.Capabilities;
-            var browserName = capabilities.GetCapability("browserName");
+            var browserName =     capabilities.GetCapability("browserName");
             var browserVersion = capabilities.GetCapability("browserVersion");
             var SeleniumWebDriverVersion = (capabilities.GetCapability("chrome") as Dictionary<string, object>)!["chromedriverVersion"];
 
@@ -106,13 +106,13 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Verify : Username is on top right menu");
                 //Actor.AttemptsTo(Refresh.Browser());
                 // Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                //var displayNameAppeared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
-                //if (!displayNameAppeared)
-                //{
-                //    //If the user name is not displayed refresh the page
-                //    userActions.LogConsoleMessage("Refreshed to display user name");
-                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                //}
+                var displayNameAppeared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
+                if (!displayNameAppeared)
+                {
+                    //If the user name is not displayed refresh the page
+                    userActions.LogConsoleMessage("Refreshed to display user name");
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                }
 
                 Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName), timeout: 60
                    );
@@ -120,13 +120,13 @@ namespace Dokimion.Tests
             }catch  (Exception e) {
 
                 userActions.LogConsoleMessage("Page Not redirected , try to login again" + e);
-                // //Refresh and login again
-                Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.LoginPageWelcomeMsg).ForUpTo(4));
-                // Actor.AttemptsTo(Refresh.Browser());
-                Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+               // //Refresh and login again
+               // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.LoginPageWelcomeMsg).ForUpTo(4));
+               //// Actor.AttemptsTo(Refresh.Browser());
+               // Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
 
-                Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName),
-                timeout: 60);
+               // var displayNameAppeared =   Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName),
+               // timeout: 60);
 
             }
             finally
@@ -134,8 +134,8 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Clean up : Logout User");
                 try
                 {
-                    //Actor.AttemptsTo(Refresh.Browser());
-                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                    Actor.AttemptsTo(Refresh.Browser());
+                    // Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
                 }
                 catch (Exception e)
                 {
