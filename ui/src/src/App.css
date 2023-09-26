@@ -36,17 +36,13 @@
 
 .tree-side{
     height: 100vh;
-    width: 100vh;
-    overflow-x: clip;
-    overflow-y: auto;
+    overflow-y: scroll;
     z-index: 0;
 }
 
 .testcase-side{
     height: 100vh;
-    width: 100vh;
-    overflow-x: clip;
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 .clickable{
@@ -382,15 +378,5 @@ a.link-black, a.link-black:link, a.link-black:link:visited {
     margin-right: 15px;
 }
 
-table.tableUserProfile {
-   border: 1px solid black;
-}
 
-th.headerUserProfile {
-   border: 2px solid black;
-}
-
-td.cellUserProfile {
-   border: 1px solid black;
-}
 
