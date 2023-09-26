@@ -48,7 +48,8 @@ class Launch extends SubComponent {
     attributesStatus: {},
     loading: true,
     errorMessage: "",
-    width: 700,
+    width_left: 700,
+    width_right: 1000,
   };
 
   constructor(props) {
@@ -312,7 +313,7 @@ class Launch extends SubComponent {
         <div className="row">
           <Resizable
             style={resizeStyle}
-            size={{ width: this.state.width, height: this.state.height }}
+            size={{ width: this.state.width_left, height: this.state.height }}
             onResizeStop={(e, direction, ref, d) => {
             this.setState({
 		width: this.state.width + d.width,
@@ -330,7 +331,7 @@ class Launch extends SubComponent {
           </Resizable>
           <Resizable
             style={resizeStyle}
-            size={{ width: this.state.width, height: this.state.height }}
+            size={{ width: this.state.width_right, height: this.state.height }}
             onResizeStop={(e, direction, ref, d) => {
             this.setState({
 		width: this.state.width + d.width,
