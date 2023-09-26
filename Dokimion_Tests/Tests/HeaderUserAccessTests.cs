@@ -100,7 +100,6 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click on right side on User link");
-                Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()));
 
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)

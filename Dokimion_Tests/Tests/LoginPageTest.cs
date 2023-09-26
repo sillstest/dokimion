@@ -107,7 +107,6 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Verify : Username is on top right menu");
                 //Actor.AttemptsTo(Refresh.Browser());
                 //Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()));
                 var displayNameAppeared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!displayNameAppeared)
                 {
