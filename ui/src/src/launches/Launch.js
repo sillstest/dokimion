@@ -11,6 +11,7 @@ import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+import { Resizable } from "re-resizable";
 
 import $ from "jquery";
 
@@ -22,6 +23,15 @@ global.jQuery = $;
 
 require("gijgo/js/gijgo.min.js");
 require("gijgo/css/gijgo.min.css");
+
+const resizeStyle = {
+  display: "flex",
+  height: "scroll",
+  alignItems: "left",
+  justifyContent: "left",
+  border: "solid 1px #ddd",
+  background: "#f0f0f0"
+};
 
 class Launch extends SubComponent {
   state = {
@@ -38,6 +48,7 @@ class Launch extends SubComponent {
     attributesStatus: {},
     loading: true,
     errorMessage: "",
+    width: 700,
   };
 
   constructor(props) {
@@ -288,8 +299,9 @@ class Launch extends SubComponent {
 
   render() {
     return (
+      <>
+      <ControlledPopup popupMessage={this.state.errorMessage}/>
       <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="launch-title">
           <h3>
             <Link to={"/" + this.state.projectId + "/launch/" + this.state.launch.id} onClick={this.showLaunchStats}>
@@ -298,6 +310,16 @@ class Launch extends SubComponent {
           </h3>
         </div>
         <div className="row">
+          <Resizable
+            style={resizeStyle}
+            size={{ width: this.state.width, height: this.state.height }}
+            onResizeStop={(e, direction, ref, d) => {
+            this.setState({
+		width: this.state.width + d.width,
+		height: this.state.height + d.height,
+	    })
+          }}
+          >
           <div className="sweet-loading">
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
@@ -305,6 +327,17 @@ class Launch extends SubComponent {
           <div className="tree-side col-5">
             <div id="tree"></div>
           </div>
+          </Resizable>
+          <Resizable
+            style={resizeStyle}
+            size={{ width: this.state.width, height: this.state.height }}
+            onResizeStop={(e, direction, ref, d) => {
+            this.setState({
+		width: this.state.width + d.width,
+		height: this.state.height + d.height,
+	    })
+          }}
+          >
           <div id="testCase" className="testcase-side col-7">
             {this.state.selectedTestCase && this.state.selectedTestCase.uuid && (
               <TestCase
@@ -479,6 +512,7 @@ class Launch extends SubComponent {
               </div>
             )}
           </div>
+          </Resizable>
         </div>
 
         <div
@@ -492,6 +526,7 @@ class Launch extends SubComponent {
           <LaunchForm launch={this.state.launch} restart={true} failedOnly={this.state.restartFailedOnly} />
         </div>
       </div>
+      </>
     );
   }
 }
