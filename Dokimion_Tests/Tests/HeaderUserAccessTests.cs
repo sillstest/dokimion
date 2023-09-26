@@ -111,9 +111,16 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
                 //Added actions to perform logout to remove flakyness
-                Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
-
-               // actions.Pause(TimeSpan.FromSeconds(1)).Perform();
+                //Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout: 60);
+                try
+                {
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                }
+                catch (Exception e)
+                {
+                    userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
+                }
                 actions.ClickAndHold(Header.UserInfo.FindElement(driver));
                 actions.SendKeys(Keys.Down + Keys.Down);
                 actions.Build();
@@ -153,8 +160,15 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-               // Actor.AttemptsTo(Refresh.Browser());
+                try
+                {
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
+                }
+                catch (Exception e)
+                {
+                    userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
+                }
                 Actor.AttemptsTo(Logout.For());
             }
         }
@@ -185,13 +199,16 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
-                if (!elementAppreared)
+                try
                 {
+                    //Actor.AttemptsTo(Refresh.Browser());
                     Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
                 }
-                //Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                // Actor.AttemptsTo(Refresh.Browser());
+                catch (Exception e)
+                {
+                    userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
+                    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
+                }
                 Actor.AttemptsTo(Logout.For());
             }
         }
