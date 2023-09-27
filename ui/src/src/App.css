@@ -41,6 +41,7 @@
 
 .resize.horizontal {
     resize: horizontal;
+    overflow-y: scroll;
 }
 
 .row_launch {
