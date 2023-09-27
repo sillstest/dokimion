@@ -297,14 +297,17 @@ class Launch extends SubComponent {
             </Link>
           </h3>
         </div>
-        <div className="row">
+        <div className="row_launch">
           <div className="sweet-loading">
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
 
+          <div class="resize horizontal">
           <div className="tree-side col-5">
             <div id="tree"></div>
           </div>
+          </div>
+          <div class="resize horizontal">
           <div id="testCase" className="testcase-side col-7">
             {this.state.selectedTestCase && this.state.selectedTestCase.uuid && (
               <TestCase
@@ -478,6 +481,7 @@ class Launch extends SubComponent {
                 </div>
               </div>
             )}
+          </div>
           </div>
         </div>
 

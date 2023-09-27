@@ -34,15 +34,29 @@
     padding-left: 0px;
 }
 
+.resize {
+    border: 1px solid black;
+    overflow: auto;
+}
+
+.resize.horizontal {
+    resize: horizontal;
+}
+
+.row_launch {
+    display: flex;
+}
+
 .tree-side{
     height: 100vh;
-    overflow-y: scroll;
     z-index: 0;
+    flex: 1;
 }
 
 .testcase-side{
+    resize: horizontal;
     height: 100vh;
-    overflow-y: scroll;
+    flex: 1;
 }
 
 .clickable{
