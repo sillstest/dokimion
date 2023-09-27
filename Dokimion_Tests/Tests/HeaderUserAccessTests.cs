@@ -220,7 +220,7 @@ namespace Dokimion.Tests
             var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
             if (!elementAppreared)
             {
-                Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
+                Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(30));
             }
             Actor.AttemptsTo(Click.On(Header.UserInfo));
 
