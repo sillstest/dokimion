@@ -53,17 +53,13 @@ namespace Dokimion.Tests
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
                 //Page is redirected after initial URL
-                //Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
 
             }
             catch (Exception ex)
             {
                 //Open Dokimion again 
-                //Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
-                //Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput).ForAnAdditional(3));
-                Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()).ForAnAdditional(5));
-
+                Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()).ForAnAdditional(15));
                 count++;
                 userActions.LogConsoleMessage("Unable to load page : retried with addtionatime on " + count + " " + ex.ToString());
             }
@@ -93,7 +89,6 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Set Up : ");
             userActions.LogConsoleMessage("Login as User");
 
-           // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
             Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
 
             try
@@ -104,8 +99,7 @@ namespace Dokimion.Tests
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
-                    //Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(5));
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
 
                 }
                 Actor.AttemptsTo(Click.On(Header.UserInfo));
@@ -117,32 +111,19 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                //Added actions to perform logout to remove flakyness
-                //Actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True());
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
-                    //Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(5));
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
 
                 }
-                //try
-                //{
-                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                //}
-                //catch (Exception e)
-                //{
-                //    userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
-                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
-                //}
+            
                 actions.ClickAndHold(Header.UserInfo.FindElement(driver));
                 actions.SendKeys(Keys.Down + Keys.Down);
                 actions.Build();
                 actions.Perform();
                 actions.Click(Header.LogoutLink.FindElement(driver)).Perform();
-
-                //Actor.AttemptsTo(Refresh.Browser());
-                // Actor.AttemptsTo(Logout.For());
+            
             }
         }
 
@@ -162,9 +143,8 @@ namespace Dokimion.Tests
                 var elementAppreared=  Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
-                    // Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
                     userActions.LogConsoleMessage("Wait till user name is displayed");
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(5));
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
 
                 }
                 Actor.AttemptsTo(Click.On(Header.UserInfo));
@@ -177,20 +157,11 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                //try
-                //{
-                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                //}
-                //catch (Exception e)
-                //{
-                //    userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
-                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
-                //}
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
                     userActions.LogConsoleMessage("Wait till user name is displayed");
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(5));
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
 
                 }
                 Actor.AttemptsTo(Logout.For());
@@ -210,7 +181,6 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click on left side Projects link");
-                //Actor.AttemptsTo(Click.On(Header.ProjectsLink));
                 actions.Pause(TimeSpan.FromSeconds(1)).Perform();
                 IWebElement projectLink = Header.ProjectsLink.FindElement((IWebDriver)driver);
                 actions.Click(projectLink).Perform();
@@ -223,22 +193,12 @@ namespace Dokimion.Tests
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                //try
-                //{
-                //    //Actor.AttemptsTo(Refresh.Browser());
-                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                //}
-                //catch (Exception e)
-                //{
-                //    userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
-                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
-                //}
-
+       
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
                     userActions.LogConsoleMessage("Wait till user name is displayed");
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(5));
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
 
                 }
                 Actor.AttemptsTo(Logout.For());
@@ -260,8 +220,7 @@ namespace Dokimion.Tests
             var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
             if (!elementAppreared)
             {
-                //Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(5));
+                Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
             }
             Actor.AttemptsTo(Click.On(Header.UserInfo));
 

@@ -52,11 +52,9 @@ namespace Dokimion.Tests
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
                 //Page is redirected after initial URL
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
-               // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput));
             }
             catch (Exception ex)
             {
-                //Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.NameInput).ForAnAdditional(3));
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()).ForAnAdditional(3));
                 userActions.LogConsoleMessage("Unable to load page : retried with addtionatime on " + count + " " + ex.ToString());
                 
@@ -99,20 +97,16 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(SendKeys.To(LoginPage.PasswordInput, userActions.Password));
 
             userActions.LogConsoleMessage("Click Sign in button");
-            //Actor.AttemptsTo(Click.On(LoginPage.SingInButton));
             LoginPage.SingInButton.FindElement(driver).Click();
             userActions.LogConsoleMessage("Submit clicked");
             try
             {
                 userActions.LogConsoleMessage("Verify : Username is on top right menu");
-                //Actor.AttemptsTo(Refresh.Browser());
-                //Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
                 var displayNameAppeared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!displayNameAppeared)
                 {
                     userActions.LogConsoleMessage("Wait till user name is displayed");
-                    //Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForUpTo(4));
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(5));
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
 
                 }
 
@@ -120,38 +114,33 @@ namespace Dokimion.Tests
                    );
                 userActions.LogConsoleMessage("Page redirected after click");
             }catch  (Exception e) {
-
                 userActions.LogConsoleMessage("Page Not redirected , try to login again , Click did not work" + e);
-                // //Refresh and login again
-                // Actor.AttemptsTo(WaitAndRefresh.For(LoginPage.LoginPageWelcomeMsg).ForUpTo(4));
-                // Actor.AttemptsTo(Refresh.Browser());
-                Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.LoginPageWelcomeMsg), IsEqualTo.True()).ForAnAdditional(5));
-                Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+                var headerUserNameDisplayed = Actor.AsksFor(Appearance.Of(Header.UserInfo));
+                var loginWelComePage = Actor.AskingFor(Appearance.Of(LoginPage.LoginPageWelcomeMsg));
+                if (!headerUserNameDisplayed)
+                {
+                    userActions.LogConsoleMessage("Wait till user name is displayed");
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
 
-                Actions actions = new Actions(driver);
-                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-                Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName),
-                timeout: 60);
+                }
+                else if (loginWelComePage)
+                {
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.LoginPageWelcomeMsg), IsEqualTo.True()).ForAnAdditional(15));
+                    Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
 
+                    Actions actions = new Actions(driver);
+                    actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                    Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName),
+                    timeout: 60);
+                }
             }
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-                //try
-                //{
-                //    //Actor.AttemptsTo(Refresh.Browser());
-                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                //}
-                //catch (Exception e)
-                //{
-                //    userActions.LogConsoleMessage("Added Additional time to find User Name " + e.Source);
-                //    Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo).ForAnAdditional(5));
-                //}
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
-                    //Actor.AttemptsTo(WaitAndRefresh.For(Header.UserInfo));
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(5));
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
 
                 }
                 Actor.AttemptsTo(Logout.For());
