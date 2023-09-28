@@ -370,10 +370,11 @@ class TestCases extends SubComponent {
             />
           </div>
         </div>
-        <div className="row">
+        <div className="row_launch">
           <div className="sweet-loading">
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
+          <div class="resize horizontal">
           <div className="tree-side col-5">
             <div id="tree"></div>
             {this.showLoadMore() && (
@@ -384,6 +385,8 @@ class TestCases extends SubComponent {
               </div>
             )}
           </div>
+          </div>
+          <div class="resize horizontal">
           <div id="testCase" className="testcase-side col-7">
             {this.state.selectedTestCase && this.state.selectedTestCase.id && (
               <TestCase
@@ -392,6 +395,7 @@ class TestCases extends SubComponent {
                 testcaseId={this.state.selectedTestCase.id}
               />
             )}
+          </div>
           </div>
         </div>
       </div>
