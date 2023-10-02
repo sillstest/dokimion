@@ -13,8 +13,6 @@ namespace Dokimion.Tests
 {
     internal class LoginPageTest
     {
-
-
         private IActor Actor;
         UserActions userActions;
         ChromeDriver driver;
@@ -55,9 +53,12 @@ namespace Dokimion.Tests
             }
             catch (Exception ex)
             {
+                userActions.captureScreenShot(driver, "LoginPageTest");
+
+                count++;
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()).ForAnAdditional(3));
                 userActions.LogConsoleMessage("Unable to load page : retried with addtionatime on " + count + " " + ex.ToString());
-                
+
             }
 
             Actor.WaitsUntil(Appearance.Of(LoginPage.LoginPageWelcomeMsg), IsEqualTo.True());
@@ -113,7 +114,11 @@ namespace Dokimion.Tests
                 Actor.WaitsUntil(Text.Of(Header.UserInfo), ContainsSubstring.Text(userActions.DisplayUserName), timeout: 60
                    );
                 userActions.LogConsoleMessage("Page redirected after click");
-            }catch  (Exception e) {
+            }
+            catch (Exception e)
+            {
+                userActions.captureScreenShot(driver, "TC1LoginValidPage");
+
                 userActions.LogConsoleMessage("Page Not redirected , try to login again , Click did not work" + e);
                 var headerUserNameDisplayed = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 var loginWelComePage = Actor.AskingFor(Appearance.Of(LoginPage.LoginPageWelcomeMsg));
@@ -140,11 +145,17 @@ namespace Dokimion.Tests
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
-
+                    try
+                    {
+                        Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
+                    }
+                    catch (Exception ) { 
+                        userActions.captureScreenShot(driver, "TC1LoginValidPage");
+                    }
                 }
                 Actor.AttemptsTo(Logout.For());
-               userActions.LogConsoleMessage("Logged out successfully!! ");
+                userActions.LogConsoleMessage("Logged out successfully!! ");
+
             }
 
         }

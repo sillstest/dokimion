@@ -9,6 +9,7 @@ using OpenQA.Selenium.Interactions;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 using WebDriverManager.Helpers;
+using System.Linq.Expressions;
 
 namespace Dokimion.Tests
 {
@@ -18,7 +19,6 @@ namespace Dokimion.Tests
         UserActions userActions;
         Actions actions;
         ChromeDriver driver;
-
 
         [OneTimeSetUp]
         public void Setup()
@@ -58,6 +58,8 @@ namespace Dokimion.Tests
             }
             catch (Exception ex)
             {
+                userActions.captureScreenShot(driver, "HeaderUserAccessTests");
+
                 //Open Dokimion again 
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()).ForAnAdditional(15));
                 count++;
@@ -108,22 +110,33 @@ namespace Dokimion.Tests
                 Actor.WaitsUntil(Text.Of(Header.LogoutLink), IsEqualTo.Value(Header.Logout)).Should().NotBeNullOrEmpty();
 
             }
+            catch (Exception)
+            {
+                userActions.captureScreenShot(driver, "TC3UserOptions");
+
+            }
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
+                    try
+                    {
+                        Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
+                    }
+                    catch
+                    {
+                        userActions.captureScreenShot(driver, "TC3UserOptions");
 
+                    }
                 }
-            
                 actions.ClickAndHold(Header.UserInfo.FindElement(driver));
                 actions.SendKeys(Keys.Down + Keys.Down);
                 actions.Build();
                 actions.Perform();
                 actions.Click(Header.LogoutLink.FindElement(driver)).Perform();
-            
+
             }
         }
 
@@ -140,7 +153,7 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click on right side on User link");
-                var elementAppreared=  Actor.AsksFor(Appearance.Of(Header.UserInfo));
+                var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
                     userActions.LogConsoleMessage("Wait till user name is displayed");
@@ -154,15 +167,24 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Verify : User name is displayed");
                 Actor.WaitsUntil(Text.Of(Header.ProfileName), ContainsSubstring.Text(userActions.DisplayUserName));
             }
+            catch
+            {
+                userActions.captureScreenShot(driver,"TC4UserClickOnProfile");
+            }
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
+                    try { 
                     userActions.LogConsoleMessage("Wait till user name is displayed");
                     Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
-
+                    }
+                    catch
+                    {
+                        userActions.captureScreenShot(driver, "TC4UserClickOnProfile");
+                    }
                 }
                 Actor.AttemptsTo(Logout.For());
             }
@@ -190,16 +212,26 @@ namespace Dokimion.Tests
                 bool dokimionExists = Actor.AskingFor(Appearance.Of(Header.Dokimion));
                 Assert.That((allExists && dokimionExists), Is.True);
             }
+            catch
+            {
+                userActions.captureScreenShot(driver, "TC5UserClickOnProjects");
+            }
             finally
             {
                 userActions.LogConsoleMessage("Clean up : Logout User");
-       
+
                 var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
                 if (!elementAppreared)
                 {
-                    userActions.LogConsoleMessage("Wait till user name is displayed");
-                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
-
+                    try
+                    {
+                        userActions.LogConsoleMessage("Wait till user name is displayed");
+                        Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(15));
+                    }
+                    catch
+                    {
+                        userActions.captureScreenShot(driver, "TC5UserClickOnProjects");
+                    }
                 }
                 Actor.AttemptsTo(Logout.For());
             }
@@ -218,9 +250,16 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on right side on User link");
             var elementAppreared = Actor.AsksFor(Appearance.Of(Header.UserInfo));
-            if (!elementAppreared)
+            try
             {
-                Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(30));
+                if (!elementAppreared)
+                {
+                    Actor.AttemptsTo(Wait.Until(Appearance.Of(Header.UserInfo), IsEqualTo.True()).ForAnAdditional(30));
+                }
+            }
+            catch
+            {
+                userActions.captureScreenShot(driver,"TC6UserClickOnLogout");
             }
             Actor.AttemptsTo(Click.On(Header.UserInfo));
 
