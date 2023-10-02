@@ -7,7 +7,7 @@ namespace Dokimion
     public class UserActions
     {
         public string? DokimionUrl = TestContext.Parameters.Get("Url");
-        
+
         public string? ActorName = TestContext.Parameters.Get("ActorName");
         public string? Username = TestContext.Parameters["Username"];
         public string? Password = TestContext.Parameters.Get("Password");
@@ -16,7 +16,9 @@ namespace Dokimion
         public string? DisplayUserName = TestContext.Parameters.Get("DisplayUserName");
 
         public readonly string Headless = "--headless=new";
-        public readonly string WindowSize =  "--window-size=1920,1080";
+        public readonly string WindowSize = "--window-size=1920,1080";
+
+
         public ChromeOptions GetChromeOptions()
         {
 
@@ -45,7 +47,6 @@ namespace Dokimion
                     LogConsoleMessage(TestContext.CurrentContext.Result.StackTrace);
                 }
 
-
             }
         }
 
@@ -53,6 +54,27 @@ namespace Dokimion
         {
             TestContext.Progress.WriteLine(message);
         }
+
+        //Take a screenshot incase of exception/fail scenario 
+        public void captureScreenShot(ChromeDriver driver, string fileName)
+        {
+            Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+            screenshot.SaveAsFile(appendDateTimeToFileName(fileName), ScreenshotImageFormat.Png);
+            LogConsoleMessage("In Exception Screenshot taken: ");
+
+        }
+
+        //Add current date and time to the screenshot file
+        public string appendDateTimeToFileName(string methodName)
+        {
+            string name = Directory.GetCurrentDirectory();
+            string screenPath = Path.GetFullPath(Path.Combine(name, @"..\..\..\", "Screenshots\\"));
+            var nameofFile = String.Concat(screenPath, methodName,
+                DateTime.Now.ToString("MMddyyyy_HHmmssfff"),
+                ".png");
+            return nameofFile;
+        }
+
 
     }
 }
