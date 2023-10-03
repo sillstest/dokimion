@@ -34,29 +34,15 @@
     padding-left: 0px;
 }
 
-.resize {
-    overflow: auto;
-}
-
-.resize.horizontal {
-    resize: horizontal;
-    overflow-y: scroll;
-}
-
-.row_launch {
-    display: flex;
-}
-
 .tree-side{
     height: 100vh;
+    overflow-y: scroll;
     z-index: 0;
-    flex: 1;
 }
 
 .testcase-side{
-    resize: horizontal;
     height: 100vh;
-    flex: 1;
+    overflow-y: scroll;
 }
 
 .clickable{
@@ -392,5 +378,15 @@ a.link-black, a.link-black:link, a.link-black:link:visited {
     margin-right: 15px;
 }
 
+table.tableUserProfile {
+   border: 1px solid black;
+}
 
+th.headerUserProfile {
+   border: 2px solid black;
+}
+
+td.cellUserProfile {
+   border: 1px solid black;
+}
 
