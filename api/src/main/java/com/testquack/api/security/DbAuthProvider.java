@@ -203,7 +203,7 @@ System.out.flush();
                 map(User::getLogin).
                 collect(Collectors.toSet());
         for (String user : usersSet) {
-           System.out.println("UserResource.getAllUsers() - user: " + user);
+           System.out.println("DbAuthProvider::getAllUsers() - user: " + user);
            System.out.flush();
         }
 

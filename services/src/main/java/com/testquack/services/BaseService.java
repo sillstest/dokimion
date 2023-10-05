@@ -157,7 +157,11 @@ System.out.flush();
         return userCanReadProject(session, projectId);
     }
     protected boolean userCanUpdateProject(Session session, String projectId){
-        return userCanReadProject(session, projectId);
+
+        if (UserSecurity.allowUserWriteRequest(session.getPerson().getLogin(), projectId)) {
+           return true;
+        }
+        return false;
 
     }
     protected boolean userCanReadProject(Session session, String projectId){
@@ -168,7 +172,11 @@ System.out.flush();
         if (isAdmin(session)) {
             return true;
         }
-        
+
+        if (UserSecurity.allowUserReadRequest(session.getPerson().getLogin(), projectId)) {
+           return true;
+        }
+
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
 System.out.println("BaseService::userCanReadProject - after findOne");
 System.out.flush();
