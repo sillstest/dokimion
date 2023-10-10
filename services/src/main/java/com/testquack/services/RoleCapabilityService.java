@@ -42,6 +42,12 @@ System.out.flush();
     }
 
     public List<RoleCapability> findAll() {
+System.out.println("RoleCapService.findAll");
+System.out.flush();
+
+System.out.println("RoleCapService.findAll - splitIterator: " + repository.findAll().spliterator());
+System.out.flush();
+
         List<RoleCapability> roleCapList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
 
         return roleCapList;

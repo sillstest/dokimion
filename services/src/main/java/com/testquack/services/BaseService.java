@@ -158,6 +158,10 @@ System.out.flush();
     }
     protected boolean userCanUpdateProject(Session session, String projectId){
 
+System.out.println("BaseService:userCanUpdateProject - session.person: " + session.getPerson());
+System.out.println("BaseService:userCanUpdateProject - projectId: " + projectId);
+System.out.flush();
+
         if (UserSecurity.allowUserWriteRequest(session.getPerson().getLogin(), projectId)) {
            return true;
         }
@@ -336,6 +340,8 @@ System.out.println("BaseService::create - after doSave call - entity: " + entity
     private E doSave(Session session, String projectId, E entity){
         beforeSave(session, projectId, entity);
         if (validateEntity(entity)){
+System.out.println("BaseService::doSave - entity: " + entity);
+System.out.flush();
             entity = getRepository().save(getCurrOrganizationId(session), projectId, entity);
 System.out.println("BaseService::doSave - entity: " + entity);
 System.out.flush();

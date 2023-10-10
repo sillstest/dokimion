@@ -3,12 +3,15 @@ package com.testquack.api.resources;
 import com.testquack.beans.Filter;
 import com.testquack.beans.RoleCapability;
 import com.testquack.beans.Role;
+import com.testquack.beans.User;
 import com.testquack.beans.Capability;
 import com.testquack.services.BaseService;
+import com.testquack.services.UserService;
 import com.testquack.services.RoleCapabilityService;
 import com.testquack.api.utils.FilterUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.greatbit.whoru.auth.SessionProvider;
+import ru.greatbit.whoru.auth.AuthProvider;
 import ru.greatbit.whoru.auth.Session;
 
 import java.util.Set;
@@ -27,6 +30,9 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
   SessionProvider sessionProvider;
 
   @Autowired
+  AuthProvider authProvider;
+
+  @Autowired
   private RoleCapabilityService service;
 
   @Override
@@ -39,32 +45,56 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
     return service;
   }
 
+  @GET
+  @Path("/")
+  public Role getRole() {
+
+     System.out.println("RoleCapabilityResource::getRole");
+     System.out.flush();
+
+     return Role.TESTER;
+
+  }
+
   @POST
   @Path("/add/{role}/{cap}")
-  public RoleCapability addRoleCapabilityPair(@PathParam("role") Role role,
-                                              @PathParam("cap")  Capability cap) {
+  public RoleCapability addRoleCapabilityPair(@PathParam("role") String role,
+                                              @PathParam("cap")  String cap) {
+
+     System.out.println("RoleCapabilityResource::addRoleCap");
+     System.out.println("RoleCapabilityResource::addRoleCap - role: " + role + ", cap: " + cap);
+     System.out.flush();
 
     RoleCapability roleCap = new RoleCapability();
-    roleCap.setRole(role);
-    roleCap.setCapability(cap);
+    roleCap.setRole(Role.TESTER);
+    roleCap.setCapability(Capability.READ);
 
-    return service.save(getUserSession(), null, roleCap);
+    Session session = authProvider.getSession(request);
+    return service.save(session, null, roleCap);
 
   }
 
 
   @POST
   @Path("/delete/{role}/{cap}")
-  public void deleteRoleCapabilityPair(@PathParam("role") Role role,
-                                          @PathParam("cap")  Capability cap) {
+  public void deleteRoleCapabilityPair(@PathParam("role") String role,
+                                       @PathParam("cap")  String cap) {
 
-    service.delete(getUserSession(), role.value(), cap.value());
+     System.out.println("RoleCapabilityResource::delRoleCap");
+     System.out.println("RoleCapabilityResource::delRoleCap - role: " + role + ", cap: " + cap);
+     System.out.flush();
+
+    Session session = authProvider.getSession(request);
+    service.delete(session, role, cap);
 
   }
 
   @GET
   @Path("/getallroles")
   public Set<Role> getAllRoles() {
+
+     System.out.println("RoleCapabilityResource::getAllRoles");
+     System.out.flush();
 
      Set<Role> rolesSet = service.findAll().stream().map(RoleCapability::getRole).
                 collect(Collectors.toSet());
@@ -74,11 +104,17 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
 
   @GET
   @Path("/getcapsforrole/{role}")
-  public RoleCapability getCapabilitiesForRole(@PathParam("role") Role role) {
+  public RoleCapability getCapabilitiesForRole(@PathParam("role") String role) {
 
-     return service.findOne(getUserSession(), null, role.value());
+     System.out.println("RoleCapabilityResource::getCapsForRole");
+     System.out.println("RoleCapabilityResource::getCapsForRole - role: " + role);
+     System.out.flush();
+
+     Session session = authProvider.getSession(request);
+     return service.findOne(session, null, role);
 
   }
+
 
 }
 
