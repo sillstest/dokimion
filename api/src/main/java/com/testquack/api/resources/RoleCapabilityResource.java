@@ -47,9 +47,8 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
   }
 
   @POST
-  @Path("/add/{projectId}/{role}/{cap}")
-  public RoleCapability addRoleCapabilityPair(@PathParam("projectId") String projectId,
-                                              @PathParam("role") String role,
+  @Path("/add/{role}/{cap}")
+  public RoleCapability addRoleCapabilityPair(@PathParam("role") String role,
                                               @PathParam("cap")  String cap) {
 
      System.out.println("RoleCapabilityResource::addRoleCap");
@@ -60,15 +59,14 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
     RoleCapability roleCap = mapRoleCapabilityStringToEnum(role, cap);
     Session session = authProvider.getSession(request);
 
-    return service.save(session, projectId, roleCap);
+    return service.save(session, "", roleCap);
 
   }
 
 
   @POST
-  @Path("/delete/{projectId}/{role}/{cap}")
-  public void deleteRoleCapabilityPair(@PathParam("projectId") String projectId,
-                                       @PathParam("role") String role,
+  @Path("/delete/{role}/{cap}")
+  public void deleteRoleCapabilityPair(@PathParam("role") String role,
                                        @PathParam("cap")  String cap) {
 
      System.out.println("RoleCapabilityResource::delRoleCap");
@@ -78,7 +76,7 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
     Session session = authProvider.getSession(request);
     RoleCapability roleCap = mapRoleCapabilityStringToEnum(role, cap);
 
-    service.delete(session, projectId, roleCap.getId());
+    service.delete(session, "", roleCap.getId());
 
   }
 
@@ -96,16 +94,15 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
   }
 
   @GET
-  @Path("/getcapsforrole/{projectId}/{role}")
-  public RoleCapability getCapabilitiesForRole(@PathParam("projectId") String projectId,
-                                               @PathParam("role") String role) {
+  @Path("/getcapsforrole/{role}")
+  public RoleCapability getCapabilitiesForRole(@PathParam("role") String role) {
 
      System.out.println("RoleCapabilityResource::getCapsForRole");
      System.out.println("RoleCapabilityResource::getCapsForRole - role: " + role);
      System.out.flush();
 
      Session session = authProvider.getSession(request);
-     return service.findOne(session, projectId, role);
+     return service.findOne(session, "", role);
 
   }
 
