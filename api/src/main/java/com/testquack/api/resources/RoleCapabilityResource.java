@@ -46,39 +46,29 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
     return service;
   }
 
-  @GET
-  @Path("/")
-  public Role getRole() {
-
-     System.out.println("RoleCapabilityResource::getRole");
-     System.out.flush();
-
-     return Role.TESTER;
-
-  }
-
   @POST
-  @Path("/add/{role}/{cap}")
-  public RoleCapability addRoleCapabilityPair(@PathParam("role") String role,
+  @Path("/add/{projectId}/{role}/{cap}")
+  public RoleCapability addRoleCapabilityPair(@PathParam("projectId") String projectId,
+                                              @PathParam("role") String role,
                                               @PathParam("cap")  String cap) {
 
      System.out.println("RoleCapabilityResource::addRoleCap");
      System.out.println("RoleCapabilityResource::addRoleCap - role: " + role + ", cap: " + cap);
      System.out.flush();
 
-    RoleCapability roleCap = new RoleCapability();
-    roleCap.setRole(Role.TESTER);
-    roleCap.setCapability(Capability.READ);
 
+    RoleCapability roleCap = mapRoleCapabilityStringToEnum(role, cap);
     Session session = authProvider.getSession(request);
-    return service.save(session, "test", roleCap);
+
+    return service.save(session, projectId, roleCap);
 
   }
 
 
   @POST
-  @Path("/delete/{role}/{cap}")
-  public void deleteRoleCapabilityPair(@PathParam("role") String role,
+  @Path("/delete/{projectId}/{role}/{cap}")
+  public void deleteRoleCapabilityPair(@PathParam("projectId") String projectId,
+                                       @PathParam("role") String role,
                                        @PathParam("cap")  String cap) {
 
      System.out.println("RoleCapabilityResource::delRoleCap");
@@ -86,7 +76,9 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
      System.out.flush();
 
     Session session = authProvider.getSession(request);
-    service.delete(session, role, cap);
+    RoleCapability roleCap = mapRoleCapabilityStringToEnum(role, cap);
+
+    service.delete(session, projectId, roleCap.getId());
 
   }
 
@@ -104,18 +96,43 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
   }
 
   @GET
-  @Path("/getcapsforrole/{role}")
-  public RoleCapability getCapabilitiesForRole(@PathParam("role") String role) {
+  @Path("/getcapsforrole/{projectId}/{role}")
+  public RoleCapability getCapabilitiesForRole(@PathParam("projectId") String projectId,
+                                               @PathParam("role") String role) {
 
      System.out.println("RoleCapabilityResource::getCapsForRole");
      System.out.println("RoleCapabilityResource::getCapsForRole - role: " + role);
      System.out.flush();
 
      Session session = authProvider.getSession(request);
-     return service.findOne(session, null, role);
+     return service.findOne(session, projectId, role);
 
   }
 
+
+  private RoleCapability mapRoleCapabilityStringToEnum(String role, String cap) {
+
+    RoleCapability roleCap = new RoleCapability();
+    if (role == "Tester") {
+       roleCap.setRole(Role.TESTER);
+    } else if (role == "Test Developer") {
+       roleCap.setRole(Role.TEST_DEVELOPER);
+    } else if (role == "Admin") {
+       roleCap.setRole(Role.ADMIN);
+    }
+
+    if (cap == "read") {
+       roleCap.setCapability(Capability.READ);
+    } else if (cap == "write") {
+       roleCap.setCapability(Capability.WRITE);
+    } else if (cap == "readwrite") {
+       roleCap.setCapability(Capability.READWRITE);
+    } else if (cap == "admin") {
+       roleCap.setCapability(Capability.ADMIN);
+    }
+
+   return roleCap;
+  }
 
 }
 
