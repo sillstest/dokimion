@@ -91,7 +91,7 @@ System.out.flush();
     }
 
     public E save(Session user, String projectId, E entity){
-System.out.println("BaseService::save 1 - session: " + user);
+System.out.println("BaseService::save 1 - session, projectId: " + user + ", " + projectId);
 System.out.flush();
         if (!userCanSave(user, projectId, entity)){
 System.out.println("user CANNOT save: " + user);
@@ -432,15 +432,10 @@ System.out.flush();
 
     protected boolean isRoleAdmin(Session session)
     {
-System.out.println("BaseService::isRoleAdmin - session: " + session);
-System.out.flush();
-
        List<String> roles = session.getPerson().getRoles();
 
        for (String role : roles)
        {
-System.out.println("role: " + role);
-System.out.flush();
           if (role.equals("Admin")) {
              return true;
           }

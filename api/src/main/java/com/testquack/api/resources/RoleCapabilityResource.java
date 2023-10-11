@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ru.greatbit.whoru.auth.SessionProvider;
 import ru.greatbit.whoru.auth.AuthProvider;
 import ru.greatbit.whoru.auth.Session;
+import ru.greatbit.whoru.auth.Person;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -70,7 +71,7 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
     roleCap.setCapability(Capability.READ);
 
     Session session = authProvider.getSession(request);
-    return service.save(session, null, roleCap);
+    return service.save(session, "test", roleCap);
 
   }
 
