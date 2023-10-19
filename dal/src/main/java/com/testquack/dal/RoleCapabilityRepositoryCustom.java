@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface RoleCapabilityRepositoryCustom {
 
-    List<RoleCapability> findByOrganizationId(String id);
+    public List<RoleCapability> suggestRoleCapability(String organizationId, String literal);
+
 }

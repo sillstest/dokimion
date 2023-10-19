@@ -3,6 +3,7 @@ package com.testquack.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.testquack.beans.RoleCapability;
 import com.testquack.beans.Role;
+import com.testquack.beans.Filter;
 import com.testquack.beans.Capability;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.RoleCapabilityRepository;
@@ -10,9 +11,12 @@ import ru.greatbit.whoru.auth.Session;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class RoleCapabilityService extends BaseService<RoleCapability> {
@@ -26,38 +30,13 @@ public class RoleCapabilityService extends BaseService<RoleCapability> {
     }
 
     @Override
-    public RoleCapability findOne(Session session, String projectId, String id) {
-
-System.out.println("RoleCapService.findOne - projectId, id: " + projectId + "," + id);
-System.out.println("RoleCapService.findOne - session: " + session);
+    public List<RoleCapability> findFiltered(Session session, String projectId, Filter filter) {
+System.out.println("RoleCapService.findFiltered - session: " + session);
+System.out.println("RoleCapService.findFiltered - projectId: " + projectId);
+System.out.println("RoleCapService.findFiltered - filter: " + filter);
 System.out.flush();
-
-        //return cleanUserSesitiveData(super.findOne(session, projectId, id));
-        RoleCapability rolecap = cleanRoleCapabilitySensitiveData(super.findOne(session, projectId, id));
-
-System.out.println("RoleCapService.findOne - rolecap: " + rolecap);
-System.out.flush();
-
-        return rolecap;
+        return getRepository().find(getCurrOrganizationId(session), projectId, filter);
     }
-
-    public List<RoleCapability> findAll() {
-System.out.println("RoleCapService.findAll");
-System.out.flush();
-
-System.out.println("RoleCapService.findAll - splitIterator: " + repository.findAll().spliterator());
-System.out.flush();
-
-        List<RoleCapability> roleCapList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
-
-        return roleCapList;
-    }
-
-    private RoleCapability cleanRoleCapabilitySensitiveData(RoleCapability rolecap){
-        return rolecap.withRole(null).withCapability(null);
-    }
-
-
 
 }
 
