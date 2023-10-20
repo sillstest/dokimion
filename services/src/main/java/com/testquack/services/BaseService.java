@@ -176,10 +176,11 @@ System.out.flush();
         if (isAdmin(session)) {
             return true;
         }
-
+/*
         if (UserSecurity.allowUserReadRequest(session.getPerson().getLogin(), projectId)) {
            return true;
         }
+*/
 
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
 System.out.println("BaseService::userCanReadProject - after findOne");
