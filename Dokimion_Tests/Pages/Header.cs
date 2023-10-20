@@ -29,6 +29,12 @@ namespace Dokimion.Pages
         public static string Profile = "Profile";
         public static string Logout = "Log out";
 
+        public static IWebLocator TestCases => L("TestCases", By.XPath("//a[normalize-space()='TestCases']"));
+        //div[@class='card-header']//a[normalize-space()='Dokimion']
+        public static IWebLocator DokimionProject => L("DokimionProject", By.XPath("//div[@class='card-header']//a[normalize-space()='Dokimion']"));
+
+        public static IWebLocator Attributes => L("TestCases", By.XPath("//a[normalize-space()='Attributes']"));
+
 
     }
 
