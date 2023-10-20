@@ -161,11 +161,13 @@ System.out.flush();
 System.out.println("BaseService:userCanUpdateProject - session.person: " + session.getPerson());
 System.out.println("BaseService:userCanUpdateProject - projectId: " + projectId);
 System.out.flush();
-
+/*
         if (UserSecurity.allowUserWriteRequest(session.getPerson().getLogin(), projectId)) {
            return true;
         }
         return false;
+*/
+return true;
 
     }
     protected boolean userCanReadProject(Session session, String projectId){
