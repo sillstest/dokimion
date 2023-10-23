@@ -37,6 +37,8 @@ System.out.flush();
 
      for (RoleCapability roleCap : roleCapList) {
         if (userRole == roleCap.getRole()) {
+System.out.println("allowUserReadRequest - roleCap matched role: " + roleCap.getRole());
+System.out.flush();
            if (roleCap.getCapability() == Capability.READ) {
 System.out.println("allowUserReadRequest - roleCap allowed READ: " + roleCap);
 System.out.flush();
@@ -73,8 +75,11 @@ System.out.flush();
 
      for (RoleCapability roleCap : roleCapList) {
         if (userRole == roleCap.getRole()) {
-           if (roleCap.getCapability() == Capability.READWRITE) {
-System.out.println("allowUserWrieRequest - roleCap allowed READWRITE: " + roleCap);
+System.out.println("allowUserWriteRequest - roleCap matched role: " + roleCap.getRole());
+System.out.flush();
+           if ((roleCap.getCapability() == Capability.READWRITE) || 
+               (roleCap.getCapability() == Capability.ADMIN)) {
+System.out.println("allowUserWrieRequest - roleCap allowed READWRITE or ADMIN: " + roleCap);
 System.out.flush();
 
               return true;
