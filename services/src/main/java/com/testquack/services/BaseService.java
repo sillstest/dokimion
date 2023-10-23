@@ -15,6 +15,8 @@ import com.testquack.beans.Filter;
 import com.testquack.beans.Project;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.ProjectRepository;
+import com.testquack.dal.UserRepository;
+import com.testquack.dal.RoleCapabilityRepository;
 import ru.greatbit.whoru.auth.Session;
 
 import java.util.Collection;
@@ -44,6 +46,12 @@ public abstract class BaseService<E extends Entity> {
 
     @Autowired
     protected HazelcastInstance hazelcastInstance;
+
+    @Autowired
+    protected UserRepository userRepository;
+
+    @Autowired
+    protected RoleCapabilityRepository roleCapRepository;
 
     @Autowired
     protected ProjectRepository projectRepository;
@@ -161,13 +169,13 @@ System.out.flush();
 System.out.println("BaseService:userCanUpdateProject - session.person: " + session.getPerson());
 System.out.println("BaseService:userCanUpdateProject - projectId: " + projectId);
 System.out.flush();
-/*
-        if (UserSecurity.allowUserWriteRequest(session.getPerson().getLogin(), projectId)) {
+
+        if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session), 
+           userRepository, roleCapRepository, projectId, session.getPerson().getLogin())) {
            return true;
         }
+
         return false;
-*/
-return true;
 
     }
     protected boolean userCanReadProject(Session session, String projectId){
@@ -178,11 +186,12 @@ System.out.flush();
         if (isAdmin(session)) {
             return true;
         }
-/*
-        if (UserSecurity.allowUserReadRequest(session.getPerson().getLogin(), projectId)) {
+
+        if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session), 
+           userRepository, roleCapRepository, projectId, session.getPerson().getLogin())) {
            return true;
         }
-*/
+
 
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
 System.out.println("BaseService::userCanReadProject - after findOne");

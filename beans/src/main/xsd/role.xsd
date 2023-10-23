@@ -22,16 +22,14 @@
       </xs:complexContent>
     </xs:complexType>
                    
-    <xs:element name="role" type="Role"/>
     <xs:simpleType name="Role">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="Tester"/>
-            <xs:enumeration value="Test Developer"/>
-            <xs:enumeration value="Admin"/>
+            <xs:enumeration value="TESTER"/>
+            <xs:enumeration value="TESTDEVELOPER"/>
+            <xs:enumeration value="ADMIN"/>
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:element name="capability" type="Capability"/>
     <xs:simpleType name="Capability">
         <xs:restriction base="xs:string">
             <xs:enumeration value="read"/>

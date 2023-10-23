@@ -46,16 +46,16 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
     @Test
     public void findFilteredSingleFieldTest(){
        roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.TESTER));
-       roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.TEST_DEVELOPER));
+       roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.TESTDEVELOPER));
        roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.ADMIN));
 
        List<RoleCapability> roleCaps = roleCapRepo.find(
                 null,
                 null,
-                new Filter().withField("role", Role.TEST_DEVELOPER)
+                new Filter().withField("role", Role.TESTDEVELOPER)
        );
        assertThat(roleCaps.size(), is(1));
-       assertThat(roleCaps.get(0).getRole(), is(Role.TEST_DEVELOPER));
+       assertThat(roleCaps.get(0).getRole(), is(Role.TESTDEVELOPER));
 
        for (RoleCapability roleCap : roleCaps ) {
           System.out.println("findFilteredSingleFieldTest - role: " + roleCap.getRole().value());
@@ -94,7 +94,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
     public void findFilteredMultipleFieldTest(){
 
         roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.TESTER).withCapability(Capability.READWRITE));
-        roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.TEST_DEVELOPER).withCapability(Capability.WRITE));
+        roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.TESTDEVELOPER).withCapability(Capability.WRITE));
         roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.ADMIN).withCapability(Capability.READWRITE));
 
 /*
@@ -113,7 +113,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
              null,
              new Filter().
                       withField("role", Role.TESTER).
-                      withField("role", Role.TEST_DEVELOPER).
+                      withField("role", Role.TESTDEVELOPER).
                       withField("capability", Capability.READWRITE)
         );
 
@@ -125,7 +125,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
     public void findOrderedTest(){
 
         roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.TESTER));
-        roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.TEST_DEVELOPER));
+        roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.TESTDEVELOPER));
         roleCapRepo.save(null, "RoleCapability", new RoleCapability().withRole(Role.ADMIN));
 
         List<RoleCapability> roleCaps = roleCapRepo.find(
@@ -137,7 +137,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
 
         assertThat(roleCaps.size(), is(3));
         assertThat(roleCaps.stream().map(RoleCapability::getRole).collect(toList()),
-                contains(Role.ADMIN, Role.TESTER, Role.TEST_DEVELOPER));
+                contains(Role.ADMIN, Role.TESTER, Role.TESTDEVELOPER));
 
         roleCaps = roleCapRepo.find(
                 null,
@@ -148,7 +148,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
        
         assertThat(roleCaps.size(), is(3));
         assertThat(roleCaps.stream().map(RoleCapability::getRole).collect(toList()),
-                contains(Role.TEST_DEVELOPER, Role.TESTER, Role.ADMIN));
+                contains(Role.TESTDEVELOPER, Role.TESTER, Role.ADMIN));
 
     }
 
