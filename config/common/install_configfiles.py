@@ -165,6 +165,8 @@ def main():
                  pass;
 
 
+    else:
+       print("Non-supported hostname: " + hostname);
 
     return
 
