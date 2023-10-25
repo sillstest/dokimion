@@ -7,16 +7,13 @@ import os
 import platform
 import shutil
 
-VM_common_configFiles = [
-   [ "dokimion/config/production/common"                 ],
-   [ "rsyslog.conf",          "/etc"                     ],
-   [ "rsyslog.service",       "/etc/systemd/system/multi-user.target.wants" ],
-   [ "nginx.conf",            "/etc/nginx"               ]
-]
-
 VM_dokimion_configFiles = [
    [ "dokimion/config/production/dokimion"               ],
-   [ "load_balancer.conf",    "/etc/nginx/conf.d"        ]
+   [ "nginx.conf",            "/etc/nginx/"              ]
+   [ "nginx.service",         "/etc/systemd/system/multi-user.target.wants" ]
+   [ "load_balancer.conf",    "/etc/nginx/sites-available" ]
+   [ "rsyslog.conf",          "/etc"                     ],
+   [ "rsyslog.service",       "/etc/systemd/system/multi-user.target.wants" ]
 ]
 
 VM_dokimion1_configFiles = [
@@ -27,7 +24,11 @@ VM_dokimion1_configFiles = [
    [ "quack.properties",         "/etc/dokimion"            ],
    [ "dokimion1.conf",           "/etc/nginx/sites-available" ],
    [ "dokimion1_server.service", "/etc/systemd/system"      ],
-   [ "dokimion1_ui.service",     "/etc/systemd/system"      ]
+   [ "dokimion1_ui.service",     "/etc/systemd/system"      ],
+   [ "rsyslog.conf",             "/etc"                     ],
+   [ "rsyslog.service",          "/etc/systemd/system/multi-user.target.wants" ],
+   [ "nginx.conf",               "/etc/nginx/"              ],
+   [ "nginx.service",            "/etc/systemd/system/multi-user.target.wants" ]
 ]
 
 VM_dokimion2_configFiles = [
@@ -38,7 +39,11 @@ VM_dokimion2_configFiles = [
    [ "quack.properties",         "/etc/dokimion"            ],
    [ "dokimion2.conf",           "/etc/nginx/sites-available" ],
    [ "dokimion2_server.service", "/etc/systemd/system"      ],
-   [ "dokimion2_ui.service",     "/etc/systemd/system"      ]
+   [ "dokimion2_ui.service",     "/etc/systemd/system"      ],
+   [ "rsyslog.conf",             "/etc"                     ],
+   [ "rsyslog.service",          "/etc/systemd/system/multi-user.target.wants" ],
+   [ "nginx.conf",               "/etc/nginx/"              ],
+   [ "nginx.service",            "/etc/systemd/system/multi-user.target.wants" ]
 ]
 
 VM_dokimion3_configFiles = [
@@ -50,6 +55,10 @@ VM_dokimion3_configFiles = [
    [ "dokimion3.conf",           "/etc/nginx/sites-available" ],
    [ "dokimion3_server.service", "/etc/systemd/system"      ],
    [ "dokimion3_ui.service",     "/etc/systemd/system"      ]
+   [ "rsyslog.conf",             "/etc"                     ],
+   [ "rsyslog.service",          "/etc/systemd/system/multi-user.target.wants" ],
+   [ "nginx.conf",               "/etc/nginx/"              ],
+   [ "nginx.service",            "/etc/systemd/system/multi-user.target.wants" ]
 ]
 
 VM_dokimion4_configFiles = [
@@ -61,6 +70,10 @@ VM_dokimion4_configFiles = [
    [ "dokimion4.conf",           "/etc/nginx/sites-available" ],
    [ "dokimion4_server.service", "/etc/systemd/system"      ],
    [ "dokimion4_ui.service",     "/etc/systemd/system"      ]
+   [ "rsyslog.conf",             "/etc"                     ],
+   [ "rsyslog.service",          "/etc/systemd/system/multi-user.target.wants" ],
+   [ "nginx.conf",               "/etc/nginx/"              ],
+   [ "nginx.service",            "/etc/systemd/system/multi-user.target.wants" ]
 ]
 
 VM_dokimiondev_configFiles = [
@@ -73,7 +86,9 @@ VM_dokimiondev_configFiles = [
    [ "dokimion_server_dev.service", "/etc/systemd/system"      ],
    [ "dokimion_ui_dev.service",     "/etc/systemd/system"      ],
    [ "rsyslog.conf",                "/etc"                     ],
-   [ "nginx.conf",                  "/etc/nginx"               ]
+   [ "rsyslog.service",             "/etc/systemd/system/multi-user.target.wants" ],
+   [ "nginx.conf",                  "/etc/nginx/"              ],
+   [ "nginx.service",               "/etc/systemd/system/multi-user.target.wants" ]
 ]
 
 def main():
@@ -169,9 +184,6 @@ def main():
        print("Non-supported hostname: " + hostname);
 
     return
-
-
-
 
 
 if __name__ == "__main__":
