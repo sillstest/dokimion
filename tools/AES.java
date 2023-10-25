@@ -56,7 +56,9 @@ public class AES {
     final String secretKey = "al;jf;lda1_+_!!()!!!!";
 
     //String originalString = "bibles1_for!the@#world.com";
-    String originalString = "E12!rp_$wd";
+    //String originalString = "E12!rp_$wd";
+    String originalString = "adminpass";
+
     String encryptedString = AES.encrypt(originalString, secretKey) ;
     String decryptedString = AES.decrypt(encryptedString, secretKey) ;
 
