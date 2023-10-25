@@ -169,9 +169,6 @@ public class LaunchService extends BaseService<Launch> {
         if (isEmpty(launchTestCase.getUuid())) {
             launchTestCase.setUuid(UUID.randomUUID().toString());
         }
-        if (launch.isSkipBroken() && launchTestCase.isBroken()) {
-            launchTestCase.setLaunchStatus(SKIPPED);
-        }
     }
 
     @Override
@@ -338,7 +335,6 @@ public class LaunchService extends BaseService<Launch> {
                             withField("id", statsMap.keySet().toArray()));
             actualTestcases.forEach(actualTestcase -> {
                 LaunchTestcaseStats statsToUpdate = statsMap.get(actualTestcase.getId());
-                statsToUpdate.setBroken(actualTestcase.isBroken());
                 statsToUpdate.setName(
                         isEmpty(actualTestcase.getName()) ?
                                 actualTestcase.getImportedName() : actualTestcase.getName());

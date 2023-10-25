@@ -17,7 +17,7 @@ public class TestCase extends TestCaseBase {
         super();
         this.attributes = testCasePreview.getAttributes();
         this.automated = testCasePreview.isAutomated();
-        this.broken = testCasePreview.isBroken();
+        this.locked = false;
         this.deleted = testCasePreview.isDeleted();
         this.id = testCasePreview.getId();
         this.importedName = testCasePreview.getImportedName();

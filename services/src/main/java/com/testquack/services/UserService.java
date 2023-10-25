@@ -40,7 +40,13 @@ public class UserService extends BaseService<User> {
 
     @Override
     protected boolean userCanRead(Session session, String projectId, User entity) {
-        return true;
+
+       if (UserSecurity.allowUserReadRequest(getCurrOrganizationId(session),
+           userRepository, roleCapRepository, projectId, entity.getLogin())) {
+           return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -49,11 +55,25 @@ public class UserService extends BaseService<User> {
     }
 
     protected boolean userCanSave(Session session, String login) {
+
+       if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session),
+           userRepository, roleCapRepository, null, login)) {
+           return true;
+        }
+
         return isAdmin(session) || login.equals(session.getPerson().getLogin());
     }
 
     @Override
     protected boolean userCanSave(Session session, String projectId, Collection<User> entities) {
+
+       for (User user : entities) {
+          if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session),
+              userRepository, roleCapRepository, projectId, user.getLogin())) {
+              return true;
+           }
+        }
+
         return isAdmin(session);
     }
 
@@ -64,6 +84,12 @@ public class UserService extends BaseService<User> {
 
     @Override
     protected boolean userCanCreate(Session session, String projectId, User entity) {
+
+       if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session),
+           userRepository, roleCapRepository, projectId, entity.getLogin())) {
+           return true;
+        }
+
         return isAdmin(session);
     }
 

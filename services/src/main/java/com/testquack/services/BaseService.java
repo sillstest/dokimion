@@ -15,6 +15,8 @@ import com.testquack.beans.Filter;
 import com.testquack.beans.Project;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.ProjectRepository;
+import com.testquack.dal.UserRepository;
+import com.testquack.dal.RoleCapabilityRepository;
 import ru.greatbit.whoru.auth.Session;
 
 import java.util.Collection;
@@ -44,6 +46,12 @@ public abstract class BaseService<E extends Entity> {
 
     @Autowired
     protected HazelcastInstance hazelcastInstance;
+
+    @Autowired
+    protected UserRepository userRepository;
+
+    @Autowired
+    protected RoleCapabilityRepository roleCapRepository;
 
     @Autowired
     protected ProjectRepository projectRepository;
@@ -91,7 +99,7 @@ System.out.flush();
     }
 
     public E save(Session user, String projectId, E entity){
-System.out.println("BaseService::save 1 - session: " + user);
+System.out.println("BaseService::save 1 - session, projectId: " + user + ", " + projectId);
 System.out.flush();
         if (!userCanSave(user, projectId, entity)){
 System.out.println("user CANNOT save: " + user);
@@ -157,7 +165,17 @@ System.out.flush();
         return userCanReadProject(session, projectId);
     }
     protected boolean userCanUpdateProject(Session session, String projectId){
-        return userCanReadProject(session, projectId);
+
+System.out.println("BaseService:userCanUpdateProject - session.person: " + session.getPerson());
+System.out.println("BaseService:userCanUpdateProject - projectId: " + projectId);
+System.out.flush();
+
+        if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session), 
+           userRepository, roleCapRepository, projectId, session.getPerson().getLogin())) {
+           return true;
+        }
+
+        return false;
 
     }
     protected boolean userCanReadProject(Session session, String projectId){
@@ -168,7 +186,13 @@ System.out.flush();
         if (isAdmin(session)) {
             return true;
         }
-        
+
+        if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session), 
+           userRepository, roleCapRepository, projectId, session.getPerson().getLogin())) {
+           return true;
+        }
+
+
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
 System.out.println("BaseService::userCanReadProject - after findOne");
 System.out.flush();
@@ -328,6 +352,8 @@ System.out.println("BaseService::create - after doSave call - entity: " + entity
     private E doSave(Session session, String projectId, E entity){
         beforeSave(session, projectId, entity);
         if (validateEntity(entity)){
+System.out.println("BaseService::doSave - entity: " + entity);
+System.out.flush();
             entity = getRepository().save(getCurrOrganizationId(session), projectId, entity);
 System.out.println("BaseService::doSave - entity: " + entity);
 System.out.flush();
@@ -418,15 +444,10 @@ System.out.flush();
 
     protected boolean isRoleAdmin(Session session)
     {
-System.out.println("BaseService::isRoleAdmin - session: " + session);
-System.out.flush();
-
        List<String> roles = session.getPerson().getRoles();
 
        for (String role : roles)
        {
-System.out.println("role: " + role);
-System.out.flush();
           if (role.equals("Admin")) {
              return true;
           }
