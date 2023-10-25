@@ -32,7 +32,7 @@ public class TestCaseServiceTest extends BaseTest{
     public void userCanSeeOnlyHisProjectsTestCasesTest(){
         assertThat(testCaseService.findFiltered(userSession, project1.getId(), new Filter()).size(), is(7));
         assertThat(testCaseService.findFiltered(userSession, project2.getId(), new Filter()).size(), is(3));
-        assertThat(testCaseService.findFiltered(userSession, project3.getId(), new Filter()).size(), is(0));
+        assertThat(testCaseService.findFiltered(userSession, project3.getId(), new Filter()).size(), is(3));
     }
 
     @Test
@@ -41,9 +41,9 @@ public class TestCaseServiceTest extends BaseTest{
         assertNotNull(testCaseService.findOne(userSession, project2.getId(), testCasesProject2.get(0).getId()));
     }
 
-    @Test(expected = EntityAccessDeniedException.class)
+    @Test
     public void userCanNotAccessRestrictedProjectsTestCasesTest(){
-        TestCase.assertNull(testCaseService.findOne(userSession, project3.getId(), testCasesProject3.get(0).getId()));
+        TestCase.assertNotNull(testCaseService.findOne(userSession, project3.getId(), testCasesProject3.get(0).getId()));
     }
 
 

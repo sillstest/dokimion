@@ -111,6 +111,34 @@ public class TestCaseResource extends BaseCrudResource<TestCase> {
     }
 
     @POST
+    @Path("/{testcaseId}/lock")
+    public TestCase LockTestCase(@PathParam("projectId") String projectId,
+                                 @PathParam("testcaseId") final String testcaseId)
+                                 throws Exception {
+System.out.println("TestCaseResource::LockTestCase - projectId: " + projectId);
+System.out.println("TestCaseResource::LockTestCase - testcaseId: " + testcaseId);
+System.out.println("TestCaseResource::LockTestCase - stubbed out");
+System.out.flush();
+TestCase tc = new TestCase();
+return tc;
+        //return service.lockTestCase(getUserSession(), projectId, testcaseId);
+    }
+
+    @POST
+    @Path("/{testcaseId}/unlock")
+    public TestCase UnlockTestCase(@PathParam("projectId") String projectId,
+                                   @PathParam("testcaseId") final String testcaseId)
+                                   throws Exception {
+System.out.println("TestCaseResource::UnlockTestCase - projectId: " + projectId);
+System.out.println("TestCaseResource::UnlockTestCase - testcaseId: " + testcaseId);
+System.out.println("TestCaseResource::LockTestCase - stubbed out");
+System.out.flush();
+TestCase tc = new TestCase();
+return tc;
+        //return service.unlockTestCase(getUserSession(), projectId, testcaseId);
+    }
+
+    @POST
     @Path("/{testcaseId}/issue/link/{issueId}")
     public TestCase linkIssueById(@PathParam("projectId") String projectId,
                                   @PathParam("testcaseId") final String testcaseId,

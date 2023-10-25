@@ -137,7 +137,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
 
         assertThat(roleCaps.size(), is(3));
         assertThat(roleCaps.stream().map(RoleCapability::getRole).collect(toList()),
-                contains(Role.ADMIN, Role.TESTER, Role.TESTDEVELOPER));
+                contains(Role.ADMIN, Role.TESTDEVELOPER, Role.TESTER));
 
         roleCaps = roleCapRepo.find(
                 null,
@@ -148,7 +148,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
        
         assertThat(roleCaps.size(), is(3));
         assertThat(roleCaps.stream().map(RoleCapability::getRole).collect(toList()),
-                contains(Role.TESTDEVELOPER, Role.TESTER, Role.ADMIN));
+                contains(Role.TESTER, Role.TESTDEVELOPER, Role.ADMIN));
 
     }
 
