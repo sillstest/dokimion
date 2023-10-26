@@ -31,12 +31,11 @@
                     <xs:element name="version" type="xs:string"/>
                     <xs:element name="attachments" type="Attachment" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="automated" type="xs:boolean" default="false"/>
-                    <xs:element name="broken" type="xs:boolean" default="false"/>
+                    <xs:element name="locked" type="xs:boolean" default="false"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
-
 
     <xs:simpleType name="Status">
         <xs:restriction base="xs:string">
@@ -131,7 +130,6 @@
                 <xs:sequence>
                     <xs:element name="importedName" type="xs:string"/>
                     <xs:element name="automated" type="xs:boolean"/>
-                    <xs:element name="broken" type="xs:boolean"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>

@@ -32,14 +32,6 @@
         </xs:complexContent>
     </xs:complexType>
 
-    <xs:element name="role" type="Role"/>
-    <xs:simpleType name="Role">
-        <xs:restriction base="xs:string">
-            <xs:enumeration value="ADMIN"/>
-            <xs:enumeration value="USER"/>
-        </xs:restriction>
-    </xs:simpleType>
-
     <xs:element name="changePasswordRequest" type="ChangePasswordRequest"/>
     <xs:complexType name="ChangePasswordRequest">
         <xs:sequence>

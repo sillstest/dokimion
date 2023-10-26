@@ -17,6 +17,7 @@ import com.testquack.beans.TestcaseFilter;
 import com.testquack.beans.TrackerProject;
 import com.testquack.dal.TestCasePreviewRepository;
 import com.testquack.services.errors.EntityNotFoundException;
+import com.testquack.services.errors.EntityAccessDeniedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.testquack.dal.CommonRepository;
@@ -214,7 +215,15 @@ public class TestCaseService extends BaseService<TestCase> {
             existingTestcase.getMetaData().putAll(testCase.getMetaData());
         }
         existingTestcase.setDeleted(false);
-        save(user, projectId, existingTestcase);
+        if (existingTestcase.isLocked() == false) {
+           existingTestcase.setLocked(true);
+           save(user, projectId, existingTestcase);
+        } else {
+            throw new EntityAccessDeniedException(
+                    format("User %s can't update testcase %s", user.getPerson().getLogin(), 
+                            existingTestcase.getId()));
+        }
+
     }
 
     private TestCase createMissingAttributes(Session session, String projectId, TestCase testCase) {
@@ -242,17 +251,22 @@ public class TestCaseService extends BaseService<TestCase> {
     }
 
     public TestCase uploadAttachment(Session userSession, String projectId, String testcaseId, InputStream uploadedInputStream, String fileName, long size) throws IOException {
-        Attachment attachment = storage.upload(getCurrOrganizationId(userSession), projectId, uploadedInputStream, fileName, size);
-        return update(userSession, projectId,
-                (TestCase) new TestCase().withId(testcaseId).withLastModifiedTime(Long.MAX_VALUE),
-                ((originalEntity, newEntity) -> {
-            attachment.withId(UUID.randomUUID().toString()).
-                    withCreatedBy(userSession.getLogin()).
-                    withCreatedTime(System.currentTimeMillis()).
-                    withDataSize(size);
-            ((TestCase)originalEntity).getAttachments().add(attachment);
-            return originalEntity;
-        }));
+
+        Attachment uploadedAttachment = storage.upload(getCurrOrganizationId(userSession), projectId, uploadedInputStream, fileName, size);
+
+       TestCase newTestCase = (TestCase)new TestCase().withId(testcaseId).
+                       withLastModifiedTime(Long.MAX_VALUE);
+       uploadedAttachment.withId(UUID.randomUUID().toString()).
+                       withCreatedBy(userSession.getLogin()).
+                       withCreatedTime(System.currentTimeMillis()).
+                       withDataSize(size);
+       List<Attachment> attachmentsList = new ArrayList<Attachment>();
+       attachmentsList.add(uploadedAttachment);
+       newTestCase.setAttachments(attachmentsList);
+
+       newTestCase = update(userSession, projectId, newTestCase);
+
+       return newTestCase;
     }
 
     public Attachment getAttachment(Session userSession, String projectId, String testcaseId, String attachmentId) {
@@ -265,7 +279,18 @@ public class TestCaseService extends BaseService<TestCase> {
         Attachment attachment = getAttachment(testCase, attachmentId);
         storage.remove(attachment);
         testCase.getAttachments().remove(attachment);
-        return update(userSession, projectId, testCase);
+
+        TestCase newTestCase = new TestCase();
+        if (testCase.isLocked() == false) {
+           newTestCase.setLocked(true);
+           newTestCase = update(userSession, projectId, testCase);
+        } else {
+            throw new EntityAccessDeniedException(
+                    format("User %s can't update testcase %s", 
+                            userSession.getPerson().getLogin(), testCase.getId()));
+        }
+
+        return newTestCase;
     }
 
     private Attachment getAttachment(TestCase testCase, String attachmentId) {
@@ -281,7 +306,17 @@ public class TestCaseService extends BaseService<TestCase> {
     public TestCase createIssue(HttpServletRequest request, Session userSession, String projectId, String testcaseId, Issue issue) throws Exception {
         TestCase testCase = findOne(userSession, projectId, testcaseId);
         testCase.getIssues().add(tracker.createIssue(request, userSession, issue));
-        return update(userSession, projectId, testCase);
+
+        TestCase newTestCase = new TestCase();
+        if (testCase.isLocked() == false) {
+           newTestCase.setLocked(true);
+           newTestCase = update(userSession, projectId, testCase);
+        } else {
+            throw new EntityAccessDeniedException(
+                    format("User %s can't update testcase %s", 
+                            userSession.getPerson().getLogin(), testCase.getId()));
+        }
+        return newTestCase;
     }
 
     public Issue getIssue(HttpServletRequest request, Session userSession, String issueId) throws Exception {
@@ -294,7 +329,17 @@ public class TestCaseService extends BaseService<TestCase> {
             return testCase;
         }
         testCase.getIssues().add(tracker.linkIssue(request, userSession, issueId));
-        return update(userSession, projectId, testCase);
+
+        TestCase newTestCase = new TestCase();
+        if (testCase.isLocked() == false) {
+           newTestCase.setLocked(true);
+           newTestCase = update(userSession, projectId, testCase);
+        } else {
+            throw new EntityAccessDeniedException(
+                    format("User %s can't update testcase %s", 
+                            userSession.getPerson().getLogin(), testCase.getId()));
+        }
+        return newTestCase;
     }
 
 
@@ -303,7 +348,17 @@ public class TestCaseService extends BaseService<TestCase> {
         List<Issue> issues = testCase.getIssues().stream().filter(issue -> !issue.getId().equals(issueId)).
                 collect(Collectors.toList());
         testCase.setIssues(issues);
-        return update(userSession, projectId, testCase);
+
+        TestCase newTestCase = new TestCase();
+        if (testCase.isLocked() == false) {
+           newTestCase.setLocked(true);
+           newTestCase = update(userSession, projectId, testCase);
+        } else {
+            throw new EntityAccessDeniedException(
+                    format("User %s can't update testcase %s", 
+                            userSession.getPerson().getLogin(), testCase.getId()));
+        }
+        return newTestCase;
     }
 
     public List<Issue> suggestIssue(HttpServletRequest request, Session userSession, String issueProject, String text) throws Exception {
@@ -340,6 +395,44 @@ public class TestCaseService extends BaseService<TestCase> {
                 Collections.emptyList();
         testCases.sort(Comparator.comparing(EntityPreview::getId));
         return mapTestcasesToCsv(session, projectId, testCases);
+    }
+
+    public TestCase lockTestCase(Session userSession, String projectId, String testCaseId) {
+System.out.println("TestCaseService::lockTestCase");
+System.out.flush();
+        TestCase testCase = new TestCase();
+        try {
+           testCase = findOne(userSession, projectId, testCaseId);
+        } catch (EntityNotFoundException e){
+            logger.info(format("Unable to find testcase by id [%s]", testCaseId));
+        }
+        TestCase updatedTestCase = testCase;
+        if (testCase.isLocked() == false) {
+System.out.println("TestCaseService::lockTestCase - need to lock");
+System.out.flush();
+           testCase.setLocked(true);
+           updatedTestCase = update(userSession, projectId, testCase);
+        }
+        return updatedTestCase;
+    }
+
+    public TestCase unlockTestCase(Session userSession, String projectId, String testCaseId) {
+System.out.println("TestCaseService::unlockTestCase");
+System.out.flush();
+        TestCase testCase = new TestCase();
+        try {
+           testCase = findOne(userSession, projectId, testCaseId);
+        } catch (EntityNotFoundException e){
+            logger.info(format("Unable to find testcase by id [%s]", testCaseId));
+        }
+        TestCase updatedTestCase = new TestCase();
+        if (testCase.isLocked() == true) {
+System.out.println("TestCaseService::unLockTestCase - need to unlock");
+System.out.flush();
+           testCase.setLocked(false);
+           updatedTestCase = update(userSession, projectId, testCase);
+        }
+        return updatedTestCase;
     }
 
     private String mapTestcasesToCsv(Session session, String projectId, List<TestCase> testCases) {
