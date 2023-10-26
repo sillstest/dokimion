@@ -83,8 +83,7 @@ namespace Dokimion.Tests
         [OneTimeTearDown]
         public void QuitBrowser()
         {
-            Actions actions = new Actions(driver);
-            actions.MoveToElement(driver.FindElement(By.XPath("//div[@id='navbarNav']"))).Build().Perform();
+         
             Actor.AttemptsTo(Logout.For());
             Actor.AttemptsTo(QuitWebDriver.ForBrowser());
         }
@@ -101,35 +100,35 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
 
-            try
-            {
-                userActions.LogConsoleMessage("Action steps : ");
-                userActions.LogConsoleMessage("Click on the Add button");
-                Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
-                Attributes.AddAttributes.FindElement(driver).Click();
+            //try
+            //{
+            userActions.LogConsoleMessage("Action steps : ");
+            userActions.LogConsoleMessage("Click on the Add button");
+            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
+            Attributes.AddAttributes.FindElement(driver).Click();
 
-                userActions.LogConsoleMessage("Enter Name: Functionality ");
-                userActions.LogConsoleMessage("Enter Values: Authentication,TestCase, TestSuites,Projects, Launch");
-                userActions.LogConsoleMessage("Click on Add values button ");
+            userActions.LogConsoleMessage("Enter Name: Functionality ");
+            userActions.LogConsoleMessage("Enter Values: Authentication,TestCase, TestSuites,Projects, Launch");
+            userActions.LogConsoleMessage("Click on Add values button ");
 
-                Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
+            Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
                 "TestCase", "TestSuites", "Projects", "Launch" }, driver));
 
-                userActions.LogConsoleMessage("Click on Save changes button ");
-                //Check the functionality header is there
-                //With values
-                string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
-                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
-                Assert.That(name.Trim(), Is.EqualTo("Functionality"));
-                StringAssert.Contains("Authentication, TestCase, TestSuites, Projects, Launch", values.Trim());
+            userActions.LogConsoleMessage("Click on Save changes button ");
+            //Check the functionality header is there
+            //With values
+            string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
+            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+            Assert.That(name.Trim(), Is.EqualTo("Functionality"));
+            StringAssert.Contains("Authentication, TestCase, TestSuites, Projects, Launch", values.Trim());
 
-                userActions.LogConsoleMessage("Clean up: Click on Remove button to delete the attribute ");
-                removeAttribute();
-            }catch (Exception ex)
-            {
-                userActions.LogConsoleMessage(ex.ToString());
+            userActions.LogConsoleMessage("Clean up: Click on Remove button to delete the attribute ");
+            RemoveAttribute();
+            //}catch (Exception ex)
+            //{
+            //    userActions.LogConsoleMessage(ex.ToString());
 
-            }
+            //}
         }
 
         [Test]
@@ -138,67 +137,67 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
 
-            try
-            {
-                userActions.LogConsoleMessage("Action steps : ");
-                userActions.LogConsoleMessage("Click on the Add button");
-                Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
-                Attributes.AddAttributes.FindElement(driver).Click();
+            //try
+            //{
+            userActions.LogConsoleMessage("Action steps : ");
+            userActions.LogConsoleMessage("Click on the Add button");
+            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
+            Attributes.AddAttributes.FindElement(driver).Click();
 
-                userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
-                    "TestSuites, Projects, Launch" );
-                //Create Functionality again
-                Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
+            userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
+                "TestSuites, Projects, Launch");
+            //Create Functionality again
+            Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
                 "TestCase", "TestSuites", "Projects", "Launch" }, driver));
 
-                //Hover over Functionality to find 
-                Actions actions = new Actions(driver);
-                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-                actions.MoveToElement(Attributes.FunctionalityAttrib.FindElement(driver)).
-                Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            //Hover over Functionality to find 
+            Actions actions = new Actions(driver);
+            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            actions.MoveToElement(Attributes.FunctionalityAttrib.FindElement(driver)).
+            Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
-                userActions.LogConsoleMessage("Click on edit 'pencil' to add Faulty Attribute");
+            userActions.LogConsoleMessage("Click on edit 'pencil' to add Faulty Attribute");
 
-                //Click on the edit pencil symbol
-                IWebElement editAttribute = driver.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='pencil-alt'])[1]"));
+            //Click on the edit pencil symbol
+            IWebElement editAttribute = driver.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='pencil-alt'])[1]"));
 
-                actions.MoveToElement(editAttribute)
-                .Pause(TimeSpan.FromSeconds(1))
-                    .Click(editAttribute).Build().Perform();
-
-
-                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-                Actor.AttemptsTo(Click.On(Attributes.AddAttributeValueButton));
-
-                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-
-                var attribValueLocator = $"//input[@name='value' and @index='5']";
-
-                IWebElement attribLocator = driver.FindElement(By.XPath(attribValueLocator));
-
-                driver.FindElement(By.XPath(
-                    attribValueLocator)).SendKeys("Faulty");
-                Attributes.SaveAttribute.FindElement(driver).Click();
-
-                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-                string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
-                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
-
-                userActions.LogConsoleMessage("Verify : Faulty is added to Functionality ");
+            actions.MoveToElement(editAttribute)
+            .Pause(TimeSpan.FromSeconds(1))
+                .Click(editAttribute).Build().Perform();
 
 
-                Assert.That(name.Trim(), Is.EqualTo("Functionality"));
-                Assert.That(values.Contains("Faulty"), Is.True);
+            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            Actor.AttemptsTo(Click.On(Attributes.AddAttributeValueButton));
+
+            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
+            var attribValueLocator = $"//input[@name='value' and @index='5']";
+
+            IWebElement attribLocator = driver.FindElement(By.XPath(attribValueLocator));
+
+            driver.FindElement(By.XPath(
+                attribValueLocator)).SendKeys("Faulty");
+            Attributes.SaveAttribute.FindElement(driver).Click();
+
+            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
+            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+
+            userActions.LogConsoleMessage("Verify : Faulty is added to Functionality ");
 
 
-                userActions.LogConsoleMessage("Clean up: Delete the attribute ");
-                removeAttribute();
-            }catch(Exception ex)
-            {
+            Assert.That(name.Trim(), Is.EqualTo("Functionality"));
+            Assert.That(values.Contains("Faulty"), Is.True);
 
-                userActions.LogConsoleMessage(ex.ToString());
 
-            }
+            userActions.LogConsoleMessage("Clean up: Delete the attribute ");
+            RemoveAttribute();
+            //}catch(Exception ex)
+            //{
+
+            //    userActions.LogConsoleMessage(ex.ToString());
+
+            //}
         }
 
 
@@ -208,61 +207,61 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
 
-            try
-            {
-                userActions.LogConsoleMessage("Action steps : ");
-                userActions.LogConsoleMessage("Click on the Add button");
-                Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
-                Attributes.AddAttributes.FindElement(driver).Click();
+            //try
+            //{
+            userActions.LogConsoleMessage("Action steps : ");
+            userActions.LogConsoleMessage("Click on the Add button");
+            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
+            Attributes.AddAttributes.FindElement(driver).Click();
 
-                userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
-                    "TestSuites, Projects, Launch");
-                Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
+            userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
+                "TestSuites, Projects, Launch");
+            Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
                 "TestCase", "TestSuites", "Projects", "Launch", "Faulty" }, driver));
 
-                Actions actions = new Actions(driver);
-                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-                actions.MoveToElement(Attributes.FunctionalityAttrib.FindElement(driver)).
-                Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            Actions actions = new Actions(driver);
+            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            actions.MoveToElement(Attributes.FunctionalityAttrib.FindElement(driver)).
+            Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
-                userActions.LogConsoleMessage("Click on edit 'pencil' to modify Functionality attribute");
-                IWebElement m = driver.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='pencil-alt'])[1]"));
+            userActions.LogConsoleMessage("Click on edit 'pencil' to modify Functionality attribute");
+            IWebElement m = driver.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='pencil-alt'])[1]"));
 
-                actions.MoveToElement(m)
-                .Pause(TimeSpan.FromSeconds(1))
-                    .Click(m).Build().Perform();
+            actions.MoveToElement(m)
+            .Pause(TimeSpan.FromSeconds(1))
+                .Click(m).Build().Perform();
 
-                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
-                userActions.LogConsoleMessage("Click on 'delete' to modify Functionality attribute to delete Faulty");
+            userActions.LogConsoleMessage("Click on 'delete' to modify Functionality attribute to delete Faulty");
 
-                //Add logic to remove n save
-                IWebElement faultyDelete = driver.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='minus-circle'])[6]"));
+            //Add logic to remove n save
+            IWebElement faultyDelete = driver.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='minus-circle'])[6]"));
 
-                faultyDelete.Click();
+            faultyDelete.Click();
 
-                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
-                Attributes.SaveAttribute.FindElement(driver).Click();
-                //Need to reflect the DOM with removal of attrib
-                actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-                //With values
-                string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
-                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+            Attributes.SaveAttribute.FindElement(driver).Click();
+            //Need to reflect the DOM with removal of attrib
+            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            //With values
+            string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
+            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
 
-                userActions.LogConsoleMessage("Verify: Faulty is not available in Functionality attribute");
+            userActions.LogConsoleMessage("Verify: Faulty is not available in Functionality attribute");
 
-                Assert.That(name.Trim(), Is.EqualTo("Functionality"));
+            Assert.That(name.Trim(), Is.EqualTo("Functionality"));
 
-                Assert.That(values.Trim().Contains("Faulty"), Is.Not.True);
+            Assert.That(values.Trim().Contains("Faulty"), Is.Not.True);
 
-                userActions.LogConsoleMessage("Clean up: Delete the attribute ");
-                removeAttribute();
-            }catch(Exception ex)
-            {
-                userActions.LogConsoleMessage(ex.ToString());
+            userActions.LogConsoleMessage("Clean up: Delete the attribute ");
+            RemoveAttribute();
+            //}catch(Exception ex)
+            //{
+            //    userActions.LogConsoleMessage(ex.ToString());
 
-            }
+            //}
         }
 
 
@@ -272,39 +271,39 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
 
-            try
-            {
-                userActions.LogConsoleMessage("Action steps : ");
-                userActions.LogConsoleMessage("Click on the Add button");
-                Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
+            //try
+            //{
+            userActions.LogConsoleMessage("Action steps : ");
+            userActions.LogConsoleMessage("Click on the Add button");
+            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
 
-                Attributes.AddAttributes.FindElement(driver).Click();
+            Attributes.AddAttributes.FindElement(driver).Click();
 
-                userActions.LogConsoleMessage("Enter Name: ");
-                userActions.LogConsoleMessage("Enter Values: ");
-                userActions.LogConsoleMessage("Click on Add values button ");
-                userActions.LogConsoleMessage("Add attribute 'Priority' with values High, Medium and Low ");
+            userActions.LogConsoleMessage("Enter Name: ");
+            userActions.LogConsoleMessage("Enter Values: ");
+            userActions.LogConsoleMessage("Click on Add values button ");
+            userActions.LogConsoleMessage("Add attribute 'Priority' with values High, Medium and Low ");
 
-                Actor.AttemptsTo(CreateAttributes.For("Priority", new List<string>() { "High" ,
+            Actor.AttemptsTo(CreateAttributes.For("Priority", new List<string>() { "High" ,
                 "Medium","Low" }, driver));
 
-                userActions.LogConsoleMessage("Click on Save changes button ");
+            userActions.LogConsoleMessage("Click on Save changes button ");
 
-                //With values
-                string name = Actor.AskingFor(Text.Of(Attributes.PriorityAttrib));
-                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+            //With values
+            string name = Actor.AskingFor(Text.Of(Attributes.PriorityAttrib));
+            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
 
-                userActions.LogConsoleMessage("Verify : Priority attribute is added");
-                Assert.That(name.Trim(), Is.EqualTo("Priority"));
-                Assert.That(values.Trim(), Is.EqualTo("High, Medium, Low"));
+            userActions.LogConsoleMessage("Verify : Priority attribute is added");
+            Assert.That(name.Trim(), Is.EqualTo("Priority"));
+            Assert.That(values.Trim(), Is.EqualTo("High, Medium, Low"));
 
-                userActions.LogConsoleMessage("Clean up: Delete the attribute ");
-                removeAttribute();
-            }catch(Exception ex)
-            {
-                userActions.LogConsoleMessage(ex.ToString());
+            userActions.LogConsoleMessage("Clean up: Delete the attribute ");
+            RemoveAttribute();
+            //}catch(Exception ex)
+            //{
+            //    userActions.LogConsoleMessage(ex.ToString());
 
-            }
+            //}
         }
 
         [Test]
@@ -313,41 +312,42 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
 
-            try
-            {
-                userActions.LogConsoleMessage("Action steps : ");
-                userActions.LogConsoleMessage("Click on the Add button");
-                Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
+            //try
+            //{
+            userActions.LogConsoleMessage("Action steps : ");
+            userActions.LogConsoleMessage("Click on the Add button");
+            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
 
-                Attributes.AddAttributes.FindElement(driver).Click();
+            Attributes.AddAttributes.FindElement(driver).Click();
 
-                userActions.LogConsoleMessage("Enter Name: ");
-                userActions.LogConsoleMessage("Enter Values: ");
-                userActions.LogConsoleMessage("Click on Add values button ");
-                userActions.LogConsoleMessage("Add attibute 'Placement' with values Header, Footer and Body");
+            userActions.LogConsoleMessage("Enter Name: ");
+            userActions.LogConsoleMessage("Enter Values: ");
+            userActions.LogConsoleMessage("Click on Add values button ");
+            userActions.LogConsoleMessage("Add attibute 'Placement' with values Header, Footer and Body");
 
-                Actor.AttemptsTo(CreateAttributes.For("Placement", new List<string>() { "Header" ,
+            Actor.AttemptsTo(CreateAttributes.For("Placement", new List<string>() { "Header" ,
                 "Footer","Body" }, driver));
 
-                userActions.LogConsoleMessage("Click on Save changes button ");
+            userActions.LogConsoleMessage("Click on Save changes button ");
 
-                //With values
-                string name = Actor.AskingFor(Text.Of(Attributes.PlacementAttrib));
-                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+            //With values
+            string name = Actor.AskingFor(Text.Of(Attributes.PlacementAttrib));
+            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
 
-                userActions.LogConsoleMessage("Verfiy: Placement attribute is added ");
+            userActions.LogConsoleMessage("Verfiy: Placement attribute is added ");
 
-                Assert.That(name.Trim(), Is.EqualTo("Placement"));
+            Assert.That(name.Trim(), Is.EqualTo("Placement"));
 
-                userActions.LogConsoleMessage("Clean up: Delete the attribute ");
-                removeAttribute();
-            }catch(Exception ex)
-            {
-                userActions.LogConsoleMessage(ex.ToString());
-            }
+            userActions.LogConsoleMessage("Clean up: Delete the attribute ");
+            RemoveAttribute();
+            //}catch(Exception ex)
+            //{
+            //    userActions.LogConsoleMessage(ex.ToString());
+            //}
         }
 
-        private void removeAttribute()
+        //[Test]
+        private void RemoveAttribute()
         {
 
             Actions actions = new Actions(driver);
@@ -368,7 +368,7 @@ namespace Dokimion.Tests
             .Pause(TimeSpan.FromSeconds(1))
                 .Click(Attributes.RemoveAttribButton.FindElement(driver)).Build().Perform();
 
-            
+
             actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
         }
     }
