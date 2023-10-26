@@ -9,9 +9,9 @@ import shutil
 
 VM_dokimion_configFiles = [
    [ "dokimion/config/production/dokimion"               ],
-   [ "nginx.conf",            "/etc/nginx/"              ]
-   [ "nginx.service",         "/etc/systemd/system/multi-user.target.wants" ]
-   [ "load_balancer.conf",    "/etc/nginx/sites-available" ]
+   [ "nginx.conf",            "/etc/nginx/"              ],
+   [ "nginx.service",         "/etc/systemd/system/multi-user.target.wants" ],
+   [ "load_balancer.conf",    "/etc/nginx/sites-available" ],
    [ "rsyslog.conf",          "/etc"                     ],
    [ "rsyslog.service",       "/etc/systemd/system/multi-user.target.wants" ]
 ]
@@ -54,7 +54,7 @@ VM_dokimion3_configFiles = [
    [ "quack.properties",         "/etc/dokimion"            ],
    [ "dokimion3.conf",           "/etc/nginx/sites-available" ],
    [ "dokimion3_server.service", "/etc/systemd/system"      ],
-   [ "dokimion3_ui.service",     "/etc/systemd/system"      ]
+   [ "dokimion3_ui.service",     "/etc/systemd/system"      ],
    [ "rsyslog.conf",             "/etc"                     ],
    [ "rsyslog.service",          "/etc/systemd/system/multi-user.target.wants" ],
    [ "nginx.conf",               "/etc/nginx/"              ],
@@ -69,7 +69,7 @@ VM_dokimion4_configFiles = [
    [ "quack.properties",         "/etc/dokimion"            ],
    [ "dokimion4.conf",           "/etc/nginx/sites-available" ],
    [ "dokimion4_server.service", "/etc/systemd/system"      ],
-   [ "dokimion4_ui.service",     "/etc/systemd/system"      ]
+   [ "dokimion4_ui.service",     "/etc/systemd/system"      ],
    [ "rsyslog.conf",             "/etc"                     ],
    [ "rsyslog.service",          "/etc/systemd/system/multi-user.target.wants" ],
    [ "nginx.conf",               "/etc/nginx/"              ],
