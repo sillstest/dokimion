@@ -229,7 +229,7 @@ export function isUserOwnerOrAdmin(userSession, createdById) {
        {
           return (true);
        } else  {
-          if ((userSession.person.login === createdById) || (userSession.person.roles[0] == 'Admin'))
+          if ((userSession.person.login === createdById) || (userSession.person.roles[0].toLowerCase() == 'admin'))
           {
              return (true);
           }
