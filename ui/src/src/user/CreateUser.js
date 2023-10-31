@@ -21,7 +21,7 @@ class CreateUser extends Component {
         password: "",
         firstName: "",
         lastName: "",
-        role: "User",
+        role: "TESTER",
       },
       message: "",
     };
@@ -47,7 +47,7 @@ class CreateUser extends Component {
     let noAdmins = 0;
     for (let i = 0; i < (this.state.users.length-1); i++)
     {
-       if (this.state.users[i].role == 'Admin') {
+       if (this.state.users[i].role == 'ADMIN') {
           noAdmins += 1;
        }
 
@@ -61,8 +61,13 @@ class CreateUser extends Component {
   }
 
   handleSubmit(event) {
-    if ((this.state.oneUser.role == "Admin") && (this.isNewAdminAllowed() == false)) {
-       this.setState({message: "Number of users with role = \'Admin\' is MAXIMUM already"});
+    if (this.state.oneUser.login.toLowerCase() == "admin") {
+       this.setState({message: "Error - System admin reserved"});
+       return;
+    }
+    if ((this.state.oneUser.role.toLowerCase() == "admin") && 
+        (this.isNewAdminAllowed() == false)) {
+       this.setState({message: "Number of users with role = \'ADMIN\' is MAXIMUM already"});
        return;
     }
     Backend.post("user", this.state.oneUser)
@@ -133,8 +138,9 @@ class CreateUser extends Component {
                   value={this.state.oneUser.role}
                   onChange={this.handleChange}
                 >
-                  <option key="role" value="User">User</option>
-		  <option key="role" value="Admin">Administrator</option>
+                  <option key="role" value="TESTER">TESTER</option>
+                  <option key="role" value="TEST DEVELOPER">TEST DEVELOPER</option>
+		  <option key="role" value="ADMIN">ADMINISTRATOR</option>
                 </select>
               </div>
            </div>
