@@ -10,9 +10,11 @@ import com.testquack.services.errors.EntityValidationException;
 import com.testquack.services.errors.OrganizationNotSetException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import com.testquack.beans.User;
 import com.testquack.beans.Entity;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Project;
+import com.testquack.beans.Launch;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.ProjectRepository;
 import com.testquack.dal.UserRepository;
@@ -22,6 +24,7 @@ import ru.greatbit.whoru.auth.Session;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Logger;
@@ -81,9 +84,12 @@ System.out.flush();
         if (entity == null){
             throw new EntityNotFoundException();
         }
-        if (!userCanRead(session, projectId, entity)) {
-            throw new EntityAccessDeniedException(
-                    format("User %s can't read entity %s", session.getPerson().getLogin(), id)
+        if ((!userCanRead(session, projectId, entity))  ||
+            (UserSecurity.allowUserReadRequest(getCurrOrganizationId(session),
+             userRepository, roleCapRepository, projectId, session.getPerson().getLogin()) 
+             == false)) {
+             throw new EntityAccessDeniedException(
+                    format("User %s can't read entity %s", projectId, id)
             );
         }
 System.out.println("BaseService:findOneUnfiltered - after userCanRead call");
@@ -100,15 +106,34 @@ System.out.flush();
 
     public E save(Session user, String projectId, E entity){
 System.out.println("BaseService::save 1 - session, projectId: " + user + ", " + projectId);
+System.out.println("BaseService::save 1 - entity: " + entity);
 System.out.flush();
-        if (!userCanSave(user, projectId, entity)){
-System.out.println("user CANNOT save: " + user);
+        if (!userCanSave(user, projectId, entity)) {
+           throw new EntityAccessDeniedException(
+               format("User %s can't save entity %s", user.getPerson().getLogin(), entity.getId()));
+        } else if (entity instanceof User) {
+          User userEntity = (User)entity;
+System.out.println("entity instanceof User - session.login, entity.login: " +
+                    user.getPerson().getLogin() + ", " + userEntity.getLogin());
 System.out.flush();
-            throw new EntityAccessDeniedException(
-                    format("User %s can't save entity %s", user.getPerson().getLogin(), entity.getId())
-            );
-        }
-System.out.println("user CAN save: " + user);
+          if (user.getPerson().getLogin().equals(userEntity.getLogin())) {
+              // permissions allowed to write (change) your own password
+System.out.println("Permissions allowed to change your own password");
+System.out.flush();
+          } else if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(user), userRepository, roleCapRepository, projectId, user.getPerson().getLogin(), (entity instanceof Launch)) == false) {
+
+System.out.println("user CANNOT save 1: " + user);
+System.out.flush();
+                throw new EntityAccessDeniedException(
+                   format("User %s can't save entity %s", user.getPerson().getLogin(), entity.getId()));
+          }
+        } else if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(user), userRepository, roleCapRepository, projectId, user.getPerson().getLogin(), (entity instanceof Launch)) == false) {
+System.out.println("user CANNOT save 2: " + user);
+System.out.flush();
+                throw new EntityAccessDeniedException(
+                   format("User %s can't save entity %s", user.getPerson().getLogin(), entity.getId()));
+           }
+System.out.println("user CAN save 3: " + user);
 System.out.flush();
         return isEmpty(entity.getId()) ?
                 create(user, projectId, entity) :
@@ -118,14 +143,24 @@ System.out.flush();
     public Collection<E> save(Session user, String projectId, Collection<E> entities){
 System.out.println("BaseService::save 2 - session: " + user);
 System.out.flush();
-        if (!userCanSave(user, projectId, entities)){
+        if (!userCanSave(user, projectId, entities)) {
+           //  dump collection into an iterator
+           Iterator<E> it = entities.iterator();
+           while (it.hasNext()) {
+            E entity = it.next();
+            if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(user),
+                userRepository, roleCapRepository, projectId, 
+                user.getPerson().getLogin(),
+                (entity instanceof Launch)) == false) {
 System.out.println("user CANNOT save: " + user);
 System.out.flush();
-            throw new EntityAccessDeniedException(
-                    format("User %s can't save entities %s",
+               throw new EntityAccessDeniedException(
+                       format("User %s can't save entities %s",
                             user.getPerson().getLogin(),
                             entities.stream().map(obj -> obj == null ? "null" : obj.toString()).collect(joining(", ")))
-            );
+               );
+            }
+           }
         }
 System.out.println("user CAN save: " + user);
 System.out.flush();
@@ -139,8 +174,12 @@ System.out.flush();
         beforeDelete(session, projectId, id);
 System.out.println("BaseService:delete - after beforeDelete");
 System.out.flush();
-        if (!userCanDelete(session, projectId, id)){
-            throw new EntityAccessDeniedException(
+        if ((!userCanDelete(session, projectId, id)) ||
+            (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session),
+             userRepository, roleCapRepository, projectId, 
+             session.getPerson().getLogin(), 
+             (findOne(session, projectId, id) instanceof Launch)) == false)) { 
+               throw new EntityAccessDeniedException(
                     format("User %s can't delete entity %s", session.getPerson().getLogin(), id)
             );
         }
@@ -156,8 +195,18 @@ System.out.flush();
     }
 
     public long count(Session session, String projectId, Filter filter){
+
+        if (UserSecurity.allowUserReadRequest(getCurrOrganizationId(session),
+            userRepository, roleCapRepository, projectId, session.getPerson().getLogin()) 
+            == false) {
+            throw new EntityAccessDeniedException(
+               format("User %s can't count entity %s", session.getPerson().getLogin(), 
+                       projectId));
+        }
+
         return userCanReadProject(session, projectId) ?
             getRepository().count(getCurrOrganizationId(session), projectId, filter) : 0;
+
     }
 
 
@@ -170,12 +219,7 @@ System.out.println("BaseService:userCanUpdateProject - session.person: " + sessi
 System.out.println("BaseService:userCanUpdateProject - projectId: " + projectId);
 System.out.flush();
 
-        if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session), 
-           userRepository, roleCapRepository, projectId, session.getPerson().getLogin())) {
-           return true;
-        }
-
-        return false;
+        return userCanReadProject(session, projectId);
 
     }
     protected boolean userCanReadProject(Session session, String projectId){
@@ -186,12 +230,6 @@ System.out.flush();
         if (isAdmin(session)) {
             return true;
         }
-
-        if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session), 
-           userRepository, roleCapRepository, projectId, session.getPerson().getLogin())) {
-           return true;
-        }
-
 
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
 System.out.println("BaseService::userCanReadProject - after findOne");
@@ -213,7 +251,7 @@ System.out.flush();
 System.out.println("BaseService::userCanReadProject - after findOne: project: " + project);
 System.out.flush();
 
-        if (project.isDeleted()) {
+        if (project == null || project.isDeleted()) {
             throw new EntityNotFoundException(format("Project %s does not exist", projectId));
         }
 System.out.println("BaseService::userCanReadProject - after project.isDeleted");
@@ -312,12 +350,19 @@ System.out.flush();
 System.out.println("BaseService::create - after beforeCreate call");
 System.out.flush();
 
-        if (!userCanCreate(session, projectId, entity)){
+        if ((!userCanCreate(session, projectId, entity))  &&
+            (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session),
+            userRepository, roleCapRepository, projectId, session.getPerson().getLogin(),
+            (entity instanceof Launch)) == false)) {
             throw new EntityAccessDeniedException(getAccessDeniedMessage(session, entity, "CREATE"));
         }
+
+
 System.out.println("BaseService::create - after userCanCreate call");
+System.out.flush();
         entity = doSave(session, projectId, entity);
 System.out.println("BaseService::create - after doSave call - entity: " + entity);
+System.out.flush();
         afterCreate(session, projectId, entity);
         return entity;
     }
@@ -327,7 +372,7 @@ System.out.println("BaseService::create - after doSave call - entity: " + entity
     }
 
     protected E update(Session session, String projectId, E entity, UpdatableEntityConvertor converter) {
-        if (!userCanUpdate(session, projectId, entity)){
+        if (!userCanUpdate(session, projectId, entity)) {
             throw new EntityAccessDeniedException(getAccessDeniedMessage(session, entity, "UPDATE"));
         }
         FencedLock lock = hazelcastInstance.getCPSubsystem().getLock(entity.getClass() + entity.getId());
@@ -376,12 +421,23 @@ System.out.flush();
 System.out.println("BaseService.delete - projectId: " + projectId);
 System.out.flush();
         if (userCanUpdateProject(session, projectId)) {
+
+            List<E> entityList = findFiltered(session, projectId, filter);
+
+            for (E ent : entityList) {
+               if (UserSecurity.allowUserWriteRequest(getCurrOrganizationId(session),
+                   userRepository, roleCapRepository, projectId, 
+                   session.getPerson().getLogin(), (ent instanceof Launch)) 
+                   == false) {
 System.out.println("BaseService.delete - after call of userCanUpdateProject");
 System.out.flush();
-            findFiltered(session, projectId, filter).forEach(entity -> {
-                entity.setDeleted(true);
-                getRepository().save(getCurrOrganizationId(session), projectId, entity);
-            });
+                  findFiltered(session, projectId, filter).forEach(entity -> {
+                      entity.setDeleted(true);
+                      getRepository().save(getCurrOrganizationId(session), projectId, 
+                      entity);
+               });
+            }
+          }
         }
     }
 
@@ -448,7 +504,7 @@ System.out.flush();
 
        for (String role : roles)
        {
-          if (role.equals("Admin")) {
+          if (role.equals("ADMIN")) {
              return true;
           }
        }
