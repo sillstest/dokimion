@@ -5,7 +5,6 @@ import com.testquack.beans.Role;
 import com.testquack.beans.Capability;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
-import com.testquack.beans.Launch;
 import com.testquack.beans.Entity;
 import ru.greatbit.whoru.auth.Session;
 
@@ -61,21 +60,12 @@ System.out.flush();
                           UserRepository           userRepository, 
                           RoleCapabilityRepository roleCapRepository,
                           String                   projectId,
-                          String                   loginId,
-                          boolean	           launchFlag ) {
+                          String                   loginId) {
 
 System.out.println("allowUserWriteRequest - org id: " + organizationId);
 System.out.println("allowUserWriteRequest - projectId: " + projectId);
 System.out.println("allowUserWriteRequest - loginId: " + loginId);
-System.out.println("allowUserWriteRequest - launchFlag: " + launchFlag);
 System.out.flush();
-
-     if (launchFlag == true) {
-        // allow anybody to write to a launch
-        System.out.println("allowUserWriteRequest - entity is a Launch");
-        System.out.flush();
-        return true;
-     }
 
      User user = (User)userRepository.findOne(organizationId, projectId, loginId);
 
@@ -104,6 +94,8 @@ System.out.flush();
         }
      }
  
+System.out.println("allowUserWriteRequest - returning false");
+System.out.flush();
      return false;
   }
 
@@ -115,6 +107,9 @@ System.out.flush();
                           String                   projectId,
                           String                   loginId,
                           List<Entity>             entityList ) {
+
+System.out.println("allowUserWriteRequest - no body 1");
+System.out.flush();
 
       return true;
 
@@ -128,6 +123,9 @@ System.out.flush();
                           String                   projectId,
                           String                   loginId,
                           Collection<Entity>       entityCollection ) {
+
+System.out.println("allowUserWriteRequest - no body 2");
+System.out.flush();
 
       return true;
 
