@@ -5,7 +5,7 @@ class Footer extends Component {
     return (
       <footer className="footer">
         <div className="container text-center">
-          <span className="text-muted" className="col-3"><a href="https://www.testquack.com" className="link-black" target="_blanc">testing.languagetechnology.org</a></span>
+          <span className="text-muted" className="col-3"><a href="https://testing.languagetechnology.org" className="link-black" target="_blanc">testing.languagetechnology.org</a></span>
         </div>
       </footer>
     );

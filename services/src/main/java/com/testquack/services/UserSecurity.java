@@ -5,12 +5,14 @@ import com.testquack.beans.Role;
 import com.testquack.beans.Capability;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
+import com.testquack.beans.Entity;
 import ru.greatbit.whoru.auth.Session;
 
 import com.testquack.dal.UserRepository;
 import com.testquack.dal.RoleCapabilityRepository;
 
 import java.util.List;
+import java.util.Collection;
 
 public class UserSecurity {
 
@@ -20,15 +22,12 @@ public class UserSecurity {
                           RoleCapabilityRepository roleCapRepository,
                           String                   projectId,
                           String                   loginId) {
-/*
-
      User user = (User)userRepository.findOne(organizationId, projectId, loginId);
 
 System.out.println("allowUserReadRequest - user: " + user);
-System.out.println("allowUserReadRequest - user.getRole: " + user.getRole());
 System.out.flush();
 
-     Role userRole = Role.fromValue(user.getRole());
+     Role userRole = translateRoleFormat(user.getRole());
 
      List<RoleCapability> roleCapList = roleCapRepository.find(
              organizationId, projectId, new Filter());
@@ -39,8 +38,11 @@ System.out.flush();
      for (RoleCapability roleCap : roleCapList) {
         if (userRole == roleCap.getRole()) {
 System.out.println("allowUserReadRequest - roleCap matched role: " + roleCap.getRole());
+System.out.println("allowUserReadRequest - cap: " + roleCap.getCapability().value());
 System.out.flush();
-           if (roleCap.getCapability() == Capability.READ) {
+           if ((roleCap.getCapability() == Capability.READ) ||
+               (roleCap.getCapability() == Capability.READWRITE) ||
+               (roleCap.getCapability() == Capability.ADMIN)) {
 System.out.println("allowUserReadRequest - roleCap allowed READ: " + roleCap);
 System.out.flush();
               return true;
@@ -50,8 +52,6 @@ System.out.flush();
      }
  
      return false;
-*/
-return true;
 
   }
 
@@ -62,14 +62,15 @@ return true;
                           String                   projectId,
                           String                   loginId) {
 
-/*
-     User user = (User)userRepository.findOne(organizationId, projectId, loginId);
-
-System.out.println("allowUserWriteRequest - user: " + user);
-System.out.println("allowUserReadRequest - user.getRole: " + user.getRole());
+System.out.println("allowUserWriteRequest - org id: " + organizationId);
+System.out.println("allowUserWriteRequest - projectId: " + projectId);
+System.out.println("allowUserWriteRequest - loginId: " + loginId);
 System.out.flush();
 
-     Role userRole = Role.fromValue(user.getRole());
+     User user = (User)userRepository.findOne(organizationId, projectId, loginId);
+
+
+     Role userRole = translateRoleFormat(user.getRole());
 
      List<RoleCapability> roleCapList = roleCapRepository.find(
              organizationId, projectId, new Filter());
@@ -79,11 +80,13 @@ System.out.flush();
 
      for (RoleCapability roleCap : roleCapList) {
         if (userRole == roleCap.getRole()) {
-System.out.println("allowUserWriteRequest - roleCap matched role: " + roleCap.getRole());
+System.out.println("allowUserWriteRequest - matched role: " + roleCap.getRole().value());
+System.out.println("allowUserWriteRequest - cap: " + roleCap.getCapability().value());
 System.out.flush();
+
            if ((roleCap.getCapability() == Capability.READWRITE) || 
                (roleCap.getCapability() == Capability.ADMIN)) {
-System.out.println("allowUserWrieRequest - roleCap allowed READWRITE or ADMIN: " + roleCap);
+System.out.println("allowUserWriteRequest - roleCap allowed READWRITE or ADMIN: " + roleCap);
 System.out.flush();
 
               return true;
@@ -91,10 +94,63 @@ System.out.flush();
         }
      }
  
+System.out.println("allowUserWriteRequest - returning false");
+System.out.flush();
      return false;
-*/
-return true;
   }
 
 
+  public static boolean allowUserWriteRequest(
+                          String                   organizationId, 
+                          UserRepository           userRepository, 
+                          RoleCapabilityRepository roleCapRepository,
+                          String                   projectId,
+                          String                   loginId,
+                          List<Entity>             entityList ) {
+
+System.out.println("allowUserWriteRequest - no body 1");
+System.out.flush();
+
+      return true;
+
+   }
+
+
+  public static boolean allowUserWriteRequest(
+                          String                   organizationId, 
+                          UserRepository           userRepository, 
+                          RoleCapabilityRepository roleCapRepository,
+                          String                   projectId,
+                          String                   loginId,
+                          Collection<Entity>       entityCollection ) {
+
+System.out.println("allowUserWriteRequest - no body 2");
+System.out.flush();
+
+      return true;
+
+   }
+
+
+  private static Role translateRoleFormat(String role) {
+
+     Role returnRole = Role.TESTER;
+
+     switch(role) {
+        case "TESTER":
+           returnRole = Role.TESTER;
+           break;
+        case "TESTDEVELOPER":
+           returnRole = Role.TESTDEVELOPER;
+           break;
+        case "ADMIN":
+           returnRole = Role.ADMIN;
+           break;
+        default:
+           System.out.println("translateRoleFormat - role: " + role);
+           System.out.flush();
+           break;
+      }
+      return returnRole;
+  }
 }

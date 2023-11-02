@@ -295,7 +295,7 @@ class TestCasesFilter extends Component {
               <button type="button" className="btn btn-primary" title="Add Testcase" data-toggle="modal" data-target="#editTestcase">
                 <FontAwesomeIcon icon={faPlus} />
               </button>
-              <button type="button" title="More" class="btn dropdown-toggle clickable" href="#" role="button" id="dropdownMoreLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <button type="button" title="More" className="btn dropdown-toggle clickable" href="#" role="button" id="dropdownMoreLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                  <FontAwesomeIcon icon={faBars} />
               </button>
               <div class="dropdown-menu" aria-labelledby="dropdownMoreLink">

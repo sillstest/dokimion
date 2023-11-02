@@ -79,7 +79,7 @@ class Profile extends SubComponent {
             <td className="cellUserProfile">{this.state.profile.role}</td>
           </tr>
         </table>
-        {!this.state.session.metainfo || !this.state.session.metainfo.organizationsEnabled && (
+        {(typeof(this.state.session.metainfo) == "undefined") || !this.state.session.metainfo || !this.state.session.metainfo.organizationsEnabled && (
 
             <div>
               <div className="row">
