@@ -23,6 +23,7 @@ import { ConfirmButton } from "../common/uicomponents/ConfirmButton";
 import { Editor } from "@tinymce/tinymce-react";
 import Backend from "../services/backend";
 
+
 class TestCase extends SubComponent {
   constructor(props) {
     super(props);
@@ -47,6 +48,7 @@ class TestCase extends SubComponent {
         attachments: [],
         properties: [],
         broken: false,
+        locked: false,
       },
       originalTestcase: {
         steps: [],
@@ -59,7 +61,11 @@ class TestCase extends SubComponent {
       commentsCount: 0,
       loading: true,
       errorMessage: "",
+      session: {person: {}},
     };
+
+    this.getSession = this.getSession.bind(this);
+    this.onSessionChange = this.onSessionChange.bind(this);
     this.getTestCase = this.getTestCase.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
@@ -83,6 +89,8 @@ class TestCase extends SubComponent {
     this.onTestcaseUpdated = this.onTestcaseUpdated.bind(this);
     this.onCommentsCountChanged = this.onCommentsCountChanged.bind(this);
     this.removeTestcase = this.removeTestcase.bind(this);
+    this.lockTestcase = this.lockTestcase.bind(this);
+    this.unlockTestcase = this.unlockTestcase.bind(this);
     this.getAttributes = this.getAttributes.bind(this);
     this.cancelEditProperty = this.cancelEditProperty.bind(this);
     this.toggleEditProperty = this.toggleEditProperty.bind(this);
@@ -107,8 +115,23 @@ class TestCase extends SubComponent {
     if (this.props.launchId) {
       this.state.launchId = this.props.launchId;
     }
+    this.getSession();
     this.setState(this.state);
   }
+
+  onSessionChange(session) {
+    this.props.onSessionChange(session);
+  }
+
+  getSession() {
+    Backend.get("user/session")
+      .then(response => {
+        this.state.session = response;
+        this.setState(this.state);
+      })
+      .catch(() => {console.log("Unable to fetch session");});
+  }
+
 
   componentWillReceiveProps(nextProps, nextState) {
     if (nextProps.testcase) {
@@ -400,6 +423,28 @@ class TestCase extends SubComponent {
       })
       .catch(error => {
         this.setState({errorMessage: "Couldn't remove testcase: " + error});
+      });
+  }
+
+  lockTestcase() {
+    Backend.post(this.projectId + "/testcase/" + this.state.testcase.id + "/lock")
+      .then(response => {
+        this.state.testcase.lock = true;
+        window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");
+      })
+      .catch(error => {
+        this.setState({errorMessage: "Couldn't lock testcase: " + error});
+      });
+  }
+
+  unlockTestcase() {
+    Backend.post(this.projectId + "/testcase/" + this.state.testcase.id + "/unlock")
+      .then(response => {
+        this.state.testcase.lock = false;
+        window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");
+      })
+      .catch(error => {
+        this.setState({errorMessage: "Couldn't unlock testcase: " + error});
       });
   }
 
@@ -873,7 +918,7 @@ class TestCase extends SubComponent {
                 }.bind(this),
               )}
               {!this.state.readonly && (
-                <div className>
+                <div className="true">
                   <button type="button" className="btn btn-primary" onClick={this.addStep}>
                     Add Step
                   </button>
@@ -1157,16 +1202,42 @@ class TestCase extends SubComponent {
           </div>
         </div>
 
-        {!this.state.readonly && (
-          <ConfirmButton
-            onSubmit={this.removeTestcase}
-            buttonClass={"btn btn-danger float-right"}
-            id={"testcase-removal"}
-            modalText={"Are you sure you want to remove Test Case?"}
-            buttonText={"Remove Testcase"}
-          />
-        )}
-      </div>
+        <div className="row">
+          <div className="col-md-6"></div>
+          {(Utils.isAdmin(this.state.session) && !this.state.testcase.locked) && (
+            <ConfirmButton
+             onSubmit={this.lockTestcase}
+             buttonClass={"btn btn-danger"}
+             id={"testcase-lock"}
+             modalText={"Are you sure you want to lock this test case?"}
+             buttonText={"Lock Testcase"}
+            />
+          )}
+
+          {(Utils.isAdmin(this.state.session) && this.state.testcase.locked) && (
+            <ConfirmButton
+              onSubmit={this.unlockTestcase}
+              buttonClass={"btn btn-danger"}
+              id={"testcase-unlock"}
+              modalText={"Are you sure you want to unlock this test case?"}
+              buttonText={"Unlock Testcase"}
+             />
+          )}
+
+          {!this.state.readonly && (
+            <ConfirmButton
+             onSubmit={this.removeTestcase}
+             buttonClass={"btn btn-danger float-right"}
+             id={"testcase-removal"}
+             modalText={"Are you sure you want to remove the Test Case?"}
+             buttonText={"Remove Testcase"}
+           />
+          )}
+         </div>
+        </div>
+
+
+
     );
   }
 }

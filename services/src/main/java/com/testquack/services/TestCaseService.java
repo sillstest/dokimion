@@ -218,6 +218,8 @@ public class TestCaseService extends BaseService<TestCase> {
         if (existingTestcase.isLocked() == false) {
            existingTestcase.setLocked(true);
            save(user, projectId, existingTestcase);
+System.out.println("importTestCases - existingTestCase: " + existingTestcase);
+System.out.flush();
         } else {
             throw new EntityAccessDeniedException(
                     format("User %s can't update testcase %s", user.getPerson().getLogin(), 
@@ -282,7 +284,7 @@ public class TestCaseService extends BaseService<TestCase> {
 
         TestCase newTestCase = new TestCase();
         if (testCase.isLocked() == false) {
-           newTestCase.setLocked(true);
+           testCase.setLocked(true);
            newTestCase = update(userSession, projectId, testCase);
         } else {
             throw new EntityAccessDeniedException(
@@ -309,8 +311,10 @@ public class TestCaseService extends BaseService<TestCase> {
 
         TestCase newTestCase = new TestCase();
         if (testCase.isLocked() == false) {
-           newTestCase.setLocked(true);
+           testCase.setLocked(true);
            newTestCase = update(userSession, projectId, testCase);
+System.out.println("createIssue - newTestCase: " + newTestCase);
+System.out.flush();
         } else {
             throw new EntityAccessDeniedException(
                     format("User %s can't update testcase %s", 
@@ -332,8 +336,10 @@ public class TestCaseService extends BaseService<TestCase> {
 
         TestCase newTestCase = new TestCase();
         if (testCase.isLocked() == false) {
-           newTestCase.setLocked(true);
+           testCase.setLocked(true);
            newTestCase = update(userSession, projectId, testCase);
+System.out.println("linkIssue - newTestCase: " + newTestCase);
+System.out.flush();
         } else {
             throw new EntityAccessDeniedException(
                     format("User %s can't update testcase %s", 
@@ -351,8 +357,10 @@ public class TestCaseService extends BaseService<TestCase> {
 
         TestCase newTestCase = new TestCase();
         if (testCase.isLocked() == false) {
-           newTestCase.setLocked(true);
+           testCase.setLocked(true);
            newTestCase = update(userSession, projectId, testCase);
+System.out.println("unlinkIssue - newTestCase: " + newTestCase);
+System.out.flush();
         } else {
             throw new EntityAccessDeniedException(
                     format("User %s can't update testcase %s", 
@@ -412,6 +420,8 @@ System.out.println("TestCaseService::lockTestCase - need to lock");
 System.out.flush();
            testCase.setLocked(true);
            updatedTestCase = update(userSession, projectId, testCase);
+System.out.println("lockTestCase - updatedTestCase: " + updatedTestCase);
+System.out.flush();
         }
         return updatedTestCase;
     }
@@ -431,6 +441,8 @@ System.out.println("TestCaseService::unLockTestCase - need to unlock");
 System.out.flush();
            testCase.setLocked(false);
            updatedTestCase = update(userSession, projectId, testCase);
+System.out.println("unlockTestCase - updatedTestCase: " + updatedTestCase);
+System.out.flush();
         }
         return updatedTestCase;
     }

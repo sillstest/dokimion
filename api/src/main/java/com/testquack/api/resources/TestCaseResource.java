@@ -119,9 +119,11 @@ System.out.println("TestCaseResource::LockTestCase - projectId: " + projectId);
 System.out.println("TestCaseResource::LockTestCase - testcaseId: " + testcaseId);
 System.out.println("TestCaseResource::LockTestCase - stubbed out");
 System.out.flush();
+/*
 TestCase tc = new TestCase();
 return tc;
-        //return service.lockTestCase(getUserSession(), projectId, testcaseId);
+*/
+        return service.lockTestCase(getUserSession(), projectId, testcaseId);
     }
 
     @POST
@@ -133,9 +135,11 @@ System.out.println("TestCaseResource::UnlockTestCase - projectId: " + projectId)
 System.out.println("TestCaseResource::UnlockTestCase - testcaseId: " + testcaseId);
 System.out.println("TestCaseResource::LockTestCase - stubbed out");
 System.out.flush();
+/*
 TestCase tc = new TestCase();
 return tc;
-        //return service.unlockTestCase(getUserSession(), projectId, testcaseId);
+*/
+        return service.unlockTestCase(getUserSession(), projectId, testcaseId);
     }
 
     @POST
