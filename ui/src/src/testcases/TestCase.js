@@ -1204,20 +1204,20 @@ class TestCase extends SubComponent {
 
         <div className="row">
           <div className="col-md-6"></div>
-          {(Utils.isAdmin(this.state.session) && !this.state.testcase.locked) && (
+          {!this.state.readonly && (Utils.isAdmin(this.state.session) && !this.state.testcase.locked) && (
             <ConfirmButton
              onSubmit={this.lockTestcase}
-             buttonClass={"btn btn-danger"}
+             buttonClass={"btn btn-danger float-left"}
              id={"testcase-lock"}
              modalText={"Are you sure you want to lock this test case?"}
              buttonText={"Lock Testcase"}
             />
           )}
 
-          {(Utils.isAdmin(this.state.session) && this.state.testcase.locked) && (
+          {!this.state.readonly && (Utils.isAdmin(this.state.session) && this.state.testcase.locked) && (
             <ConfirmButton
               onSubmit={this.unlockTestcase}
-              buttonClass={"btn btn-danger"}
+              buttonClass={"btn btn-danger float-left"}
               id={"testcase-unlock"}
               modalText={"Are you sure you want to unlock this test case?"}
               buttonText={"Unlock Testcase"}
