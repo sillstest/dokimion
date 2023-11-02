@@ -41,7 +41,7 @@ class Projects extends Component {
         </div>
 
         {(this.state.projects || []).length == 0 && (
-            <div class="alert alert-light center-text" role="alert">
+            <div className="alert alert-light center-text" role="alert">
               You do not have any projects yet <br/>
               Ask your admin to grant you permission to access a project.
             </div>

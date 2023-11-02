@@ -222,6 +222,22 @@ export function getDatepickerTime(timeMillis) {
   return null;
 }
 
+export function isAdmin(userSession) {
+
+   if (userSession) {
+      if ((userSession.isAdmin === undefined) || 
+          (userSession.person === undefined)) {
+         return;
+      }
+      if (userSession.isAdmin == true || 
+          userSession.person.roles[0].toLowerCase() == 'admin') {
+         return (true);
+      }
+   }
+
+   return (false);
+}
+
 export function isUserOwnerOrAdmin(userSession, createdById) {
     if (userSession)
     {

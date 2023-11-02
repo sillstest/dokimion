@@ -210,7 +210,7 @@ class Comments extends SubComponent {
                     <div className="inplace-display" id={"comment-" + i + "-display"} index={i}>
                       <p className="card-text">{comment.textFormatted || ""}</p>
                     </div>
-                    <div id={"comment-" + i + "-form"} index={i} lassName="inplace-form" style={{ display: "none" }}>
+                    <div id={"comment-" + i + "-form"} index={i} className="inplace-form" style={{ display: "none" }}>
                       <form>
                         <textarea
                           rows="7"

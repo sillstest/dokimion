@@ -250,7 +250,9 @@ class TestCases extends SubComponent {
         this.setState(this.state);
       }.bind(this),
     );
-    if (this.state.selectedTestCase.id) {
+    if (!(this.state.selectedTestCase === undefined) &&
+         (!(this.state.selectedTestCase.id === undefined)) &&
+         (this.state.selectedTestCase.id)) {
       var node = this.tree.getNodeById(this.state.selectedTestCase.id);
       if (!node) return;
       this.tree.select(node);
