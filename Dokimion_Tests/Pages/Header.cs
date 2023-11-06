@@ -33,9 +33,13 @@ namespace Dokimion.Pages
         //div[@class='card-header']//a[normalize-space()='Dokimion']
         public static IWebLocator DokimionProject => L("DokimionProject", By.XPath("//div[@class='card-header']//a[normalize-space()='Dokimion']"));
 
-        public static IWebLocator Attributes => L("TestCases", By.XPath("//a[normalize-space()='Attributes']"));
+        public static IWebLocator Attributes => L("Attributes", By.XPath("//a[normalize-space()='Attributes']"));
 
+        public static IWebLocator Suites => L("Suites", By.XPath("//a[normalize-space()='Suites']"));
 
+        public static IWebLocator Launches => L("Launches", By.XPath("//a[normalize-space()='Launches']"));
+
+        public static IWebLocator DokimionLaunchStatisticsProject => L("DokimionLaunchStatisticsProject", By.XPath("//div[@class='card-header']//a[normalize-space()='Dokimion_LS']"));
     }
 
 }

@@ -23,6 +23,10 @@ namespace Dokimion.Pages
         public static IWebLocator GetTestCaseName => L(
                          "TestCaseName", By.XPath("(//span[@data-role='display'])[1]"));
 
+        public static IWebLocator GetTestCaseNameList => L(
+                         "TestCaseName", By.XPath("(//span[@data-role='display'])"));
+
+
         public static IWebLocator RemoveTestCase => L("RemoveTestCase", By.XPath("(//*[@id='testCase']//a[text()='Remove Testcase'])[1]"));
             //By.XPath("//*[@id='testCase']/div/div[3]/a"));
 
@@ -64,7 +68,10 @@ namespace Dokimion.Pages
      
         public static IWebLocator FinalRemoveStep1 => L("FinalRemoveStep1", By.XPath("//div[@id='steps-0-display']//div[@class = 'modal-footer']//a[contains(text(),'Remove')]"));
 
-        public static IWebLocator Preconditions => L("Preconditions",By.XPath("//h5[normalize-space()='Preconditions']//span[@class='edit edit-icon clickable']//*[name()='svg']"));
+        public static IWebLocator Preconditions => L("Preconditions",By.XPath("//h5[normalize-space()='Preconditions']"));
+
+        public static IWebLocator PreconditionsSVG => L("", By.XPath("(//*[local-name()='svg' and @data-icon='pencil-alt'])[3]"));
+
 
         public static IWebLocator SavePreconditions => L("SavePreconditions", By.XPath("//div[@id='preconditions-form']//button[@type='button'][normalize-space()='Save']"));
         public static IWebLocator PreconditionsText => L("PreconditionsText", By.XPath("//*[@id='preconditions-display']/p"));
