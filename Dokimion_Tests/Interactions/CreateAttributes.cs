@@ -1,6 +1,5 @@
 ﻿using Boa.Constrictor.Screenplay;
 using Boa.Constrictor.Selenium;
-using Dokimion;
 using Dokimion.Pages;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
@@ -32,31 +31,32 @@ namespace Dokimion.Interactions
             actor.AttemptsTo(Clear.On(Attributes.AttributeName));
 
             actor.AttemptsTo(SendKeys.To(Attributes.AttributeName, this.Name));
+            actor.WaitsUntil(ValueAttribute.Of(Attributes.AttributeName), ContainsSubstring.Text(this.Name), timeout: 45);
+
 
             int totalNum = Values.Count;
-           // Console.WriteLine("In the Perform Task : " + totalNum);
 
             Actions actions = new Actions(driver);
             actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
             for (int i = 0; i < totalNum; i++)
             {
-             //   Console.WriteLine("Why so many add ? " + i);
                 var attribValueLocator = $"//input[@name='value' and @index='{i}']";
+                actor.WaitsUntil(Appearance.Of(Attributes.AddAttributeValueButton), IsEqualTo.True(), timeout: 45);
+
                 actor.AttemptsTo(Click.On(Attributes.AddAttributeValueButton));
+                
+                IWebLocator attribLocator = new WebLocator($"AttribLocator{i}", By.XPath(attribValueLocator));
 
-                IWebElement attribLocator = driver.FindElement(By.XPath(
-                   attribValueLocator));
+                actor.WaitsUntil(Appearance.Of(attribLocator),IsEqualTo.True(), timeout:60);
+                actor.AttemptsTo(Clear.On(attribLocator));
+                actor.AttemptsTo(SendKeys.To(attribLocator, Values.ElementAt(i)));
+                actor.WaitsUntil(ValueAttribute.Of(attribLocator), ContainsSubstring.Text(Values.ElementAt(i)), timeout: 60);
 
-                attribLocator.Clear();
-                attribLocator.SendKeys(Values.ElementAt(i));
-                //actor.WaitsUntil(Appearance.Of(),IsEqualTo.True());
-                //actor.AttemptsTo(SendKeys.To(attribLocator, Values.ElementAt(i) ));
 
             }
             Attributes.SaveAttribute.FindElement(driver).Click();
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-
+            
         }
     }
 }

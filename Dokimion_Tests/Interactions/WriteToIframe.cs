@@ -1,15 +1,6 @@
 ﻿using Boa.Constrictor.Screenplay;
-using Boa.Constrictor.Selenium;
-using Dokimion.Pages;
-using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Reflection.Metadata;
-using Dokimion;
+using OpenQA.Selenium.Interactions;
 
 namespace Dokimion.Interactions
 {

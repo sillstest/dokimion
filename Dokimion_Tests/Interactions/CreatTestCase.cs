@@ -1,11 +1,6 @@
 ﻿using Boa.Constrictor.Screenplay;
 using Boa.Constrictor.Selenium;
 using Dokimion.Pages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dokimion.Interactions
 {
@@ -26,7 +21,7 @@ namespace Dokimion.Interactions
 
         public void PerformAs(IActor actor)
         {
-                UserActions userActions = new UserActions();
+            UserActions userActions = new UserActions();
             userActions.LogConsoleMessage("Click on the Testcases on header");
             actor.AttemptsTo(Click.On(Header.TestCases));
 
