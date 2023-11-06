@@ -55,6 +55,7 @@ class LaunchesStatisticsOverview extends SubComponent {
         </div>
         <div className="row">
           <div className="col-6">
+            {typeof(this.state.stats.all) != 'undefined' &&
             <table class="table">
               <tbody>
                 <tr>
@@ -69,6 +70,7 @@ class LaunchesStatisticsOverview extends SubComponent {
                 </tr>
               </tbody>
             </table>
+            }
           </div>
         </div>
         <div className="row">

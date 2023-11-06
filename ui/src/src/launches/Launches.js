@@ -168,6 +168,8 @@ class Launches extends SubComponent {
     return (
       <div class="progress">
         <ControlledPopup popupMessage={this.state.errorMessage}/>
+        {typeof(launch) != 'undefined' &&
+        <>
         <div
           class="progress-bar progress-bar-striped"
           role="progressbar"
@@ -193,6 +195,8 @@ class Launches extends SubComponent {
           role="progressbar"
           style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.SKIPPED, launch.launchStats.total)}
         ></div>
+         </>
+         }
       </div>
     );
   }

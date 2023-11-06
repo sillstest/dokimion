@@ -62,6 +62,7 @@ class LaunchesByStatusesPieWidget extends SubComponent {
   }
 
   setUpStatusPieSeries() {
+    if (typeof(this.state.stats.all) != 'undefined') {
     this.state.statusSeries = [
       {
         name: "Statuses",
@@ -99,9 +100,11 @@ class LaunchesByStatusesPieWidget extends SubComponent {
         ],
       },
     ];
+   }
   }
 
   statusPieChartRender() {
+    if (typeof(this.state.stats.all) != 'undefined') {
     Highcharts.chart({
       chart: {
         type: "pie",
@@ -125,6 +128,7 @@ class LaunchesByStatusesPieWidget extends SubComponent {
       },
       series: this.state.statusSeries,
     });
+    }
   }
 
   render() {
