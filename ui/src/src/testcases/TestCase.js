@@ -1224,6 +1224,8 @@ class TestCase extends SubComponent {
              />
           )}
 
+          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+
           {!this.state.readonly && (
             <ConfirmButton
              onSubmit={this.removeTestcase}
