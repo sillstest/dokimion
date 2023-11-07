@@ -5,6 +5,7 @@ using Dokimion.Pages;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
+using System.Collections.ObjectModel;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 using WebDriverManager.Helpers;
@@ -30,7 +31,7 @@ namespace Dokimion.Tests
             new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
 
 
-            driver = new ChromeDriver(userActions.GetChromeOptions());
+            driver = new ChromeDriver( userActions.GetChromeOptions());
             driver.Manage().Window.Maximize();
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
 
@@ -50,6 +51,8 @@ namespace Dokimion.Tests
             {
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
+               // Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
+
                 //Page is redirected after initial URL
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
             }
@@ -91,8 +94,6 @@ namespace Dokimion.Tests
         {
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
-            //try
-            //{
             userActions.LogConsoleMessage("Action steps : ");
 
             userActions.LogConsoleMessage("Click on the Testcases on header");
@@ -101,7 +102,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Click on the '+' to Add Test cases");
             Actor.AttemptsTo(Click.On(TestCases.AddTestCase));
 
-            userActions.LogConsoleMessage("Enter the Test Case Name");
+            userActions.LogConsoleMessage("Enter the Test Case TCNames");
             Actor.WaitsUntil(Appearance.Of(TestCases.TestCaseName), IsEqualTo.True());
             Actor.AttemptsTo(Clear.On(TestCases.TestCaseName));
             Actor.AttemptsTo(SendKeys.To(TestCases.TestCaseName, "Validate login"));
@@ -112,33 +113,16 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Submit the Save Changes button");
             Actor.AttemptsTo(Click.On(TestCases.SaveTestCaseButton));
 
-            var testCaseName = Actor.AsksFor(Text.Of(TestCases.GetTestCaseName));
+            IWebElement TestCase = GetTestCaseElement("Validate login");
+            TestCase.Click();
 
             userActions.LogConsoleMessage("Verify : Testcase is created");
-            Assert.That(testCaseName.Substring(0, 14), Is.EqualTo("Validate login"));
-
-            //scrolls the page down
-            Actions actions = new Actions(driver);
-            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-            actions.Release().Build().Perform();
+            StringAssert.Contains("Validate login", TestCase.Text);
 
             userActions.LogConsoleMessage("Clean up:");
             userActions.LogConsoleMessage("Click on the Remove Testcase button");
-            Actor.AttemptsTo(Click.On(TestCases.RemoveTestCase));
-
-            userActions.LogConsoleMessage("Click on the Remove Testcase button on confirmation box");
-
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-            actions.MoveToElement(TestCases.RemoveTestCaseButton.FindElement(driver))
-            .Click(TestCases.RemoveTestCaseButton.FindElement(driver)).Build().Perform();
-
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-            //}
-            //catch (Exception e)
-            //{
-            //    userActions.LogConsoleMessage(e.ToString());
-            //    userActions.captureScreenShot(driver, "TC7CreateTestCase");
-            //}
+            Actor.AttemptsTo(DeleteTestCase.For(driver));
+            
         }
 
         [Test]
@@ -148,21 +132,16 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Set Up : ");
             Actor.AttemptsTo(CreatTestCase.For("Add2StepsToTestCase", "Testcase for adding 2 Steps"));
 
-            //try
-            //{
+            
             userActions.LogConsoleMessage("Action steps : ");
-
-            userActions.LogConsoleMessage("Click on the Validate login TestcaseName");
-            Actor.AttemptsTo(Click.On(TestCases.GetTestCaseName));
+            userActions.LogConsoleMessage("Click on the Add2StepsToTestCase TestcaseName");
+            IWebElement TestCase = GetTestCaseElement("Add2StepsToTestCase");
+            TestCase.Click();
 
             userActions.LogConsoleMessage("Click on the Add Steps Button to input step 1");
             Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
-
-            Actions actions = new Actions(driver);
-            IWebElement element = TestCases.AddStepButton.FindElement(driver);
-            actions.MoveToElement(element);
-            actions.Click(element);
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
 
             //Steps
             Actor.AttemptsTo(WriteToIframe.For(driver, 2, "Go to Quack home page"));
@@ -178,12 +157,8 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Click on the Add Steps Button to input step 2");
             Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
 
-            //We need to scroll to add another step
-            actions = new Actions(driver);
-            IWebElement element1 = TestCases.AddStepButton.FindElement(driver);
-            actions.MoveToElement(element1);
-            actions.Click(element1);
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
 
             //Step 2
             Actor.AttemptsTo(WriteToIframe.For(driver, 4, "Login as admin"));
@@ -191,12 +166,12 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(WriteToIframe.For(driver, 5, "List of projects opens"));
 
             //Scroll down page
+            Actions actions = new Actions(driver);
             actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
-            var saveAppreared = Actor.AskingFor(Appearance.Of(TestCases.SaveStep2));
 
             userActions.LogConsoleMessage("Click on the Save Button to input step 1");
-            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep2), IsEqualTo.True());
+            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep2), IsEqualTo.True(), timeout:45);
             Actor.AttemptsTo(Click.On(TestCases.SaveStep2));
             // Verify
             userActions.LogConsoleMessage("Verify : Step 1 conatins Go to Quack home page");
@@ -209,18 +184,10 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Clean up :");
             userActions.LogConsoleMessage("Removed 2nd step");
-            removeStep();
-            removeStep();
-            userActions.LogConsoleMessage("Remove TestCase");
-            removeTestCase();
-            //}
-            //catch (Exception ex)
-            //{
-            //    userActions.LogConsoleMessage(ex.ToString());
-            //    // userActions.captureScreenShot(driver, "TC8AddStepsToTestCase");
-
-            //}
-
+            RemoveStep();
+     
+            Actor.AttemptsTo(DeleteTestCase.For(driver));
+          
         }
 
         [Test]
@@ -229,23 +196,22 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
             Actor.AttemptsTo(CreatTestCase.For("UpdateExpectation2", "Testcase for adding 2 Steps and update"));
-
-            //try
-            //{
+            
             userActions.LogConsoleMessage("Action steps : ");
 
-            userActions.LogConsoleMessage("Click on the Validate login TestcaseName");
-            Actor.AttemptsTo(Click.On(TestCases.GetTestCaseName));
+            userActions.LogConsoleMessage("Click on the UpdateExpectation2 TestcaseName");
+            IWebElement TestCase = GetTestCaseElement("UpdateExpectation2");
+            TestCase.Click();
 
             userActions.LogConsoleMessage("Click on the Add Steps Button to input step 1");
             Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
 
-            Actions actions = new Actions(driver);
-            IWebElement element = TestCases.AddStepButton.FindElement(driver);
-            actions.MoveToElement(element);
-            actions.Click(element);
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
 
+
+            Actions actions = new Actions(driver);
+           
             //Steps
             Actor.AttemptsTo(WriteToIframe.For(driver, 2, "Go to Quack home page"));
             //Expectations
@@ -259,13 +225,8 @@ namespace Dokimion.Tests
             //Add 2nd step
             userActions.LogConsoleMessage("Click on the Add Steps Button to input step 2");
             Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
-
-            //We need to scroll to add another step
-            actions = new Actions(driver);
-            IWebElement element1 = TestCases.AddStepButton.FindElement(driver);
-            actions.MoveToElement(element1);
-            actions.Click(element1);
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
 
             //Step 2
             Actor.AttemptsTo(WriteToIframe.For(driver, 4, "Login as admin"));
@@ -275,8 +236,6 @@ namespace Dokimion.Tests
             //Scroll down page
             actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
-            var saveAppreared = Actor.AskingFor(Appearance.Of(TestCases.SaveStep2));
-
             userActions.LogConsoleMessage("Click on the Save button");
             Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep2), IsEqualTo.True());
             Actor.AttemptsTo(Click.On(TestCases.SaveStep2));
@@ -285,7 +244,6 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Click on the Edit Link");
             Actor.AttemptsTo(Click.On(TestCases.EditStep2Expectations));
 
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
             userActions.LogConsoleMessage("Update the expectation in step 2 to UPD");
 
@@ -307,19 +265,7 @@ namespace Dokimion.Tests
 
             // Cleanup
             userActions.LogConsoleMessage("Clean up :");
-            userActions.LogConsoleMessage("Remove 2 steps");
-            removeStep();
-            removeStep();
-            userActions.LogConsoleMessage("Remove TestCase");
-            removeTestCase();
-            //}
-            //catch (Exception ex)
-            //{
-            //    userActions.LogConsoleMessage(ex.StackTrace!);
-
-            //    // userActions.captureScreenShot(driver, "TC8AddStepsToTestCase");
-
-            //}
+            Actor.AttemptsTo(DeleteTestCase.For(driver));
         }
 
 
@@ -332,27 +278,26 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Create a Testcase");
             Actor.AttemptsTo(CreatTestCase.For("PreconditionTestCase", "Testcase for adding precondition"));
 
-
-            //try
-            //{
             userActions.LogConsoleMessage("Action steps : ");
 
-            userActions.LogConsoleMessage("Click on the Validate login TestcaseName");
-            Actor.AttemptsTo(Click.On(TestCases.GetTestCaseName));
+            userActions.LogConsoleMessage("Click on the PreconditionTestCase TestcaseName");
+            IWebElement TestCase = GetTestCaseElement("PreconditionTestCase");
+            TestCase.Click();
 
-            userActions.LogConsoleMessage("Click on the Preconditions");
-            Actor.WaitsUntil(Existence.Of(TestCases.Preconditions), IsEqualTo.True());
+            userActions.LogConsoleMessage("Click on the Preconditions edit icon");
+     
+            Actor.AttemptsTo(Hover.Over(TestCases.Preconditions));
+            Actor.AttemptsTo(Hover.Over(TestCases.PreconditionsSVG));
+            Actor.AttemptsTo(Click.On(TestCases.PreconditionsSVG));
 
-            Actions actions = new Actions(driver);
-            IWebElement element = TestCases.Preconditions.FindElement(driver);
-            actions.MoveToElement(element);
-            actions.Click(element);
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-
+            IWebLocator preconditionFrame = new WebLocator("preconditionFrame", By.XPath("//div[@id ='preconditions-form']//iframe"));
+            Actor.WaitsUntil(Appearance
+                .Of(preconditionFrame), IsEqualTo.True(), timeout:45);
             //Preconditions frame index
             Actor.AttemptsTo(WriteToIframe.For(driver, 1, "Quack has to be installed and available"));
 
             // scroll
+            Actions actions = new Actions(driver);
             actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
 
@@ -366,58 +311,46 @@ namespace Dokimion.Tests
             Assert.That(preconditionText
                 , Is.EqualTo("Quack has to be installed and available"));
 
-
             userActions.LogConsoleMessage("Clean up : Delete Testcase");
-            removeTestCase();
-
-            //}
-            //catch (Exception ex)
-            //{
-            //    userActions.LogConsoleMessage(ex.ToString());
-
-            //    // userActions.captureScreenShot(driver, "TC8AddStepsToTestCase");
-            //}
-
+            Actor.AttemptsTo(DeleteTestCase.For(driver));
         }
 
-        private void removeStep()
+
+        public void RemoveStep()
         {
-            // userActions.LogConsoleMessage("Before clicking on Remove");
+
+            userActions.LogConsoleMessage("Click on the Remove Step");
             Actions actions = new Actions(driver);
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
             Actor.WaitsUntil(Appearance.Of(TestCases.RemoveStep1), IsEqualTo.True(), timeout: 45);
             Actor.AttemptsTo(Click.On(TestCases.RemoveStep1));
 
             //Confirm pop up is displayed
-            Actor.WaitsUntil(Appearance.Of(TestCases.RemoveStep1Confirm), IsEqualTo.True());
-            Actor.WaitsUntil(Appearance.Of(TestCases.FinalRemoveStep1), IsEqualTo.True());
+            Actor.WaitsUntil(Appearance.Of(TestCases.RemoveStep1Confirm), IsEqualTo.True(), timeout:45);
+            Actor.WaitsUntil(Appearance.Of(TestCases.FinalRemoveStep1), IsEqualTo.True(), timeout:45);
 
-            actions.MoveToElement(TestCases.FinalRemoveStep1.FindElement(driver))
-                .Click(TestCases.FinalRemoveStep1.FindElement(driver)).Build().Perform();
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            userActions.LogConsoleMessage("Click on the Remove Step Confirmation");
 
+            Actor.AttemptsTo(Hover.Over(TestCases.FinalRemoveStep1));
+            TestCases.FinalRemoveStep1.FindElement(driver).Click();
+            
         }
-
-        private void removeTestCase()
+    
+        private IWebElement GetTestCaseElement(string testcasename)
         {
-            userActions.LogConsoleMessage("Click on the Remove Testcase button");
-            Actor.AttemptsTo(Click.On(TestCases.RemoveTestCase));
 
-            userActions.LogConsoleMessage("Click on the Remove Testcase button on confirmation box");
+            Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
 
-            Actions actions = new Actions(driver);
+            ReadOnlyCollection<IWebElement> TCNamesList = TestCases.GetTestCaseNameList.FindElements(driver);
 
-            bool isVisible = Actor.AskingFor(Appearance.Of(TestCases.RemoveTestCaseButton));
-            if (!isVisible)
-            {
-                //scoll to the bottom
-                actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            IEnumerable<IWebElement> TCNames = TCNamesList.Where(name => name.Text.Contains(testcasename));
+            Assert.IsNotNull(TCNames);
 
-            }
+            IWebElement TestCase = TCNames.Last();
+            userActions.LogConsoleMessage("Clicked on Testcase : " + TestCase.Text);
+            return TestCase;  
 
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-            actions.MoveToElement(TestCases.RemoveTestCaseButton.FindElement(driver))
-            .Click(TestCases.RemoveTestCaseButton.FindElement(driver)).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
         }
+
+
     }
 }

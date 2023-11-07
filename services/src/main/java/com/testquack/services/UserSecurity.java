@@ -136,14 +136,14 @@ System.out.flush();
 
      Role returnRole = Role.TESTER;
 
-     switch(role) {
-        case "TESTER":
+     switch(role.toLowerCase()) {
+        case "tester":
            returnRole = Role.TESTER;
            break;
-        case "TESTDEVELOPER":
+        case "testdeveloper":
            returnRole = Role.TESTDEVELOPER;
            break;
-        case "ADMIN":
+        case "admin":
            returnRole = Role.ADMIN;
            break;
         default:

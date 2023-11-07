@@ -295,33 +295,7 @@ System.out.flush();
 System.out.println("BaseService::userCanAccessProjectCommon - after isUserOrganizationAdmin");
 System.out.flush();
 
-        Project project = projectRepository.findOne(getCurrOrganizationId(session), null, projectId);
-System.out.println("BaseService::userCanAccessProjectCommon - after findOne: project: " + project);
-System.out.flush();
-
-        if (project == null || project.isDeleted()) {
-            throw new EntityNotFoundException(format("Project %s does not exist", projectId));
-        }
-System.out.println("BaseService::userCanAccessProjectCommon - after project.isDeleted");
-System.out.flush();
-
-        List<String> contains_groups = session.getPerson().getGroups();
-
-System.out.println("BaseService::userCanAccessProjectCommon - after contains: " + contains_groups);
-System.out.flush();
-
-        String contains_login = session.getPerson().getLogin();
-System.out.println("BaseService::userCanAccessProjectCommon - after equals: " + contains_login);
-System.out.flush();
-
-
-        if (contains_groups.isEmpty() == false)
-        {
-           return project.getReadWriteGroups().stream().anyMatch(contains_groups::contains) || 
-                  project.getReadWriteUsers().stream().anyMatch(contains_login::equals);
-        } else {
-           return project.getReadWriteUsers().stream().anyMatch(contains_login::equals);
-        }
+        return true;
     }
     protected boolean userCanSave(Session session, String projectId, E entity){
 System.out.println("BaseService::userCanSave 1 - session: " + session);

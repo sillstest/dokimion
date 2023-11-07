@@ -38,6 +38,8 @@ namespace Dokimion.Pages
 
         public static IWebLocator PlacementAttrib => L("PlacementAttrib", By.XPath("//b[contains(text(),'Placement')]"));
 
+        public static IWebLocator EditAttribSVG => L("EditAttribSVG", By.XPath("(//*[local-name()='svg' and @data-icon='pencil-alt'])[1]"));
+
 
     }
 }

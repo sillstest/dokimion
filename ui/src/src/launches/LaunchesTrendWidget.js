@@ -61,6 +61,7 @@ class LaunchesTrendWidget extends SubComponent {
   }
 
   renderChart() {
+    if (typeof(this.state.launches) != 'undefined') {
     Highcharts.chart("trend", {
       title: {
         text: "Launches Statuses Trend",
@@ -107,6 +108,7 @@ class LaunchesTrendWidget extends SubComponent {
         ],
       },
     });
+    }
   }
 
   getSeries() {
@@ -118,7 +120,7 @@ class LaunchesTrendWidget extends SubComponent {
       TOTAL: { name: "Total", color: "#007bff", data: [] },
     };
 
-    this.state.launches.forEach(launch => {
+    typeof(this.state.launches) != 'undefined' && this.state.launches.forEach(launch => {
       Object.keys(launch.launchStats.statusCounters).forEach(key => {
         if (totalStats[key]) {
           totalStats[key].data.push(launch.launchStats.statusCounters[key]);

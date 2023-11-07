@@ -62,19 +62,22 @@ class LaunchesByUsersPieWidget extends SubComponent {
   }
 
   setUpUsersPieSeries() {
+    if (typeof(this.state.stats.all) != 'undefined') {
     this.state.userSeries = [
       {
         name: "Statuses",
-        data: Object.keys(this.state.stats.all.users).map(
+        data: typeof(this.state.stats.all) != 'undefined' && Object.keys(this.state.stats.all.users).map(
           function (user) {
             return { name: user, y: this.state.stats.all.users[user] };
           }.bind(this),
         ),
       },
     ];
+    }
   }
 
   usersPieChartRender() {
+    if (typeof(this.state.stats.all) != 'undefined') {
     Highcharts.chart({
       chart: {
         type: "pie",
@@ -98,6 +101,7 @@ class LaunchesByUsersPieWidget extends SubComponent {
       },
       series: this.state.userSeries,
     });
+    }
   }
 
   render() {

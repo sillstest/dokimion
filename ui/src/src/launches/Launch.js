@@ -349,6 +349,7 @@ class Launch extends SubComponent {
                   <div className="col-4">Started at: {Utils.timeToDate(this.state.launch.startTime)}</div>
                   <div className="col-4">Finished at: {Utils.timeToDate(this.state.launch.finishTime)}</div>
                 </div>
+                {typeof(this.state.launch) != 'undefined' &&
                 <div className="progress launch-summary-block">
                   <div
                     className="progress-bar progress-bar-striped"
@@ -416,7 +417,7 @@ class Launch extends SubComponent {
                     )}
                   </div>
                 </div>
-
+                }
                 <div className="restart-launch-control">
                   <button type="button" className="btn btn-primary" onClick={e => this.onLaunchRestart(false, e)}>
                     Restart All
