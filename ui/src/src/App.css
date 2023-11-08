@@ -36,12 +36,14 @@
 
 .tree-side{
     height: 100vh;
-    overflow-y: scroll;
     z-index: 0;
+    resize: horizontal;
+    overflow-y: scroll;
 }
 
 .testcase-side{
     height: 100vh;
+    resize: horizontal;
     overflow-y: scroll;
 }
 
@@ -51,6 +53,7 @@
 
 .testcase-section{
     padding: 15px;
+    width: 100px;
     margin-bottom: 15px;
 }
 
@@ -390,3 +393,9 @@ td.cellUserProfile {
    border: 1px solid black;
 }
 
+.row_wrapper {
+   display: flex;
+   overflow: auto;
+   margin-right: -15px;
+   margin-left: -15px;
+}

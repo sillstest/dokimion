@@ -297,6 +297,7 @@ class Launch extends SubComponent {
             </Link>
           </h3>
         </div>
+        <div className="row_wrapper">
         <div className="row">
           <div className="sweet-loading">
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
@@ -480,6 +481,7 @@ class Launch extends SubComponent {
               </div>
             )}
           </div>
+        </div>
         </div>
 
         <div
