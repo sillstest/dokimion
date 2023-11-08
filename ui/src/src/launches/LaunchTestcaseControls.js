@@ -77,9 +77,6 @@ class LaunchTestcaseControls extends Component {
         <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#broken-dialog">
           Broken
         </button>
-        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#skipped-dialog">
-          Skip
-        </button>
         <button type="button" class="btn btn-warning" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
           X
         </button>
@@ -203,42 +200,6 @@ class LaunchTestcaseControls extends Component {
                   onClick={e => this.handleStatusSubmit("BROKEN", e, "broken-dialog")}
                 >
                   Mark as Broken
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="modal fade" tabIndex="-1" role="dialog" id="skipped-dialog">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Skip Test Case</h5>
-                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <textarea
-                  rows="7"
-                  id="failure-text"
-                  name="text"
-                  className="form-control"
-                  value={this.state.failureDetails.text}
-                  placeholder="Reason of Skipping"
-                  onChange={this.handleDetailsFailureChange}
-                />
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-dismiss="modal" aria-label="Cancel">
-                  Close
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  onClick={e => this.handleStatusSubmit("SKIPPED", e, "skipped-dialog")}
-                >
-                  Skip
                 </button>
               </div>
             </div>
