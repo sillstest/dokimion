@@ -123,7 +123,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
                       <Checkbox
                         toggle
                         onClick={e => this.onBrokenToggle(testcase.id, !testcase.broken, e)}
-                        checked={!testcase.broken}
+                        checked={testcase.broken}
                         label={{ children: testcase.broken ? "Off" : "On" }}
                       />
                     </td>
