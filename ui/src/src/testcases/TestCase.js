@@ -610,7 +610,7 @@ class TestCase extends SubComponent {
                     <Checkbox
                       toggle
                       onChange={this.onBrokenToggle}
-                      checked={!this.state.testcase.broken}
+                      checked={this.state.testcase.broken}
                       label={{ children: this.state.testcase.broken ? "Off" : "On" }}
                     />
                   </div>
