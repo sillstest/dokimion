@@ -312,16 +312,24 @@ public class LaunchService extends BaseService<Launch> {
     }
 
     public Collection<LaunchTestcaseStats> getTestCasesHeatMap(Session session, String projectId, Filter filter, int statsTopLimit) throws Exception {
+System.out.println("LaunchService::getTestCasesHeatMap - projectId, statsTopLimit: " + projectId + ", " + statsTopLimit);
+System.out.flush();
         statsTopLimit = statsTopLimit == 0 ? 100 : statsTopLimit;
         if (userCanReadProject(session, projectId)) {
             Map<String, LaunchTestcaseStats> unsortedMap = dbUtils.mapReduce(Launch.class, getCollectionName(getCurrOrganizationId(session), projectId, Launch.class),
                     "testcaseHeatMap.js", "testcaseHeatReduce.js", filter, LaunchTestcaseStats.class);
+
+System.out.println("LaunchService::getTestCasesHeatMap - unsortedMap: " + unsortedMap);
+System.out.flush();
 
             MinMaxPriorityQueue<LaunchTestcaseStats> topStats = MinMaxPriorityQueue.
                     orderedBy(new LaunchTestcaseStatsComparator()).
                     maximumSize(statsTopLimit).
                     create();
             topStats.addAll(unsortedMap.values());
+
+System.out.println("LaunchService::getTestCasesHeatMap - topStats: " + topStats);
+System.out.flush();
 
             Map<String, LaunchTestcaseStats> statsMap =
                     topStats.stream().collect(toMap(LaunchTestcaseStats::getId, Function.identity()));
@@ -339,11 +347,17 @@ public class LaunchService extends BaseService<Launch> {
                         isEmpty(actualTestcase.getName()) ?
                                 actualTestcase.getImportedName() : actualTestcase.getName());
             });
+System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases: " + actualTestcases);
+System.out.flush();
+
 
             //Sort stats by most broken
             List<LaunchTestcaseStats> sortedStats = new ArrayList<>(topStats.size());
             sortedStats.addAll(topStats);
             sortedStats.sort(new LaunchTestcaseStatsComparator());
+System.out.println("LaunchService::getTestCasesHeatMap - sortedStats: " + sortedStats);
+System.out.flush();
+
             return sortedStats;
         }
         return emptyList();
