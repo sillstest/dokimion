@@ -439,9 +439,9 @@ namespace Dokimion.Tests
             string ProjectImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.ProjectsLaunchStatusIcon, "src"));
             StringAssert.Contains("fail", ProjectImgSrc);
 
-            userActions.LogConsoleMessage("Verify : Launch status is skipped");
+            userActions.LogConsoleMessage("Verify : Launch status is broken");
             string LaunchImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.LaunchLaunchStatusIcon, "src"));
-            StringAssert.Contains("skipped", LaunchImgSrc);
+            StringAssert.Contains("broken", LaunchImgSrc);
             userActions.LogConsoleMessage("Clean up : Delete the Smoke Test Launch");
             //Clean Up
             Actor.AttemptsTo(DeleteLaunch.For(driver));

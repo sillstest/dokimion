@@ -23,40 +23,41 @@ namespace Dokimion.Tests
 
             userActions = new UserActions();
             userActions.LogConsoleMessage("In one time Set up :" + TestContext.CurrentContext.Test.ClassName);
-            userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            //This will match ChromeDriver and web browser versions
-            new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
-
-            driver = new ChromeDriver(userActions.GetChromeOptions());
-
-            driver.Manage().Window.Maximize();
-            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
-
-            ICapabilities capabilities = driver.Capabilities;
-            var browserName = capabilities.GetCapability("browserName");
-            var browserVersion = capabilities.GetCapability("browserVersion");
-            var SeleniumWebDriverVersion = (capabilities.GetCapability("chrome") as Dictionary<string, object>)!["chromedriverVersion"];
-
-            userActions.LogConsoleMessage("BrowserName : " + browserName);
-            userActions.LogConsoleMessage("browserVersion : " + browserVersion);
-            userActions.LogConsoleMessage("ChromeDriver : " + driver.GetType().ToString());
-            userActions.LogConsoleMessage("SeleniumWebDriverVersion " + SeleniumWebDriverVersion);
-
             var count = 1;
 
             try
             {
+
+                //This will match ChromeDriver and web browser versions
+                new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
+
+                driver = new ChromeDriver(userActions.GetChromeOptions());
+
+                driver.Manage().Window.Maximize();
+                driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
+
+                ICapabilities capabilities = driver.Capabilities;
+                var browserName = capabilities.GetCapability("browserName");
+                var browserVersion = capabilities.GetCapability("browserVersion");
+                var SeleniumWebDriverVersion = (capabilities.GetCapability("chrome") as Dictionary<string, object>)!["chromedriverVersion"];
+
+                userActions.LogConsoleMessage("BrowserName : " + browserName);
+                userActions.LogConsoleMessage("browserVersion : " + browserVersion);
+                userActions.LogConsoleMessage("ChromeDriver : " + driver.GetType().ToString());
+                userActions.LogConsoleMessage("SeleniumWebDriverVersion " + SeleniumWebDriverVersion);
+
+                userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
-               // Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
+                // Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
                 //Page is redirected after initial URL
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
             }
             catch (Exception ex)
             {
-                userActions.captureScreenShot(driver, "LoginPageTest");
+                userActions.captureScreenShot(driver, "AttributeTests");
 
                 count++;
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()).ForAnAdditional(3));
@@ -208,7 +209,7 @@ namespace Dokimion.Tests
 
 
             Actor.AttemptsTo(Hover.Over(Attributes.FunctionalityAttrib));
-            
+
             userActions.LogConsoleMessage("Click on edit 'pencil' to modify Functionality attribute");
 
             Actor.AttemptsTo(Hover.Over(Attributes.EditAttribSVG));
@@ -222,13 +223,13 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Hover.Over(DeleteSVG));
             Actor.AttemptsTo(Click.On(DeleteSVG));
 
-            Actor.WaitsUntil(Appearance.Of(Attributes.SaveAttribute),IsEqualTo.True(), timeout:60);
+            Actor.WaitsUntil(Appearance.Of(Attributes.SaveAttribute), IsEqualTo.True(), timeout: 60);
 
             userActions.LogConsoleMessage("Click on Save Changes button");
             Attributes.SaveAttribute.FindElement(driver).Click();
             //var check = ContainsSubstring.Text("Goodbye").Evaluate("Hello World!").Should().BeFalse();
-           Actor.WaitsUntil(Text.Of(Attributes.VerifyAttributesList),IsEqualTo.Value("Authentication, TestCase, TestSuites, Projects, Launch")
-            , timeout: 60);
+            Actor.WaitsUntil(Text.Of(Attributes.VerifyAttributesList), IsEqualTo.Value("Authentication, TestCase, TestSuites, Projects, Launch")
+             , timeout: 60);
             //  Actor.WaitsUntil(Appearance.Of(Attributes.VerifyAttributesList), IsEqualTo.True(), timeout: 60);
 
             string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
@@ -316,5 +317,5 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(DeleteAttribute.For("Placement"));
         }
     }
- 
+
 }
