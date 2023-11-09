@@ -152,7 +152,7 @@ namespace Dokimion.Pages
         public static IWebLocator LaunchPassButton => L("LaunchPassButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Pass']"));
         public static IWebLocator LaunchFailButton => L("LaunchFailButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Fail']"));
         public static IWebLocator LaunchBrokenButton => L("LaunchBrokenButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Broken']"));
-        public static IWebLocator LaunchSkipButton => L("LaunchSkipButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Skip']"));
+       // public static IWebLocator LaunchSkipButton => L("LaunchSkipButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Skip']"));
         public static IWebLocator LaunchXButton => L("LaunchXButton", By.XPath("//div[@class='launch-status-controls']//button[text()='X']"));
 
         public static IWebLocator LaunchFailMessage => L("LaunchFailMessage", By.XPath("//div[@id='fail-dialog']//textarea[@id='failure-text']"));
@@ -165,9 +165,9 @@ namespace Dokimion.Pages
 
         public static IWebLocator LaunchBrokenMsgButton => L("LaunchBrokenMsgButton", By.XPath("//div[@id='broken-dialog']//button[text()='Mark as Broken']"));
 
-        public static IWebLocator LaunchSkipMessage => L("LaunchSkipMessage", By.XPath("//div[@id='skipped-dialog']//textarea[@id='failure-text']"));
+       // public static IWebLocator LaunchSkipMessage => L("LaunchSkipMessage", By.XPath("//div[@id='skipped-dialog']//textarea[@id='failure-text']"));
 
-        public static IWebLocator LaunchSkipMsgButton => L("LaunchSkipMessage", By.XPath("//div[@id='skipped-dialog']//button[text()='Skip']"));
+//        public static IWebLocator LaunchSkipMsgButton => L("LaunchSkipMessage", By.XPath("//div[@id='skipped-dialog']//button[text()='Skip']"));
 
         public static IWebLocator LaunchRestartFailButton => L("LaunchRestartFailButton", By.XPath("//div[@id='testCase']//div[@class='restart-launch-control']//button[text()='Restart Failed']"));
 

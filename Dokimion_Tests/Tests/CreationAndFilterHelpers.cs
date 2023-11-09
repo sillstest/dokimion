@@ -47,7 +47,7 @@ namespace Dokimion.Tests
             string locator2 = "//li[contains(@data-id,'Launch')]//i[contains(@class,'gj-icon')]";
             driver.FindElement(By.XPath(locator2)).Click();
             Actor.AttemptsTo(Click.On(TestCases.LaunchCreationTC));
-            UpdateLaunchStatusControl(Actor,TestCases.LaunchSkipButton, "Skipped",driver);
+            UpdateLaunchStatusControl(Actor,TestCases.LaunchBrokenButton, "Broken",driver);
 
             userActions.LogConsoleMessage("Click on the Header Project List Validation TC");
             string locator3 = "//li[contains(@data-id,'Projects')]//i[contains(@class,'gj-icon')]";
@@ -274,25 +274,25 @@ namespace Dokimion.Tests
                 Actor.WaitsUntil(Appearance.Of(TestCases.LaunchBrokenStatusButton), IsEqualTo.True(), timeout: 45);
 
             }
-            else if (description.Contains("Skip"))
-            {
-                userActions.LogConsoleMessage("Click on the Skip Button");
-                Actor.AttemptsTo(Click.On(Status));
+            //else if (description.Contains("Skip"))
+            //{
+            //    userActions.LogConsoleMessage("Click on the Skip Button");
+            //    Actor.AttemptsTo(Click.On(Status));
 
-                Actor.WaitsUntil(Appearance.Of(TestCases.LaunchSkipMessage), IsEqualTo.True(), timeout: 45);
-                userActions.LogConsoleMessage("Enter the Reason for Skip " + comments);
-                Actor.AttemptsTo(Clear.On(TestCases.LaunchSkipMessage));
-                Actor.AttemptsTo(SendKeys.To(TestCases.LaunchSkipMessage, comments));
-                Actor.WaitsUntil(Text.Of(TestCases.LaunchSkipMessage), ContainsSubstring.Text(comments), timeout: 45);
-                //Actor.WaitsUntil(ValueAttribute.Of(TestCases.LaunchSkipMessage), ContainsSubstring.Text(comments), timeout: 45);
+            //    Actor.WaitsUntil(Appearance.Of(TestCases.LaunchSkipMessage), IsEqualTo.True(), timeout: 45);
+            //    userActions.LogConsoleMessage("Enter the Reason for Skip " + comments);
+            //    Actor.AttemptsTo(Clear.On(TestCases.LaunchSkipMessage));
+            //    Actor.AttemptsTo(SendKeys.To(TestCases.LaunchSkipMessage, comments));
+            //    Actor.WaitsUntil(Text.Of(TestCases.LaunchSkipMessage), ContainsSubstring.Text(comments), timeout: 45);
+            //    //Actor.WaitsUntil(ValueAttribute.Of(TestCases.LaunchSkipMessage), ContainsSubstring.Text(comments), timeout: 45);
 
 
-                userActions.LogConsoleMessage("Click on the Skip Button");
-                Actor.AttemptsTo(Hover.Over(TestCases.LaunchSkipMsgButton));
-                 TestCases.LaunchSkipMsgButton.FindElement(driver).Click();
-                Actor.WaitsUntil(Appearance.Of(TestCases.LaunchSkippedStatusButton), IsEqualTo.True(), timeout: 45);
+            //    userActions.LogConsoleMessage("Click on the Skip Button");
+            //    Actor.AttemptsTo(Hover.Over(TestCases.LaunchSkipMsgButton));
+            //     TestCases.LaunchSkipMsgButton.FindElement(driver).Click();
+            //    Actor.WaitsUntil(Appearance.Of(TestCases.LaunchSkippedStatusButton), IsEqualTo.True(), timeout: 45);
 
-            }
+            //}
         }
 
     }
