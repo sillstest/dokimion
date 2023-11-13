@@ -76,7 +76,15 @@ System.out.flush();
 System.out.println("LaunchResource::getLaunchesStatistics - project id: " + projectId);
 System.out.flush();
 
-        return service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
+        Map<String, LaunchStatistics> rs = service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
+	System.out.println("LaunchResource - after call to service.getLaunchStatistics");
+	for (Map.Entry<String, LaunchStatistics> entry : rs.entrySet()) {
+	   System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
+	}
+System.out.flush();
+
+        return rs;
+        //return service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
     }
 
     @GET

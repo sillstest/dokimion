@@ -79,7 +79,7 @@ public class LaunchService extends BaseService<Launch> {
         return repository;
     }
 
-    private final static Set<LaunchStatus> NON_FAILED_STATUSES = Stream.of(RUNNING, RUNNABLE, SKIPPED, PASSED).collect(toSet());
+    private final static Set<LaunchStatus> NON_FAILED_STATUSES = Stream.of(RUNNING, RUNNABLE, PASSED).collect(toSet());
 
     public LaunchTestCase updateLaunchTestCaseStatus(HttpServletRequest request,
                                                      Session session, String projectId,
@@ -132,7 +132,7 @@ public class LaunchService extends BaseService<Launch> {
     }
 
     private boolean isFailedStatus(LaunchStatus status) {
-        return status.equals(FAILED) || status.equals(BROKEN) || status.equals(SKIPPED);
+        return status.equals(FAILED) || status.equals(BROKEN);
     }
 
     private void addFailureDetails(HttpServletRequest request, Session session, String projectId, LaunchTestCase launchTestCase, FailureDetails failureDetails) throws Exception {
@@ -206,7 +206,7 @@ public class LaunchService extends BaseService<Launch> {
     private boolean isLaunchFinished(Launch launch) {
         Map<LaunchStatus, Integer> statusCounters = launch.getLaunchStats().getStatusCounters();
         return launch.getLaunchStats().getTotal() == statusCounters.get(PASSED) +
-                statusCounters.get(FAILED) + statusCounters.get(BROKEN) + statusCounters.get(SKIPPED);
+                statusCounters.get(FAILED) + statusCounters.get(BROKEN);
     }
 
     private void updateLaunchStatus(LaunchStats launchStats, LaunchTestCaseTree testCaseTree) {
@@ -334,20 +334,41 @@ System.out.flush();
             Map<String, LaunchTestcaseStats> statsMap =
                     topStats.stream().collect(toMap(LaunchTestcaseStats::getId, Function.identity()));
 
+
+System.out.println("LaunchService::getTestCasesHeatMap - statsMap: " + statsMap);
+System.out.flush();
+
+
             //Get current broken flag state
             List<TestCase> actualTestcases = testCaseService.findFiltered(session, projectId,
                     new TestcaseFilter().withIncludedField("id").
                             withIncludedField("name").
                             withIncludedField("broken").
+                            withIncludedField("launchBroken").
                             withIncludedField("importedName").
                             withField("id", statsMap.keySet().toArray()));
+
+System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases with filter: ");
+for (TestCase tc : actualTestcases) {
+   System.out.println("testcase: " + tc);
+   System.out.flush();
+}
+System.out.flush();
+
+
             actualTestcases.forEach(actualTestcase -> {
                 LaunchTestcaseStats statsToUpdate = statsMap.get(actualTestcase.getId());
                 statsToUpdate.setName(
                         isEmpty(actualTestcase.getName()) ?
                                 actualTestcase.getImportedName() : actualTestcase.getName());
+		statsToUpdate.setBroken(actualTestcase.isBroken());
+		statsToUpdate.setLaunchBroken(actualTestcase.isLaunchBroken());
             });
-System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases: " + actualTestcases);
+System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases with filter 2: ");
+for (TestCase tc : actualTestcases) {
+   System.out.println("testcase: " + tc);
+   System.out.flush();
+}
 System.out.flush();
 
 
@@ -356,6 +377,14 @@ System.out.flush();
             sortedStats.addAll(topStats);
             sortedStats.sort(new LaunchTestcaseStatsComparator());
 System.out.println("LaunchService::getTestCasesHeatMap - sortedStats: " + sortedStats);
+for (LaunchTestcaseStats ts : sortedStats) {
+   System.out.println("launchstats");
+   System.out.println("name: " + ts.getName());
+   System.out.println("id: " + ts.getId());
+   System.out.println("broken: " + ts.isBroken());
+   System.out.println("launchBroken: " + ts.isLaunchBroken());
+   System.out.flush();
+}
 System.out.flush();
 
             return sortedStats;

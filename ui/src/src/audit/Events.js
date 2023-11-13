@@ -12,7 +12,7 @@ import ControlledPopup from "../common/ControlledPopup";
 class Events extends SubComponent {
   state = {
     events: [],
-    allEventTypes: ["PASSED", "FAILED", "BROKEN", "SKIPPED", "UPDATED"],
+    allEventTypes: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
     entityTypes: ["TestCase"],
     filter: {
       skip: 0,
@@ -21,7 +21,7 @@ class Events extends SubComponent {
       orderdir: "DESC",
       entityType: "",
       entityId: "",
-      eventType: ["PASSED", "FAILED", "BROKEN", "SKIPPED", "UPDATED"],
+      eventType: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
     },
     pager: {
       total: 0,

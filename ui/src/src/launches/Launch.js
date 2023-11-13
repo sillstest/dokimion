@@ -170,7 +170,6 @@ class Launch extends SubComponent {
               PASSED: 0,
               FAILED: 0,
               BROKEN: 0,
-              SKIPPED: 0,
               RUNNABLE: 0,
               RUNNING: 0,
             };
@@ -192,7 +191,6 @@ class Launch extends SubComponent {
               PASSED: 0,
               FAILED: 0,
               BROKEN: 0,
-              SKIPPED: 0,
               RUNNABLE: 0,
               RUNNING: 0,
             };
@@ -401,19 +399,6 @@ class Launch extends SubComponent {
                   >
                     {Utils.getProgressBarNumber(
                       this.state.launch.launchStats.statusCounters.BROKEN,
-                      this.state.launch.launchStats.total,
-                    )}
-                  </div>
-                  <div
-                    className="progress-bar progress-bar-striped bg-warning"
-                    role="progressbar"
-                    style={Utils.getProgressBarStyle(
-                      this.state.launch.launchStats.statusCounters.SKIPPED,
-                      this.state.launch.launchStats.total,
-                    )}
-                  >
-                    {Utils.getProgressBarNumber(
-                      this.state.launch.launchStats.statusCounters.SKIPPED,
                       this.state.launch.launchStats.total,
                     )}
                   </div>

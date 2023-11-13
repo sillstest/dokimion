@@ -24,7 +24,6 @@ export function getTreeNode(node, parentsToUpdate, uncheckedList) {
   resultNode.PASSED = 0;
   resultNode.FAILED = 0;
   resultNode.BROKEN = 0;
-  resultNode.SKIPPED = 0;
   resultNode.RUNNING = 0;
   resultNode.RUNNABLE = 0;
   parentsToUpdate.push(resultNode);
@@ -111,9 +110,6 @@ export function getNodeStatusImg(node) {
   if ((node.PASSED || 0) > 0 && node.PASSED == node.TOTAL) {
     return "/images/passed.png";
   }
-  if ((node.SKIPPED || 0) == node.TOTAL) {
-    return "/images/skipped.png";
-  }
   return "/images/1px.png";
 }
 
@@ -131,8 +127,6 @@ export function getStatusImg(testCase) {
         return "/images/broken.png";
       case "PASSED":
         return "/images/passed.png";
-      case "SKIPPED":
-        return "/images/skipped.png";
       case "RUNNING":
         return "/images/running.png";
     }
@@ -150,8 +144,6 @@ export function getStatusColorClass(status) {
       return "alert alert-warning";
     case "PASSED":
       return "alert alert-success";
-    case "SKIPPED":
-      return "alert alert-secondary";
     case "RUNNING":
       return "alert alert-primary";
   }
@@ -381,10 +373,6 @@ export function getChartSeriesConfig() {
     BROKEN: {
       name: "Broken",
       color: "#ffc107",
-    },
-    SKIPPED: {
-      name: "Skipped",
-      color: "#6c757d",
     },
     RUNNABLE: {
       name: "Runnable",

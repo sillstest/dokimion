@@ -190,11 +190,6 @@ class Launches extends SubComponent {
           role="progressbar"
           style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.BROKEN, launch.launchStats.total)}
         ></div>
-        <div
-          class="progress-bar progress-bar-striped bg-warning"
-          role="progressbar"
-          style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.SKIPPED, launch.launchStats.total)}
-        ></div>
          </>
          }
       </div>

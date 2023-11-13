@@ -16,7 +16,6 @@ public class LaunchStats {
         statusCounters.put(LaunchStatus.PASSED, 0);
         statusCounters.put(LaunchStatus.FAILED, 0);
         statusCounters.put(LaunchStatus.BROKEN, 0);
-        statusCounters.put(LaunchStatus.SKIPPED, 0);
         statusCounters.put(LaunchStatus.RUNNABLE, 0);
         statusCounters.put(LaunchStatus.RUNNING, 0);
     }

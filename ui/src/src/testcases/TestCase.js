@@ -611,7 +611,7 @@ class TestCase extends SubComponent {
                       toggle
                       onChange={this.onBrokenToggle}
                       checked={this.state.testcase.broken}
-                      label={{ children: this.state.testcase.broken ? "Off" : "On" }}
+                      label={{ children: this.state.testcase.broken ? "On" : "Off" }}
                     />
                   </div>
                 )}
@@ -1196,7 +1196,7 @@ class TestCase extends SubComponent {
                 orderdir: "DESC",
                 entityType: "TestCase",
                 entityId: this.state.testcase.id,
-                eventType: ["PASSED", "FAILED", "BROKEN", "SKIPPED", "UPDATED"],
+                eventType: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
               }}
             />
           </div>

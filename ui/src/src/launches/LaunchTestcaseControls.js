@@ -111,8 +111,6 @@ class LaunchTestcaseControls extends Component {
         return "alert alert-warning";
       case "PASSED":
         return "alert alert-success";
-      case "SKIPPED":
-        return "alert alert-secondary";
     }
     return "alert";
   }

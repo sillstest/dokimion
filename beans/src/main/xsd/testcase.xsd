@@ -33,6 +33,7 @@
                     <xs:element name="automated" type="xs:boolean" default="false"/>
                     <xs:element name="locked" type="xs:boolean" default="false"/>
                     <xs:element name="broken" type="xs:boolean" default="false"/>
+                    <xs:element name="launchBroken" type="xs:boolean" default="false"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>

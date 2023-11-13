@@ -60,13 +60,13 @@ System.out.flush();
     })
     public E create(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
             @ApiParam(value = "Entity", required = true) E entity) {
-System.out.println("BaseCrudResource::create() - projectId: " + projectId);
+System.out.println("BaseCrudResource::create() - entity: " + entity);
 System.out.flush();
         //return getService().save(getUserSession(), projectId, entity);
 System.out.println("BaseCrudResource::create - user session: " + getUserSession());
 System.out.flush();
         E new_entity = getService().save(getUserSession(), projectId, entity);
-System.out.println("BaseCrudResource::create - entity: " + entity);
+System.out.println("BaseCrudResource::create - new entity: " + new_entity);
 System.out.flush();
         return new_entity;
     }

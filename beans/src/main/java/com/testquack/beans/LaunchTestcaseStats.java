@@ -5,6 +5,7 @@ public class LaunchTestcaseStats extends LaunchStats {
     private String name;
     private String id;
     private boolean broken;
+    private boolean launchBroken;
 
     public String getName() {
         return name;
@@ -28,5 +29,13 @@ public class LaunchTestcaseStats extends LaunchStats {
 
     public void setBroken(boolean broken) {
         this.broken = broken;
+    }
+
+    public boolean isLaunchBroken() {
+        return launchBroken;
+    }
+
+    public void setLaunchBroken(boolean launchBroken) {
+        this.launchBroken = launchBroken;
     }
 }

@@ -69,7 +69,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
       .then(response => {
         testcaseToUpdate = response;
         if (testcaseToUpdate) {
-          testcaseToUpdate.broken = value;
+          testcaseToUpdate.launchBroken = value;
           this.updateTestcase(testcaseToUpdate);
         }
       })
@@ -83,7 +83,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
       .then(response => {
         var foundTestcaseStats = this.state.heatmap.find(testcaseStats => testcaseStats.id == testcaseToUpdate.id);
         if (foundTestcaseStats) {
-          foundTestcaseStats.broken = response.broken;
+          foundTestcaseStats.launchBroken = response.launchBroken;
         }
         this.setState(this.state);
       })
@@ -122,9 +122,9 @@ class LaunchTestcasesHeatmap extends SubComponent {
                     <td>
                       <Checkbox
                         toggle
-                        onClick={e => this.onBrokenToggle(testcase.id, !testcase.broken, e)}
-                        checked={testcase.broken}
-                        label={{ children: testcase.broken ? "Off" : "On" }}
+                        onClick={e => this.onBrokenToggle(testcase.id, !testcase.launchBroken, e)}
+                        checked={testcase.launchBroken}
+                        label={{ children: testcase.launchBroken ? "On" : "Off" }}
                       />
                     </td>
                   </tr>
