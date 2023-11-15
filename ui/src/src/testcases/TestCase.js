@@ -96,6 +96,8 @@ class TestCase extends SubComponent {
     this.toggleEditProperty = this.toggleEditProperty.bind(this);
     this.onBrokenToggle = this.onBrokenToggle.bind(this);
     this.cloneTestCase = this.cloneTestCase.bind(this);
+    this.handleOnClickToSelectText = this.handleOnClickToSelectText.bind(this);
+
   }
 
   componentDidMount() {
@@ -453,7 +455,25 @@ class TestCase extends SubComponent {
     this.handleSubmit(null, null, null, true);
   }
 
+
+  handleOnClickToSelectText(){
+    var text = window.getSelection();
+    if (text.rangeCount > 0) {
+
+      var mark = document.createElement("span");
+      mark.style.color='blue';
+      //mark.style.backgroundColor = 'yellow';
+      mark.style.fontWeight='bold';
+
+      var selectionRange = text.getRangeAt(0);
+      mark.appendChild(selectionRange.extractContents());
+      selectionRange.insertNode(mark);
+    }
+  }
+
+
   render() {
+
     return (
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>
@@ -818,13 +838,29 @@ class TestCase extends SubComponent {
                           <div index={i} className="row">
                             <div className="card col-md-12">
                               <div className="card-body">
-                                <div className="card-text">
+                                 {((typeof this.state.testcase.launchStatus!=='undefined') &&  this.state.testcase.launchStatus.includes("RUNNING")) ? (
+                                
+                                   <div className="card-text">
+                                    
+                                    <div
+                                    onClick={this.handleOnClickToSelectText}
+
+                                    dangerouslySetInnerHTML={{
+                                      __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
+                                    }}
+                                  ></div>
+
+                                  </div>)
+                                :(
+                                  <div className="card-text">
                                   <div
                                     dangerouslySetInnerHTML={{
                                       __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
                                     }}
                                   ></div>
-                                </div>
+                                  </div>
+                                )}
+
                                 <h6 className="card-subtitle mb-2 expectations">
                                   <b>
                                     <i>Expectations</i>
