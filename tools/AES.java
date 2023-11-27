@@ -55,15 +55,19 @@ public class AES {
   public static void main(final String[] args) {
     final String secretKey = "al;jf;lda1_+_!!()!!!!";
 
-    //String originalString = "bibles1_for!the@#world.com";
-    //String originalString = "E12!rp_$wd";
-    String originalString = "adminpass";
-
+    String originalString = "bibles1_for!the@#world.com";
     String encryptedString = AES.encrypt(originalString, secretKey) ;
     String decryptedString = AES.decrypt(encryptedString, secretKey) ;
-
     System.out.println(originalString);
     System.out.println(encryptedString);
     System.out.println(decryptedString);
+
+    originalString = "E12!rp_$wd";
+    encryptedString = AES.encrypt(originalString, secretKey) ;
+    decryptedString = AES.decrypt(encryptedString, secretKey) ;
+    System.out.println(originalString);
+    System.out.println(encryptedString);
+    System.out.println(decryptedString);
+
   }
 }
