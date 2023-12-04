@@ -23,6 +23,7 @@
                     <xs:element name="diff" type="xs:string"/>
                     <xs:element name="entityType" type="xs:string"/>
                     <xs:element name="entityId" type="xs:string"/>
+                    <xs:element name="duration" type="xs:long"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
