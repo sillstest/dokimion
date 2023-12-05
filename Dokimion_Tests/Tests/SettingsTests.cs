@@ -12,7 +12,6 @@ using WebDriverManager.Helpers;
 
 namespace Dokimion.Tests
 {
-    [Ignore("Ignore a fixture")]
     internal class SettingsTests
     {
         private IActor Actor;
@@ -52,7 +51,7 @@ namespace Dokimion.Tests
             {
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
-                //Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
+               // Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
                 //Page is redirected after initial URL
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
             }
@@ -72,8 +71,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Set Up : ");
             userActions.LogConsoleMessage("Login as User");
-            //Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
-            Actor.AttemptsTo(LoginUser.For("admin", "adminpass"));
+            Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
         }
 
 
@@ -98,16 +96,16 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action Steps : ");
 
-            userActions.LogConsoleMessage("Click on the Dokimion_LS project settings icon on right");
+            userActions.LogConsoleMessage("Click on the Dokimion project settings icon on right");
 
             Actor.WaitsUntil(Appearance.Of(Settings.DokimionProjectSettingsLink), IsEqualTo.True());
             ReadOnlyCollection<IWebElement> listOfAttributes = Settings.DokimionProjectSettingsLink.FindElements(driver);
 
             IWebElement element = listOfAttributes[0];
 
-            StringAssert.Contains("Dokimion_LS", element.Text);
+            StringAssert.Contains("Dokimion", element.Text);
             element = listOfAttributes[1];
-            element.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='cogs'])")).Click();
+            element.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='cogs'])[1]")).Click();
 
 
             userActions.LogConsoleMessage("Enter Window and Mac in the Environments input");
@@ -117,14 +115,12 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Click on the Save Button");
             Actor.AttemptsTo(Click.On(Settings.SettingsSaveButton));
-
+            
             //Verify
             userActions.LogConsoleMessage("Verify : Project Settings successfully saved is displayed");
-
-            Actor.WaitsUntil(Appearance.Of(Settings.DisplayMessage), IsEqualTo.True(), timeout: 60);
+            Actor.WaitsUntil(Text.Of(Settings.DisplayMessage), ContainsSubstring.Text("Project Settings successfully saved"), timeout: 60);
             string message = Actor.AskingFor(Text.Of(Settings.DisplayMessage));
             StringAssert.Contains("Project Settings successfully saved", message);
-
 
             ReadOnlyCollection<IWebElement> environments = Settings.EnvironmentList.FindElements(driver);
             Actor.WaitsUntil(TextList.For(Settings.EnvironmentList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(2)), timeout: 60);
@@ -138,24 +134,25 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Verify : Mac is present");
             Assert.IsNotEmpty(env2.Text);
             StringAssert.Contains("Mac", env2.Text);
+            //Needed to remove the display message for 2nd confirmation
+            Actor.AttemptsTo(Refresh.Browser());
 
             //Clean Up
             userActions.LogConsoleMessage("Clean up : Delete the Windows and Mac");
             Actor.WaitsUntil(Appearance.Of(Settings.RemoveEnvironments), IsEqualTo.True(), timeout: 60);
-            Actions actions = new Actions(driver);
-            IWebElement remove_icon = Settings.RemoveEnvironments.FindElement(driver);
-            actions.MoveToElement(remove_icon).Click(remove_icon).Release().Build().Perform();
+            Actor.AttemptsTo(Hover.Over(Settings.RemoveEnvironments));
+            Actor.AttemptsTo(Click.On(Settings.RemoveEnvironments));
 
-            remove_icon = Settings.RemoveEnvironments.FindElement(driver);
-            actions.MoveToElement(remove_icon).Click(remove_icon).Release().Build().Perform();
-
-            Actor.WaitsUntil(Appearance.Of(Settings.SettingsSaveButton), IsEqualTo.True());
+            Actor.WaitsUntil(Appearance.Of(Settings.RemoveEnvironments), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Hover.Over(Settings.RemoveEnvironments));
+            Actor.AttemptsTo(Click.On(Settings.RemoveEnvironments));
 
             userActions.LogConsoleMessage("Clean up : Click on Save button");
-
+            Actor.WaitsUntil(Appearance.Of(Settings.SettingsSaveButton), IsEqualTo.True());
             Actor.AttemptsTo(Click.On(Settings.SettingsSaveButton));
             //
-            Actor.WaitsUntil(Appearance.Of(Settings.DisplayMessage), IsEqualTo.True(), timeout: 60);
+            userActions.LogConsoleMessage("Clean up : Project Settings successfully saved is displayed");
+            Actor.WaitsUntil(Text.Of(Settings.DisplayMessage), ContainsSubstring.Text("Project Settings successfully saved"), timeout: 60);
             string message1 = Actor.AskingFor(Text.Of(Settings.DisplayMessage));
             StringAssert.Contains("Project Settings successfully saved", message1);
         }
