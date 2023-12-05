@@ -296,7 +296,7 @@ class Launches extends SubComponent {
                 <th scope="col">Created</th>
                 <th scope="col">Started</th>
                 <th scope="col">Finished</th>
-                <th scope="col">ExecutionTime</th>
+                <th scope="col">Duration</th>
                 <th scope="col">Remove</th>
                 <th></th>
               </tr>
