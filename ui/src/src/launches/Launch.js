@@ -170,7 +170,6 @@ class Launch extends SubComponent {
               PASSED: 0,
               FAILED: 0,
               BROKEN: 0,
-              SKIPPED: 0,
               RUNNABLE: 0,
               RUNNING: 0,
             };
@@ -192,7 +191,6 @@ class Launch extends SubComponent {
               PASSED: 0,
               FAILED: 0,
               BROKEN: 0,
-              SKIPPED: 0,
               RUNNABLE: 0,
               RUNNING: 0,
             };
@@ -297,6 +295,7 @@ class Launch extends SubComponent {
             </Link>
           </h3>
         </div>
+        <div className="row_wrapper">
         <div className="row">
           <div className="sweet-loading">
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
@@ -403,19 +402,6 @@ class Launch extends SubComponent {
                       this.state.launch.launchStats.total,
                     )}
                   </div>
-                  <div
-                    className="progress-bar progress-bar-striped bg-warning"
-                    role="progressbar"
-                    style={Utils.getProgressBarStyle(
-                      this.state.launch.launchStats.statusCounters.SKIPPED,
-                      this.state.launch.launchStats.total,
-                    )}
-                  >
-                    {Utils.getProgressBarNumber(
-                      this.state.launch.launchStats.statusCounters.SKIPPED,
-                      this.state.launch.launchStats.total,
-                    )}
-                  </div>
                 </div>
                 }
                 <div className="restart-launch-control">
@@ -480,6 +466,7 @@ class Launch extends SubComponent {
               </div>
             )}
           </div>
+        </div>
         </div>
 
         <div

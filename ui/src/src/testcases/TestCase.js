@@ -24,6 +24,11 @@ import { Editor } from "@tinymce/tinymce-react";
 import Backend from "../services/backend";
 
 
+// Tinymce is registered to bob_beck@sil.org on tiny.cloud, the tinymce
+// assigned api key has been added as argument to the Editor component
+// The account is a free one, only allowing 2 domains - localhost,
+// testing.languagetechnology.com
+
 class TestCase extends SubComponent {
   constructor(props) {
     super(props);
@@ -37,6 +42,7 @@ class TestCase extends SubComponent {
       "bold italic forecolor backcolor | alignleft aligncenter " +
       "alignright alignjustify | bullist numlist outdent indent | " +
       "removeformat | table | codesample | help";
+
     this.tinymceContentStyle = "p {margin: 0}";
     this.state = {
       testcase: {
@@ -96,6 +102,8 @@ class TestCase extends SubComponent {
     this.toggleEditProperty = this.toggleEditProperty.bind(this);
     this.onBrokenToggle = this.onBrokenToggle.bind(this);
     this.cloneTestCase = this.cloneTestCase.bind(this);
+    this.handleOnClickToSelectText = this.handleOnClickToSelectText.bind(this);
+
   }
 
   componentDidMount() {
@@ -453,7 +461,25 @@ class TestCase extends SubComponent {
     this.handleSubmit(null, null, null, true);
   }
 
+
+  handleOnClickToSelectText(){
+    var text = window.getSelection();
+    if (text.rangeCount > 0) {
+
+      var mark = document.createElement("span");
+      mark.style.color='blue';
+      //mark.style.backgroundColor = 'yellow';
+      mark.style.fontWeight='bold';
+
+      var selectionRange = text.getRangeAt(0);
+      mark.appendChild(selectionRange.extractContents());
+      selectionRange.insertNode(mark);
+    }
+  }
+
+
   render() {
+
     return (
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>
@@ -610,8 +636,8 @@ class TestCase extends SubComponent {
                     <Checkbox
                       toggle
                       onChange={this.onBrokenToggle}
-                      checked={!this.state.testcase.broken}
-                      label={{ children: this.state.testcase.broken ? "Off" : "On" }}
+                      checked={this.state.testcase.broken}
+                      label={{ children: this.state.testcase.broken ? "On" : "Off" }}
                     />
                   </div>
                 )}
@@ -670,6 +696,7 @@ class TestCase extends SubComponent {
                   <div id="description-form" className="inplace-form" style={{ display: "none" }}>
                     <Editor
                       initialValue={this.state.testcase.description}
+                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
                         height: 500,
                         menubar: false,
@@ -726,6 +753,7 @@ class TestCase extends SubComponent {
                   <div id="preconditions-form" className="inplace-form" style={{ display: "none" }}>
                     <Editor
                       initialValue={this.state.testcase.preconditions}
+                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
                         height: 500,
                         menubar: false,
@@ -773,6 +801,7 @@ class TestCase extends SubComponent {
                             <p className="card-text">
                               <Editor
                                 initialValue={this.state.testcase.steps[i].action}
+                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
                                   height: 300,
                                   menubar: false,
@@ -787,6 +816,7 @@ class TestCase extends SubComponent {
                             <p className="card-text">
                               <Editor
                                 initialValue={this.state.testcase.steps[i].expectation}
+                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
                                   height: 300,
                                   menubar: false,
@@ -818,13 +848,29 @@ class TestCase extends SubComponent {
                           <div index={i} className="row">
                             <div className="card col-md-12">
                               <div className="card-body">
-                                <div className="card-text">
+                                 {((typeof this.state.testcase.launchStatus!=='undefined') &&  this.state.testcase.launchStatus.includes("RUNNING")) ? (
+                                
+                                   <div className="card-text">
+                                    
+                                    <div
+                                    onClick={this.handleOnClickToSelectText}
+
+                                    dangerouslySetInnerHTML={{
+                                      __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
+                                    }}
+                                  ></div>
+
+                                  </div>)
+                                :(
+                                  <div className="card-text">
                                   <div
                                     dangerouslySetInnerHTML={{
                                       __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
                                     }}
                                   ></div>
-                                </div>
+                                  </div>
+                                )}
+
                                 <h6 className="card-subtitle mb-2 expectations">
                                   <b>
                                     <i>Expectations</i>
@@ -871,6 +917,7 @@ class TestCase extends SubComponent {
                               <p className="card-text">
                                 <Editor
                                   initialValue={this.state.testcase.steps[i].action}
+                                  apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
                                     height: 300,
                                     menubar: false,
@@ -885,6 +932,7 @@ class TestCase extends SubComponent {
                               <p className="card-text">
                                 <Editor
                                   initialValue={this.state.testcase.steps[i].expectation}
+                                  apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
                                     height: 300,
                                     menubar: false,
@@ -1196,7 +1244,7 @@ class TestCase extends SubComponent {
                 orderdir: "DESC",
                 entityType: "TestCase",
                 entityId: this.state.testcase.id,
-                eventType: ["PASSED", "FAILED", "BROKEN", "SKIPPED", "UPDATED"],
+                eventType: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
               }}
             />
           </div>

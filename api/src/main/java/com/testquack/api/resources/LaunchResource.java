@@ -63,7 +63,7 @@ public class LaunchResource extends BaseCrudResource<Launch> {
             @ApiParam(value = "New Status", required = true) @PathParam("status") LaunchStatus status,
             FailureDetails failureDetails) throws Exception {
 
-System.out.println("updateLaunchTestCaseStatus - launch id: " + launchId);
+System.out.println("LaunchResource::updateLaunchTestCaseStatus - launch id: " + launchId);
 System.out.flush();
 
         return service.updateLaunchTestCaseStatus(request, getUserSession(), projectId, launchId, testcaseUUID, status, failureDetails);
@@ -73,10 +73,18 @@ System.out.flush();
     @Path("/statistics")
     public Map<String, LaunchStatistics> getLaunchesStatistics(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId) throws Exception {
 
-System.out.println("getLaunchesStatistics - project id: " + projectId);
+System.out.println("LaunchResource::getLaunchesStatistics - project id: " + projectId);
 System.out.flush();
 
-        return service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
+        Map<String, LaunchStatistics> rs = service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
+	System.out.println("LaunchResource - after call to service.getLaunchStatistics");
+	for (Map.Entry<String, LaunchStatistics> entry : rs.entrySet()) {
+	   System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
+	}
+System.out.flush();
+
+        return rs;
+        //return service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
     }
 
     @GET
@@ -85,7 +93,7 @@ System.out.flush();
                                                                      @PathParam("projectId") String projectId,
                                                                      @QueryParam("statsTopLimit") int statsTopLimit) throws Exception {
 
-System.out.println("getLaunchTestcasesHeatMap - project id: " + projectId);
+System.out.println("LaunchResource::getLaunchTestcasesHeatMap - project id: " + projectId);
 System.out.flush();
 
         return service.getTestCasesHeatMap(getUserSession(), projectId, initFilter(request), statsTopLimit);
@@ -95,7 +103,7 @@ System.out.flush();
     @Override
     public Launch create(String projectId, Launch launch) {
 
-System.out.println("create - project id, launch: " + projectId + ", " + launch);
+System.out.println("LaunchResource::create - project id, launch: " + projectId + ", " + launch);
 System.out.flush();
 
         if (launch.getEnvironments().isEmpty()) {

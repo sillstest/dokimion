@@ -45,7 +45,7 @@ public class AES {
       Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
       cipher.init(Cipher.DECRYPT_MODE, secretKey);
       return new String(cipher.doFinal(Base64.getDecoder()
-        .decode(strToDecrypt)));
+        .decode(strToDecrypt.getBytes("UTF-8"))));
     } catch (Exception e) {
       System.out.println("Error while decrypting: " + e.toString());
     }
@@ -55,15 +55,19 @@ public class AES {
   public static void main(final String[] args) {
     final String secretKey = "al;jf;lda1_+_!!()!!!!";
 
-    //String originalString = "bibles1_for!the@#world.com";
-    //String originalString = "E12!rp_$wd";
-    String originalString = "adminpass";
-
+    String originalString = "bibles1_for!the@#world.com";
     String encryptedString = AES.encrypt(originalString, secretKey) ;
     String decryptedString = AES.decrypt(encryptedString, secretKey) ;
-
     System.out.println(originalString);
     System.out.println(encryptedString);
     System.out.println(decryptedString);
+
+    originalString = "E12!rp_$wd";
+    encryptedString = AES.encrypt(originalString, secretKey) ;
+    decryptedString = AES.decrypt(encryptedString, secretKey) ;
+    System.out.println(originalString);
+    System.out.println(encryptedString);
+    System.out.println(decryptedString);
+
   }
 }

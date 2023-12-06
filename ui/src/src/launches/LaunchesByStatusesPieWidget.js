@@ -83,11 +83,6 @@ class LaunchesByStatusesPieWidget extends SubComponent {
             color: "#ffc107",
           },
           {
-            name: "Skipped",
-            y: this.state.stats.all.launchStats.statusCounters.SKIPPED,
-            color: "#6c757d",
-          },
-          {
             name: "Runnable",
             y: this.state.stats.all.launchStats.statusCounters.RUNNABLE,
             color: "#7cb5ec",

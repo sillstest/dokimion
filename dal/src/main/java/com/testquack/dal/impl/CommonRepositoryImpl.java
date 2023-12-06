@@ -62,6 +62,10 @@ public abstract class CommonRepositoryImpl<E extends EntityPreview> implements C
 
     @Override
     public E findOne(String organizationId, String projectId, String id) {
+
+System.out.println("CommonRepositoryImpl::findOne - getCollectionName: " + getCollectionName(organizationId, projectId));
+System.out.println("CommonRepositoryImpl::findOne - getEntityClass: " + getEntityClass());
+System.out.flush();
         return mongoOperations.findOne(new Query(Criteria.where("id").is(id)), getEntityClass(), getCollectionName(organizationId, projectId));
     }
 

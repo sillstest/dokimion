@@ -32,6 +32,7 @@
                     <xs:element name="environment" type="xs:string"/>
                     <xs:element name="environments" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="launchGroup" type="xs:string"/>
+                    <xs:element name="duration" type="xs:long"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -76,7 +77,6 @@
             <xs:enumeration value="FAILED"/>
             <xs:enumeration value="BROKEN"/>
             <xs:enumeration value="PASSED"/>
-            <xs:enumeration value="SKIPPED"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -88,6 +88,7 @@
             <xs:element name="versionName" type="xs:string"/>
             <xs:element name="launchCount" type="xs:int"/>
             <xs:element name="launchTimes" type="LaunchTimes"/>
+            <xs:element name="launchBroken" type="xs:boolean" default="false"/>
         </xs:sequence>
     </xs:complexType>
 

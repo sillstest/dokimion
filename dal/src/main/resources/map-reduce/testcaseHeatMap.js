@@ -6,7 +6,6 @@ function map() {
                PASSED: 0,
                FAILED: 0,
                BROKEN: 0,
-               SKIPPED: 0,
                RUNNABLE: 0,
                RUNNING: 0
             }
