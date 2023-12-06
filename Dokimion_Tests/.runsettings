@@ -3,10 +3,10 @@
 	<TestRunParameters>
 		<Parameter name="ActorName" value="TestActor" />
 		<Parameter name="Logger" value="new NoOpLogger()" />
-		<Parameter name="Username" value="" />
-		<Parameter name="Password" value="" />
-		<Parameter name="AdminUser" value="" />
-		<Parameter name="AdminPass" value="" />
+		<Parameter name="Username" value="dummyUserName" />
+		<Parameter name="Password" value="dummyPasword" />
+		<Parameter name="AdminUser" value="dummyAdminUser" />
+		<Parameter name="AdminPass" value="dummyAdminPass" />
 		<Parameter name="InvalidUser" value="Test" />
 		<Parameter name="InvalidPassword" value="Not a valid password" />
 		<Parameter name="DisplayUserName" value="Tester" />
