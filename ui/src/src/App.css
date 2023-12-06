@@ -36,17 +36,12 @@
 
 .tree-side{
     height: 100vh;
-    width:  90vw;
     z-index: 0;
-    resize: horizontal;
-    overflow-y: scroll;
 }
 
 .testcase-side{
     height: 100vh;
-    width:  90vw;
-    resize: horizontal;
-    overflow-y: scroll;
+    max-width: 900px;
 }
 
 .clickable{
@@ -395,9 +390,13 @@ td.cellUserProfile {
    border: 1px solid black;
 }
 
-.row_wrapper {
+.flex_wrapper {
    display: flex;
-   overflow: auto;
-   margin-right: -15px;
-   margin-left: -15px;
+   flex-direction: row;
 }
+
+.resize_wrapper {
+   resize: horizontal;
+   overflow-y: scroll;
+}
+
