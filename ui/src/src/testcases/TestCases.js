@@ -347,6 +347,7 @@ class TestCases extends SubComponent {
     return (
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>
+
         <div>
           <TestCasesFilter
             projectAttributes={this.state.projectAttributes}
@@ -355,6 +356,7 @@ class TestCases extends SubComponent {
           />
         </div>
 
+        <div className="flex_wrapper">
         <div>
           <div
             className="modal fade"
@@ -376,6 +378,7 @@ class TestCases extends SubComponent {
           <div className="sweet-loading">
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
+          <div className="resize_wrapper">
           <div className="tree-side col-5">
             <div id="tree"></div>
             {this.showLoadMore() && (
@@ -386,6 +389,8 @@ class TestCases extends SubComponent {
               </div>
             )}
           </div>
+          </div>
+          <div className="resize_wrapper">
           <div id="testCase" className="testcase-side col-7">
             {this.state.selectedTestCase && this.state.selectedTestCase.id && (
               <TestCase
@@ -395,6 +400,8 @@ class TestCases extends SubComponent {
               />
             )}
           </div>
+          </div>
+        </div>
         </div>
       </div>
     );
