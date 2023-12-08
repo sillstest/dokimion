@@ -299,7 +299,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Clean up :");
         }
 
-        //[Test] TODO Not working on Dokimion4
+        [Test] 
         public void TC24StatisticsHeatmapTest()
         {
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);

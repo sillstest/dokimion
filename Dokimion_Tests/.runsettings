@@ -1,10 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
 	<TestRunParameters>
 		<Parameter name="ActorName" value="TestActor" />
 		<Parameter name="Logger" value="new NoOpLogger()" />
-		<Parameter name="Username" value="Tester" />
-		<Parameter name="Password" value="Tester1!!!" />
+		<Parameter name="Username" value="dummyUserName" />
+		<Parameter name="Password" value="dummyPassword" />
+		<Parameter name="AdminUser" value="dummyAdminUser" />
+		<Parameter name="AdminPass" value="dummyAdminPass" />
 		<Parameter name="InvalidUser" value="Test" />
 		<Parameter name="InvalidPassword" value="Not a valid password" />
 		<Parameter name="DisplayUserName" value="Tester" />
