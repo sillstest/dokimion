@@ -295,16 +295,14 @@ class Launch extends SubComponent {
             </Link>
           </h3>
         </div>
-        <div className="row_wrapper">
-        <div className="row">
-          <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-          </div>
-
-          <div className="tree-side col-5">
+        <div className="sweet-loading">
+          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+        </div>
+        <div className="grid_container">
+          <div className="tree-side">
             <div id="tree"></div>
           </div>
-          <div id="testCase" className="testcase-side col-7">
+          <div id="testCase" className="testcase-side">
             {this.state.selectedTestCase && this.state.selectedTestCase.uuid && (
               <TestCase
                 testcase={this.state.selectedTestCase}
@@ -325,8 +323,8 @@ class Launch extends SubComponent {
             {(!this.state.selectedTestCase || !this.state.selectedTestCase.uuid) && (
               <div>
                 {this.state.launch.launchGroup && (
-                  <div className="row launch-summary-block">
-                    <div className="col-6">
+                  <div className="launch-summary-block">
+                    <div>
                       <Link to={"/" + this.state.projectId + "/launches?launchGroup=" + this.state.launch.launchGroup}>
                         View Launch Group
                       </Link>
@@ -334,19 +332,19 @@ class Launch extends SubComponent {
                   </div>
                 )}
                 {(this.state.launch.testSuite || {}).id && (
-                  <div className="row launch-summary-block">
-                    <div className="col-2">Test Suite:</div>
-                    <div className="col-4">
+                  <div className="launch-summary-block">
+                    <div>Test Suite:</div>
+                    <div>
                       <Link to={"/" + this.state.projectId + "/testcases?testSuite=" + this.state.launch.testSuite.id}>
                         {this.state.launch.testSuite.name}
                       </Link>
                     </div>
                   </div>
                 )}
-                <div className="row launch-summary-block">
-                  <div className="col-4">Created at: {Utils.timeToDate(this.state.launch.createdTime)}</div>
-                  <div className="col-4">Started at: {Utils.timeToDate(this.state.launch.startTime)}</div>
-                  <div className="col-4">Finished at: {Utils.timeToDate(this.state.launch.finishTime)}</div>
+                <div className="launch-summary-block">
+                  <div>Created at: {Utils.timeToDate(this.state.launch.createdTime)}</div>
+                  <div>Started at: {Utils.timeToDate(this.state.launch.startTime)}</div>
+                  <div>Finished at: {Utils.timeToDate(this.state.launch.finishTime)}</div>
                 </div>
                 {typeof(this.state.launch) != 'undefined' &&
                 <div className="progress launch-summary-block">
@@ -412,7 +410,6 @@ class Launch extends SubComponent {
                     Restart Failed
                   </button>
                 </div>
-
                 {this.state.launch.launcherConfig && this.state.launch.launcherConfig.launcherId && (
                   <div className="launcher-details">
                     <h5>
@@ -466,7 +463,6 @@ class Launch extends SubComponent {
               </div>
             )}
           </div>
-        </div>
         </div>
 
         <div

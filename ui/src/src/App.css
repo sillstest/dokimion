@@ -34,15 +34,26 @@
     padding-left: 0px;
 }
 
+.grid_container {
+  display: grid;
+  grid-template-columns: 30% minmax(70%, autofit);
+}
+
 .tree-side{
     height: 100vh;
     overflow-y: scroll;
     z-index: 0;
+    resize: horizontal;
+    overflow-x: scroll;
+    grid-row: 1;
+    grid-column: 1;
 }
 
 .testcase-side{
     height: 100vh;
     overflow-y: scroll;
+    grid-row: 1;
+    grid-column: 2;
 }
 
 .clickable{
