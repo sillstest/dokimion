@@ -36,7 +36,7 @@
 
 .grid_container {
   display: grid;
-  grid-template-columns: 30% minmax(70%, autofit);
+  grid-template-columns: auto 1fr;
 }
 
 .tree-side{
