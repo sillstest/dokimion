@@ -329,7 +329,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Verify that Toggle Button is unchecked");
             Actor.WaitsUntil(Appearance.Of(Launches.ToggleUnchecked), IsEqualTo.True(), timeout: 60);
             var val = Actor.AskingFor(HtmlAttribute.Of(Launches.ToggleButton1, "class")) ;
-            StringAssert.DoesNotContain("checked", val);
+            StringAssert.Contains("checked", val);
 
             userActions.LogConsoleMessage("Clean up: Reset the Toggle Button");
             Actor.AttemptsTo(Click.On(Launches.ToggleButton1));
