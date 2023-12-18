@@ -372,11 +372,11 @@ class TestCases extends SubComponent {
             />
           </div>
         </div>
-        <div className="row">
-          <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-          </div>
-          <div className="tree-side col-5">
+        <div className="sweet-loading">
+          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+        </div>
+        <div className="grid_container">
+          <div className="tree-side">
             <div id="tree"></div>
             {this.showLoadMore() && (
               <div>
@@ -386,12 +386,12 @@ class TestCases extends SubComponent {
               </div>
             )}
           </div>
-          <div id="testCase" className="testcase-side col-7">
+          <div id="testCase" className="testcase-side">
             {this.state.selectedTestCase && this.state.selectedTestCase.id && (
               <TestCase
+                testcase={this.state.selectedTestCase}
                 projectId={this.props.match.params.project}
                 projectAttributes={this.state.projectAttributes}
-                testcaseId={this.state.selectedTestCase.id}
               />
             )}
           </div>
