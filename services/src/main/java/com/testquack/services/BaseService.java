@@ -49,6 +49,34 @@ public abstract class BaseService<E extends Entity> {
     @Value("${entity.lock.ttl.min}")
     protected long lockTtl;
 
+    @Value("${mongo.replicaSet}")
+    protected String mongoReplicaSet;
+
+    @Value("${mongo.username}")
+    protected String mongousername;
+
+    @Value("${mongo.password}")
+    protected String mongopassword;
+
+    @Value("${mongo.dbname}")
+    protected String mongodbname;
+
+    public String getMongoReplicaSet() {
+       return mongoReplicaSet;
+    }
+
+    public String getMongoUsername() {
+       return mongousername;
+    }
+
+    public String getMongoPassword() {
+       return mongopassword;
+    }
+
+    public String getMongoDBName() {
+       return mongodbname;
+    }
+
     @Autowired
     protected HazelcastInstance hazelcastInstance;
 

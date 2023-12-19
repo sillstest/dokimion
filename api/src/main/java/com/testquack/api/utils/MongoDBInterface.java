@@ -38,46 +38,31 @@ import java.util.Scanner;
 @Configuration
 public class MongoDBInterface  {
 
-   String replicaSetProperty = "mongo.replicaSet=";
-   String mongoUsernameProperty = "mongo.username=";
-   String mongoPasswdProperty = "mongo.password=";
-   String mongoDBnameProperty = "mongo.dbname=";
-   String replicaSet, mongoUsername, mongoPasswd, mongoDBname;
-   String propertiesFilename="/etc/dokimion/quack.properties";
+   String mongoReplicaSet;
+   String mongoUsername;
+   String mongoPassword;
+   String mongoDBname;
 
-   private MongoClient getMongoClient()
+   public void setMongoDBProperties(String replicaSet,
+                                    String username,
+                                    String password,
+                                    String dbname)
    {
-      try {
+      mongoReplicaSet = replicaSet;
+      mongoUsername = username;
+      mongoPassword = password;
+      mongoDBname = dbname;
+System.out.println("setMongoDBProperties - replicaSet: " + replicaSet);
+System.out.println("setMongoDBProperties - username: " + username);
+System.out.println("setMongoDBProperties - password: " + password);
+System.out.println("setMongoDBProperties - dbname: " + dbname);
 
-         // read properties from file
-         File myObj = new File(propertiesFilename);
-         Scanner myReader = new Scanner(myObj);
-         while (myReader.hasNextLine()) {
-	   String data = myReader.nextLine();
-	   if (data.startsWith(replicaSetProperty)) {
-              replicaSet = data.substring(replicaSetProperty.length());
-	   }
-	   if (data.startsWith(mongoUsernameProperty)) {
-              mongoUsername = data.substring(mongoUsernameProperty.length());
-	   }
-	   if (data.startsWith(mongoPasswdProperty)) {
-              mongoPasswd = data.substring(mongoPasswdProperty.length());
-	   }
-	   if (data.startsWith(mongoDBnameProperty)) {
-              mongoDBname = data.substring(mongoDBnameProperty.length());
-	   }
-         }
-         myReader.close();
-      } catch (FileNotFoundException e) {
-         System.out.println("File Not Found exception");
-      }
-      System.out.println("getMongoClient - replicaSet: " + replicaSet);
-      System.out.println("getMongoClient - mongoUsername: " + mongoUsername);
-      System.out.println("getMongoClient - mongoPasswd: " + mongoPasswd);
-      System.out.println("getMongoClient - mongoDBname: " + mongoDBname);
-      System.out.flush();
+   }
 
-      List<ServerAddress> addresses = Stream.of(replicaSet.split(",")).
+   public MongoClient getMongoClient()
+   {
+
+      List<ServerAddress> addresses = Stream.of(mongoReplicaSet.split(",")).
 		          map(String::trim).
 	                  map(host-> {
                               String[] tokens = host.split(":");
@@ -106,7 +91,7 @@ public class MongoDBInterface  {
       } else {
 
          final String secretKey = "al;jf;lda1_+_!!()!!!!";
-         String decryptedPasswd = aes.decrypt(mongoPasswd, secretKey) ;
+         String decryptedPasswd = aes.decrypt(mongoPassword, secretKey) ;
 
          System.out.println("MongoDBInterface - decryptedPasswd: " + decryptedPasswd);
          System.out.flush();
