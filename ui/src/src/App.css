@@ -47,7 +47,7 @@
     overflow-x: scroll;
     grid-row: 1;
     grid-column: 1;
-    width: 30%;
+    grid-width: 30%;
 }
 
 .testcase-side{
@@ -55,7 +55,7 @@
     overflow-y: scroll;
     grid-row: 1;
     grid-column: 2;
-    width: 70%;
+    grid-width: 70%;
 }
 
 .clickable{
