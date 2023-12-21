@@ -370,17 +370,21 @@ class TestCases extends SubComponent {
     let newValidAttribs =   filterAttribs.filter(id => !((id.id === null) || (id.id==='broken')));
     //Array of all selected ids
     var selectedAttribIds = newValidAttribs.map( val => val.id);
-    
+    console.log("Filter Attribs : " + JSON.stringify(newValidAttribs));
     if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
       {
         this.setState({errorMessage: "Select an Attribute to Add" });
         return;
-      }else{
+      }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
+        console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
+        this.setState({errorMessage: "Select an Attribute to Add" });
+        return;
+      }
+      else{
         this.setState({errorMessage: " " });
       }
   
     selectedTCS.forEach((item, index, temp)=>{ 
-  
       Backend.get(projectId + "/testcase/" + item)
       .then(response => {
         const testcase = response;
@@ -465,11 +469,17 @@ class TestCases extends SubComponent {
   
     if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
     {
-      this.setState({errorMessage: "Select an Attribute to Add" });
+      this.setState({errorMessage: "Select an Attribute to Remove" });
       return;
-    }else{
+    }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
+      console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
+      this.setState({errorMessage: "Select an Attribute to Remove" });
+      return;
+    }
+    else{
       this.setState({errorMessage: " " });
     }
+
   
     selectedTCS.forEach((item, index, temp)=>{ 
   
@@ -571,9 +581,9 @@ class TestCases extends SubComponent {
           <div id="testCase" className="testcase-side">
             {this.state.selectedTestCase && this.state.selectedTestCase.id && (
               <TestCase
-                testcase={this.state.selectedTestCase}
                 projectId={this.props.match.params.project}
                 projectAttributes={this.state.projectAttributes}
+                testcaseId={this.state.selectedTestCase.id}
               />
             )}
           </div>
