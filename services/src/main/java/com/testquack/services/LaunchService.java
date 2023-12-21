@@ -201,7 +201,23 @@ public class LaunchService extends BaseService<Launch> {
         if (isLaunchFinished(launch) && launch.getFinishTime() == 0){
             launch.setFinishTime(System.currentTimeMillis());
             //update the total duration here 
-            launch.setDuration(launch.getTestCaseTree().getTestCases().stream().mapToLong(LaunchTestCase::getDuration).sum());
+           long totalLaunchDuration =0;
+            if(launch.getTestCaseTree().getTestCases().size() >0){
+                totalLaunchDuration = launch.getTestCaseTree().getTestCases().stream().mapToLong(LaunchTestCase::getDuration).sum();
+            }
+            if(launch.getTestCaseTree().getChildren().size() >0 ){
+                List<LaunchTestCaseTree> launchTCTreeList = launch.getTestCaseTree().getChildren();
+                if(launchTCTreeList!=null && launchTCTreeList.size() > 0)
+                {
+                    for(LaunchTestCaseTree ltree : launchTCTreeList){
+
+                           totalLaunchDuration = totalLaunchDuration + ltree.getTestCases().stream().mapToLong(LaunchTestCase::getDuration).sum();
+
+                    }
+                }
+
+            }
+            launch.setDuration(totalLaunchDuration);
         }
         if (!isLaunchFinished(launch) &&
                 launch.getLaunchStats().getStatusCounters().getOrDefault(RUNNABLE, 0) != launch.getLaunchStats().getTotal() &&
