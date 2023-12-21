@@ -313,7 +313,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Click on the Statistics link on Launches");
 
-            Actor.WaitsUntil(Appearance.Of(Launches.StatisticsLink), IsEqualTo.True());
+            Actor.WaitsUntil(Appearance.Of(Launches.StatisticsLink), IsEqualTo.True(), timeout:45);
             Actor.AttemptsTo(Click.On(Launches.StatisticsLink));
 
             userActions.LogConsoleMessage("Click on the Heat Map Tab");
@@ -327,7 +327,8 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Click.On(Launches.ToggleButton1));
 
             userActions.LogConsoleMessage("Verify that Toggle Button is unchecked");
-            Actor.WaitsUntil(Appearance.Of(Launches.ToggleUnchecked), IsEqualTo.True(), timeout: 60);
+            Actor.WaitsUntil(Appearance.Of(Launches.ToggleUnchecked), IsEqualTo.True(), timeout: 45);
+            Actor.WaitsUntil(Appearance.Of(Launches.ToggleButton1), IsEqualTo.True(), timeout: 45);
             var val = Actor.AskingFor(HtmlAttribute.Of(Launches.ToggleButton1, "class")) ;
             StringAssert.DoesNotContain("checked", val);
 
