@@ -28,9 +28,7 @@ namespace Dokimion.Pages
 
         public static IWebLocator ToggleButton1 => L("ToggleButton1", By.XPath("(//div[@id='heatmap']//div[contains(@class, 'toggle checkbox')])[1]"));
 
-        public static IWebLocator ToggleUnchecked => L("ToggleUnchecked", By.XPath("//div[@id='heatmap']//div[@class='ui toggle checkbox']"));
-
-        //public static IWebLocator ToggleInput1 => L("ToggleInput1", By.XPath("//*[@id='heatmap']/div/table/tbody/tr[1]/td[3]/div/input"));
+        public static IWebLocator ToggleLabel1 => L("ToggleInput1", By.XPath("(//div[@id='heatmap']//div[contains(@class, 'toggle checkbox')])[1]/label"));
 
         public static IWebLocator StatusesGraph => L("StatusesGraph", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])[1]"));
         public static IWebLocator UsersGraph => L("UsersGraph", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])[2]"));

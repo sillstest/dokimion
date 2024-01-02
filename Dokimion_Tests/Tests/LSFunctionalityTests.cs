@@ -1,5 +1,4 @@
-﻿using AngleSharp.Dom;
-using Boa.Constrictor.Screenplay;
+﻿using Boa.Constrictor.Screenplay;
 using Boa.Constrictor.Selenium;
 using Dokimion.Interactions;
 using Dokimion.Pages;
@@ -13,7 +12,6 @@ using WebDriverManager.Helpers;
 
 namespace Dokimion.Tests
 {
-    //  [Ignore("Ignore a fixture")]
 
     public class LSFunctionalityTests
     {
@@ -327,10 +325,10 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Click.On(Launches.ToggleButton1));
 
             userActions.LogConsoleMessage("Verify that Toggle Button is unchecked");
-            Actor.WaitsUntil(Appearance.Of(Launches.ToggleUnchecked), IsEqualTo.True(), timeout: 45);
-            Actor.WaitsUntil(Appearance.Of(Launches.ToggleButton1), IsEqualTo.True(), timeout: 45);
-            var val = Actor.AskingFor(HtmlAttribute.Of(Launches.ToggleButton1, "class")) ;
-            StringAssert.DoesNotContain("checked", val);
+            Actor.WaitsUntil(Text.Of(Launches.ToggleLabel1), ContainsSubstring.Text("Off"), timeout: 45);
+
+            var val = Actor.AskingFor(Text.Of(Launches.ToggleLabel1)) ;
+            StringAssert.Contains("Off", val);
 
             userActions.LogConsoleMessage("Clean up: Reset the Toggle Button");
             Actor.AttemptsTo(Click.On(Launches.ToggleButton1));
