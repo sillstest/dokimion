@@ -7,6 +7,7 @@ namespace Dokimion
     public class UserActions
     {
         public string? DokimionUrl = TestContext.Parameters.Get("Url");
+       // public string? DokimionUrl = "http://192.168.56.103";
 
         public string? ActorName = TestContext.Parameters.Get("ActorName");
         public string? Username = TestContext.Parameters["Username"];
@@ -14,6 +15,9 @@ namespace Dokimion
         public string? InvalidUser = TestContext.Parameters.Get("InvalidUser");
         public string? InvalidPassword = TestContext.Parameters.Get("InvalidPassword");
         public string? DisplayUserName = TestContext.Parameters.Get("DisplayUserName");
+
+        public string? AdminUser = TestContext.Parameters["AdminUser"];
+        public string? AdminPass = TestContext.Parameters.Get("AdminPass");
 
         public readonly string Headless = "--headless=new";
         public readonly string WindowSize = "--window-size=1920,1080";

@@ -104,14 +104,17 @@ public class LaunchService extends BaseService<Launch> {
 
             //Emit audit on terminal status
             if (isTerminalStatus(status)) {
+                System.out.println("Insert New Event : " + status);
                 eventService.create(session, projectId,
                         new Event().withEventType(status.toString()).
                                 withTime(System.currentTimeMillis()).
                                 withUser(session.getLogin()).
                                 withEntityId(launchTestCase.getId()).
-                                withEntityType(TestCase.class.getSimpleName())
+                                withEntityType(TestCase.class.getSimpleName()).
+                                withDuration(launchTestCase.getDuration())
                 );
             }
+            System.out.println("Update Launch TestCase : " + launchTestCase);
             return launchTestCase;
         } finally {
             lock.unlock();
@@ -120,7 +123,9 @@ public class LaunchService extends BaseService<Launch> {
     }
 
     private boolean isTerminalStatus(LaunchStatus status) {
+       
         return status != RUNNABLE && status != RUNNING;
+       
     }
 
     private boolean isFailureDetailsValid(FailureDetails failureDetails) {
@@ -195,6 +200,24 @@ public class LaunchService extends BaseService<Launch> {
         updateLaunchStatus(launch.getLaunchStats(), launch.getTestCaseTree());
         if (isLaunchFinished(launch) && launch.getFinishTime() == 0){
             launch.setFinishTime(System.currentTimeMillis());
+            //update the total duration here 
+           long totalLaunchDuration =0;
+            if(launch.getTestCaseTree().getTestCases().size() >0){
+                totalLaunchDuration = launch.getTestCaseTree().getTestCases().stream().mapToLong(LaunchTestCase::getDuration).sum();
+            }
+            if(launch.getTestCaseTree().getChildren().size() >0 ){
+                List<LaunchTestCaseTree> launchTCTreeList = launch.getTestCaseTree().getChildren();
+                if(launchTCTreeList!=null && launchTCTreeList.size() > 0)
+                {
+                    for(LaunchTestCaseTree ltree : launchTCTreeList){
+
+                           totalLaunchDuration = totalLaunchDuration + ltree.getTestCases().stream().mapToLong(LaunchTestCase::getDuration).sum();
+
+                    }
+                }
+
+            }
+            launch.setDuration(totalLaunchDuration);
         }
         if (!isLaunchFinished(launch) &&
                 launch.getLaunchStats().getStatusCounters().getOrDefault(RUNNABLE, 0) != launch.getLaunchStats().getTotal() &&
@@ -210,16 +233,20 @@ public class LaunchService extends BaseService<Launch> {
     }
 
     private void updateLaunchStatus(LaunchStats launchStats, LaunchTestCaseTree testCaseTree) {
+
         updateLaunchStatus(launchStats, testCaseTree.getTestCases());
         testCaseTree.getChildren().forEach(child -> updateLaunchStatus(launchStats, child));
+
     }
 
     private void updateLaunchStatus(LaunchStats launchStats, List<LaunchTestCase> testCases) {
+        
         testCases.forEach(testCase -> {
             launchStats.setTotal(launchStats.getTotal() + 1);
             int counter = launchStats.getStatusCounters().get(testCase.getLaunchStatus());
             launchStats.getStatusCounters().put(testCase.getLaunchStatus(), counter+1);
         });
+        
     }
 
     private Launch fillLaunchByFilter(Session session, String projectId, Launch launch) {
@@ -289,11 +316,23 @@ public class LaunchService extends BaseService<Launch> {
     private void updateStatus(String userId, LaunchTestCase launchTestCase, LaunchStatus status) {
         if (status.equals(RUNNING)){
             launchTestCase.setCurrentUser(userId);
+            //Added to calculate exec time
+            launchTestCase.setStartTime(System.currentTimeMillis());
+        }else{
+            launchTestCase.setFinishTime(System.currentTimeMillis());
         }
         launchTestCase.setLaunchStatus(status);
         if (!launchTestCase.getUsers().contains(userId)){
             launchTestCase.getUsers().add(userId);
         }
+        //Calculate TCs execution time duration
+        if(launchTestCase.getStartTime() !=0 && launchTestCase.getFinishTime()!=0 )
+        {
+            long tempDuration = launchTestCase.getFinishTime() - launchTestCase.getStartTime();
+            System.out.println(" Time Duration for exe" + tempDuration);
+            launchTestCase.setDuration(tempDuration);
+        }
+
     }
 
     public Map<String, LaunchStatistics> getLaunchesStatistics(Session session, String projectId, Filter filter) throws Exception {
@@ -312,15 +351,15 @@ public class LaunchService extends BaseService<Launch> {
     }
 
     public Collection<LaunchTestcaseStats> getTestCasesHeatMap(Session session, String projectId, Filter filter, int statsTopLimit) throws Exception {
-System.out.println("LaunchService::getTestCasesHeatMap - projectId, statsTopLimit: " + projectId + ", " + statsTopLimit);
-System.out.flush();
+        System.out.println("LaunchService::getTestCasesHeatMap - projectId, statsTopLimit: " + projectId + ", " + statsTopLimit);
+        System.out.flush();
         statsTopLimit = statsTopLimit == 0 ? 100 : statsTopLimit;
         if (userCanReadProject(session, projectId)) {
             Map<String, LaunchTestcaseStats> unsortedMap = dbUtils.mapReduce(Launch.class, getCollectionName(getCurrOrganizationId(session), projectId, Launch.class),
                     "testcaseHeatMap.js", "testcaseHeatReduce.js", filter, LaunchTestcaseStats.class);
 
-System.out.println("LaunchService::getTestCasesHeatMap - unsortedMap: " + unsortedMap);
-System.out.flush();
+                System.out.println("LaunchService::getTestCasesHeatMap - unsortedMap: " + unsortedMap);
+                System.out.flush();
 
             MinMaxPriorityQueue<LaunchTestcaseStats> topStats = MinMaxPriorityQueue.
                     orderedBy(new LaunchTestcaseStatsComparator()).
@@ -328,15 +367,15 @@ System.out.flush();
                     create();
             topStats.addAll(unsortedMap.values());
 
-System.out.println("LaunchService::getTestCasesHeatMap - topStats: " + topStats);
-System.out.flush();
+            System.out.println("LaunchService::getTestCasesHeatMap - topStats: " + topStats);
+            System.out.flush();
 
             Map<String, LaunchTestcaseStats> statsMap =
                     topStats.stream().collect(toMap(LaunchTestcaseStats::getId, Function.identity()));
 
 
-System.out.println("LaunchService::getTestCasesHeatMap - statsMap: " + statsMap);
-System.out.flush();
+            System.out.println("LaunchService::getTestCasesHeatMap - statsMap: " + statsMap);
+            System.out.flush();
 
 
             //Get current broken flag state
@@ -348,12 +387,12 @@ System.out.flush();
                             withIncludedField("importedName").
                             withField("id", statsMap.keySet().toArray()));
 
-System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases with filter: ");
-for (TestCase tc : actualTestcases) {
-   System.out.println("testcase: " + tc);
-   System.out.flush();
-}
-System.out.flush();
+            System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases with filter: ");
+            for (TestCase tc : actualTestcases) {
+            System.out.println("testcase: " + tc);
+            System.out.flush();
+            }
+            System.out.flush();
 
 
             actualTestcases.forEach(actualTestcase -> {
@@ -361,31 +400,31 @@ System.out.flush();
                 statsToUpdate.setName(
                         isEmpty(actualTestcase.getName()) ?
                                 actualTestcase.getImportedName() : actualTestcase.getName());
-		statsToUpdate.setBroken(actualTestcase.isBroken());
-		statsToUpdate.setLaunchBroken(actualTestcase.isLaunchBroken());
+            statsToUpdate.setBroken(actualTestcase.isBroken());
+            statsToUpdate.setLaunchBroken(actualTestcase.isLaunchBroken());
             });
-System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases with filter 2: ");
-for (TestCase tc : actualTestcases) {
-   System.out.println("testcase: " + tc);
-   System.out.flush();
-}
-System.out.flush();
+            System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases with filter 2: ");
+            for (TestCase tc : actualTestcases) {
+            System.out.println("testcase: " + tc);
+            System.out.flush();
+            }
+            System.out.flush();
 
 
             //Sort stats by most broken
             List<LaunchTestcaseStats> sortedStats = new ArrayList<>(topStats.size());
             sortedStats.addAll(topStats);
             sortedStats.sort(new LaunchTestcaseStatsComparator());
-System.out.println("LaunchService::getTestCasesHeatMap - sortedStats: " + sortedStats);
-for (LaunchTestcaseStats ts : sortedStats) {
-   System.out.println("launchstats");
-   System.out.println("name: " + ts.getName());
-   System.out.println("id: " + ts.getId());
-   System.out.println("broken: " + ts.isBroken());
-   System.out.println("launchBroken: " + ts.isLaunchBroken());
-   System.out.flush();
-}
-System.out.flush();
+            System.out.println("LaunchService::getTestCasesHeatMap - sortedStats: " + sortedStats);
+            for (LaunchTestcaseStats ts : sortedStats) {
+            System.out.println("launchstats");
+            System.out.println("name: " + ts.getName());
+            System.out.println("id: " + ts.getId());
+            System.out.println("broken: " + ts.isBroken());
+            System.out.println("launchBroken: " + ts.isLaunchBroken());
+            System.out.flush();
+            }
+            System.out.flush();
 
             return sortedStats;
         }

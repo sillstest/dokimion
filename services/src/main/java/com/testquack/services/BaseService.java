@@ -49,6 +49,34 @@ public abstract class BaseService<E extends Entity> {
     @Value("${entity.lock.ttl.min}")
     protected long lockTtl;
 
+    @Value("${mongo.replicaSet}")
+    protected String mongoReplicaSet;
+
+    @Value("${mongo.username}")
+    protected String mongousername;
+
+    @Value("${mongo.password}")
+    protected String mongopassword;
+
+    @Value("${mongo.dbname}")
+    protected String mongodbname;
+
+    public String getMongoReplicaSet() {
+       return mongoReplicaSet;
+    }
+
+    public String getMongoUsername() {
+       return mongousername;
+    }
+
+    public String getMongoPassword() {
+       return mongopassword;
+    }
+
+    public String getMongoDBName() {
+       return mongodbname;
+    }
+
     @Autowired
     protected HazelcastInstance hazelcastInstance;
 
@@ -113,13 +141,14 @@ System.out.flush();
                format("User %s can't save entity %s", user.getPerson().getLogin(), entity.getId()));
         } else if (entity instanceof User) {
           User userEntity = (User)entity;
-System.out.println("entity instanceof User - session.login, entity.login: " +
-                    user.getPerson().getLogin() + ", " + userEntity.getLogin());
+System.out.println("entity instanceof User");
 System.out.flush();
-          if (user.getPerson().getLogin().equals(userEntity.getLogin())) {
+          if (isAdmin(user) == false) {
+             if (user.getPerson().getLogin().equals(userEntity.getLogin())) {
               // permissions allowed to write (change) your own password
 System.out.println("Permissions allowed to change your own password");
 System.out.flush();
+              }
            }
         }
 System.out.println("user CAN save 1: " + user);

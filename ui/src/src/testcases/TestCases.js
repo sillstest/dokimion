@@ -11,6 +11,7 @@ import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
+import equal from "fast-deep-equal";
 
 var jQuery = require("jquery");
 window.jQuery = jQuery;
@@ -59,6 +60,9 @@ class TestCases extends SubComponent {
     this.showLoadMore = this.showLoadMore.bind(this);
     this.updateCount = this.updateCount.bind(this);
     this.processElementChecked = this.processElementChecked.bind(this);
+    this.handleBulkAddAttributes=this.handleBulkAddAttributes.bind(this);
+    this.handleBulkRemoveAttributes=this.handleBulkRemoveAttributes.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   componentDidMount() {
@@ -343,6 +347,192 @@ class TestCases extends SubComponent {
     return ((this.state.filter || {}).skip || 0) + this.testCasesFetchLimit <= this.state.count;
   }
 
+  handleSubmit(testcase) {
+
+    Backend.put(this.props.match.params.project + "/testcase/", testcase)
+      .then(response => {
+        testcase = response;
+        console.log("After DB update : " + JSON.stringify(testcase));
+      })
+      .catch(error => {
+        this.setState({errorMessage: "Couldn't save testcase: " + error});
+      });
+    
+  }
+  
+  handleBulkAddAttributes(filterAttribs){
+    let projectId = this.props.match.params.project;
+    let Tcs = this.state.testcasesTree.testCases.map(tc => tc.id);
+    let NotSelected = this.state.filter.notFields.id;
+  
+    let selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId===id));
+    //Remove broken and empty object
+    let newValidAttribs =   filterAttribs.filter(id => !((id.id === null) || (id.id==='broken')));
+    //Array of all selected ids
+    var selectedAttribIds = newValidAttribs.map( val => val.id);
+    console.log("Filter Attribs : " + JSON.stringify(newValidAttribs));
+    if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
+      {
+        this.setState({errorMessage: "Select an Attribute to Add" });
+        return;
+      }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
+        console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
+        this.setState({errorMessage: "Select an Attribute to Add" });
+        return;
+      }
+      else{
+        this.setState({errorMessage: " " });
+      }
+  
+    selectedTCS.forEach((item, index, temp)=>{ 
+      Backend.get(projectId + "/testcase/" + item)
+      .then(response => {
+        const testcase = response;
+        const originalTC = JSON.parse(JSON.stringify(testcase));
+  
+          //No Attribs 
+        if(Object.keys(testcase.attributes).length === 0){
+            //add the attribs to testcase
+            var attributeValues =[];
+            newValidAttribs.forEach((elem, index) =>{ 
+            var selectedAttribValues = elem.attrValues.map( val => val.value);
+            testcase.attributes[elem.id] = attributeValues.concat(selectedAttribValues); 
+    //        console.log("Updated Attribuyes " + JSON.stringify(testcase.attributes));
+          })
+        }else{
+            //Check if the selectedID is present not in TC Attributes
+            var attributetobeaddedAdditionally = selectedAttribIds.filter((id)=> !Object.keys(testcase.attributes).includes(id));
+            //console.log("TO BE Added : " + attributetobeaddedAdditionally + " length " + Object.keys(attributetobeaddedAdditionally).length);
+            if(attributetobeaddedAdditionally.length>0){
+              var attributeValues =[];
+              attributetobeaddedAdditionally.forEach((elem, index) =>{ 
+                if(elem!==null&& elem!==undefined){
+                  var filterObject = newValidAttribs.find((val)=> val.id.includes(elem));
+                  var selectedAttribValues = filterObject.attrValues.map( val => val.value);
+                  testcase.attributes[filterObject.id] = attributeValues.concat(selectedAttribValues); 
+  //                console.log("New Attribs added" + JSON.stringify(testcase.attributes));
+                }
+            })}
+  
+              //Only if TC has exisitng attributes 
+              Object.keys(testcase.attributes || {}).map( 
+                function (attributeId, i) { 
+                  if (attributeId && attributeId != "null") {
+                  var attributeValues = testcase.attributes[attributeId] || []; 
+                //  console.log("Attrib ID " + attributeId + " AttribValues " + attributeValues); 
+                  var valueAttribTobeAdded =[]; 
+                  newValidAttribs.forEach((elem, index) =>{ 
+                    var selectedAttribValues = elem.attrValues.map( val => val.value);
+                if(elem.id === attributeId){ 
+  
+                    valueAttribTobeAdded = selectedAttribValues.filter(val => !attributeValues.includes(val));
+                    testcase.attributes[attributeId] = attributeValues.concat(valueAttribTobeAdded) ; 
+                }
+              
+              }) 
+              }
+            }.bind(this)); 
+           }//closing else
+         
+          //  console.log("Original TC :" + JSON.stringify(originalTC));
+          //  console.log(" TC :" + JSON.stringify(testcase));
+           if(!equal(originalTC, testcase)){
+            console.log("Testcase Modified need to update : " + testcase.id);
+            this.handleSubmit(testcase);
+            this.refreshTree();
+           }else{
+            console.log("Testcase Not modified : " + testcase.id);
+           }
+         
+          }).catch(error => {
+              this.setState({errorMessage: "Couldn't fetch testcase: " + error});
+              
+      })})
+     
+    this.setState({errorMessage: "Added Attributes in selected Tescases"});
+    this.props.history.push(
+      "/" + this.props.match.params.project +"/testcases"
+   );
+  
+   return "OK";
+  }
+  
+  
+  handleBulkRemoveAttributes(filterAttribs){
+    //console.log("Entered here in handleBulkRemoveAttributes" + JSON.stringify(filterAttribs));
+  
+    let projectId = this.props.match.params.project;
+    let Tcs = this.state.testcasesTree.testCases.map(tc => tc.id);
+    let NotSelected = this.state.filter.notFields.id;
+    let selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId===id));
+    let newValidAttribs =    filterAttribs.filter(id => !((id.id === null) || (id.id==='broken')));
+  
+    if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
+    {
+      this.setState({errorMessage: "Select an Attribute to Remove" });
+      return;
+    }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
+      console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
+      this.setState({errorMessage: "Select an Attribute to Remove" });
+      return;
+    }
+    else{
+      this.setState({errorMessage: " " });
+    }
+
+  
+    selectedTCS.forEach((item, index, temp)=>{ 
+  
+      Backend.get(projectId + "/testcase/" + item)
+      .then(response => {
+      //  console.log("TC from DB" + JSON.stringify(response));
+        const testcase = response;
+        const originalTC = JSON.parse(JSON.stringify(testcase));
+          //No Attribs 
+          if(Object.keys(testcase.attributes).length === 0){
+            //If the attributes are empty nothing left to delete
+            console.log("Selected attribute not present in TC " + testcase.id);
+        }else{
+              //Only if TC has exisitng attributes 
+              Object.keys(testcase.attributes || {}).map( 
+                function (attributeId, i) { 
+                  if (attributeId && attributeId != "null") {
+                  var attributeValues = testcase.attributes[attributeId] || []; 
+                  var valueAttribTobeAdded =[]; 
+                  newValidAttribs.forEach((elem, index) =>{ 
+                    if(elem.id === attributeId){ 
+                      var selectedAttribValues = elem.attrValues.map( val => val.value);
+                    
+                      valueAttribTobeAdded = attributeValues.filter(val => !selectedAttribValues.includes(val));
+                      if(valueAttribTobeAdded.length===0){
+      //                console.log("Deleted empty attributes with Key" + attributeId);
+                        delete testcase.attributes[attributeId];
+                      }else{
+                        testcase.attributes[attributeId] = valueAttribTobeAdded ; 
+                      }
+                }}) 
+              }
+            }.bind(this)); 
+           }//closing else
+           if(!equal(originalTC, testcase)){
+            console.log("Testcase Modified need to update : " + testcase.id);
+            this.handleSubmit(testcase);
+            this.refreshTree();
+           }else{
+            console.log("Testcase Not modified : " + testcase.id);
+           }
+          }).catch(error => {
+              this.setState({errorMessage: "Couldn't fetch testcase: " + error});
+      })})
+  
+    
+    this.setState({errorMessage: "Removed Attributes in selected Tescases"});
+    this.props.history.push(
+      "/" + this.props.match.params.project +"/testcases"
+    );
+    return "OK";
+  }
+
   render() {
     return (
       <div>
@@ -352,6 +542,8 @@ class TestCases extends SubComponent {
             projectAttributes={this.state.projectAttributes}
             onFilter={this.onFilter}
             project={this.props.match.params.project}
+            handleBulkAddAttributes={this.handleBulkAddAttributes}
+            handleBulkRemoveAttributes={this.handleBulkRemoveAttributes}
           />
         </div>
 
@@ -372,11 +564,11 @@ class TestCases extends SubComponent {
             />
           </div>
         </div>
-        <div className="row">
-          <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-          </div>
-          <div className="tree-side col-5">
+        <div className="sweet-loading">
+          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+        </div>
+        <div className="grid_container">
+          <div className="tree-side">
             <div id="tree"></div>
             {this.showLoadMore() && (
               <div>
@@ -386,7 +578,7 @@ class TestCases extends SubComponent {
               </div>
             )}
           </div>
-          <div id="testCase" className="testcase-side col-7">
+          <div id="testCase" className="testcase-side">
             {this.state.selectedTestCase && this.state.selectedTestCase.id && (
               <TestCase
                 projectId={this.props.match.params.project}

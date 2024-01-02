@@ -139,7 +139,7 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Click.On(Header.Launches));
 
             userActions.LogConsoleMessage("Click on the Smoke Test Launch Re-Run link on Launches");
-
+            Actor.WaitsUntil(Appearance.Of(Launches.SmokeTestReRunLink), IsEqualTo.True(), timeout: 60);
             Actor.AttemptsTo(Click.On(Launches.SmokeTestReRunLink));
 
             //

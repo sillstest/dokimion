@@ -20,7 +20,7 @@ class Launches extends SubComponent {
       limit: 20,
       orderby: "id",
       orderdir: "DESC",
-      includedFields: "name,launchStats,id,createdTime,startTime,finishTime,launcherConfig",
+      includedFields: "name,launchStats,id,createdTime,startTime,finishTime,launcherConfig,duration",
     },
     pager: {
       total: 0,
@@ -198,6 +198,7 @@ class Launches extends SubComponent {
 
 
   render() {
+    
     return (
       <div className="row">
         <div className="col-sm-3 launch-filter">
@@ -295,6 +296,7 @@ class Launches extends SubComponent {
                 <th scope="col">Created</th>
                 <th scope="col">Started</th>
                 <th scope="col">Finished</th>
+                <th scope="col">Duration</th>
                 <th scope="col">Remove</th>
                 <th></th>
               </tr>
@@ -310,7 +312,8 @@ class Launches extends SubComponent {
                       <td>{this.getProgressBar(launch)}</td>
                       <td>{Utils.timeToDate(launch.createdTime)}</td>
                       <td>{Utils.timeToDate(launch.startTime)}</td>
-                      <td>{Utils.timeToDate(launch.finishTime)}</td>
+                      <td>{Utils.timeToDate(launch.finishTime)}</td> 
+                      <td>{Utils.timePassed(launch.duration)  }</td>
                       <td>
                         <button onClick={() => this.deleteLaunch(launch.id)}>
                           <i class="bi-trash" aria-hidden="true"></i>
