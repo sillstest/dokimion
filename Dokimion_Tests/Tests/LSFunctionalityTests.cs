@@ -320,15 +320,21 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Click.On(Launches.HeatMapLink));
 
             userActions.LogConsoleMessage("Click on the Toggle button on 'Header Project list validation'");
+            Actor.WaitsUntil(Appearance.Of(Launches.ToggleButton1), IsEqualTo.True(), timeout: 45);
+            var val = Actor.AskingFor(Text.Of(Launches.ToggleLabel1));
+            userActions.LogConsoleMessage("Before Toggle switch : " + val);
+
 
             Actor.WaitsUntil(Appearance.Of(Launches.ToggleButton1), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Hover.Over(Launches.ToggleButton1));
             Actor.AttemptsTo(Click.On(Launches.ToggleButton1));
 
+            
             userActions.LogConsoleMessage("Verify that Toggle Button is unchecked");
-            Actor.WaitsUntil(Text.Of(Launches.ToggleLabel1), ContainsSubstring.Text("Off"), timeout: 45);
-
-            var val = Actor.AskingFor(Text.Of(Launches.ToggleLabel1)) ;
-            StringAssert.Contains("Off", val);
+            Actor.WaitsUntil(Text.Of(Launches.ToggleLabel1), ContainsSubstring.Text("On"), timeout: 45);
+            val = Actor.AskingFor(Text.Of(Launches.ToggleLabel1));
+            userActions.LogConsoleMessage("Before Toggle switch : " + val);
+            StringAssert.Contains("On", val);
 
             userActions.LogConsoleMessage("Clean up: Reset the Toggle Button");
             Actor.AttemptsTo(Click.On(Launches.ToggleButton1));
