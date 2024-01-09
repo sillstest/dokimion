@@ -22,6 +22,7 @@ public class TestCase extends TestCaseBase {
         this.id = testCasePreview.getId();
         this.importedName = testCasePreview.getImportedName();
         this.name = testCasePreview.getName();
+        this.steps=testCasePreview.getSteps();
     }
 
     private Map<String, Set<String>> attributes = new HashMap<>();

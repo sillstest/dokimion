@@ -31,7 +31,7 @@ export function getTreeNode(node, parentsToUpdate, uncheckedList) {
     resultNode.children = [];
     node.testCases.forEach(function (testCase) {
       resultNode.children.push({
-        text: (testCase.name || testCase.importedName || "") + "<span class='text-muted'> (" + testCase.id + ")</span>",
+        text: getSizeOfTestcase(testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + "<span class='text-muted'> (" + testCase.id + ")</span>",
         id: testCase.id,
         uuid: testCase.uuid,
         isLeaf: true,
@@ -384,3 +384,27 @@ export function getChartSeriesConfig() {
     },
   };
 }
+
+export function getSizeOfTestcase(steps) {
+  var html = '';
+  if(steps && steps.length > 0)
+  {
+    var actions = steps[0].action;
+    if(actions){
+      var lines = actions.split("<br>");
+       var noOfLines =   lines.length;
+      if(noOfLines <= 25){
+        html = `<span style='color:green;font-style:italic;font-weight:bold;'>SML</span>`
+      }else if(noOfLines > 25 && noOfLines <= 100 ){
+        html = `<span style='color:#DAA520;font-style:italic;font-weight:bold;'>MED</span>`
+      }else if(noOfLines > 100)
+      {
+          html = `<span style='color:red;font-style:italic;font-weight:bold;'>LRG</span>`
+      }
+    }
+  }else{
+    html = `<span style='color:green;font-style:italic;font-weight:bold;'>SML</span>`
+  }
+  return html 
+}
+
