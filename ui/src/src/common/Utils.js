@@ -387,9 +387,10 @@ export function getChartSeriesConfig() {
 
 export function getSizeOfTestcase(steps) {
   var html = '';
-  if(steps && steps.length > 0)
+  if(steps && steps.length > 0 )
   {
-    var actions = steps[0].action;
+    var actions = steps[0].action ? steps[0].action : "";
+    actions += steps[0].expectation ? steps[0].expectation : "";
     if(actions){
       var lines = actions.split("<br>");
        var noOfLines =   lines.length;
@@ -401,6 +402,8 @@ export function getSizeOfTestcase(steps) {
       {
           html = `<span style='color:red;font-style:italic;font-weight:bold;'>LRG</span>`
       }
+    }else{
+      console.log("No Steps"  + actions);
     }
   }else{
     html = `<span style='color:green;font-style:italic;font-weight:bold;'>SML</span>`
