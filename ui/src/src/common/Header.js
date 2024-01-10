@@ -195,6 +195,9 @@ class Header extends Component {
               <a className="dropdown-item" href={"/user/create-redirect"}>
                 Create User
               </a>
+              <a className="dropdown-item" href={"/user/delete"}>
+                Delete User
+              </a>
             </div>
           )}
 

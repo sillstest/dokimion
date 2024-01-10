@@ -74,6 +74,8 @@ System.out.flush();
     @DELETE
     @Path("/{login}")
     public Response delete(@PathParam("login") String login) {
+System.out.println("UserResource::delete - login: " + login);
+System.out.flush();
         service.delete(getSession(), null, getUser(login).getId());
         return Response.ok().build();
     }
