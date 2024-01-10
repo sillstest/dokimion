@@ -114,11 +114,11 @@ namespace Dokimion.Pages
         public static IWebLocator GroupingTreeDepthAuth => L("GroupingTreeDepthAuth", By.XPath("//li[contains(@data-id,'Authentication')]//i[contains(@class,'gj-icon')]"));
 
 
-        public static IWebLocator AuthenticationGroupTC => L("AuthenticationGroupTC", By.XPath("//li[contains(@data-id,'Authentication')]//span[@data-role='display']//b[text()='Authentication']"));
+        public static IWebLocator AuthenticationGroupTC => L("AuthenticationGroupTC", By.XPath("//li[contains(@data-id,'Authentication')]//span[@data-role='display']//b[contains(text(),'Authentication')]"));
 
-        public static IWebLocator ValidateLoginGroupTC => L("ValidateLoginGroupTC", By.XPath("//li[contains(@data-id,'Authentication')]//span[@data-role='display' and text()='Validate login']"));
+        public static IWebLocator ValidateLoginGroupTC => L("ValidateLoginGroupTC", By.XPath("//li[contains(@data-id,'Authentication')]//span[@data-role='display' and contains(text(),'Validate login')]"));
 
-        public static IWebLocator HeaderProjectListGroupTC => L("HeaderProjectListGroupTC", By.XPath("//li[contains(@data-id,'Projects')]//span[@data-role='display' and text()='Header project list validation']"));
+        public static IWebLocator HeaderProjectListGroupTC => L("HeaderProjectListGroupTC", By.XPath("//li[contains(@data-id,'Projects')]//span[@data-role='display' and contains(text(),'Header project list validation')]"));
         public static IWebLocator SaveSuiteLocator => L("SaveSuiteLocator", By.XPath("//*[local-name()='svg' and @data-icon='save']"));
 
         public static IWebLocator SuiteNameInput => L("SuiteNameInput", By.XPath("//div[@id='suite-modal']//input[@name='name']"));
@@ -145,7 +145,7 @@ namespace Dokimion.Pages
         public static IWebLocator SmokeTestLaunchTitle => L("SmokeTestLaunchTitle", By.XPath("//main//a[text()='Smoke Test Launch']"));
 
         //Add testcase
-        public static IWebLocator AddTestcaseLocator => L("AddTestcaseLocator", By.XPath("//li[contains(@data-id,'TestCase')]//span[@data-role='display' and text()='Add testcase']"));
+        public static IWebLocator AddTestcaseLocator => L("AddTestcaseLocator", By.XPath("//li[contains(@data-id,'TestCase')]//span[@data-role='display' and contains(text(),'Add testcase')]"));
 
         public static IWebLocator LaunchStartButton => L("LaunchStartButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Start']"));
 
@@ -159,7 +159,7 @@ namespace Dokimion.Pages
 
         public static IWebLocator LaunchFailMsgButton => L("LaunchFailMsgButton", By.XPath("//div[@id='fail-dialog']//button[text()='Fail']"));
 
-        public static IWebLocator LaunchCreationTC => L("LaunchCreationTC", By.XPath("//li[contains(@data-id,'Launch')]//span[@data-role='display' and text()='Launch creation']"));
+        public static IWebLocator LaunchCreationTC => L("LaunchCreationTC", By.XPath("//li[contains(@data-id,'Launch')]//span[@data-role='display' and contains(text(),'Launch creation')]"));
 
         public static IWebLocator LaunchBrokenMessage => L("LaunchBrokenMessage", By.XPath("//div[@id='broken-dialog']//textarea[@id='failure-text']"));
 
