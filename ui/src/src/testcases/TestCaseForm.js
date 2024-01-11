@@ -56,6 +56,15 @@ class TestCaseForm extends SubComponent {
     }
     if (nextProps.projectAttributes) {
       this.state.projectAttributes = nextProps.projectAttributes;
+      var tempAttribs =  this.state.projectAttributes.map(attribute => ({value:attribute.id, attributeValues : attribute.attrValues}));
+      //remove broken
+      tempAttribs.shift();
+   
+      tempAttribs.map(t => (this.state.testcase.attributes[t.value] = ( t.attributeValues!=null? t.attributeValues.map(t=>t.value) 
+        :[])
+             
+        ))
+
     }
     this.setState(this.state);
   }
@@ -113,9 +122,17 @@ class TestCaseForm extends SubComponent {
   }
 
   getAttributeKeysToAdd() {
-    return (this.state.projectAttributes || [])
-      .filter(attribute => !(Object.keys(this.state.testcase.attributes || {}) || []).includes(attribute.id))
-      .map(attribute => ({ value: attribute.id, label: attribute.name }));
+
+    var attribs = (this.state.projectAttributes || [])
+    .filter(attribute => !(Object.keys(this.state.testcase.attributes || {}) || []).includes(attribute.id))
+    .map(attribute => ({ value: attribute.id, label: attribute.name }));
+    //remove broken from the attribs list
+    attribs.shift();
+    return attribs;
+
+    // return (this.state.projectAttributes || [])
+    //   .filter(attribute => !(Object.keys(this.state.testcase.attributes || {}) || []).includes(attribute.id))
+    //   .map(attribute => ({ value: attribute.id, label: attribute.name }));
   }
 
   render() {
@@ -160,28 +177,32 @@ class TestCaseForm extends SubComponent {
               {Object.keys(this.state.testcase.attributes || {}).map(
                 function (attributeId, i) {
                   var attributeValues = this.state.testcase.attributes[attributeId] || [];
-                  if (attributeId !== "null") {
+                  if (attributeId !== "null" && !attributeId.includes('broken')) {
                     return (
                       <div key={i} index={attributeId} className="form-group row">
                         <label className="col-sm-3 col-form-label">{this.getAttributeName(attributeId)}</label>
                         <div className="col-sm-8">
                           <CreatableSelect
-                            value={(attributeValues || []).map(function (val) {
-                              return { value: val, label: val };
-                            })}
+                            // value={(attributeValues || []).map(function (val) {
+                            //   return { value: val, label: val };
+                            // })}
                             isMulti
                             isClearable
+                            defaultValue = {(attributeValues || []).map(function (val) {
+                                return { value: val, label: val };
+                              })}
                             onChange={e => this.editAttributeValues(attributeId, e)}
                             options={this.getAttributeValues(attributeId).map(function (attrValue) {
                               return { value: attrValue.value, label: attrValue.value };
                             })}
                           />
                         </div>
+                        {/* Commented as part of Issue 15,all attribs are mandatory
                         <div className="col-sm-1">
                           <span className="clickable red" index={i} onClick={e => this.removeAttribute(attributeId, e)}>
                             <FontAwesomeIcon icon={faMinusCircle} />
                           </span>
-                        </div>
+                        </div> */}
                       </div>
                     );
                   } else {
@@ -204,13 +225,14 @@ class TestCaseForm extends SubComponent {
                   }
                 }.bind(this),
               )}
-              <div className="form-group row">
+              {/* Commented as part of Issue 15, all attribs are added by default
+               <div className="form-group row">
                 <div className="col-sm-4">
                   <button type="button" className="btn btn-primary" id="addAttribute" onClick={this.addAttribute}>
                     Add attribute
                   </button>
                 </div>
-              </div>
+              </div> */}
             </form>
           </div>
           <div className="modal-footer">
