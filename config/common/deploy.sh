@@ -19,13 +19,13 @@ tar xvzf ui.tgz
 # restart relevant system services
 if [ $1 == "_dev" ]
 then
-systemctl restart dokimion_server$1.service
-systemctl restart dokimion_ui$1.service
-systemctl status dokimion_server$1.service
-systemctl status dokimion_ui$1.service
+   systemctl restart dokimion_server$1.service
+   systemctl restart dokimion_ui$1.service
+   systemctl status dokimion_server$1.service
+   systemctl status dokimion_ui$1.service
 else
-systemctl restart dokimion$1_server.service
-systemctl restart dokimion$1_ui.service
-systemctl status dokimion$1_server.service
-systemctl status dokimion$1_ui.service
+   systemctl restart dokimion$1_server.service
+   systemctl restart dokimion$1_ui.service
+   systemctl status dokimion$1_server.service
+   systemctl status dokimion$1_ui.service
 fi
