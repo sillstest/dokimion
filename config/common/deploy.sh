@@ -14,6 +14,9 @@ cd dokimion
 cp ~1/ui/ui.tgz .
 cp ~1/assembly/target/quack.war dokimion.war
 cp ~1/assembly/target/lib/jetty-runner.jar .
+cp ~1/tools/aes.java .
+cp ~1/tools/RoleCapability.java .
+
 tar xvzf ui.tgz
 
 # restart relevant system services
