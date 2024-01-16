@@ -410,56 +410,6 @@ class Launch extends SubComponent {
                     Restart Failed
                   </button>
                 </div>
-                {this.state.launch.launcherConfig && this.state.launch.launcherConfig.launcherId && (
-                  <div className="launcher-details">
-                    <h5>
-                      External Launch:
-                      {this.state.launch.launcherConfig.externalLaunchUrl && (
-                        <a
-                          className="external-launch-link"
-                          target="_blank"
-                          href={this.state.launch.launcherConfig.externalLaunchUrl}
-                          rel="noreferrer"
-                        >
-                          {this.state.launch.launcherConfig.name}
-                        </a>
-                      )}
-                      {!this.state.launch.launcherConfig.externalLaunchUrl && this.state.launch.launcherConfig.name}
-                    </h5>
-                    <dl>
-                      {this.state.launch.launcherConfig.reportUrl && (
-                        <span>
-                          <dt>Report</dt>
-                          <dd>
-                            <a href={this.state.launch.launcherConfig.reportUrl}>View</a>
-                          </dd>
-                        </span>
-                      )}
-                      {Object.keys(this.state.launch.launcherConfig.properties).map(
-                        function (key) {
-                          return (
-                            <span>
-                              <dt>{key}</dt>
-                              <dd>{this.state.launch.launcherConfig.properties[key]}</dd>
-                            </span>
-                          );
-                        }.bind(this),
-                      )}
-                    </dl>
-                  </div>
-                )}
-
-                <div className="launch-attr-stats">
-                  {Object.keys(this.state.attributesStatus).map(attrKey => {
-                    return (
-                      <LaunchAttributeStatsChart
-                        key={attrKey}
-                        attrKey={attrKey}
-                        stats={this.state.attributesStatus[attrKey]}
-                      />
-                    );
-                  })}
-                </div>
               </div>
             )}
           </div>
