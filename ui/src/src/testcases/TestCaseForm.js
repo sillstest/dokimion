@@ -28,6 +28,7 @@ class TestCaseForm extends SubComponent {
     this.editAttributeValues = this.editAttributeValues.bind(this);
     this.removeAttribute = this.removeAttribute.bind(this);
     this.getAttributeKeysToAdd = this.getAttributeKeysToAdd.bind(this);
+    this.getDefaultAttribValues=this.getDefaultAttribValues.bind(this);
   }
 
   handleChange(event) {
@@ -135,6 +136,17 @@ class TestCaseForm extends SubComponent {
     //   .map(attribute => ({ value: attribute.id, label: attribute.name }));
   }
 
+ //Added function to select the default values for 'Paratext'
+ getDefaultAttribValues(attribList){
+  var defaultAttribs =[];
+  var projectId = this.props.match.params.project;
+  if(projectId.includes('paratext')){
+      defaultAttribs = attribList.filter(val => (val.includes('Full Regression') || val.includes('Manual') || 
+      val.includes('All')));
+  }
+  return defaultAttribs;
+}
+
   render() {
     return (
       <div className="modal-dialog" role="document" id="testcase-creation-form">
@@ -177,6 +189,7 @@ class TestCaseForm extends SubComponent {
               {Object.keys(this.state.testcase.attributes || {}).map(
                 function (attributeId, i) {
                   var attributeValues = this.state.testcase.attributes[attributeId] || [];
+                  var defaultAttribs = this.getDefaultAttribValues(attributeValues);
                   if (attributeId !== "null" && !attributeId.includes('broken')) {
                     return (
                       <div key={i} index={attributeId} className="form-group row">
@@ -188,7 +201,7 @@ class TestCaseForm extends SubComponent {
                             // })}
                             isMulti
                             isClearable
-                            defaultValue = {(attributeValues || []).map(function (val) {
+                            defaultValue = {(defaultAttribs || []).map(function (val) {
                                 return { value: val, label: val };
                               })}
                             onChange={e => this.editAttributeValues(attributeId, e)}
