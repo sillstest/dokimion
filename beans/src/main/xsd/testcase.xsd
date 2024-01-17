@@ -34,6 +34,7 @@
                     <xs:element name="locked" type="xs:boolean" default="false"/>
                     <xs:element name="broken" type="xs:boolean" default="false"/>
                     <xs:element name="launchBroken" type="xs:boolean" default="false"/>
+                    <xs:element name="sizeProperties" type="SizeProperties" minOccurs="3"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -138,5 +139,13 @@
         </xs:complexContent>
     </xs:complexType>
 
+
+    <xs:complexType name="SizeProperties">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="minLines" type="xs:long"/>
+            <xs:element name="maxLines" type="xs:long"/>
+        </xs:sequence>
+    </xs:complexType>
 
 </xs:schema>
