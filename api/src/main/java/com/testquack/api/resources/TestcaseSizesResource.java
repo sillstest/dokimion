@@ -49,58 +49,6 @@ public class TestcaseSizesResource extends BaseResource<TestcaseSizes> {
     return service;
   }
 
-  @POST
-  @ApiOperation(value = "Create entity", notes = "")
-  @ApiResponses(value = {
-            @ApiResponse(code = 403, message = "Access denied to the entity"),
-            @ApiResponse(code = 200, message = "Created entity")
-  })
-  public Response create(@ApiParam(value = "Entity", required = true) 
-         TestcaseSizes entity) {
-
-     TestcaseSizesService service = (TestcaseSizesService) getService();
-
-System.out.println("TestcaseSizesResource:create - RC entity: " + (TestcaseSizes)entity);
-System.out.println("TestcaseSizesResource:create - service: " + service);
-System.out.println("TestcaseSizesResource.create - getUserSession: " + getUserSession());
-System.out.flush();
-
-    Session session = getUserSession();
-    TestcaseSizes tcSizesEntity = (TestcaseSizes)entity;
-
-    TestcaseSizesService tcSizesService = (TestcaseSizesService)getService();
-
-    TestcaseSizes tcSizes = tcSizesService.save(session, "TestcaseSizes", tcSizesEntity);
-
-    JSONObject jsonObj = new JSONObject();
-    jsonObj.put("id", tcSizes.getId());
-
-    return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
-
-  }
-
-
-  @DELETE
-  @Path("/{id}")
-  @ApiOperation(value = "Delete entity", notes = "")
-  @ApiResponses(value = {
-          @ApiResponse(code = 403, message = "Access denied to the entity"),
-          @ApiResponse(code = 200, message = "Successful operation")
-  })
-  public Response delete(@ApiParam(value = "Id", required = true) @PathParam("id") String id) {
-
-     System.out.println("TestcaseSizesResource::delete - id: " + id);
-     System.out.flush();
-
-     TestcaseSizesService tcSizesService = (TestcaseSizesService)getService();
-     tcSizesService.delete(getUserSession(), "TestcaseSizes", id);
-
-     System.out.println("TestcaseSizesResource::delete - after service.delete");
-     System.out.flush();
-
-     return ok().build();
-  }
-
   @GET
   @Path("/getalltcsizes")
   @ApiOperation(value = "Find all entities", notes = "")
@@ -109,19 +57,34 @@ System.out.flush();
           @ApiResponse(code = 403, message = "Access denied to the entity"),
           @ApiResponse(code = 200, message = "Successful operation")
   })
-  public List<TestcaseSizes> getAllTestcaseSizes() {
+
+  public Collection<TestcaseSizes> getAllTestcaseSizes() {
 
     System.out.println("TestcaseSizesResource::getAllTestcaseSizes");
     System.out.flush();
 
-    TestcaseSizesService tcSizesService = (TestcaseSizesService)getService();
-    List<TestcaseSizes> listTCSizes = tcSizesService.findFiltered(getUserSession(), "TestcaseSizes", new Filter());
+    Collection<TestcaseSizes> collTCSizes = getService().findFiltered(getUserSession(), null, initFilter(request));
 
-    return listTCSizes;
+    for (TestcaseSizes tcSize : collTCSizes) {
+        System.out.println("TestcaseSizesResource.findFiltered - tcSize: " + tcSize);
+        System.out.flush();
+     }
+/*
+    TestcaseSizesService tcSizesService = (TestcaseSizesService)getService();
+    List<TestcaseSizes> listTCSizes = tcSizesService.findFiltered(getUserSession(), "TestcaseSizes", initFilter(request));
+
+for (TestcaseSizes tcSize : listTCSizes){
+   System.out.println("TestcaseSizes::getallTestcaseSizes::tcSize: " + tcSize);
+}
+System.out.flush();
+*/
+
+    return collTCSizes;
 
   }
 
 }
+
 
 
 

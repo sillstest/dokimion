@@ -77,31 +77,28 @@ public class TestcaseSizesService extends BaseService<TestcaseSizes> {
         return false;
     }
 
-
     @Override
-    public TestcaseSizes findOne(Session session, String projectId, String id) {
-
-System.out.println("TestcaseSizesService.findOne - projectId, id: " + projectId + "," + id);
-System.out.println("TestcaseSizesService.findOne - session: " + session);
+    public List<TestcaseSizes> findFiltered(Session session, String projectId, Filter filter) {
+System.out.println("TestcaseSizes.findFiltered - session: " + session);
+System.out.println("TestcaseSizes.findFiltered - projectId: " + projectId);
+System.out.println("TestcaseSizes.findFiltered - filter: " + filter);
 System.out.flush();
-
-        List<TestcaseSizes> tcSizesList = findAll();
-        for (TestcaseSizes tcSize : tcSizesList) {
-              return tcSize;
-        }
-        return null;
+        return getRepository().find(getCurrOrganizationId(session), projectId, filter);
     }
 
-    public TestcaseSizes findOne(String organizationId, Filter filter) {
-        return repository.find(organizationId,null, filter).stream().findFirst().orElseThrow(EntityNotFoundException::new);
-    }
 
     public List<TestcaseSizes> findAll() {
+
+System.out.println("TestcaseSizesService::findAll");
+System.out.flush();
+
         List<TestcaseSizes> tcSizesList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
         for (TestcaseSizes tcSize : tcSizesList) {
            System.out.println("TestcaseSizesService.findAll() - tcSize: " + tcSize);
            System.out.flush();
         }
+
+
         return tcSizesList;
         //return StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
     }

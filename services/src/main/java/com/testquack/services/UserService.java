@@ -151,6 +151,9 @@ System.out.flush();
     }
 
     public List<User> findAll() {
+System.out.println("UserService::findAll");
+System.out.flush();
+
         List<User> usersList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
         for (User user : usersList) {
            System.out.println("UserService.findAll() - user: " + user);

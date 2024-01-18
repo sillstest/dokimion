@@ -20,15 +20,24 @@ public class TestcaseSizesRepositoryCustomImpl extends CommonRepositoryImpl<Test
 
     @Override
     protected String getCollectionName(String organizationId, String projectId) {
-        return isEmpty(organizationId) ? "TestcaseSizes" : organizationId + "_rolecapability";
+        //return isEmpty(organizationId) ? "TestcaseSizes" : organizationId + "_testcaseSizes";
+
+        String collName = isEmpty(organizationId) ? "TestcaseSizes" : organizationId + "_testcaseSizes";
+
+System.out.println("TestcaseSizesRepositoryCustomImpl::getCollectionName - " + collName);
+System.out.flush();
+        return collName;
     }
 
     @Override
     public List<TestcaseSizes> suggestTestcaseSizes(String organizationId, String literal) {
+System.out.println("TestcaseSizesRepositoryCustomImpl::suggestTestcaseSizes");
+System.out.flush();
         Criteria criteria = new Criteria();
         criteria.orOperator(
-                Criteria.where("role").regex(literal, "i"),
-                Criteria.where("capability").regex(literal, "i")
+                Criteria.where("small").regex(literal, "i"),
+                Criteria.where("medium").regex(literal, "i"),
+                Criteria.where("large").regex(literal, "i")
         );
         Query query = new Query(criteria);
         query.limit(20);
