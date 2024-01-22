@@ -71,7 +71,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Set Up : ");
             userActions.LogConsoleMessage("Login as User");
-            Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+            Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
             Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 15);
             Actor.AttemptsTo(Click.On(Header.DokimionProject));
 
