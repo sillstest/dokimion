@@ -7,9 +7,6 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Order;
 import com.testquack.beans.TestcaseSizes;
-import com.testquack.beans.Small;
-import com.testquack.beans.Medium;
-import com.testquack.beans.Large;
 
 import java.util.List;
 
@@ -36,64 +33,30 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
 
     @Test
     public void tcSizesSaveTest(){
-        TestcaseSizes tcsSmallMin = tcSizesRepo.save(new TestcaseSizes().withSmall(new Small().withMinLines(0)));
-        TestcaseSizes tcsSmallMax = tcSizesRepo.save(new TestcaseSizes().withSmall(new Small().withMaxLines(25)));
-        TestcaseSizes tcsMediumMin = tcSizesRepo.save(new TestcaseSizes().withMedium(new Medium().withMinLines(26)));
-        TestcaseSizes tcsMediumMax = tcSizesRepo.save(new TestcaseSizes().withMedium(new Medium().withMaxLines(50)));
-        TestcaseSizes tcsLargeMin = tcSizesRepo.save(new TestcaseSizes().withLarge(new Large().withMinLines(51)));
-        TestcaseSizes tcsLargeMax = tcSizesRepo.save(new TestcaseSizes().withLarge(new Large().withMaxLines(51)));
+        TestcaseSizes tcsSizes = tcSizesRepo.save(new TestcaseSizes());
 
-        assertNotNull(tcsSmallMin.getId());
-        assertNotNull(tcsSmallMax.getId());
-        assertNotNull(tcsMediumMin.getId());
-        assertNotNull(tcsMediumMax.getId());
-        assertNotNull(tcsLargeMin.getId());
-        assertNotNull(tcsLargeMax.getId());
+        assertNotNull(tcsSizes.getId());
 
-        TestcaseSizes tcSizesFetched = tcSizesRepo.findById(tcsSmallMin.getId()).get();
+        TestcaseSizes tcSizesFetched = tcSizesRepo.findById(tcsSizes.getId()).get();
         assertNotNull(tcSizesFetched);
-        assertThat(tcSizesFetched.getSmall(), is(tcsSmallMin.getSmall()));
+        assertThat(tcSizesFetched.getName(), is(tcsSizes.getName()));
 
-        tcSizesFetched = tcSizesRepo.findById(tcsSmallMax.getId()).get();
-        assertNotNull(tcSizesFetched);
-        assertThat(tcSizesFetched.getSmall(), is(tcsSmallMax.getSmall()));
-
-        tcSizesFetched = tcSizesRepo.findById(tcsMediumMin.getId()).get();
-        assertNotNull(tcSizesFetched);
-        assertThat(tcSizesFetched.getMedium(), is(tcsMediumMin.getMedium()));
-
-        tcSizesFetched = tcSizesRepo.findById(tcsMediumMax.getId()).get();
-        assertNotNull(tcSizesFetched);
-        assertThat(tcSizesFetched.getMedium(), is(tcsMediumMax.getMedium()));
-
-        tcSizesFetched = tcSizesRepo.findById(tcsLargeMin.getId()).get();
-        assertNotNull(tcSizesFetched);
-        assertThat(tcSizesFetched.getLarge(), is(tcsLargeMin.getLarge()));
-
-        tcSizesFetched = tcSizesRepo.findById(tcsLargeMax.getId()).get();
-        assertNotNull(tcSizesFetched);
-        assertThat(tcSizesFetched.getLarge(), is(tcsLargeMax.getLarge()));
     }
 
     @Test
     public void findFilteredSingleFieldTest(){
-       tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withSmall(new Small().withMinLines(0)));
-       tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withSmall(new Small().withMaxLines(25)));
+       tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("medium"));
 
        List<TestcaseSizes> tcSizes = tcSizesRepo.find(
                 null,
                 null,
-                new Filter().
-                  withField("small", new Small().withMinLines(0)).
-                  withField("small", new Small().withMaxLines(25))
+                new Filter().withField("small")
        );
-       assertThat(tcSizes.size(), is(0));
-       assertThat(tcSizes.get(0).getSmall(), is(new Small().withMinLines(0)));
-       assertThat(tcSizes.get(0).getSmall(), is(new Small().withMaxLines(25)));
+       assertThat(tcSizes.size(), is(1));
+       assertThat(tcSizes.get(0).getName(), is("medium"));
 
        for (TestcaseSizes tcSize : tcSizes ) {
-          System.out.println("findFilteredSingleFieldTest - small min: " + tcSize.getSmall().withMinLines(0));
-          System.out.println("findFilteredSingleFieldTest - small max: " + tcSize.getSmall().withMaxLines(0));
+          System.out.println("findFilteredSingleFieldTest - name: " + tcSize.getName());
           System.out.flush();
        }
     }
@@ -101,27 +64,24 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
     @Test
     public void findFilteredMultipleValuesFieldTest(){
 
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withMedium(new Medium().withMinLines(0)));
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withMedium(new Medium().withMinLines(10)));
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withMedium(new Medium().withMinLines(25)));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("small"));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("medium"));
 
 
         List<TestcaseSizes> tcSizes = tcSizesRepo.find(
              null,
              null,
              new Filter().
-                     withField("medium", new Medium().withMinLines(30)).
-                     withField("medium", new Medium().withMaxLines(55))
+                     withField("small").
+                     withField("medium")
         );
         assertThat(tcSizes.size(), is(2));
-        assertThat(tcSizes.stream().map(TestcaseSizes::getMedium).
+        assertThat(tcSizes.stream().map(TestcaseSizes::getName).
                 collect(toList()),
-                containsInAnyOrder(new Medium().withMinLines(30),
-                                   new Medium().withMinLines(50)));
+                containsInAnyOrder("small", "medium"));
 
        for (TestcaseSizes tcSize : tcSizes ) {
-          System.out.println("findFilteredMultipleValuesFieldTest medium min: " + tcSize.getMedium().withMinLines(30));
-          System.out.println("findFilteredMultipleValuesFieldTest medium max: " + tcSize.getMedium().withMaxLines(60));
+          System.out.println("findFilteredMultipleValuesFieldTest: " + tcSize.getName());
           System.out.flush();
        }
 
@@ -131,30 +91,30 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
     @Test
     public void findFilteredMultipleFieldTest(){
 
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withLarge(new Large().withMinLines(55).withMaxLines(99)));
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withLarge(new Large().withMinLines(22).withMaxLines(88)));
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withLarge(new Large().withMinLines(10).withMaxLines(55)));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("small"));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("medium"));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("large"));
 
 
         List<TestcaseSizes> tcSizes = tcSizesRepo.find(
              null,
              null,
              new Filter().
-                      withField("Large", new Large().withMinLines(44)).
-                      withField("Medium", new Medium().withMaxLines(66)).
-                      withField("Small", new Small().withMinLines(22))
+                      withField("large").
+                      withField("medium").
+                      withField("small")
         );
 
-        assertThat(tcSizes.size(), is(1));
-        assertThat(tcSizes.get(0).getLarge(), is(new Large().withMinLines(22)));
+        assertThat(tcSizes.size(), is(3));
+        assertThat(tcSizes.get(0).getName(), is("small"));
     }
 
     @Test
     public void findOrderedTest(){
 
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withSmall(new Small().withMinLines(0)));
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withSmall(new Small().withMinLines(25)));
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withSmall(new Small().withMinLines(55)));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("small"));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("small"));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("small"));
 
         List<TestcaseSizes> tcSizes = tcSizesRepo.find(
                 null,
@@ -164,8 +124,8 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
         );
 
         assertThat(tcSizes.size(), is(3));
-        assertThat(tcSizes.stream().map(TestcaseSizes::getSmall).collect(toList()),
-                contains(new Small().withMinLines(0), new Small().withMinLines(25), new Small().withMinLines(55)));
+        assertThat(tcSizes.stream().map(TestcaseSizes::getName).collect(toList()),
+                contains("small"));
 
         tcSizes = tcSizesRepo.find(
                 null,
@@ -175,14 +135,14 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
         );
        
         assertThat(tcSizes.size(), is(3));
-        assertThat(tcSizes.stream().map(TestcaseSizes::getSmall).collect(toList()),
-                contains(new Small().withMinLines(0), new Small().withMinLines(22), new Small().withMinLines(55)));
+        assertThat(tcSizes.stream().map(TestcaseSizes::getName).collect(toList()),
+                contains("small"));
 
     }
 
     @Test
     public void findLimitedFieldsTest(){
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withMedium(new Medium().withMaxLines(99).withMinLines(33)));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("medium"));
 
         List<TestcaseSizes> tcSizes = tcSizesRepo.find(
              null,
@@ -192,8 +152,8 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
         );
 
         assertThat(tcSizes.size(), is(1));
-        assertThat(tcSizes.get(0).getMedium(), is(new Medium().withMaxLines(44)));
-        assertNull(tcSizes.get(0).getMedium());
+        assertThat(tcSizes.get(0).getName(), is("medium"));
+        assertNull(tcSizes.get(0).getName());
 
         tcSizes = tcSizesRepo.find(
              null,
@@ -203,7 +163,7 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
         );
 
         assertThat(tcSizes.size(), is(1));
-        assertThat(tcSizes.get(0).getMedium(), is(new Medium().withMaxLines(55)));
-        assertNull(tcSizes.get(0).getMedium());
+        assertThat(tcSizes.get(0).getName(), is("medium"));
+        assertNull(tcSizes.get(0).getName());
     }
 }

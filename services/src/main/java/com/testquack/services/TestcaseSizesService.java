@@ -3,9 +3,6 @@ package com.testquack.services;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.testquack.beans.Filter;
-import com.testquack.beans.Small;
-import com.testquack.beans.Medium;
-import com.testquack.beans.Large;
 import com.testquack.beans.TestcaseSizes;
 import com.testquack.dal.OrganizationRepository;
 import com.testquack.services.errors.EntityAccessDeniedException;
@@ -33,57 +30,25 @@ public class TestcaseSizesService extends BaseService<TestcaseSizes> {
     @Autowired
     private TestcaseSizesRepository repository;
 
-    @Autowired
-    private OrganizationRepository organizationRepository;
-
     @Override
     protected CommonRepository<TestcaseSizes> getRepository() {
         return repository;
     }
 
     @Override
-    protected boolean userCanRead(Session session, String projectId, TestcaseSizes entity) {
-        return true;
-    }
-
-    @Override
-    protected boolean userCanSave(Session session, String projectId, TestcaseSizes entity) {
-        return false;
-    }
-
-    protected boolean userCanSave(Session session, String login) {
-
-        return false;
-    }
-
-    @Override
-    protected boolean userCanSave(Session session, String projectId, Collection<TestcaseSizes> entities) {
-        return false;
-    }
-
-    @Override
-    protected boolean userCanDelete(Session session, String projectId, String id) {
-        return userCanSave(session, id);
-    }
-
-    @Override
-    protected boolean userCanCreate(Session session, String projectId, TestcaseSizes entity) {
-
-        return false;
-    }
-
-    @Override
-    protected boolean userCanUpdate(Session session, String projectId, TestcaseSizes entity) {
-        return false;
-    }
-
-    @Override
     public List<TestcaseSizes> findFiltered(Session session, String projectId, Filter filter) {
-System.out.println("TestcaseSizes.findFiltered - session: " + session);
-System.out.println("TestcaseSizes.findFiltered - projectId: " + projectId);
-System.out.println("TestcaseSizes.findFiltered - filter: " + filter);
+System.out.println("TestcaseSizesService.findFiltered - session: " + session);
+System.out.println("TestcaseSizesService.findFiltered - projectId: " + projectId);
+System.out.println("TestcaseSizesService.findFiltered - filter: " + filter);
 System.out.flush();
-        return getRepository().find(getCurrOrganizationId(session), projectId, filter);
+        List<TestcaseSizes> listTCSizes = getRepository().find(getCurrOrganizationId(session), projectId, filter);
+        for (TestcaseSizes tcSize : listTCSizes) {
+           System.out.println("TestcaseSizesService::findFiltered - tcSize: " + tcSize);
+           System.out.flush();
+        }
+        return listTCSizes;
+
+        //return getRepository().find(getCurrOrganizationId(session), projectId, filter);
     }
 
 
