@@ -21,6 +21,7 @@ import org.json.*;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -63,20 +64,28 @@ public class TestcaseSizesResource extends BaseResource<TestcaseSizes> {
     System.out.println("TestcaseSizesResource::getAllTestcaseSizes");
     System.out.flush();
 
-    Collection<TestcaseSizes> collTCSizes = getService().findFiltered(getUserSession(), null, initFilter(request));
+System.out.println("getAllTestcaseSizes::filter - " + initFilter(request));
+System.out.flush();
+
+    Collection<TestcaseSizes> collTCSizes = getService().findFiltered(getUserSession(), null, new Filter());
 
     for (TestcaseSizes tcSize : collTCSizes) {
         System.out.println("TestcaseSizesResource.findFiltered - tcSize: " + tcSize);
         System.out.flush();
      }
 /*
-    TestcaseSizesService tcSizesService = (TestcaseSizesService)getService();
-    List<TestcaseSizes> listTCSizes = tcSizesService.findFiltered(getUserSession(), "TestcaseSizes", initFilter(request));
+   TestcaseSizesService tcSizesService = (TestcaseSizesService)getService();
+   Set<String> tcSizesSet = tcSizesService.findAll().stream().map(
+                            TestcaseSizes::getTcsName).collect(Collectors.toSet());
 
-for (TestcaseSizes tcSize : listTCSizes){
-   System.out.println("TestcaseSizes::getallTestcaseSizes::tcSize: " + tcSize);
-}
-System.out.flush();
+   Collection<TestcaseSizes> collTCSizes = new LinkedList<TestcaseSizes>();
+   for (String tcSizeName : tcSizesSet) {
+      System.out.println("TestcaseSizes::getallTestcaseSizes::tcSize: " + tcSizeName);
+      System.out.flush();
+      TestcaseSizes tcSize = new TestcaseSizes();
+      tcSize.setName(tcSizeName);
+      collTCSizes.add(tcSize);
+   }
 */
 
     return collTCSizes;

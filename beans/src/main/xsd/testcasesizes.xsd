@@ -15,34 +15,21 @@
       <xs:complexContent>
         <xs:extension base="Entity">
           <xs:sequence>
-            <xs:element name="small" type="Small"/>
-            <xs:element name="medium" type="Medium"/>
-            <xs:element name="large" type="Large"/>
+            <xs:element name="tcsName" type="TcsName"/>
+            <xs:element name="minLines" type="NoLines"/>
+            <xs:element name="maxLines" type="NoLines"/>
           </xs:sequence>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
 
-    <xs:complexType name="Small">
-        <xs:sequence>
-            <xs:element name="minLines" type="NoLines"/>
-            <xs:element name="maxLines" type="NoLines"/>
-        </xs:sequence>
-    </xs:complexType>
-
-    <xs:complexType name="Medium">
-        <xs:sequence>
-            <xs:element name="minLines" type="NoLines"/>
-            <xs:element name="maxLines" type="NoLines"/>
-        </xs:sequence>
-    </xs:complexType>
-
-    <xs:complexType name="Large">
-        <xs:sequence>
-            <xs:element name="minLines" type="NoLines"/>
-            <xs:element name="maxLines" type="NoLines"/>
-        </xs:sequence>
-    </xs:complexType>
+    <xs:simpleType name="TcsName">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="small"/>
+            <xs:enumeration value="medium"/>
+            <xs:enumeration value="large"/>
+        </xs:restriction>
+    </xs:simpleType>
 
     <xs:simpleType name="NoLines">
         <xs:restriction base="xs:long">
