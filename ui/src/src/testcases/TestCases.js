@@ -45,6 +45,14 @@ class TestCases extends SubComponent {
     loading: true,
     showCasesSelectCheckboxes: false,
     errorMessage: "",
+    tcSizesFilter: {
+      skip: 0,
+      limit: 20,
+      orderby: "name",
+      orderdir: "ASC",
+      includedFields: "name,minLines,maxLines",
+    },
+    tcSizes: {},
   };
 
   constructor(props) {
@@ -62,7 +70,21 @@ class TestCases extends SubComponent {
     this.processElementChecked = this.processElementChecked.bind(this);
     this.handleBulkAddAttributes=this.handleBulkAddAttributes.bind(this);
     this.handleBulkRemoveAttributes=this.handleBulkRemoveAttributes.bind(this);
+    this.handleGetTCSizes = this.handleGetTCSizes.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleGetTCSizes() {
+
+    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery(this.state.tcSizesFilter))
+      .then(response => {
+        this.state.tcSizes = response;
+        this.setState(this.state);
+      })
+      .catch(() => {
+        console.log("Error in handleGetTCsizes");
+      });
+
   }
 
   componentDidMount() {
@@ -78,6 +100,7 @@ class TestCases extends SubComponent {
       };
       this.setState(this.state);
     }
+
     Backend.get(this.props.match.params.project + "/attribute")
       .then(response => {
         this.state.projectAttributes = response.sort((a, b) => (a.name || "").localeCompare(b.name));
@@ -238,7 +261,7 @@ class TestCases extends SubComponent {
       uiLibrary: "bootstrap4",
       checkboxes: true,
       checkedField: "checked",
-      dataSource: Utils.parseTree(this.state.testcasesTree, this.state.filter.notFields.id),
+      dataSource: Utils.parseTree(this.state.testcasesTree, this.state.filter.notFields.id, this.state.tcSizes),
     });
     this.tree.on(
       "select",
@@ -534,6 +557,7 @@ class TestCases extends SubComponent {
   }
 
   render() {
+    this.handleGetTCSizes();
     return (
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>

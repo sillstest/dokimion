@@ -24,13 +24,6 @@ class TestCasesFilter extends Component {
     ];
 
     this.state = {
-      filter: {
-        skip: 0,
-        limit: 20,
-        orderby: "name",
-        orderdir: "ASC",
-        includedFields: "name,minlines,maxlines",
-      },
       groupsToDisplay: [],
       projectAttributes: [],
       createdLaunch: {
@@ -48,7 +41,6 @@ class TestCasesFilter extends Component {
       testSuiteNameToDisplay: "",
       errorMessage: "",
       session: {person: {}},
-      tcSizes: {},
     };
 
     this.changeGrouping = this.changeGrouping.bind(this);
@@ -68,18 +60,6 @@ class TestCasesFilter extends Component {
     this.handleBulkRemoveAttributes=this.handleBulkRemoveAttributes.bind(this);
     this.getSession = this.getSession.bind(this);
     this.onSessionChange = this.onSessionChange.bind(this);
-    this.handleGetTCSizes = this.handleGetTCSizes.bind(this);
-  }
-
-  handleGetTCSizes() {
-
-    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery(this.state.filter))
-      .then(response => {
-        this.state.tcSizes = response;
-        this.setState(this.state);
-      })
-      .catch(() => {console.log("Error in gettcsizes");});
-
   }
 
   onSessionChange(session) {
@@ -428,10 +408,6 @@ async  handleBulkRemoveAttributes(){
           <div className="col-3 btn-group" role="group">
             
             
-            <button type="button" className="btn btn-primary" title="GetTCSizes" data-toggle="modal" onClick={this.handleGetTCSizes}>
-              Get TCSizes
-              </button>
-
             <button type="button" className="btn btn-primary" title="Add Attributes" data-toggle="modal" onClick={this.handleBulkAddAttributes}>
               Add Attributes
               </button>
