@@ -38,6 +38,14 @@ class Launch extends SubComponent {
     attributesStatus: {},
     loading: true,
     errorMessage: "",
+    tcSizesFilter: {
+      skip: 0,
+      limit: 20,
+      orderby: "name",
+      orderdir: "ASC",
+      includedFields: "name,minLines,maxLines",
+     },
+     tcSizes: {},
   };
 
   constructor(props) {
@@ -52,6 +60,7 @@ class Launch extends SubComponent {
     this.showLaunchStats = this.showLaunchStats.bind(this);
     this.buildAttributesStatusMap = this.buildAttributesStatusMap.bind(this);
     this.addUnknownAttributesToAttributesStatusMap = this.addUnknownAttributesToAttributesStatusMap.bind(this);
+    this.handleGetTCSizes = this.handleGetTCSizes.bind(this);
   }
 
   componentDidMount() {
@@ -65,6 +74,19 @@ class Launch extends SubComponent {
       .catch(error => console.log(error));
     this.interval = setInterval(this.getLaunch, 30000);
   }
+
+  handleGetTCSizes() {
+
+    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery(this.state.tcSizesFilter))
+      .then(response => {
+        this.state.tcSizes = response;
+        this.setState(this.state);
+      })
+      .catch(() => {
+        console.log("Error in handleGetTCsizes");
+      });
+
+   }
 
   getLaunch(buildTree) {
     Backend.get(this.state.projectId + "/launch/" + this.props.match.params.launchId)
@@ -108,7 +130,7 @@ class Launch extends SubComponent {
       primaryKey: "uuid",
       uiLibrary: "bootstrap4",
       imageHtmlField: "statusHtml",
-      dataSource: Utils.parseTree(this.state.launch.testCaseTree),
+      dataSource: Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes),
     });
 
     this.tree.on(
@@ -212,7 +234,7 @@ class Launch extends SubComponent {
       },
     );
     Object.assign(updatedTestCase, testcase);
-    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree);
+    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes);
 
     var testCaseHtmlNode = $("li[data-id='" + testcase.uuid + "']").find("img");
     testCaseHtmlNode.attr("src", Utils.getStatusImg(testcase));
@@ -285,6 +307,7 @@ class Launch extends SubComponent {
   }
 
   render() {
+    this.handleGetTCSizes();
     return (
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>

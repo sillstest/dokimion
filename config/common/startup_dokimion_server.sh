@@ -3,7 +3,7 @@
 # $1 - SERVER_NO
 
 cd /home/dokimion/dokimion
-/usr/bin/javac RoleCapability.java aes.java
+/usr/bin/javac RoleCapability.java aes.java AdminPassword.java
 /usr/bin/java RoleCapability
 /usr/bin/javac TestcaseSizes.java aes.java AdminPassword.java
 /usr/bin/java TestcaseSizes

@@ -1,10 +1,11 @@
 {
     "configurations": [
     {
-        "command": "npm start",
+        "command": "npm start | awk -v UI_NO=_dev '{printf "dokimion_ui_"UI_NO; print $0}' | logger -p user.info",
         "name": "Run npm start",
         "request": "launch",
-        "type": "node-terminal",
+        "type": "chrome",
+         "url":  "http://192.168.56.107",
         "skipFiles": [
             "<node_internals>/**"
         ],

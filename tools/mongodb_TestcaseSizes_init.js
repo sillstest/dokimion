@@ -7,20 +7,20 @@ db.TestcaseSizes.drop()
 db.TestcaseSizes.insertOne(
 {
   "name": 'small',
-  "minlines": 0,
-  "maxlines": 25
+  "minLines": 0,
+  "maxLines": 25
 });
 db.TestcaseSizes.insertOne(
 {
   "name": 'medium',
-  "minlines": 26,
-  "maxlines": 100
+  "minLines": 26,
+  "maxLines": 100
 });
 db.TestcaseSizes.insertOne(
 {
   "name": 'large',
-  "minlines": 101,
-  "maxlines": -1
+  "minLines": 101,
+  "maxLines": -1
 });
 
 
