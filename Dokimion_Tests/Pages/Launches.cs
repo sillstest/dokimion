@@ -34,6 +34,8 @@ namespace Dokimion.Pages
         public static IWebLocator UsersGraph => L("UsersGraph", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])[2]"));
         public static IWebLocator LaunchTrendGraph => L("LaunchTrendGraph", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])[3]"));
 
+        public static IWebLocator LaunchUserExecTrendGraph => L("LaunchUserExecTrendGraph", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])[4]"));
+
         public static IWebLocator LaunchDeleteDate => L("LaunchDeleteDate", By.XPath("(//*[local-name()='svg' and contains(@class,'react-date-picker__clear')])[1]"));
 
 

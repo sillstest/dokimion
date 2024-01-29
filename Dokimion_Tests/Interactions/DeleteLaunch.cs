@@ -32,6 +32,7 @@ namespace Dokimion.Interactions {
 
             Actions actions = new Actions(driver);
 
+            Actor.WaitsUntil(Appearance.Of(Launches.LaunchDelete), IsEqualTo.True());
             Actor.WaitsUntil(Count.Of(Launches.LaunchDelete), IsGreaterThanOrEqualTo.Value(1), timeout: 60);
             ReadOnlyCollection<IWebElement> launches = Launches.LaunchDelete.FindElements(driver);
             int launchCount = launches.Count;
