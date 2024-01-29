@@ -53,8 +53,8 @@ namespace Dokimion.Tests
             try
             {
                 Actor.Can(BrowseTheWeb.With(driver));
-                Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));// userActions.DokimionUrl));
-                //Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
+                //Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));// userActions.DokimionUrl));
+                Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
                 //Page is redirected after initial URL
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
             }
