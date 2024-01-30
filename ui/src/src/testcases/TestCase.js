@@ -696,8 +696,9 @@ class TestCase extends SubComponent {
                 {!this.state.readonly && (
                   <div id="description-form" className="inplace-form" style={{ display: "none" }}>
                     <Editor
+                      tinymceScriptSrc='/tinymce/tinymce.min.js'
                       initialValue={this.state.testcase.description}
-                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
                         height: 500,
                         menubar: false,
@@ -753,8 +754,9 @@ class TestCase extends SubComponent {
                 {!this.state.readonly && (
                   <div id="preconditions-form" className="inplace-form" style={{ display: "none" }}>
                     <Editor
+                      tinymceScriptSrc='/tinymce/tinymce.min.js'
                       initialValue={this.state.testcase.preconditions}
-                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
                         height: 500,
                         menubar: false,
@@ -801,8 +803,9 @@ class TestCase extends SubComponent {
                           <div className="card-body">
                             <p className="card-text">
                               <Editor
+                                tinymceScriptSrc='/tinymce/tinymce.min.js'
                                 initialValue={this.state.testcase.steps[i].action}
-                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
                                   height: 300,
                                   menubar: false,
@@ -816,8 +819,9 @@ class TestCase extends SubComponent {
                             <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                             <p className="card-text">
                               <Editor
+                                tinymceScriptSrc='/tinymce/tinymce.min.js'
                                 initialValue={this.state.testcase.steps[i].expectation}
-                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
                                   height: 300,
                                   menubar: false,
@@ -917,8 +921,9 @@ class TestCase extends SubComponent {
                               <h6 className="card-subtitle mb-2 text-muted">{i + 1}. Step</h6>
                               <p className="card-text">
                                 <Editor
+                                  tinymceScriptSrc='/tinymce/tinymce.min.js'
                                   initialValue={this.state.testcase.steps[i].action}
-                                  apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                  // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
                                     height: 300,
                                     menubar: false,
@@ -932,8 +937,9 @@ class TestCase extends SubComponent {
                               <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                               <p className="card-text">
                                 <Editor
+                                  tinymceScriptSrc='/tinymce/tinymce.min.js'
                                   initialValue={this.state.testcase.steps[i].expectation}
-                                  apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                  // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
                                     height: 300,
                                     menubar: false,
