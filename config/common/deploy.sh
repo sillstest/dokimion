@@ -25,6 +25,8 @@ cp ~1/tools/mongodb_DefaultProjectAttributes_init.js .
 tar xvzf ui.tgz
 chmod -R a+w *
 chmod -R a+w .
+cd src
+cp -r node_modules/tinymce* public/.
 
 # restart relevant system services
 if [ $1 == "_dev" ]
