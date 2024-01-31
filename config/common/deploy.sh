@@ -23,6 +23,8 @@ cp ~1/tools/mongodb_RoleCapability_init.js .
 cp ~1/tools/mongodb_TestcaseSizes_init.js .
 cp ~1/tools/mongodb_DefaultProjectAttributes_init.js .
 tar xvzf ui.tgz
+cp ~1/config/common/startup_dokimion_server.sh ../bin/.
+cp ~1/config/common/startup_dokimion_ui.sh ../bin/.
 chmod -R a+w *
 chmod -R a+w .
 cd src
