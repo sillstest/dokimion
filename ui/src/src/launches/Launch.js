@@ -130,7 +130,7 @@ class Launch extends SubComponent {
       primaryKey: "uuid",
       uiLibrary: "bootstrap4",
       imageHtmlField: "statusHtml",
-      dataSource: Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes),
+      dataSource: Utils.parseTree(this.state.launch.testCaseTree, []),
     });
 
     this.tree.on(
@@ -234,7 +234,7 @@ class Launch extends SubComponent {
       },
     );
     Object.assign(updatedTestCase, testcase);
-    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes);
+    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, []);
 
     var testCaseHtmlNode = $("li[data-id='" + testcase.uuid + "']").find("img");
     testCaseHtmlNode.attr("src", Utils.getStatusImg(testcase));

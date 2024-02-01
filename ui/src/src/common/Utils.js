@@ -3,16 +3,16 @@ import Moment from "moment/min/moment.min.js";
 import * as UserSession from "../user/UserSession";
 import $ from "jquery";
 import qs from "qs";
-import Backend from "../services/backend";
+
 export function intDiv(val, by) {
   return (val - (val % by)) / by;
 }
 
-export function parseTree(testcasesTree, uncheckedList, tcSizes) {
-  return getTreeNode(testcasesTree, [], uncheckedList, tcSizes).children || [];
+export function parseTree(testcasesTree, uncheckedList) {
+  return getTreeNode(testcasesTree, [], uncheckedList).children || [];
 }
 
-export function getTreeNode(node, parentsToUpdate, uncheckedList, tcSizes) {
+export function getTreeNode(node, parentsToUpdate, uncheckedList) {
   uncheckedList = uncheckedList || [];
   var resultNode = {
     text: "<b>" + node.title + "</b>",
@@ -31,7 +31,7 @@ export function getTreeNode(node, parentsToUpdate, uncheckedList, tcSizes) {
     resultNode.children = [];
     node.testCases.forEach(function (testCase) {
       resultNode.children.push({
-        text: getSizeOfTestcase(tcSizes, testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + "<span class='text-muted'> (" + testCase.id + ")</span>",
+        text: getSizeOfTestcase(testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + "<span class='text-muted'> (" + testCase.id + ")</span>",
         id: testCase.id,
         uuid: testCase.uuid,
         isLeaf: true,
@@ -50,7 +50,7 @@ export function getTreeNode(node, parentsToUpdate, uncheckedList, tcSizes) {
   }
   if (node.children && node.children.length > 0) {
     resultNode.children = node.children.map(function (child) {
-      return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList, tcSizes);
+      return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList);
     });
   }
   return resultNode;
@@ -385,34 +385,23 @@ export function getChartSeriesConfig() {
   };
 }
 
-export function getSizeOfTestcase(tcSizes, steps) {
+export function getSizeOfTestcase(steps) {
   var html = '';
-
   if(steps && steps.length > 0 )
   {
     var actions = steps[0].action ? steps[0].action : "";
     actions += steps[0].expectation ? steps[0].expectation : "";
-
-    if (actions) {
+    if(actions){
       var lines = actions.split("<br>");
-      var noOfLines =   lines.length;
-
-      const smallIndex = tcSizes.findIndex(e => e.name == "small");
-      const mediumIndex = tcSizes.findIndex(e => e.name == "medium");
-      const largeIndex = tcSizes.findIndex(e => e.name == "large");
-      if (smallIndex == -1 || mediumIndex == -1 || largeIndex == -1) {
-         console.log("getSizeOfTestcase - tcSizes index invalid");
-      }
-
-      if (noOfLines <= tcSizes[smallIndex].maxLines) {
+       var noOfLines =   lines.length;
+      if(noOfLines <= 25){
         html = `<span style='color:green;font-style:italic;font-weight:bold;'>SML</span>`
-      } else if(noOfLines > tcSizes[mediumIndex].minLines && noOfLines <= tcSizes[mediumIndex].maxLines){
+      }else if(noOfLines > 25 && noOfLines <= 100 ){
         html = `<span style='color:#DAA520;font-style:italic;font-weight:bold;'>MED</span>`
-      } else if (noOfLines > tcSizes[largeIndex].minLines)
+      }else if(noOfLines > 100)
       {
           html = `<span style='color:red;font-style:italic;font-weight:bold;'>LRG</span>`
       }
-
     }else{
       console.log("No Steps"  + actions);
     }
