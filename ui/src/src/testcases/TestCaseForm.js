@@ -16,6 +16,14 @@ class TestCaseForm extends SubComponent {
       testcase: props.testcase,
       projectAttributes: [],
       errorMessage: "",
+      defaultProjectAttributesFilter: {
+        skip: 0,
+        limit: 20,
+        orderby: "project",
+        orderdir: "ASC",
+        includedFields: "project,attributes",
+      },
+      defaultProjectAttributes: [],
     };
     this.onTestCaseAdded = props.onTestCaseAdded;
     this.handleChange = this.handleChange.bind(this);
@@ -29,6 +37,7 @@ class TestCaseForm extends SubComponent {
     this.removeAttribute = this.removeAttribute.bind(this);
     this.getAttributeKeysToAdd = this.getAttributeKeysToAdd.bind(this);
     this.getDefaultAttribValues=this.getDefaultAttribValues.bind(this);
+    this.loadDefaultProjectAttributes=this.loadDefaultProjectAttributes(this);
   }
 
   handleChange(event) {
@@ -68,6 +77,17 @@ class TestCaseForm extends SubComponent {
 
     }
     this.setState(this.state);
+  }
+
+  loadDefaultProjectAttributes() {
+
+    Backend.get("/defaultprojectattributes/getalldefaultprojattribs/" + 
+                 this.props.match.params.project + "?" + 
+                 Utils.filterToQuery(this.state.defaultProjectAttributesFilter))
+      .then(response => {
+         this.state.defaultProjectAttributes = response;
+      })
+      .catch(error => console.log(error));
   }
 
   addAttribute() {
@@ -138,13 +158,21 @@ class TestCaseForm extends SubComponent {
 
  //Added function to select the default values for 'Paratext'
  getDefaultAttribValues(attribList){
-  var defaultAttribs =[];
-  var projectId = this.props.match.params.project;
-  if(projectId.includes('paratext')){
-      defaultAttribs = attribList.filter(val => (val.includes('Full Regression') || val.includes('Manual') || 
-      val.includes('All')));
-  }
-  return defaultAttribs;
+
+    var allDefaultAttribs = [];
+    for (var i = 0; i < this.state.defaultProjectAttributes.length; i++) {
+
+       var projectId = this.props.match.params.project;
+       if (projectId.includes(this.state.defaultProjectAttributes[i].project)) {
+
+          var defaultAttribs = [];
+          defaultAttribs = attribList.filter(val => (this.state.defaultProjectAttributes[i].attributes.includes(val)));
+
+          allDefaultAttribs.push(...defaultAttribs);
+      }
+    }
+
+    return allDefaultAttribs;
 }
 
   render() {

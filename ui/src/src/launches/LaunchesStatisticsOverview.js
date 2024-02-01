@@ -8,6 +8,7 @@ import { FadeLoader } from "react-spinners";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+import LaunchesByUserExecutionTrend from "./LaunchesByUserExecutionTrend";
 
 class LaunchesStatisticsOverview extends SubComponent {
   state = {
@@ -73,7 +74,7 @@ class LaunchesStatisticsOverview extends SubComponent {
             }
           </div>
         </div>
-        <div className="row">
+         <div className="row">
           <div className="col-6">
             <LaunchesByStatusesPieWidget
               projectId={this.state.projectId}
@@ -86,13 +87,18 @@ class LaunchesStatisticsOverview extends SubComponent {
               filter={Utils.queryToFilter(this.props.location.search.substring(1))}
             />
           </div>
-        </div>
+        </div> 
         <div className="row">
           <div className="col-6">
             <LaunchesTrendWidget
               projectId={this.state.projectId}
               filter={Utils.queryToFilter(this.props.location.search.substring(1))}
             />
+          </div>
+          <div className="col-6">
+          <LaunchesByUserExecutionTrend projectId={this.state.projectId}
+          filter={Utils.queryToFilter(this.props.location.search.substring(1))}
+          />
           </div>
         </div>
       </div>
