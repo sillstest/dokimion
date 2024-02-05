@@ -65,6 +65,7 @@ class Launch extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
+    this.handleGetTCSizes();
     Backend.get(this.state.projectId + "/attribute")
       .then(response => {
         this.state.projectAttributes = response;
@@ -307,7 +308,6 @@ class Launch extends SubComponent {
   }
 
   render() {
-    this.handleGetTCSizes();
     return (
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>
