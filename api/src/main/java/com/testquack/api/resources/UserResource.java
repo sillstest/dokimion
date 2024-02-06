@@ -74,6 +74,8 @@ System.out.flush();
     @DELETE
     @Path("/{login}")
     public Response delete(@PathParam("login") String login) {
+System.out.println("UserResource::delete - login: " + login);
+System.out.flush();
         service.delete(getSession(), null, getUser(login).getId());
         return Response.ok().build();
     }
@@ -86,6 +88,11 @@ System.out.flush();
 	System.out.flush();
 
 	MongoDBInterface mongoDBInterface = new MongoDBInterface();
+        mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+                                              getService().getMongoUsername(),
+                                              getService().getMongoPassword(),
+                                              getService().getMongoDBName());
+
 	String email = mongoDBInterface.getEmail(login);
 
 	System.out.println("Fetched mongodb emails");
@@ -190,17 +197,27 @@ System.out.flush();
                          @QueryParam("password") String password) {
         Session session = authProvider.doAuth(request, response);
         System.out.println("UserResource.login - session: " + session);
-        System.out.println("UserResource.login - session.person: " + session.getPerson());
 
-        List<String> roles = session.getPerson().getRoles();
-        for ( String role : roles )
-        System.out.println("role: " + role);
+        Person person = session.getPerson();
+        MongoDBInterface mongoDBInterface = new MongoDBInterface();
+        mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+                                              getService().getMongoUsername(),
+                                              getService().getMongoPassword(),
+                                              getService().getMongoDBName());
 
-        System.out.flush();
+        String thisRole = mongoDBInterface.getRole(login);
+
+System.out.println("UserResource::login - role: " + thisRole);
+
+        List<String> roles = new ArrayList<String>();
+        roles.add(thisRole);
+        person.setRoles(roles);
+        session.setPerson(person);
 
         return session;
         //return authProvider.doAuth(request, response);
     }
+
 
     @GET
     @Path("/auth")

@@ -40,6 +40,7 @@ class TestCasesFilter extends Component {
       },
       testSuiteNameToDisplay: "",
       errorMessage: "",
+      session: {person: {}},
     };
 
     this.changeGrouping = this.changeGrouping.bind(this);
@@ -55,7 +56,25 @@ class TestCasesFilter extends Component {
     this.suiteAttrChanged = this.suiteAttrChanged.bind(this);
     this.removeFilter = this.removeFilter.bind(this);
     this.getProjectAttributesSelect = this.getProjectAttributesSelect.bind(this);
+    this.handleBulkAddAttributes=this.handleBulkAddAttributes.bind(this);
+    this.handleBulkRemoveAttributes=this.handleBulkRemoveAttributes.bind(this);
+    this.getSession = this.getSession.bind(this);
+    this.onSessionChange = this.onSessionChange.bind(this);
   }
+
+  onSessionChange(session) {
+    this.props.onSessionChange(session);
+  }
+
+  getSession() {
+    Backend.get("user/session")
+      .then(response => {
+        this.state.session = response;
+        this.setState(this.state);
+      })
+      .catch(() => {console.log("Unable to fetch session");});
+  }
+
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.projectAttributes) {
@@ -142,6 +161,7 @@ class TestCasesFilter extends Component {
       if (params.fulltext){
           this.state.testSuite.filter.fulltext = params.fulltext;
       }
+      this.getSession();
       this.setState(this.state);
       this.props.onFilter(this.state.testSuite.filter);
     }
@@ -265,6 +285,22 @@ class TestCasesFilter extends Component {
     return projectAttributes;
   }
 
+ async handleBulkAddAttributes(){
+  const start = performance.now();
+    console.log("Entered in handleBulkAddAttributes : " + start);
+    let result =  await this.props.handleBulkAddAttributes(this.state.testSuite.filter.filters);
+    console.log(`Execution time of Bulk Add Attributes operation : ${performance.now() - start} ms with value ${result}`);
+  }
+
+
+async  handleBulkRemoveAttributes(){
+  const start = performance.now();
+    console.log("Entered in handleBulkRemoveAttributes : " + start)
+    let result =  await this.props.handleBulkRemoveAttributes(this.state.testSuite.filter.filters);
+   console.log(`Execution time of Bulk Remove Attributes operation : ${performance.now() - start} ms  with value ${result}`);  
+  }
+
+
   render() {
     return (
       <div>
@@ -302,7 +338,7 @@ class TestCasesFilter extends Component {
                  <a class="dropdown-item" href={"/api/" + this.props.match.params.project + "/testcase/csv"} title="Export to CSV"><FontAwesomeIcon icon={faFileCsv} /> Export to CSV</a>
                </div>
             </div>
-          </div>
+                      </div>
 
             <div>
             {this.state.testSuite.filter.filters.map(
@@ -311,7 +347,9 @@ class TestCasesFilter extends Component {
                 <div className="row filter-control-row" key={i}>
                   <div className="col-1">
                       {i == 0 ? "Filter" : ""}
+
                   </div>
+           
                   <Select
                     className="col-2 filter-attribute-id-select"
                     value={{ value: filter.id, label: filter.name }}
@@ -338,11 +376,16 @@ class TestCasesFilter extends Component {
                       <FontAwesomeIcon icon={faMinusCircle} />
                     </span>
                   )}
+          
+
                 </div>
                 );
               }.bind(this),
             )}
+          
+
             </div>
+
 
           <div className="row filter-control-row">
               <div className="col-1">Search</div>
@@ -359,7 +402,26 @@ class TestCasesFilter extends Component {
                       </div>
                   </div>
               </div>
+          <div className="col-2"></div>
+        
+          {Utils.isAdmin(this.state.session) &&
+          <div className="col-3 btn-group" role="group">
+            
+            
+            <button type="button" className="btn btn-primary" title="Add Attributes" data-toggle="modal" onClick={this.handleBulkAddAttributes}>
+              Add Attributes
+              </button>
+              <button type="button" className="btn btn-danger" title="Remove Attributes" data-toggle="modal" onClick={this.handleBulkRemoveAttributes}>
+                Remove Attributes
+              </button>
+              
+    
+            </div>
+  }
           </div>
+         
+
+
         </div>
 
         <div

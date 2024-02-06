@@ -21,6 +21,7 @@ import Profile from "../user/Profile";
 import ChangePassword from "../user/ChangePassword";
 import Users from "../user/Users";
 import CreateUser from "../user/CreateUser";
+import DeleteUser from "../user/DeleteUser";
 import OrgSelect from "../user/OrgSelect";
 import Events from "../audit/Events";
 import Redirect from "../common/Redirect";
@@ -76,8 +77,10 @@ class Main extends Component {
           <Route
             exact
             path="/user/create-redirect"
-            render={props => <Redirect {...props} requestUrl={"user/create-redirect"} />}
+            render={props => <Redirect {...props} requestUrl={"user/create-redirect"} /
+>}
           />
+
           <Route
             exact
             path="/user/all-users-redirect"
@@ -95,6 +98,15 @@ class Main extends Component {
             path="/user/"
             render={props => <Users {...props} onProjectChange={this.onProjectChange.bind(this)} />}
           />
+
+          <Route exact path="/user/delete" component={DeleteUser} />
+          <Route
+            exact
+            path="/user/"
+            render={props => <Users {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+          />
+
+
 
           <Route exact path="/user/profile/:profileId" component={Profile} />
           <Route exact path="/user/changepass/:profileId" component={ChangePassword} />

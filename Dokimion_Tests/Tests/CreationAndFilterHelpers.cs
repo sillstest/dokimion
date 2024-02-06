@@ -136,10 +136,12 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Click on the Launches on header");
 
             //Go to Main Header
+            Actor.AttemptsTo(Hover.Over(Header.Launches));
             Actor.AttemptsTo(Click.On(Header.Launches));
 
             userActions.LogConsoleMessage("Click on the Smoke Test Launch Re-Run link on Launches");
-
+            Actor.WaitsUntil(Appearance.Of(Launches.SmokeTestReRunLink), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Hover.Over(Launches.SmokeTestReRunLink));
             Actor.AttemptsTo(Click.On(Launches.SmokeTestReRunLink));
 
             //
@@ -150,6 +152,13 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Update the status on Header Project List Validation");
 
             Actor.AttemptsTo(Click.On(TestCases.HeaderProjectListGroupTC));
+            UpdateLaunchStatusControl(Actor, TestCases.LaunchPassButton, "", driver);
+
+            string launchlocator = "//li[contains(@data-id,'Launch')]//i[contains(@class,'gj-icon')]";
+            Actor.WaitsUntil(Appearance.Of(new WebLocator("launchlocator", By.XPath(launchlocator))), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Click.On(new WebLocator("launchlocator", By.XPath(launchlocator))));
+
+            Actor.AttemptsTo(Click.On(TestCases.LaunchCreationTC));
             UpdateLaunchStatusControl(Actor, TestCases.LaunchPassButton, "", driver);
         }
 

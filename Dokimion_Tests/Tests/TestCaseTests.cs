@@ -31,7 +31,7 @@ namespace Dokimion.Tests
             new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
 
 
-            driver = new ChromeDriver( userActions.GetChromeOptions());
+            driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Window.Maximize();
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);
 
@@ -112,17 +112,19 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Submit the Save Changes button");
             Actor.AttemptsTo(Click.On(TestCases.SaveTestCaseButton));
+            try
+            {
+                IWebElement TestCase = GetTestCaseElement("Validate login");
+                TestCase.Click();
 
-            IWebElement TestCase = GetTestCaseElement("Validate login");
-            TestCase.Click();
-
-            userActions.LogConsoleMessage("Verify : Testcase is created");
-            StringAssert.Contains("Validate login", TestCase.Text);
-
+                userActions.LogConsoleMessage("Verify : Testcase is created");
+                StringAssert.Contains("Validate login", TestCase.Text);
+            }
+            finally { 
             userActions.LogConsoleMessage("Clean up:");
             userActions.LogConsoleMessage("Click on the Remove Testcase button");
             Actor.AttemptsTo(DeleteTestCase.For(driver));
-            
+            }
         }
 
         [Test]
@@ -135,59 +137,62 @@ namespace Dokimion.Tests
             
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on the Add2StepsToTestCase TestcaseName");
-            IWebElement TestCase = GetTestCaseElement("Add2StepsToTestCase");
-            TestCase.Click();
+            try
+            {
+                IWebElement TestCase = GetTestCaseElement("Add2StepsToTestCase");
+                TestCase.Click();
 
-            userActions.LogConsoleMessage("Click on the Add Steps Button to input step 1");
-            Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
-            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
-            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
+                userActions.LogConsoleMessage("Click on the Add Steps Button to input step 1");
+                Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
+                Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+                Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
 
-            //Steps
-            Actor.AttemptsTo(WriteToIframe.For(driver, 2, "Go to Quack home page"));
-            //Expectations
-            Actor.AttemptsTo(WriteToIframe.For(driver, 3, "Quack login page opens"));
-            //dynamic element need to wait
+                //Steps
+                Actor.AttemptsTo(WriteToIframe.For(driver, 2, "Go to Quack home page"));
+                //Expectations
+                Actor.AttemptsTo(WriteToIframe.For(driver, 3, "Quack login page opens"));
+                //dynamic element need to wait
 
-            userActions.LogConsoleMessage("Click on the Save Button to input step 1");
-            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True());
-            Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
+                userActions.LogConsoleMessage("Click on the Save Button to input step 1");
+                Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True());
+                Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
 
-            //Add 2nd step
-            userActions.LogConsoleMessage("Click on the Add Steps Button to input step 2");
-            Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
+                //Add 2nd step
+                userActions.LogConsoleMessage("Click on the Add Steps Button to input step 2");
+                Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
 
-            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
-            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
+                Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+                Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
 
-            //Step 2
-            Actor.AttemptsTo(WriteToIframe.For(driver, 4, "Login as admin"));
-            //Expectations 2
-            Actor.AttemptsTo(WriteToIframe.For(driver, 5, "List of projects opens"));
+                //Step 2
+                Actor.AttemptsTo(WriteToIframe.For(driver, 4, "Login as admin"));
+                //Expectations 2
+                Actor.AttemptsTo(WriteToIframe.For(driver, 5, "List of projects opens"));
 
-            //Scroll down page
-            Actions actions = new Actions(driver);
-            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                //Scroll down page
+                Actions actions = new Actions(driver);
+                actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
 
-            userActions.LogConsoleMessage("Click on the Save Button to input step 1");
-            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep2), IsEqualTo.True(), timeout:45);
-            Actor.AttemptsTo(Click.On(TestCases.SaveStep2));
-            // Verify
-            userActions.LogConsoleMessage("Verify : Step 1 conatins Go to Quack home page");
-            string step1Text = Actor.AskingFor(Text.Of(TestCases.Step1Text));
-            Assert.That(step1Text, Is.EqualTo("Go to Quack home page"));
+                userActions.LogConsoleMessage("Click on the Save Button to input step 1");
+                Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep2), IsEqualTo.True(), timeout: 45);
+                Actor.AttemptsTo(Click.On(TestCases.SaveStep2));
+                // Verify
+                userActions.LogConsoleMessage("Verify : Step 1 conatins Go to Quack home page");
+                string step1Text = Actor.AskingFor(Text.Of(TestCases.Step1Text));
+                Assert.That(step1Text, Is.EqualTo("Go to Quack home page"));
 
-            userActions.LogConsoleMessage("Step 2 conatins Login as admin");
-            string step2Text = Actor.AskingFor(Text.Of(TestCases.Step2Text));
-            Assert.That(step2Text, Is.EqualTo("Login as admin"));
-
+                userActions.LogConsoleMessage("Step 2 conatins Login as admin");
+                string step2Text = Actor.AskingFor(Text.Of(TestCases.Step2Text));
+                Assert.That(step2Text, Is.EqualTo("Login as admin"));
+            }
+            finally { 
             userActions.LogConsoleMessage("Clean up :");
             userActions.LogConsoleMessage("Removed 2nd step");
             RemoveStep();
      
             Actor.AttemptsTo(DeleteTestCase.For(driver));
-          
+            }
         }
 
         [Test]
@@ -200,72 +205,76 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Action steps : ");
 
             userActions.LogConsoleMessage("Click on the UpdateExpectation2 TestcaseName");
-            IWebElement TestCase = GetTestCaseElement("UpdateExpectation2");
-            TestCase.Click();
+            try
+            {
+                IWebElement TestCase = GetTestCaseElement("UpdateExpectation2");
+                TestCase.Click();
 
-            userActions.LogConsoleMessage("Click on the Add Steps Button to input step 1");
-            Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
+                userActions.LogConsoleMessage("Click on the Add Steps Button to input step 1");
+                Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
 
-            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
-            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
-
-
-            Actions actions = new Actions(driver);
-           
-            //Steps
-            Actor.AttemptsTo(WriteToIframe.For(driver, 2, "Go to Quack home page"));
-            //Expectations
-            Actor.AttemptsTo(WriteToIframe.For(driver, 3, "Quack login page opens"));
-            //dynamic element need to wait
-
-            userActions.LogConsoleMessage("Click on the Save Button");
-            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True());
-            Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
-
-            //Add 2nd step
-            userActions.LogConsoleMessage("Click on the Add Steps Button to input step 2");
-            Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
-            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
-            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
-
-            //Step 2
-            Actor.AttemptsTo(WriteToIframe.For(driver, 4, "Login as admin"));
-            //Expectations 2
-            Actor.AttemptsTo(WriteToIframe.For(driver, 5, "List of projects opens"));
-
-            //Scroll down page
-            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-
-            userActions.LogConsoleMessage("Click on the Save button");
-            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep2), IsEqualTo.True());
-            Actor.AttemptsTo(Click.On(TestCases.SaveStep2));
-
-            //Edit ..
-            userActions.LogConsoleMessage("Click on the Edit Link");
-            Actor.AttemptsTo(Click.On(TestCases.EditStep2Expectations));
+                Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+                Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
 
 
-            userActions.LogConsoleMessage("Update the expectation in step 2 to UPD");
+                Actions actions = new Actions(driver);
 
-            //Update..Expectations 2 UPD
-            Actor.AttemptsTo(WriteToIframe.For(driver, 5, " UPD"));
+                //Steps
+                Actor.AttemptsTo(WriteToIframe.For(driver, 2, "Go to Quack home page"));
+                //Expectations
+                Actor.AttemptsTo(WriteToIframe.For(driver, 3, "Quack login page opens"));
+                //dynamic element need to wait
 
-            //Save the changes
-            userActions.LogConsoleMessage("Click on the Save Button");
-            Actor.AttemptsTo(Click.On(TestCases.SaveStep2));
+                userActions.LogConsoleMessage("Click on the Save Button");
+                Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True());
+                Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
+
+                //Add 2nd step
+                userActions.LogConsoleMessage("Click on the Add Steps Button to input step 2");
+                Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
+                Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+                Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
+
+                //Step 2
+                Actor.AttemptsTo(WriteToIframe.For(driver, 4, "Login as admin"));
+                //Expectations 2
+                Actor.AttemptsTo(WriteToIframe.For(driver, 5, "List of projects opens"));
+
+                //Scroll down page
+                actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
+                userActions.LogConsoleMessage("Click on the Save button");
+                Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep2), IsEqualTo.True());
+                Actor.AttemptsTo(Click.On(TestCases.SaveStep2));
+
+                //Edit ..
+                userActions.LogConsoleMessage("Click on the Edit Link");
+                Actor.AttemptsTo(Click.On(TestCases.EditStep2Expectations));
 
 
-            //Verify
-            userActions.LogConsoleMessage("Verify : In Step 2 Expectation is updated with UPD");
+                userActions.LogConsoleMessage("Update the expectation in step 2 to UPD");
 
-            driver.SwitchTo().Frame(5);
-            string Expectations2Text = Actor.AskingFor(Text.Of(TestCases.RichTextBody));
-            Assert.That(Expectations2Text, Is.EqualTo("List of projects opens UPD"));
-            driver.SwitchTo().DefaultContent();
+                //Update..Expectations 2 UPD
+                Actor.AttemptsTo(WriteToIframe.For(driver, 5, " UPD"));
 
+                //Save the changes
+                userActions.LogConsoleMessage("Click on the Save Button");
+                Actor.AttemptsTo(Click.On(TestCases.SaveStep2));
+
+
+                //Verify
+                userActions.LogConsoleMessage("Verify : In Step 2 Expectation is updated with UPD");
+
+                driver.SwitchTo().Frame(5);
+                string Expectations2Text = Actor.AskingFor(Text.Of(TestCases.RichTextBody));
+                Assert.That(Expectations2Text, Is.EqualTo("List of projects opens UPD"));
+                driver.SwitchTo().DefaultContent();
+            }
+            finally { 
             // Cleanup
             userActions.LogConsoleMessage("Clean up :");
             Actor.AttemptsTo(DeleteTestCase.For(driver));
+            }
         }
 
 
@@ -281,38 +290,47 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Action steps : ");
 
             userActions.LogConsoleMessage("Click on the PreconditionTestCase TestcaseName");
-            IWebElement TestCase = GetTestCaseElement("PreconditionTestCase");
-            TestCase.Click();
+            try
+            {
+                IWebElement TestCase = GetTestCaseElement("PreconditionTestCase");
+                TestCase.Click();
 
-            userActions.LogConsoleMessage("Click on the Preconditions edit icon");
-     
-            Actor.AttemptsTo(Hover.Over(TestCases.Preconditions));
-            Actor.AttemptsTo(Hover.Over(TestCases.PreconditionsSVG));
-            Actor.AttemptsTo(Click.On(TestCases.PreconditionsSVG));
+                userActions.LogConsoleMessage("Click on the Preconditions edit icon");
 
-            IWebLocator preconditionFrame = new WebLocator("preconditionFrame", By.XPath("//div[@id ='preconditions-form']//iframe"));
-            Actor.WaitsUntil(Appearance
-                .Of(preconditionFrame), IsEqualTo.True(), timeout:45);
-            //Preconditions frame index
-            Actor.AttemptsTo(WriteToIframe.For(driver, 1, "Quack has to be installed and available"));
+                Actor.AttemptsTo(Hover.Over(TestCases.Preconditions));
+                Actor.AttemptsTo(Hover.Over(TestCases.PreconditionsSVG));
+                Actor.AttemptsTo(Click.On(TestCases.PreconditionsSVG));
 
-            // scroll
-            Actions actions = new Actions(driver);
-            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                IWebLocator preconditionFrame = new WebLocator("preconditionFrame", By.XPath("//div[@id ='preconditions-form']//iframe"));
+                Actor.WaitsUntil(Appearance
+                    .Of(preconditionFrame), IsEqualTo.True(), timeout: 45);
+                //Preconditions frame index
+                Actor.AttemptsTo(WriteToIframe.For(driver, 1, "Quack has to be installed and available"));
+
+                // scroll
+                Actions actions = new Actions(driver);
+                actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
 
-            userActions.LogConsoleMessage("Click on Save button");
-            Actor.WaitsUntil(Appearance.Of(TestCases.SavePreconditions), IsEqualTo.True());
-            Actor.AttemptsTo(Click.On(TestCases.SavePreconditions));
+                userActions.LogConsoleMessage("Click on Save button");
+                Actor.WaitsUntil(Appearance.Of(TestCases.SavePreconditions), IsEqualTo.True());
+                Actor.AttemptsTo(Click.On(TestCases.SavePreconditions));
+                //   Thread.Sleep(2000);
+                //actions.Pause(TimeSpan.FromSeconds(1)).Build();
 
-            // Verify
-            userActions.LogConsoleMessage("Verify : Precondition text contains Quack has to be installed and available");
-            string preconditionText = Actor.AskingFor(Text.Of(TestCases.PreconditionsText));
-            Assert.That(preconditionText
-                , Is.EqualTo("Quack has to be installed and available"));
+                actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                // Verify
+                userActions.LogConsoleMessage("Verify : Precondition text contains Quack has to be installed and available");
+                //string preconditionText = Actor.AskingFor(Text.Of(TestCases.PreconditionsText));
+                //Assert.That(preconditionText
+                //    , Is.EqualTo("Quack has to be installed and available"));
+                Actor.WaitsUntil(Text.Of(TestCases.PreconditionsText), ContainsSubstring.Text("Quack has to be installed and available"));
+            }
+            finally { 
 
             userActions.LogConsoleMessage("Clean up : Delete Testcase");
             Actor.AttemptsTo(DeleteTestCase.For(driver));
+            }
         }
 
 

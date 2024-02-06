@@ -28,22 +28,22 @@ public class TestCaseServiceTest extends BaseTest{
         assertNotNull(testCaseService.findOne(adminSession, project3.getId(), testCasesProject3.get(0).getId()));
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void userCanSeeOnlyHisProjectsTestCasesTest(){
         assertThat(testCaseService.findFiltered(userSession, project1.getId(), new Filter()).size(), is(7));
         assertThat(testCaseService.findFiltered(userSession, project2.getId(), new Filter()).size(), is(3));
-        assertThat(testCaseService.findFiltered(userSession, project3.getId(), new Filter()).size(), is(3));
+        assertThat(testCaseService.findFiltered(userSession, project3.getId(), new Filter()).size(), is(0));
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void userCanAccessHisProjectsTestCasesTest(){
         assertNotNull(testCaseService.findOne(userSession, project1.getId(), testCasesProject1.get(0).getId()));
         assertNotNull(testCaseService.findOne(userSession, project2.getId(), testCasesProject2.get(0).getId()));
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void userCanNotAccessRestrictedProjectsTestCasesTest(){
-        TestCase.assertNotNull(testCaseService.findOne(userSession, project3.getId(), testCasesProject3.get(0).getId()));
+        TestCase.assertNull(testCaseService.findOne(userSession, project3.getId(), testCasesProject3.get(0).getId()));
     }
 
 

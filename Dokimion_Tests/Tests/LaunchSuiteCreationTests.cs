@@ -264,8 +264,10 @@ namespace Dokimion.Tests
 
             //Depth of the tree is 1.
             string locator1 = "//li[contains(@data-id,'Projects')]//i[contains(@class,'gj-icon')]";
-            Actor.WaitsUntil(Appearance.Of(new WebLocator("Projects", By.XPath(locator1))), IsEqualTo.True(), timeout: 60);
-            Actor.AttemptsTo(Click.On(new WebLocator("Projects", By.XPath(locator1))));
+            IWebLocator projectsWebLocator = new WebLocator("Projects", By.XPath(locator1));
+            Actor.WaitsUntil(Appearance.Of(projectsWebLocator), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Hover.Over(projectsWebLocator));
+            Actor.AttemptsTo(Click.On(projectsWebLocator));
 
             Actor.WaitsUntil(Appearance.Of(TestCases.HeaderProjectListGroupTC), IsEqualTo.True(), timeout: 60);
             string headerProjectList = Actor.AskingFor(Text.Of(TestCases.HeaderProjectListGroupTC));
@@ -402,50 +404,55 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Set Up : ");
 
             userActions.LogConsoleMessage("Action steps : ");
-            //create a group with Functionality and Priority high
-            creationAndFilterHelpers.CreateSmokeTest(Actor,driver);
+            try
+            {
+                //create a group with Functionality and Priority high
+                creationAndFilterHelpers.CreateSmokeTest(Actor, driver);
 
-            userActions.LogConsoleMessage("Verify : Smoke Test Launch is created");
-            //Assert Smoke test is created
-            string title = Actor.AskingFor(Text.Of(TestCases.SmokeTestLaunchTitle));
-            Assert.That(title, Is.EqualTo("Smoke Test Launch"));
+                userActions.LogConsoleMessage("Verify : Smoke Test Launch is created");
+                //Assert Smoke test is created
+                string title = Actor.AskingFor(Text.Of(TestCases.SmokeTestLaunchTitle));
+                Assert.That(title, Is.EqualTo("Smoke Test Launch"));
 
-            userActions.LogConsoleMessage("Verify : Failure message is for test");
+                userActions.LogConsoleMessage("Verify : Failure message is for test");
 
-            Actor.AttemptsTo(Click.On(TestCases.HeaderProjectListGroupTC));
-            //Actuall code - Check if Failure is on the testcase
-            Actor.WaitsUntil(Appearance.Of(TestCases.FailureLink), IsEqualTo.True(), timeout: 60);
-            Actor.AttemptsTo(Click.On(TestCases.FailureLink));
-            Actor.WaitsUntil(Appearance.Of(TestCases.FailureMessage), IsEqualTo.True(), timeout: 60);
-            string message = Actor.AskingFor(Text.Of(TestCases.FailureMessage));
-            Assert.That(message.Contains("wrong"), Is.EqualTo(true));
+                Actor.AttemptsTo(Click.On(TestCases.HeaderProjectListGroupTC));
+                //Actuall code - Check if Failure is on the testcase
+                Actor.WaitsUntil(Appearance.Of(TestCases.FailureLink), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Click.On(TestCases.FailureLink));
+                Actor.WaitsUntil(Appearance.Of(TestCases.FailureMessage), IsEqualTo.True(), timeout: 60);
+                string message = Actor.AskingFor(Text.Of(TestCases.FailureMessage));
+                Assert.That(message.Contains("wrong"), Is.EqualTo(true));
 
-            userActions.LogConsoleMessage("Verify : Authentication status is passed");
-            string AuthImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.AuthenticationLaunchStatusIcon, "src"));
-            StringAssert.Contains("pass", AuthImgSrc);
+                userActions.LogConsoleMessage("Verify : Authentication status is passed");
+                string AuthImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.AuthenticationLaunchStatusIcon, "src"));
+                StringAssert.Contains("pass", AuthImgSrc);
 
-            string Authentication_Priority = Actor.AskingFor(Text.Of(TestCases.AuthenticationGroupTC));
-            Assert.That(Authentication_Priority, Is.EqualTo("Authentication"));
-            string validateLogin = Actor.AskingFor(Text.Of(TestCases.ValidateLoginGroupTC));
-            Assert.That(validateLogin.Contains("Validate login"), Is.True);
+                string Authentication_Priority = Actor.AskingFor(Text.Of(TestCases.AuthenticationGroupTC));
+                Assert.That(Authentication_Priority, Is.EqualTo("Authentication"));
+                string validateLogin = Actor.AskingFor(Text.Of(TestCases.ValidateLoginGroupTC));
+                Assert.That(validateLogin.Contains("Validate login"), Is.True);
 
-            //
-            userActions.LogConsoleMessage("Verify :TestCase status is passed");
-            string TestcaseImgSrc = TestCases.TestCaseLaunchStatusIcon.FindElement(driver).GetAttribute("src");
-            StringAssert.Contains("pass", TestcaseImgSrc);
+                //
+                userActions.LogConsoleMessage("Verify :TestCase status is passed");
+                string TestcaseImgSrc = TestCases.TestCaseLaunchStatusIcon.FindElement(driver).GetAttribute("src");
+                StringAssert.Contains("pass", TestcaseImgSrc);
 
 
-            userActions.LogConsoleMessage("Verify : Projects status is Fail");
-            string ProjectImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.ProjectsLaunchStatusIcon, "src"));
-            StringAssert.Contains("fail", ProjectImgSrc);
+                userActions.LogConsoleMessage("Verify : Projects status is Fail");
+                string ProjectImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.ProjectsLaunchStatusIcon, "src"));
+                StringAssert.Contains("fail", ProjectImgSrc);
 
-            userActions.LogConsoleMessage("Verify : Launch status is broken");
-            string LaunchImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.LaunchLaunchStatusIcon, "src"));
-            StringAssert.Contains("broken", LaunchImgSrc);
-            userActions.LogConsoleMessage("Clean up : Delete the Smoke Test Launch");
-            //Clean Up
-            Actor.AttemptsTo(DeleteLaunch.For(driver));
-
+                userActions.LogConsoleMessage("Verify : Launch status is broken");
+                string LaunchImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.LaunchLaunchStatusIcon, "src"));
+                StringAssert.Contains("broken", LaunchImgSrc);
+            }
+            finally
+            {
+                userActions.LogConsoleMessage("Clean up : Delete the Smoke Test Launch");
+                //Clean Up
+                Actor.AttemptsTo(DeleteLaunch.For(driver));
+            }
         }
 
         [Test]
@@ -457,17 +464,23 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
 
-            userActions.LogConsoleMessage("Action steps : ");
-            creationAndFilterHelpers.CreateSmokeTestReRun(Actor, driver);
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : ");
+                creationAndFilterHelpers.CreateSmokeTestReRun(Actor, driver);
 
-            //Verify : the Header Project is updated to pass
-            userActions.LogConsoleMessage("Verify : Projects status is Pass");
-            string ProjectImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.ProjectsLaunchStatusIcon, "src"));
-            StringAssert.Contains("pass", ProjectImgSrc);
+                //Verify : the Header Project is updated to pass
+                userActions.LogConsoleMessage("Verify : Projects status is Pass");
+                string ProjectImgSrc = Actor.AskingFor(HtmlAttribute.Of(TestCases.ProjectsLaunchStatusIcon, "src"));
+                StringAssert.Contains("pass", ProjectImgSrc);
+            }
+            finally
+            {
 
-            //Clean up:
-            userActions.LogConsoleMessage("Clean up : Delete launches");
-            Actor.AttemptsTo(DeleteLaunch.For(driver));
+                //Clean up:
+                userActions.LogConsoleMessage("Clean up : Delete launches");
+                Actor.AttemptsTo(DeleteLaunch.For(driver));
+            }
 
         }
 
@@ -476,27 +489,30 @@ namespace Dokimion.Tests
         {
             userActions.LogConsoleMessage("Set up:");
             userActions.LogConsoleMessage("Action steps:");
-
-            creationAndFilterHelpers.CreateTCLaunches(Actor,driver);
-
-            //Assert Check the title of launch created 
-            userActions.LogConsoleMessage("Verify : Launch Testcases is created");
-            string title = Actor.AskingFor(Text.Of(TestCases.LaunchTestCasesTitle));
-            Assert.That(title, Is.EqualTo("Launch Testcases"));
-            //Check the Pass Status 
-            userActions.LogConsoleMessage("Verify : The Testcases status is pass");
-            Actor.WaitsUntil(TextList.For(TestCases.LaunchTCStatuses), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(11)), timeout: 60);
-            ReadOnlyCollection<IWebElement> LaunchTestCaseStatuses = TestCases.LaunchTCStatuses.FindElements(driver);
-            foreach (IWebElement tc in LaunchTestCaseStatuses)
+            try
             {
-                string passImg = tc.GetAttribute("src");
-                StringAssert.Contains("pass", passImg);
+                creationAndFilterHelpers.CreateTCLaunches(Actor, driver);
+
+                //Assert Check the title of launch created 
+                userActions.LogConsoleMessage("Verify : Launch Testcases is created");
+                string title = Actor.AskingFor(Text.Of(TestCases.LaunchTestCasesTitle));
+                Assert.That(title, Is.EqualTo("Launch Testcases"));
+                //Check the Pass Status 
+                userActions.LogConsoleMessage("Verify : The Testcases status is pass");
+                Actor.WaitsUntil(TextList.For(TestCases.LaunchTCStatuses), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(11)), timeout: 60);
+                ReadOnlyCollection<IWebElement> LaunchTestCaseStatuses = TestCases.LaunchTCStatuses.FindElements(driver);
+                foreach (IWebElement tc in LaunchTestCaseStatuses)
+                {
+                    string passImg = tc.GetAttribute("src");
+                    StringAssert.Contains("pass", passImg);
+                }
             }
+            finally { 
 
             //Delete the launch
             userActions.LogConsoleMessage("Clean up : Delete Launch Testcase");
             Actor.AttemptsTo(DeleteLaunch.For(driver));
-
+            }
         }
 
      //   [Test]

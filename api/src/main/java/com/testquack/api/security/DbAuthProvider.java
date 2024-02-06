@@ -231,11 +231,17 @@ System.out.flush();
 
     private Person convertUser(User user){
 
-        MongoDBInterface mongoDBInterface = new MongoDBInterface();
-        String role = mongoDBInterface.getRole(user.getLogin());
-
-        System.out.println("DBAuthProvider.convertUser - login, role: " + user.getLogin() + ", " + role);
+        System.out.println("convertUser");
         System.out.flush();
+
+        System.out.println("userService.getMongoDBReplicaSet - " + userService.getMongoReplicaSet());
+        System.out.flush();
+
+        MongoDBInterface mongoDBInterface = new MongoDBInterface();
+        mongoDBInterface.setMongoDBProperties(userService.getMongoReplicaSet(),
+                                              userService.getMongoUsername(),
+                                              userService.getMongoPassword(),
+                                              userService.getMongoDBName());
 
         return new Person().withFirstName(user.getFirstName()).
                 withLastName(user.getLastName()).

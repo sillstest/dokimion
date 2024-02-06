@@ -132,6 +132,7 @@
                 <xs:sequence>
                     <xs:element name="importedName" type="xs:string"/>
                     <xs:element name="automated" type="xs:boolean"/>
+                    <xs:element name="steps" type="Step" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>

@@ -125,6 +125,7 @@ class TestCase extends SubComponent {
     }
     this.getSession();
     this.setState(this.state);
+    
   }
 
   onSessionChange(session) {
@@ -695,8 +696,9 @@ class TestCase extends SubComponent {
                 {!this.state.readonly && (
                   <div id="description-form" className="inplace-form" style={{ display: "none" }}>
                     <Editor
+                      tinymceScriptSrc='/tinymce/tinymce.min.js'
                       initialValue={this.state.testcase.description}
-                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
                         height: 500,
                         menubar: false,
@@ -752,8 +754,9 @@ class TestCase extends SubComponent {
                 {!this.state.readonly && (
                   <div id="preconditions-form" className="inplace-form" style={{ display: "none" }}>
                     <Editor
+                      tinymceScriptSrc='/tinymce/tinymce.min.js'
                       initialValue={this.state.testcase.preconditions}
-                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
                         height: 500,
                         menubar: false,
@@ -800,8 +803,9 @@ class TestCase extends SubComponent {
                           <div className="card-body">
                             <p className="card-text">
                               <Editor
+                                tinymceScriptSrc='/tinymce/tinymce.min.js'
                                 initialValue={this.state.testcase.steps[i].action}
-                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
                                   height: 300,
                                   menubar: false,
@@ -815,8 +819,9 @@ class TestCase extends SubComponent {
                             <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                             <p className="card-text">
                               <Editor
+                                tinymceScriptSrc='/tinymce/tinymce.min.js'
                                 initialValue={this.state.testcase.steps[i].expectation}
-                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
                                   height: 300,
                                   menubar: false,
@@ -916,8 +921,9 @@ class TestCase extends SubComponent {
                               <h6 className="card-subtitle mb-2 text-muted">{i + 1}. Step</h6>
                               <p className="card-text">
                                 <Editor
+                                  tinymceScriptSrc='/tinymce/tinymce.min.js'
                                   initialValue={this.state.testcase.steps[i].action}
-                                  apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                  // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
                                     height: 300,
                                     menubar: false,
@@ -931,8 +937,9 @@ class TestCase extends SubComponent {
                               <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                               <p className="card-text">
                                 <Editor
+                                  tinymceScriptSrc='/tinymce/tinymce.min.js'
                                   initialValue={this.state.testcase.steps[i].expectation}
-                                  apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                  // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
                                     height: 300,
                                     menubar: false,
@@ -1084,15 +1091,16 @@ class TestCase extends SubComponent {
                   }
                 }.bind(this),
               )}
-              {!this.state.readonly && (
+              {!this.state.readonly && Utils.isAdmin(this.state.session) && (
                 <div className>
                   <button type="button" className="btn btn-primary" onClick={e => this.addAttribute(e)}>
-                    Add Attribute
+                    Add Attribute 
                   </button>
                 </div>
               )}
             </div>
 
+            {/* Commented the code for Issue 20 Properties are not used
             <div id="properties" className="mb-4">
               <h5>Properties</h5>
               {Object.keys(this.state.testcase.properties || {}).map(
@@ -1176,8 +1184,8 @@ class TestCase extends SubComponent {
                   </button>
                 </div>
               )}
-            </div>
-          </div>
+            </div> */}
+          </div> 
 
           <div className="tab-pane fade show" id="failure" role="tabpanel" aria-labelledby="failure-tab">
             {this.state.testcase.failureDetails && Object.keys(this.state.testcase.failureDetails).length > 0 && (

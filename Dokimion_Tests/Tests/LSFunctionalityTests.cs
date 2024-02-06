@@ -1,5 +1,4 @@
-﻿using AngleSharp.Dom;
-using Boa.Constrictor.Screenplay;
+﻿using Boa.Constrictor.Screenplay;
 using Boa.Constrictor.Selenium;
 using Dokimion.Interactions;
 using Dokimion.Pages;
@@ -13,7 +12,6 @@ using WebDriverManager.Helpers;
 
 namespace Dokimion.Tests
 {
-    //  [Ignore("Ignore a fixture")]
 
     public class LSFunctionalityTests
     {
@@ -275,10 +273,11 @@ namespace Dokimion.Tests
 
             Actor.WaitsUntil(Text.Of(Launches.OverviewRow2), ContainsSubstring.Text(currentDate), timeout: 60);
             //Verify the Heat graphs with
-            Actor.WaitsUntil(TextList.For(Launches.OverviewCharts), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(3)), timeout: 60);
+            Actor.WaitsUntil(Appearance.Of(Launches.OverviewCharts),IsEqualTo.True());
+            Actor.WaitsUntil(TextList.For(Launches.OverviewCharts), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(4)), timeout: 60);
             ReadOnlyCollection<IWebElement> chartNames = Launches.OverviewCharts.FindElements(driver);
 
-            userActions.LogConsoleMessage("Verify : There are 3 graphs");
+            userActions.LogConsoleMessage("Verify : There are 4 graphs");
 
             userActions.LogConsoleMessage("Verify : There is Statuses graph");
             
@@ -295,6 +294,11 @@ namespace Dokimion.Tests
             Actor.WaitsUntil(Appearance.Of(Launches.LaunchTrendGraph), IsEqualTo.True(), timeout: 45);
             string statusTrend = Actor.AskingFor(Text.Of(Launches.LaunchTrendGraph));
             StringAssert.Contains("Launches Statuses Trend", statusTrend);
+
+            userActions.LogConsoleMessage("Verify : Launches Time Duration Trend");
+            Actor.WaitsUntil(Appearance.Of(Launches.LaunchUserExecTrendGraph), IsEqualTo.True(), timeout: 45);
+            string userExecTrend = Actor.AskingFor(Text.Of(Launches.LaunchUserExecTrendGraph));
+            StringAssert.Contains("Launches Time Duration Trend", userExecTrend);
 
             userActions.LogConsoleMessage("Clean up :");
         }
@@ -313,7 +317,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Click on the Statistics link on Launches");
 
-            Actor.WaitsUntil(Appearance.Of(Launches.StatisticsLink), IsEqualTo.True());
+            Actor.WaitsUntil(Appearance.Of(Launches.StatisticsLink), IsEqualTo.True(), timeout:45);
             Actor.AttemptsTo(Click.On(Launches.StatisticsLink));
 
             userActions.LogConsoleMessage("Click on the Heat Map Tab");
@@ -322,14 +326,21 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Click.On(Launches.HeatMapLink));
 
             userActions.LogConsoleMessage("Click on the Toggle button on 'Header Project list validation'");
+            Actor.WaitsUntil(Appearance.Of(Launches.ToggleButton1), IsEqualTo.True(), timeout: 45);
+            var val = Actor.AskingFor(Text.Of(Launches.ToggleLabel1));
+            userActions.LogConsoleMessage("Before Toggle switch : " + val);
+
 
             Actor.WaitsUntil(Appearance.Of(Launches.ToggleButton1), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Hover.Over(Launches.ToggleButton1));
             Actor.AttemptsTo(Click.On(Launches.ToggleButton1));
 
+            
             userActions.LogConsoleMessage("Verify that Toggle Button is unchecked");
-            Actor.WaitsUntil(Appearance.Of(Launches.ToggleUnchecked), IsEqualTo.True(), timeout: 60);
-            var val = Actor.AskingFor(HtmlAttribute.Of(Launches.ToggleButton1, "class")) ;
-            StringAssert.DoesNotContain("checked", val);
+            Actor.WaitsUntil(Text.Of(Launches.ToggleLabel1), ContainsSubstring.Text("On"), timeout: 45);
+            val = Actor.AskingFor(Text.Of(Launches.ToggleLabel1));
+            userActions.LogConsoleMessage("Before Toggle switch : " + val);
+            StringAssert.Contains("On", val);
 
             userActions.LogConsoleMessage("Clean up: Reset the Toggle Button");
             Actor.AttemptsTo(Click.On(Launches.ToggleButton1));

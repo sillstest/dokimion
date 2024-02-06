@@ -15,7 +15,7 @@ db = db.getSiblingDB('admin')
 db.createUser(
 {
    user: "dokimion",
-   pwd: "AZY5gV305EZQxDYp4l4ob4cLiKK7QEnLtP9Hcui5GYg=",
+   pwd: passwordPrompt(),
    roles: [
       { role: "userAdmin", db: "dokimion" },
       { role: "readWrite", db: "dokimion" }

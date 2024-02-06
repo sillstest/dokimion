@@ -195,6 +195,9 @@ class Header extends Component {
               <a className="dropdown-item" href={"/user/create-redirect"}>
                 Create User
               </a>
+              <a className="dropdown-item" href={"/user/delete"}>
+                Delete User
+              </a>
             </div>
           )}
 
@@ -254,12 +257,14 @@ class Header extends Component {
                 <Link className="nav-link" to={"/" + this.props.project + "/testsuites"}>
                   Suites
                 </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={"/" + this.props.project + "/attributes"}>
-                  Attributes
-                </Link>
-              </li>
+                  </li>
+                  {Utils.isAdmin(this.state.session) &&
+                    <li className="nav-item">
+                      <Link className="nav-link" to={"/" + this.props.project + "/attributes"}>
+                        Attributes
+                      </Link>
+                    </li>
+                  }
             </ul>
           )}
           <ul className="navbar-nav">
