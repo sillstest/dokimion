@@ -65,6 +65,7 @@ class Launch extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
+    this.handleGetTCSizes();
     Backend.get(this.state.projectId + "/attribute")
       .then(response => {
         this.state.projectAttributes = response;
@@ -130,7 +131,7 @@ class Launch extends SubComponent {
       primaryKey: "uuid",
       uiLibrary: "bootstrap4",
       imageHtmlField: "statusHtml",
-      dataSource: Utils.parseTree(this.state.launch.testCaseTree, []),
+      dataSource: Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes),
     });
 
     this.tree.on(
@@ -234,7 +235,7 @@ class Launch extends SubComponent {
       },
     );
     Object.assign(updatedTestCase, testcase);
-    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, []);
+    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes);
 
     var testCaseHtmlNode = $("li[data-id='" + testcase.uuid + "']").find("img");
     testCaseHtmlNode.attr("src", Utils.getStatusImg(testcase));
@@ -307,7 +308,6 @@ class Launch extends SubComponent {
   }
 
   render() {
-    this.handleGetTCSizes();
     return (
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>
