@@ -247,15 +247,18 @@ class Launch extends SubComponent {
 
     var that = this;
     if (testcase && testcase.uuid) {
-      $(that.tree.getNodeById(testcase.uuid)[0])
-        .parents(".list-group-item")
-        .each((num, node) => {
-          var nodeId = (node.dataset || {}).id || "";
-          var dataNode = Utils.getNodeFromDataSource(nodeId, { children: that.tree.dataSource });
-          var htmlImageNode = $(node).find("img")[0];
-          var nodeImage = Utils.getNodeStatusImg(dataNode);
-          $(htmlImageNode).attr("src", nodeImage);
-        });
+      var node = $(that.tree.getNodeById(testcase.uuid));
+        if (node[0] != null) {
+          $(that.tree.getNodeById(testcase.uuid)[0])
+            .parents(".list-group-item")
+            .each((num, node) => {
+              var nodeId = (node.dataset || {}).id || "";
+              var dataNode = Utils.getNodeFromDataSource(nodeId, { children: that.tree.dataSource });
+              var htmlImageNode = $(node).find("img")[0];
+              var nodeImage = Utils.getNodeStatusImg(dataNode);
+              $(htmlImageNode).attr("src", nodeImage);
+          });
+       }
     }
   }
 
