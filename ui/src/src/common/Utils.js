@@ -50,7 +50,7 @@ export function getTreeNode(node, parentsToUpdate, uncheckedList, tcSizes) {
   }
   if (node.children && node.children.length > 0) {
     resultNode.children = node.children.map(function (child) {
-      return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList);
+      return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList, tcSizes);
     });
   }
   return resultNode;
