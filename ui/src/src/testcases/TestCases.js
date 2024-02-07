@@ -53,6 +53,7 @@ class TestCases extends SubComponent {
       includedFields: "name,minLines,maxLines",
     },
     tcSizes: {},
+    totolNoofTestCase: 0,
   };
 
   constructor(props) {
@@ -162,6 +163,7 @@ class TestCases extends SubComponent {
     this.setState(this.state);
     Backend.get(this.props.match.params.project + "/testcase/tree?" + this.getFilterApiRequestParams(filter))
       .then(response => {
+        this.state.totolNoofTestCase = response.count;
         this.state.testcasesTree = response;
         this.state.loading = false;
         this.setState(this.state);
@@ -587,6 +589,11 @@ class TestCases extends SubComponent {
               onTestCaseAdded={this.onTestCaseAdded}
             />
           </div>
+        </div>
+        <div className="row filter-control-row">
+            <div className="col-6">
+              Number of Test Cases : <span style={{fontWeight : 'bold'}}>{this.state.totolNoofTestCase}</span>
+            </div>
         </div>
         <div className="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
