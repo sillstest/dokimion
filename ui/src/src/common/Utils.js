@@ -9,6 +9,7 @@ export function intDiv(val, by) {
 }
 
 export function parseTree(testcasesTree, uncheckedList, tcSizes) {
+  sortTestcaseTree(testcasesTree);
   return getTreeNode(testcasesTree, [], uncheckedList, tcSizes).children || [];
 }
 
@@ -422,3 +423,15 @@ export function getSizeOfTestcase(tcSizes, steps) {
   return html 
 }
 
+function sortTestcaseTree(testcasesTree){
+   //Add generic logic to sort the testcasesTree on Id Issue 28
+   if(testcasesTree.testCases && testcasesTree.testCases.length>0){
+
+    testcasesTree.testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+
+  }else if(testcasesTree.children && testcasesTree.children.length >0){
+
+    testcasesTree.children[0].testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+  }
+
+}
