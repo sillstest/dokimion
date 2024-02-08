@@ -9,6 +9,7 @@ export function intDiv(val, by) {
 }
 
 export function parseTree(testcasesTree, uncheckedList, tcSizes) {
+  sortTestcaseTree(testcasesTree);
   return getTreeNode(testcasesTree, [], uncheckedList, tcSizes).children || [];
 }
 
@@ -388,6 +389,11 @@ export function getChartSeriesConfig() {
 export function getSizeOfTestcase(tcSizes, steps) {
   var html = '';
 
+  if (tcSizes == undefined || tcSizes.length == 0) {
+     console.log("getSizeOfTestcase:: test case sizes not loaded yet");
+     return;
+  }
+
   if(steps && steps.length > 0 )
   {
     var actions = steps[0].action ? steps[0].action : "";
@@ -422,3 +428,15 @@ export function getSizeOfTestcase(tcSizes, steps) {
   return html 
 }
 
+function sortTestcaseTree(testcasesTree){
+   //Add generic logic to sort the testcasesTree on Id Issue 28
+   if(testcasesTree.testCases && testcasesTree.testCases.length>0){
+
+    testcasesTree.testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+
+  }else if(testcasesTree.children && testcasesTree.children.length >0){
+
+    testcasesTree.children[0].testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+  }
+
+}
