@@ -131,7 +131,7 @@ class Launch extends SubComponent {
       primaryKey: "uuid",
       uiLibrary: "bootstrap4",
       imageHtmlField: "statusHtml",
-      dataSource: Utils.parseTree(this.state.launch.testCaseTree, []),
+      dataSource: Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes),
     });
 
     this.tree.on(
@@ -235,7 +235,7 @@ class Launch extends SubComponent {
       },
     );
     Object.assign(updatedTestCase, testcase);
-    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, []);
+    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes);
 
     var testCaseHtmlNode = $("li[data-id='" + testcase.uuid + "']").find("img");
     testCaseHtmlNode.attr("src", Utils.getStatusImg(testcase));
@@ -248,17 +248,17 @@ class Launch extends SubComponent {
     var that = this;
     if (testcase && testcase.uuid) {
       var node = $(that.tree.getNodeById(testcase.uuid));
-        if (node[0] != null) {
+      if (node[0] != null) {
           $(that.tree.getNodeById(testcase.uuid)[0])
-            .parents(".list-group-item")
-            .each((num, node) => {
-              var nodeId = (node.dataset || {}).id || "";
-              var dataNode = Utils.getNodeFromDataSource(nodeId, { children: that.tree.dataSource });
-              var htmlImageNode = $(node).find("img")[0];
-              var nodeImage = Utils.getNodeStatusImg(dataNode);
-              $(htmlImageNode).attr("src", nodeImage);
+          .parents(".list-group-item")
+          .each((num, node) => {
+            var nodeId = (node.dataset || {}).id || "";
+            var dataNode = Utils.getNodeFromDataSource(nodeId, { children: that.tree.dataSource });
+            var htmlImageNode = $(node).find("img")[0];
+            var nodeImage = Utils.getNodeStatusImg(dataNode);
+            $(htmlImageNode).attr("src", nodeImage);
           });
-       }
+      }
     }
   }
 
