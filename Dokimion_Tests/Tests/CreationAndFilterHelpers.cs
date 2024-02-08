@@ -69,6 +69,7 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Click.On(Header.TestCases));
 
             userActions.LogConsoleMessage("Click on the Grouping Select Input");
+            Actor.AttemptsTo(Hover.Over(TestCases.GroupingSelect));
             Actor.AttemptsTo(Click.On(TestCases.GroupingSelect));
             //From the drop down 
             userActions.LogConsoleMessage("Select from dropdown: Functionality ");
@@ -81,8 +82,8 @@ namespace Dokimion.Tests
             element.Click();
 
             userActions.LogConsoleMessage("Click on the Filter Select Input");
-            
 
+            Actor.AttemptsTo(Hover.Over(TestCases.Filter1Locator));
             Actor.AttemptsTo(Click.On(TestCases.Filter1Locator));
             userActions.LogConsoleMessage("Select Priority from the dropdown");
 
