@@ -389,6 +389,11 @@ export function getChartSeriesConfig() {
 export function getSizeOfTestcase(tcSizes, steps) {
   var html = '';
 
+  if (tcSizes == undefined || tcSizes.length == 0) {
+     console.log("getSizeOfTestcase:: test case sizes not loaded yet");
+     return;
+  }
+
   if(steps && steps.length > 0 )
   {
     var actions = steps[0].action ? steps[0].action : "";

@@ -88,9 +88,12 @@ class TestCases extends SubComponent {
 
   }
 
+  componentWillMount() {
+    this.handleGetTCSizes();
+  }
+
   componentDidMount() {
     super.componentDidMount();
-    this.handleGetTCSizes();
     var params = qs.parse(this.props.location.search.substring(1));
     if (params.testcase) {
       this.state.selectedTestCase = { id: params.testcase };
