@@ -151,6 +151,9 @@ public class TestCaseService extends BaseService<TestCase> {
         if (isEmpty(entity.getId())) {
             Sequencer sequencer = sequencerService.increment(getCurrOrganizationId(session), projectId);
             entity.setId(Long.toString(sequencer.getIndex()));
+System.out.println("TestCaseService::beforeCreate - allocating new test case id: " +
+                    entity.getId());
+System.out.flush();
         }
     }
 
