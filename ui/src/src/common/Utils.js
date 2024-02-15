@@ -398,10 +398,18 @@ export function getSizeOfTestcase(tcSizes, steps) {
   {
     var actions = steps[0].action ? steps[0].action : "";
     actions += steps[0].expectation ? steps[0].expectation : "";
+    if (actions && tcSizes && tcSizes.length>0) {
+    
+      var hasBreak = actions.includes("<br>");
+      var lines =[];
+      if(hasBreak){
+        lines = actions.split("<br>");
+      }else{
+        lines = actions.split("\n");
+      }
 
-    if (actions) {
-      var lines = actions.split("<br>");
       var noOfLines =   lines.length;
+      // console.log("No of lines" + noOfLines);
 
       const smallIndex = tcSizes.findIndex(e => e.name == "small");
       const mediumIndex = tcSizes.findIndex(e => e.name == "medium");
@@ -411,19 +419,19 @@ export function getSizeOfTestcase(tcSizes, steps) {
       }
 
       if (noOfLines <= tcSizes[smallIndex].maxLines) {
-        html = `<span style='color:green;font-style:italic;font-weight:bold;'>SML</span>`
+        html = '<span class="badge badge-pill badge-success">SML</span>'
       } else if(noOfLines > tcSizes[mediumIndex].minLines && noOfLines <= tcSizes[mediumIndex].maxLines){
-        html = `<span style='color:#DAA520;font-style:italic;font-weight:bold;'>MED</span>`
+        html = '<span class="badge badge-pill badge-warning">MED</span>'
       } else if (noOfLines > tcSizes[largeIndex].minLines)
       {
-          html = `<span style='color:red;font-style:italic;font-weight:bold;'>LRG</span>`
+          html = '<span class="badge badge-pill badge-danger">LRG</span>' 
       }
 
     }else{
       console.log("No Steps"  + actions);
     }
   }else{
-    html = `<span style='color:green;font-style:italic;font-weight:bold;'>SML</span>`
+    html = '<span class="badge badge-pill badge-success">SML</span>' 
   }
   return html 
 }
