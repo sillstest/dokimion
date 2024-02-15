@@ -128,11 +128,11 @@ namespace Dokimion.Tests
 
 
             Actor.AttemptsTo(Click.On(TestCases.LaunchRestartGoToLaunch));
-            Actor.WaitsUntil(Appearance.Of(TestCases.LaunchRestartModal), IsEqualTo.True(), timeout: 60);
+            //Actor.WaitsUntil(Appearance.Of(TestCases.LaunchRestartModal), IsEqualTo.True(), timeout: 60);
 
-            userActions.LogConsoleMessage("Click on the Close button Restart");
+            //userActions.LogConsoleMessage("Click on the Close button Restart");
 
-            Actor.AttemptsTo(Click.On(TestCases.LaunchRestartCloseButton));
+            //Actor.AttemptsTo(Click.On(TestCases.LaunchRestartCloseButton));
 
             userActions.LogConsoleMessage("Click on the Launches on header");
 
