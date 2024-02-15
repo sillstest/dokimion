@@ -5,14 +5,6 @@
 # --------------------------------------------------------------------------------------------------------
 # Set admin email so that you can get email.
 
-num1=1
-num2=2
-
-if [ $num2 > $num1 ]
-then
-  echo "num2 > num1"
-fi
-
 ADMIN="bob_beck@sil.org"
 # set alert level 90% is default
 ALERT=40
