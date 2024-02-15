@@ -453,7 +453,7 @@ class Launch extends SubComponent {
           aria-labelledby="launchLabel"
           aria-hidden="true"
         >
-          <LaunchForm launch={this.state.launch} restart={true} failedOnly={this.state.restartFailedOnly} />
+          <LaunchForm launch={this.state.launch} restart={true} failedOnly={this.state.restartFailedOnly} modalName="restart-launch-modal" />
         </div>
       </div>
     );

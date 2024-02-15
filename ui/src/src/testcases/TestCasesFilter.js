@@ -461,7 +461,7 @@ async  handleBulkRemoveAttributes(){
           aria-labelledby="launchLabel"
           aria-hidden="true"
         >
-          <LaunchForm launch={this.state.createdLaunch} testSuite={this.state.testSuite} />
+          <LaunchForm launch={this.state.createdLaunch} testSuite={this.state.testSuite} modalName="launch-modal"/>
         </div>
 
         <div
