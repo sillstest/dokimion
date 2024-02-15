@@ -12,7 +12,8 @@ namespace Dokimion.Pages
 {
     internal class Settings
     {
-        public static IWebLocator DokimionProjectSettingsLink => L("DokimionProjectSettingsLink", By.XPath("(//div[@class='card-header'])[1]/span/child::a"));
+        public static IWebLocator DokimionProjectSettingsLink => L("DokimionProjectSettingsLink",
+              By.XPath("(//div[@class='card-header'])/span/child::a[text()='Dokimion']"));
 
         public static IWebLocator EnvironmentInput => L("EnvironmentInput", By.XPath("//*[@id='react-select-4-input']"));
 
