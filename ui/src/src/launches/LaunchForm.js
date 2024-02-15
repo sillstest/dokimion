@@ -134,7 +134,8 @@ class LaunchForm extends SubComponent {
   }
 
   launchModalDismiss() {
-    $("#launch-modal").modal("hide");
+     //Updated Issue 92
+     $("#restart-launch-modal").modal("hide");
   }
 
   render() {
