@@ -18,6 +18,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.greatbit.whoru.jaxrs.Authenticable;
+import org.json.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -108,6 +109,32 @@ public class TestCaseResource extends BaseCrudResource<TestCase> {
                                 @PathParam("testcaseId") final String testcaseId,
                                 @RequestBody Issue issue) throws Exception {
         return service.createIssue(request, getUserSession(), projectId, testcaseId, issue);
+    }
+
+    @POST
+    @Path("/lockall")
+    public Response LockAllTestCases(@PathParam("projectId") String projectId)
+                                 throws Exception {
+System.out.println("TestCaseResource::LockAllTestCases - projectId: " + projectId);
+System.out.flush();
+
+        List<TestCase> testcasesList = service.findAll(getUserSession(), projectId);
+        JSONObject jsonObj = new JSONObject();
+
+        for (TestCase testcase : testcasesList) {
+           TestCase tc = service.lockTestCase(getUserSession(), projectId, 
+              testcase.getId());
+   
+           String status="";
+           if (tc != null) {
+              status = "OK";
+           } else {
+              status = "ERROR";
+           }
+           jsonObj.put("testcase id: ", tc.getId() + "ok");
+        }
+
+        return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
     }
 
     @POST
