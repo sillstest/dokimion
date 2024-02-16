@@ -1,18 +1,12 @@
 {
+    "version": "0.2.0",
     "configurations": [
-    {
-        "command": "npm start | awk -v UI_NO=_dev '{printf "dokimion_ui_"UI_NO; print $0}' | logger -p user.info",
-        "name": "Run npm start",
-        "request": "launch",
+      {
         "type": "chrome",
-         "url":  "http://192.168.56.107",
-        "skipFiles": [
-            "<node_internals>/**"
-        ],
-        "env": {
-            "NODE_OPTIONS": "--openssl-legacy-provider",
-        },
-
-    }
+        "request": "launch",
+        "name": "Launch Chrome against localhost",
+        "url": "http://192.168.56.107",
+        "webRoot": "${workspaceFolder}"
+      }
     ]
-}
+  }
