@@ -119,7 +119,7 @@ System.out.println("TestCaseResource::LockAllTestCases - projectId: " + projectI
 System.out.flush();
 
         List<TestCase> testcasesList = service.findAll(getUserSession(), projectId);
-        JSONObject jsonObj = new JSONObject();
+        JSONArray jsonAry = new JSONArray();
 
         for (TestCase testcase : testcasesList) {
            TestCase tc = service.lockTestCase(getUserSession(), projectId, 
@@ -131,10 +131,44 @@ System.out.flush();
            } else {
               status = "ERROR";
            }
-           jsonObj.put("testcase id: ", tc.getId() + "ok");
+
+           JSONObject jsonObj = new JSONObject();
+           jsonObj.put("testcase id: " + tc.getId() + ":",  status);
+           jsonAry.put(jsonObj);
+
         }
 
-        return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
+        return Response.ok(jsonAry.toString(), MediaType.APPLICATION_JSON).build();
+    }
+
+    @POST
+    @Path("/unlockall")
+    public Response UnlockAllTestCases(@PathParam("projectId") String projectId)
+                                 throws Exception {
+System.out.println("TestCaseResource::UnlockAllTestCases - projectId: " + projectId);
+System.out.flush();
+
+        List<TestCase> testcasesList = service.findAll(getUserSession(), projectId);
+        JSONArray jsonAry = new JSONArray();
+
+        for (TestCase testcase : testcasesList) {
+           TestCase tc = service.unlockTestCase(getUserSession(), projectId, 
+              testcase.getId());
+   
+           String status="";
+           if (tc != null) {
+              status = "OK";
+           } else {
+              status = "ERROR";
+           }
+
+           JSONObject jsonObj = new JSONObject();
+           jsonObj.put("testcase id: " + tc.getId() + ":",  status);
+           jsonAry.put(jsonObj);
+
+        }
+
+        return Response.ok(jsonAry.toString(), MediaType.APPLICATION_JSON).build();
     }
 
     @POST
