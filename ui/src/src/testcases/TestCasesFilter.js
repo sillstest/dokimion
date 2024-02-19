@@ -61,6 +61,7 @@ class TestCasesFilter extends Component {
     this.getSession = this.getSession.bind(this);
     this.onSessionChange = this.onSessionChange.bind(this);
     this.handleClose = this.handleClose.bind(this);
+    this.handleLockAllTestCases =this.handleLockAllTestCases.bind(this);
   }
 
   onSessionChange(session) {
@@ -329,6 +330,13 @@ async  handleBulkRemoveAttributes(){
     event.preventDefault();
   }
 
+  handleLockAllTestCases(){
+    const start = performance.now();
+    console.log("Entered in handleLockAllTestCases : " + start)
+    let result =  this.props.handleLockAllTestCases(this.state.testSuite.filter.filters);
+    console.log(`Execution time of Lock All Testcases operation : ${performance.now() - start} ms  with value ${result}`);
+  }
+
 
   render() {
     return (
@@ -434,19 +442,18 @@ async  handleBulkRemoveAttributes(){
           <div className="col-2"></div>
         
           {Utils.isAdmin(this.state.session) &&
-          <div className="col-3 btn-group" role="group">
-            
-            
+          <div className="col-4 btn-group" role="group">
             <button type="button" className="btn btn-primary" title="Add Attributes" data-toggle="modal" onClick={this.handleBulkAddAttributes}>
               Add Attributes
               </button>
               <button type="button" className="btn btn-danger" title="Remove Attributes" data-toggle="modal" onClick={this.handleBulkRemoveAttributes}>
                 Remove Attributes
               </button>
-              
-    
+              <button type="button" className="btn btn-warning" title="Lock All Testcases" data-toggle="modal" onClick={this.handleLockAllTestCases}>
+                Lock All Testcases
+              </button>
             </div>
-  }
+          }
           </div>
          
 

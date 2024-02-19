@@ -73,6 +73,7 @@ class TestCases extends SubComponent {
     this.handleBulkRemoveAttributes=this.handleBulkRemoveAttributes.bind(this);
     this.handleGetTCSizes = this.handleGetTCSizes.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleLockAllTestCases = this.handleLockAllTestCases.bind(this);
   }
 
   handleGetTCSizes() {
@@ -562,6 +563,24 @@ class TestCases extends SubComponent {
     return "OK";
   }
 
+//Added for Issue 84
+handleLockAllTestCases(){
+  console.log("Entered here in the handleLockAllTestcases in Testcases.js");
+  Backend.post( this.props.match.params.project +"/testcase/lockall")
+  .then(response => {
+    console.log("Locked all testcases : " + JSON.stringify(response));
+    // if(response.status === 200 ){
+      this.setState({errorMessage:"Locked All Testcases"});
+    // }
+  })
+  .catch(error => {
+    this.setState({errorMessage: "Couldn't lock all testcases: " + error});
+  });
+  this.props.history.push(
+    "/" + this.props.match.params.project +"/testcases"
+  );
+}
+
   render() {
     return (
       <div>
@@ -573,6 +592,7 @@ class TestCases extends SubComponent {
             project={this.props.match.params.project}
             handleBulkAddAttributes={this.handleBulkAddAttributes}
             handleBulkRemoveAttributes={this.handleBulkRemoveAttributes}
+            handleLockAllTestCases={this.handleLockAllTestCases}
           />
         </div>
 
