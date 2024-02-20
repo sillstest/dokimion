@@ -90,6 +90,9 @@ class TestCases extends SubComponent {
       .catch(error => {
         this.setState({errorMessage: "Couldn't fetch testcases number: " + error});
       });
+=======
+    this.handleLockAllTestCases = this.handleLockAllTestCases.bind(this);
+>>>>>>> origin/issue84
   }
 
   handleGetTCSizes() {
@@ -184,6 +187,7 @@ class TestCases extends SubComponent {
     
     Backend.get(this.props.match.params.project + "/testcase/tree?" + this.getFilterApiRequestParams(filter))
       .then(response => {
+        this.state.totolNoofTestCase = response.count;
         this.state.testcasesTree = response;
         this.state.loading = false;
         this.setState(this.state);
@@ -583,6 +587,24 @@ class TestCases extends SubComponent {
     return "OK";
   }
 
+//Added for Issue 84
+handleLockAllTestCases(){
+  console.log("Entered here in the handleLockAllTestcases in Testcases.js");
+  Backend.post( this.props.match.params.project +"/testcase/lockall")
+  .then(response => {
+    console.log("Locked all testcases : " + JSON.stringify(response));
+    // if(response.status === 200 ){
+      this.setState({errorMessage:"Locked All Testcases"});
+    // }
+  })
+  .catch(error => {
+    this.setState({errorMessage: "Couldn't lock all testcases: " + error});
+  });
+  this.props.history.push(
+    "/" + this.props.match.params.project +"/testcases"
+  );
+}
+
   render() {
     return (
       <div>
@@ -594,6 +616,7 @@ class TestCases extends SubComponent {
             project={this.props.match.params.project}
             handleBulkAddAttributes={this.handleBulkAddAttributes}
             handleBulkRemoveAttributes={this.handleBulkRemoveAttributes}
+            handleLockAllTestCases={this.handleLockAllTestCases}
           />
         </div>
 

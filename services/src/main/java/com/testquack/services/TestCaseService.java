@@ -68,6 +68,15 @@ public class TestCaseService extends BaseService<TestCase> {
 
     private final String UNKNOWN_GROUP = "None";
 
+    public List<TestCase> findAll(Session session, String projectId){
+
+        List<TestCase> testCases = repository.find(getCurrOrganizationId(session), 
+                       projectId, new TestcaseFilter());
+
+        return testCases;
+    }
+
+
     public TestCaseTree findFilteredTree(Session session, String projectId, TestcaseFilter filter) {
         TestCaseTree head = new TestCaseTree();
         List<TestCasePreview> testCases = userCanReadProject(session, projectId) ?
