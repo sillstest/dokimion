@@ -90,9 +90,7 @@ class TestCases extends SubComponent {
       .catch(error => {
         this.setState({errorMessage: "Couldn't fetch testcases number: " + error});
       });
-=======
     this.handleLockAllTestCases = this.handleLockAllTestCases.bind(this);
->>>>>>> origin/issue84
   }
 
   handleGetTCSizes() {
