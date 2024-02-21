@@ -62,6 +62,7 @@ class TestCasesFilter extends Component {
     this.onSessionChange = this.onSessionChange.bind(this);
     this.handleClose = this.handleClose.bind(this);
     this.handleLockAllTestCases =this.handleLockAllTestCases.bind(this);
+    this.handleUnLockAllTestCases=this.handleUnLockAllTestCases.bind(this);
   }
 
   onSessionChange(session) {
@@ -337,6 +338,14 @@ async  handleBulkRemoveAttributes(){
     console.log(`Execution time of Lock All Testcases operation : ${performance.now() - start} ms  with value ${result}`);
   }
 
+  handleUnLockAllTestCases(){
+    const start = performance.now();
+    console.log("Entered in handleUnLockAllTestCases : " + start)
+    let result =  this.props.handleUnLockAllTestCases(this.state.testSuite.filter.filters);
+    console.log(`Execution time of Unlock All Testcases operation : ${performance.now() - start} ms  with value ${result}`);
+    
+  }
+
   render() {
     return (
       <div>
@@ -449,7 +458,10 @@ async  handleBulkRemoveAttributes(){
                 Remove Attributes
               </button>
               <button type="button" className="btn btn-warning" title="Lock All Testcases" data-toggle="modal" onClick={this.handleLockAllTestCases}>
-                Lock All Testcases
+                Lock All TestCases
+              </button>
+              <button type="button" className="btn btn-success" title="Unlock All Testcases" data-toggle="modal" onClick={this.handleUnLockAllTestCases}>
+               Unlock All TestCases
               </button>
             </div>
           }
