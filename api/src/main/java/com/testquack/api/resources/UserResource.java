@@ -77,6 +77,10 @@ System.out.flush();
 System.out.println("UserResource::delete - login: " + login);
 System.out.flush();
         service.delete(getSession(), null, getUser(login).getId());
+
+        System.out.println("UserResource::delete - session id: " + getSession().getId());
+        System.out.flush();
+
         return Response.ok().build();
     }
 
