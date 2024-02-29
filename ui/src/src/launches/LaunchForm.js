@@ -33,6 +33,7 @@ class LaunchForm extends SubComponent {
       failedOnly: props.failedOnly || false,
       loading: false,
       errorMessage: "",
+      modalName : props.modalName,
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -91,6 +92,9 @@ class LaunchForm extends SubComponent {
     if (nextProps.launch && nextProps.launch.id) {
       this.state.launch = nextProps.launch;
     }
+    if(nextProps.modalName){
+      this.state.modalName = nextProps.modalName;
+    }
     this.setState(this.state);
   }
 
@@ -134,7 +138,12 @@ class LaunchForm extends SubComponent {
   }
 
   launchModalDismiss() {
-    $("#launch-modal").modal("hide");
+     //Updated Issue 92
+     if(typeof this.state.modalName === 'string' && this.state.modalName.length > 0 && this.state.modalName ==='launch-modal'){
+       $("#launch-modal").modal("hide");
+     }else{
+     $("#restart-launch-modal").modal("hide");
+    }
   }
 
   render() {

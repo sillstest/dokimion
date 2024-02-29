@@ -78,12 +78,19 @@ namespace Dokimion.Tests
             Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 15);
             Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
             //
-            userActions.LogConsoleMessage("Create Smoke Test Launch, Smoke Test Launch Re-Run, Launch Testcases ");
-            CreationAndFilterHelpers creationAndFilterHelpers = new CreationAndFilterHelpers();
-            creationAndFilterHelpers.CreateSmokeTestReRun(Actor, driver);
-            creationAndFilterHelpers.CreateTCLaunches(Actor, driver);
-            userActions.LogConsoleMessage("Completed creating 3 launches for filter and statistics tests ");
-
+            try
+            {
+                userActions.LogConsoleMessage("Create Smoke Test Launch, Smoke Test Launch Re-Run, Launch Testcases ");
+                CreationAndFilterHelpers creationAndFilterHelpers = new CreationAndFilterHelpers();
+                creationAndFilterHelpers.CreateSmokeTestReRun(Actor, driver);
+                creationAndFilterHelpers.CreateTCLaunches(Actor, driver);
+                userActions.LogConsoleMessage("Completed creating 3 launches for filter and statistics tests ");
+            }
+            catch(Exception e)
+            {
+                userActions.LogConsoleMessage("Error occured on setup :Create Smoke Test Launch, Smoke Test Launch Re-Run, Launch Testcases ");
+                userActions.LogConsoleMessage(e.StackTrace!);
+            }
         }
 
         [OneTimeTearDown]

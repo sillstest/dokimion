@@ -320,6 +320,10 @@ class Launch extends SubComponent {
               {this.state.launch.name}
             </Link>
           </h3>
+          {/* Added for Issue 82 */}
+          <div>
+            Number of Testcases : <span style={{fontWeight : 'bold'}}>{this.state.launch.launchStats.total}</span>
+          </div>
         </div>
         <div className="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
@@ -449,7 +453,7 @@ class Launch extends SubComponent {
           aria-labelledby="launchLabel"
           aria-hidden="true"
         >
-          <LaunchForm launch={this.state.launch} restart={true} failedOnly={this.state.restartFailedOnly} />
+          <LaunchForm launch={this.state.launch} restart={true} failedOnly={this.state.restartFailedOnly} modalName="restart-launch-modal" />
         </div>
       </div>
     );

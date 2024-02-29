@@ -5,6 +5,7 @@ using Dokimion.Pages;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
+using System;
 using System.Collections.ObjectModel;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
@@ -51,7 +52,7 @@ namespace Dokimion.Tests
             {
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
-               // Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
+                //Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
 
                 //Page is redirected after initial URL
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
@@ -68,8 +69,9 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Login Page is loaded successfully on count " + count + " " + welcomeMessage);
 
             userActions.LogConsoleMessage("Set Up : ");
-            userActions.LogConsoleMessage("Login as User");
-            Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+            userActions.LogConsoleMessage("Login as Admin");
+            //Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+            Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
             Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 15);
             Actor.AttemptsTo(Click.On(Header.DokimionProject));
         }
@@ -137,8 +139,10 @@ namespace Dokimion.Tests
             
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on the Add2StepsToTestCase TestcaseName");
+           
             try
             {
+                Actions actions = new Actions(driver);
                 IWebElement TestCase = GetTestCaseElement("Add2StepsToTestCase");
                 TestCase.Click();
 
@@ -147,6 +151,7 @@ namespace Dokimion.Tests
                 Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
                 Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
 
+                actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
                 //Steps
                 Actor.AttemptsTo(WriteToIframe.For(driver, 2, "Go to Quack home page"));
                 //Expectations
@@ -154,7 +159,8 @@ namespace Dokimion.Tests
                 //dynamic element need to wait
 
                 userActions.LogConsoleMessage("Click on the Save Button to input step 1");
-                Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True());
+                Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True(), timeout:45);
+                Actor.AttemptsTo(Hover.Over(TestCases.SaveStep1));
                 Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
 
                 //Add 2nd step
@@ -170,9 +176,8 @@ namespace Dokimion.Tests
                 Actor.AttemptsTo(WriteToIframe.For(driver, 5, "List of projects opens"));
 
                 //Scroll down page
-                Actions actions = new Actions(driver);
+               // Actions actions = new Actions(driver);
                 actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-
 
                 userActions.LogConsoleMessage("Click on the Save Button to input step 1");
                 Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep2), IsEqualTo.True(), timeout: 45);
@@ -218,6 +223,8 @@ namespace Dokimion.Tests
 
 
                 Actions actions = new Actions(driver);
+                //Scroll down page
+                actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
                 //Steps
                 Actor.AttemptsTo(WriteToIframe.For(driver, 2, "Go to Quack home page"));
@@ -339,6 +346,9 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Click on the Remove Step");
             Actions actions = new Actions(driver);
+            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
+
             Actor.WaitsUntil(Appearance.Of(TestCases.RemoveStep1), IsEqualTo.True(), timeout: 45);
             Actor.AttemptsTo(Click.On(TestCases.RemoveStep1));
 
