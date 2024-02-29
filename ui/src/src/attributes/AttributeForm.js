@@ -4,13 +4,17 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+import * as Utils from "../common/Utils";
+import equal from "fast-deep-equal";
 
 class AttributeForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
       attribute: props.attribute,
+      projectAttributes: props.projectAttributes,
       errorMessage: "",
+      edit : props.edit,
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -19,10 +23,13 @@ class AttributeForm extends Component {
     this.addValue = this.addValue.bind(this);
     this.removeValue = this.removeValue.bind(this);
     this.handleRemove = this.handleRemove.bind(this);
+    this.handleClose = this.handleClose.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.setState({ attribute: nextProps.attribute });
+    this.setState({ attribute: nextProps.attribute, 
+      projectAttributes:nextProps.projectAttributes, 
+      edit: nextProps.edit});
   }
 
   handleChange(event) {
@@ -41,21 +48,33 @@ class AttributeForm extends Component {
   }
 
   handleSubmit(event) {
-    Backend.post(this.props.project + "/attribute", this.state.attribute)
-      .then(response => {
-        this.props.onAttributeAdded(response);
-        this.state.attribute = {
-          id: null,
-          name: "",
-          attrValues: [],
-        };
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "Couldn't save attributes: " + error});
-      });
+    //Added code for Issue 40
+    var duplicate = this.state.projectAttributes.filter(attr => (attr.name.toLowerCase()) ===
+                                          (this.state.attribute.name).toLowerCase()).length>0 ? true: false;
+    console.log("Duplicate : " + duplicate + " : EDIT : " + this.state.edit);
+    if(duplicate && !this.state.edit ){
+        this.setState({errorMessage:'Duplicate Attribute '}) 
+  
+    }else if(typeof this.state.attribute.name ==='string' && this.state.attribute.name.length ===0 ){
+      this.setState({errorMessage:'Enter valid attribute '})
+      }else if(this.state.attribute.name){
+      //Add
+        Backend.post(this.props.project + "/attribute", this.state.attribute)
+          .then(response => {
+            this.props.onAttributeAdded(response);
+            this.state.attribute = {
+              id: null,
+              name: "",
+              attrValues: [],
+            };
+            this.setState(this.state);
+          })
+          .catch(error => {
+            this.setState({errorMessage: "Couldn't save attributes: " + error});
+          });
+    }
     event.preventDefault();
-  }
+  }  
 
   handleRemove(event) {
     Backend.delete(this.props.project + "/attribute/" + this.state.attribute.id)
@@ -73,6 +92,20 @@ class AttributeForm extends Component {
       });
     event.preventDefault();
   }
+
+
+
+  handleClose(event) {
+        this.state.attribute = {
+          id: null,
+          name: "",
+          attrValues: [],
+        };
+        this.state.errorMessage='';
+        this.setState(this.state);
+    event.preventDefault();
+  }
+
 
   addValue(event) {
     this.state.attribute.attrValues.push({ value: "" });
@@ -101,7 +134,7 @@ class AttributeForm extends Component {
             <h5 className="modal-title" id="editAttributeLabel">
               Attribute
             </h5>
-            <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+            <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.handleClose}>
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
@@ -152,7 +185,7 @@ class AttributeForm extends Component {
             <button type="button" className="btn btn-primary" onClick={this.handleSubmit}>
               Save changes
             </button>
-            <button type="button" className="btn btn-secondary" data-dismiss="modal">
+            <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.handleClose}>
               Close
             </button>
             {this.state.attribute.id && (

@@ -3,16 +3,17 @@ import Moment from "moment/min/moment.min.js";
 import * as UserSession from "../user/UserSession";
 import $ from "jquery";
 import qs from "qs";
-
+import Backend from "../services/backend";
 export function intDiv(val, by) {
   return (val - (val % by)) / by;
 }
 
-export function parseTree(testcasesTree, uncheckedList) {
-  return getTreeNode(testcasesTree, [], uncheckedList).children || [];
+export function parseTree(testcasesTree, uncheckedList, tcSizes) {
+  sortTestcaseTree(testcasesTree);
+  return getTreeNode(testcasesTree, [], uncheckedList, tcSizes).children || [];
 }
 
-export function getTreeNode(node, parentsToUpdate, uncheckedList) {
+export function getTreeNode(node, parentsToUpdate, uncheckedList, tcSizes) {
   uncheckedList = uncheckedList || [];
   var resultNode = {
     text: "<b>" + node.title + "</b>",
@@ -31,7 +32,7 @@ export function getTreeNode(node, parentsToUpdate, uncheckedList) {
     resultNode.children = [];
     node.testCases.forEach(function (testCase) {
       resultNode.children.push({
-        text: getSizeOfTestcase(testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + "<span class='text-muted'> (" + testCase.id + ")</span>",
+        text: getSizeOfTestcase(tcSizes, testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + "<span class='text-muted'> (" + testCase.id + ")</span>",
         id: testCase.id,
         uuid: testCase.uuid,
         isLeaf: true,
@@ -50,7 +51,7 @@ export function getTreeNode(node, parentsToUpdate, uncheckedList) {
   }
   if (node.children && node.children.length > 0) {
     resultNode.children = node.children.map(function (child) {
-      return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList);
+      return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList, tcSizes);
     });
   }
   return resultNode;
@@ -385,23 +386,39 @@ export function getChartSeriesConfig() {
   };
 }
 
-export function getSizeOfTestcase(steps) {
+export function getSizeOfTestcase(tcSizes, steps) {
   var html = '';
+
+  if (tcSizes == undefined || tcSizes.length == 0) {
+     console.log("getSizeOfTestcase:: test case sizes not loaded yet");
+     return;
+  }
+
   if(steps && steps.length > 0 )
   {
     var actions = steps[0].action ? steps[0].action : "";
     actions += steps[0].expectation ? steps[0].expectation : "";
-    if(actions){
+
+    if (actions) {
       var lines = actions.split("<br>");
-       var noOfLines =   lines.length;
-      if(noOfLines <= 25){
+      var noOfLines =   lines.length;
+
+      const smallIndex = tcSizes.findIndex(e => e.name == "small");
+      const mediumIndex = tcSizes.findIndex(e => e.name == "medium");
+      const largeIndex = tcSizes.findIndex(e => e.name == "large");
+      if (smallIndex == -1 || mediumIndex == -1 || largeIndex == -1) {
+         console.log("getSizeOfTestcase - tcSizes index invalid");
+      }
+
+      if (noOfLines <= tcSizes[smallIndex].maxLines) {
         html = `<span style='color:green;font-style:italic;font-weight:bold;'>SML</span>`
-      }else if(noOfLines > 25 && noOfLines <= 100 ){
+      } else if(noOfLines > tcSizes[mediumIndex].minLines && noOfLines <= tcSizes[mediumIndex].maxLines){
         html = `<span style='color:#DAA520;font-style:italic;font-weight:bold;'>MED</span>`
-      }else if(noOfLines > 100)
+      } else if (noOfLines > tcSizes[largeIndex].minLines)
       {
           html = `<span style='color:red;font-style:italic;font-weight:bold;'>LRG</span>`
       }
+
     }else{
       console.log("No Steps"  + actions);
     }
@@ -411,3 +428,15 @@ export function getSizeOfTestcase(steps) {
   return html 
 }
 
+function sortTestcaseTree(testcasesTree){
+   //Add generic logic to sort the testcasesTree on Id Issue 28
+   if(testcasesTree.testCases && testcasesTree.testCases.length>0){
+
+    testcasesTree.testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+
+  }else if(testcasesTree.children && testcasesTree.children.length >0){
+
+    testcasesTree.children[0].testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+  }
+
+}

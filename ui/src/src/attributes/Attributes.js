@@ -17,6 +17,7 @@ class Attributes extends SubComponent {
         attrValues: [],
       },
       loading: true,
+      edit:false,
     };
     this.onAttributeAdded = this.onAttributeAdded.bind(this);
     this.onAttributeRemoved = this.onAttributeRemoved.bind(this);
@@ -50,6 +51,7 @@ class Attributes extends SubComponent {
 
   editAttribute(i, event) {
     this.state.attributeToEdit = this.state.attributes[i];
+    this.state.edit = true;
     this.setState(this.state);
     $("#editAttribute").modal("show");
   }
@@ -106,9 +108,11 @@ class Attributes extends SubComponent {
         >
           <AttributeForm
             project={this.props.match.params.project}
+            projectAttributes={this.state.attributes}
             attribute={this.state.attributeToEdit}
             onAttributeRemoved={this.onAttributeRemoved}
             onAttributeAdded={this.onAttributeAdded}
+            edit={this.state.edit}
           />
         </div>
       </div>
