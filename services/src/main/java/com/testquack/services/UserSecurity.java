@@ -69,7 +69,6 @@ System.out.flush();
 
      User user = (User)userRepository.findOne(organizationId, projectId, loginId);
 
-
      Role userRole = translateRoleFormat(user.getRole());
 
      List<RoleCapability> roleCapList = roleCapRepository.find(
@@ -131,6 +130,23 @@ System.out.flush();
 
    }
 
+  public static boolean isAdmin(
+                          UserRepository           userRepository, 
+                          RoleCapabilityRepository roleCapRepository,
+                          String                   loginId ) {
+
+     if (loginId.equals("admin") == true) 
+        return true;
+
+     User user = (User)userRepository.findOne(null, null, loginId);
+     Role userRole = translateRoleFormat(user.getRole());
+
+     if (userRole.equals("ADMIN") == true)
+        return true;
+
+     return false;
+
+ }
 
   private static Role translateRoleFormat(String role) {
 

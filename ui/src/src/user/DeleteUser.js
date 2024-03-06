@@ -36,7 +36,7 @@ class DeleteUser extends Component {
   handleSubmit(event) {
     Backend.delete("user/" + this.state.login)
         .then(response => {
-          window.location.href = "/";
+	  window.location = decodeURI("/user/profile/" + this.state.login);
         }).catch(error => {
           this.setState({message: "Couldn't delete a user: " + error});
         });

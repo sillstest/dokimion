@@ -54,6 +54,7 @@ System.out.println("UserService::userCanSave - session: " + session);
 System.out.println("UserService::userCanSave - login: " + login);
 System.out.flush();
 
+
         return isAdmin(session) || login.equals(session.getPerson().getLogin());
     }
 
@@ -64,6 +65,15 @@ System.out.flush();
 
     @Override
     protected boolean userCanDelete(Session session, String projectId, String id) {
+
+System.out.println("UserService::userCanDelete");
+System.out.flush();
+        User user = findOne(session, projectId, id);
+        if (user.isLocked()) {
+System.out.println("UserService::userCanDelete - isLocked = true");
+System.out.flush();
+           return false;
+        }
         return userCanSave(session, id);
     }
 
@@ -86,8 +96,8 @@ System.out.println("UserService.findOne - projectId, id: " + projectId + "," + i
 System.out.println("UserService.findOne - session: " + session);
 System.out.flush();
 
-        //return cleanUserSesitiveData(super.findOne(session, projectId, id));
-        User user = cleanUserSesitiveData(super.findOne(session, projectId, id));
+        //return cleanUserSensitiveData(super.findOne(session, projectId, id));
+        User user = cleanUserSensitiveData(super.findOne(session, projectId, id));
 
 System.out.println("UserService.findOne - user: " + user);
 System.out.flush();
@@ -168,9 +178,34 @@ System.out.flush();
     }
 
 
-    private User cleanUserSesitiveData(User user){
+    private User cleanUserSensitiveData(User user){
         return user.withPassword(null).withToken(null);
     }
 
+    public boolean setLocked(Session session, boolean lockedValue) {
+
+       String userLogin;
+       if (session.getLogin() != null) {
+	  userLogin = session.getLogin();
+       } else {
+          userLogin = session.getPerson().getLogin();
+       }
+
+       if (UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
+
+          User user = findOne(session, null, userLogin);
+          user.setLocked(lockedValue);
+          User updatedUser = save(session, null, user);
+          if (updatedUser == null) {
+             System.out.println("UserService::setLocked - updatedUser = null");
+             System.out.flush();
+             return false;
+          }
+          return true;
+
+       }
+
+       return false;
+    }
 
 }
