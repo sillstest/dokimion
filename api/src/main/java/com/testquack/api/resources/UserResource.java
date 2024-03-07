@@ -279,8 +279,12 @@ System.out.println("UserResource::login - role: " + thisRole);
     public Response logout() {
 
 	Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
-	System.out.println("UserResource:::doLogout - sid: " + sid);
+System.out.println("UserResource:::logout - sid: " + sid);
+System.out.flush();
         Session session = sessionProvider.getSessionById(sid.getValue());
+
+System.out.println("UserResource::logout - session: " + session);
+System.out.flush();
 
 	if (service.setLocked(session, false) == false) {
 	   System.out.println("UserResource::logout - setLocked false failed");

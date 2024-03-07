@@ -50,11 +50,6 @@ public class UserService extends BaseService<User> {
 
     protected boolean userCanSave(Session session, String login) {
 
-System.out.println("UserService::userCanSave - session: " + session);
-System.out.println("UserService::userCanSave - login: " + login);
-System.out.flush();
-
-
         return isAdmin(session) || login.equals(session.getPerson().getLogin());
     }
 
@@ -66,12 +61,8 @@ System.out.flush();
     @Override
     protected boolean userCanDelete(Session session, String projectId, String id) {
 
-System.out.println("UserService::userCanDelete");
-System.out.flush();
         User user = findOne(session, projectId, id);
         if (user.isLocked()) {
-System.out.println("UserService::userCanDelete - isLocked = true");
-System.out.flush();
            return false;
         }
         return userCanSave(session, id);
@@ -92,17 +83,7 @@ System.out.flush();
     @Override
     public User findOne(Session session, String projectId, String id) {
 
-System.out.println("UserService.findOne - projectId, id: " + projectId + "," + id);
-System.out.println("UserService.findOne - session: " + session);
-System.out.flush();
-
-        //return cleanUserSensitiveData(super.findOne(session, projectId, id));
-        User user = cleanUserSensitiveData(super.findOne(session, projectId, id));
-
-System.out.println("UserService.findOne - user: " + user);
-System.out.flush();
-
-        return user;
+        return cleanUserSensitiveData(super.findOne(session, projectId, id));
     }
 
     @Override
@@ -131,6 +112,8 @@ System.out.flush();
     }
 
     public void changePassword(Session session, String login, String oldPassword, String newPassword) {
+System.out.println("changePassword - session: " + session);
+System.out.flush();
         if (userCanSave(session, login)){
             User user = findOne(getCurrOrganizationId(session), new Filter().withField("login", login));
 	    StringBuilder exceptionMessage = new StringBuilder("");
@@ -148,8 +131,8 @@ System.out.flush();
 
     public Session changeOrganization(Session session, String organizationId){
         if (!isUserInOrganization(session, organizationId)){
-            throw new EntityNotFoundException("Organization " + organizationId + " not found");
-        }
+		throw new EntityNotFoundException("Organization " + organizationId + " not found");
+	}
         session.getMetainfo().put(CURRENT_ORGANIZATION_KEY, organizationId);
         return session;
     }
@@ -184,23 +167,27 @@ System.out.flush();
 
     public boolean setLocked(Session session, boolean lockedValue) {
 
-       String userLogin;
-       if (session.getLogin() != null) {
-	  userLogin = session.getLogin();
-       } else {
-          userLogin = session.getPerson().getLogin();
-       }
+       String userLogin = session.getPerson().getLogin();
+       String userPassword = session.getPerson().getPassword();
 
-       if (UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
+       if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
 
           User user = findOne(session, null, userLogin);
           user.setLocked(lockedValue);
+          user.setLogin(userLogin);
+	  if (!userPassword.equals("")) 
+             user.setPassword(userPassword);
+
           User updatedUser = save(session, null, user);
+System.out.println("setLocked - updatedUser: " + updatedUser);
+System.out.flush();
           if (updatedUser == null) {
              System.out.println("UserService::setLocked - updatedUser = null");
              System.out.flush();
              return false;
           }
+ System.out.println("setLocked - set lock = " + lockedValue);
+ System.out.flush();
           return true;
 
        }
