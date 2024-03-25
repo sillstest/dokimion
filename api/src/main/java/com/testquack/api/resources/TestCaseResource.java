@@ -18,6 +18,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.greatbit.whoru.jaxrs.Authenticable;
+import org.json.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -108,6 +109,66 @@ public class TestCaseResource extends BaseCrudResource<TestCase> {
                                 @PathParam("testcaseId") final String testcaseId,
                                 @RequestBody Issue issue) throws Exception {
         return service.createIssue(request, getUserSession(), projectId, testcaseId, issue);
+    }
+
+    @POST
+    @Path("/lockall")
+    public Response LockAllTestCases(@PathParam("projectId") String projectId)
+                                 throws Exception {
+System.out.println("TestCaseResource::LockAllTestCases - projectId: " + projectId);
+System.out.flush();
+
+        List<TestCase> testcasesList = service.findAll(getUserSession(), projectId);
+        JSONArray jsonAry = new JSONArray();
+
+        for (TestCase testcase : testcasesList) {
+           TestCase tc = service.lockTestCase(getUserSession(), projectId, 
+              testcase.getId());
+   
+           String status="";
+           if (tc != null) {
+              status = "OK";
+           } else {
+              status = "ERROR";
+           }
+
+           JSONObject jsonObj = new JSONObject();
+           jsonObj.put("testcase id: " + tc.getId() + ":",  status);
+           jsonAry.put(jsonObj);
+
+        }
+
+        return Response.ok(jsonAry.toString(), MediaType.APPLICATION_JSON).build();
+    }
+
+    @POST
+    @Path("/unlockall")
+    public Response UnlockAllTestCases(@PathParam("projectId") String projectId)
+                                 throws Exception {
+System.out.println("TestCaseResource::UnlockAllTestCases - projectId: " + projectId);
+System.out.flush();
+
+        List<TestCase> testcasesList = service.findAll(getUserSession(), projectId);
+        JSONArray jsonAry = new JSONArray();
+
+        for (TestCase testcase : testcasesList) {
+           TestCase tc = service.unlockTestCase(getUserSession(), projectId, 
+              testcase.getId());
+   
+           String status="";
+           if (tc != null) {
+              status = "OK";
+           } else {
+              status = "ERROR";
+           }
+
+           JSONObject jsonObj = new JSONObject();
+           jsonObj.put("testcase id: " + tc.getId() + ":",  status);
+           jsonAry.put(jsonObj);
+
+        }
+
+        return Response.ok(jsonAry.toString(), MediaType.APPLICATION_JSON).build();
     }
 
     @POST

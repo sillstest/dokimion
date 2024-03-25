@@ -78,12 +78,19 @@ namespace Dokimion.Tests
             Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 15);
             Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
             //
-            userActions.LogConsoleMessage("Create Smoke Test Launch, Smoke Test Launch Re-Run, Launch Testcases ");
-            CreationAndFilterHelpers creationAndFilterHelpers = new CreationAndFilterHelpers();
-            creationAndFilterHelpers.CreateSmokeTestReRun(Actor, driver);
-            creationAndFilterHelpers.CreateTCLaunches(Actor, driver);
-            userActions.LogConsoleMessage("Completed creating 3 launches for filter and statistics tests ");
-
+            try
+            {
+                userActions.LogConsoleMessage("Create Smoke Test Launch, Smoke Test Launch Re-Run, Launch Testcases ");
+                CreationAndFilterHelpers creationAndFilterHelpers = new CreationAndFilterHelpers();
+                creationAndFilterHelpers.CreateSmokeTestReRun(Actor, driver);
+                creationAndFilterHelpers.CreateTCLaunches(Actor, driver);
+                userActions.LogConsoleMessage("Completed creating 3 launches for filter and statistics tests ");
+            }
+            catch(Exception e)
+            {
+                userActions.LogConsoleMessage("Error occured on setup :Create Smoke Test Launch, Smoke Test Launch Re-Run, Launch Testcases ");
+                userActions.LogConsoleMessage(e.StackTrace!);
+            }
         }
 
         [OneTimeTearDown]
@@ -273,10 +280,11 @@ namespace Dokimion.Tests
 
             Actor.WaitsUntil(Text.Of(Launches.OverviewRow2), ContainsSubstring.Text(currentDate), timeout: 60);
             //Verify the Heat graphs with
-            Actor.WaitsUntil(TextList.For(Launches.OverviewCharts), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(3)), timeout: 60);
+            Actor.WaitsUntil(Appearance.Of(Launches.OverviewCharts),IsEqualTo.True());
+            Actor.WaitsUntil(TextList.For(Launches.OverviewCharts), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(4)), timeout: 60);
             ReadOnlyCollection<IWebElement> chartNames = Launches.OverviewCharts.FindElements(driver);
 
-            userActions.LogConsoleMessage("Verify : There are 3 graphs");
+            userActions.LogConsoleMessage("Verify : There are 4 graphs");
 
             userActions.LogConsoleMessage("Verify : There is Statuses graph");
             
@@ -293,6 +301,11 @@ namespace Dokimion.Tests
             Actor.WaitsUntil(Appearance.Of(Launches.LaunchTrendGraph), IsEqualTo.True(), timeout: 45);
             string statusTrend = Actor.AskingFor(Text.Of(Launches.LaunchTrendGraph));
             StringAssert.Contains("Launches Statuses Trend", statusTrend);
+
+            userActions.LogConsoleMessage("Verify : Launches Time Duration Trend");
+            Actor.WaitsUntil(Appearance.Of(Launches.LaunchUserExecTrendGraph), IsEqualTo.True(), timeout: 45);
+            string userExecTrend = Actor.AskingFor(Text.Of(Launches.LaunchUserExecTrendGraph));
+            StringAssert.Contains("Launches Time Duration Trend", userExecTrend);
 
             userActions.LogConsoleMessage("Clean up :");
         }

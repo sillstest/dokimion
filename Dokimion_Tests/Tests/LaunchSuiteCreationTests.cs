@@ -52,7 +52,7 @@ namespace Dokimion.Tests
             try
             {
                 Actor.Can(BrowseTheWeb.With(driver));
-                // Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));// userActions.DokimionUrl));
+                 //Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));// userActions.DokimionUrl));
                 Actor.AttemptsTo(Navigate.ToUrl( userActions.DokimionUrl));
                 //Page is redirected after initial URL
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
@@ -106,6 +106,7 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Click.On(Header.TestCases));
 
             userActions.LogConsoleMessage("Click on the Grouping Select Input");
+            Actor.AttemptsTo(Hover.Over(TestCases.GroupingSelect));
             Actor.AttemptsTo(Click.On(TestCases.GroupingSelect));
             //From the drop down 
             userActions.LogConsoleMessage("Select from dropdown: Functionality, Priority and Placement ");
@@ -135,6 +136,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Click on the Filter button");
 
+            Actor.AttemptsTo(Hover.Over(TestCases.FilterLocator));
             Actor.AttemptsTo(Click.On(TestCases.FilterLocator));
             Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(6)), timeout: 60);
             ReadOnlyCollection<IWebElement> Tc = TestCases.TestCaseTreeListMain.FindElements(driver);
@@ -281,7 +283,7 @@ namespace Dokimion.Tests
             //Reset filters on Group and 
             IWebLocator FilterSelectSVG = new WebLocator("FilterSelectSVG", By.XPath("//*[local-name()='svg' and @data-icon='minus-circle']"));
             ReadOnlyCollection<IWebElement> minusSVGS = FilterSelectSVG.FindElements(driver);
-            for(int i = 0; i < minusSVGS.Count; i++)
+            for (int i = 0; i < minusSVGS.Count; i++)
             {
                 IWebLocator deleteSVGICON = new WebLocator("deleteSVGICON", By.XPath("(//*[local-name()='svg' and @data-icon='minus-circle'])[1]"));
                 Actor.WaitsUntil(Appearance.Of(deleteSVGICON), IsEqualTo.True());

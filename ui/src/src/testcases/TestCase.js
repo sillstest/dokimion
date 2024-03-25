@@ -124,8 +124,8 @@ class TestCase extends SubComponent {
       this.state.launchId = this.props.launchId;
     }
     this.getSession();
+
     this.setState(this.state);
-    
   }
 
   onSessionChange(session) {
@@ -161,6 +161,7 @@ class TestCase extends SubComponent {
     if (nextProps.projectId) {
       this.projectId = nextProps.projectId;
     }
+    
     this.setState(this.state);
   }
 
@@ -177,6 +178,23 @@ class TestCase extends SubComponent {
         this.state.attributesInEdit.clear();
         this.state.propertiesInEdit.clear();
         this.state.loading = false;
+
+        //Adding code for 79
+        this.getSession();
+        // Tester is to be readonly always.
+        // Test Developer is read only when the test is locked.
+        var roles = this.state.session.person.roles &&  this.state.session.person.roles.length>0 ? this.state.session.person.roles :[];
+
+        var isTester =  roles && roles.filter(val => val.includes('TESTER')).length >0 ? true : false;
+        var isTestDeveloper =  roles && roles.filter(val => val.includes('TESTDEVELOPER')).length >0 ? true : false;
+        console.log("Role is a ?" + isTester + " " + isTestDeveloper + this.state.testcase.locked);
+        if(isTester){
+            this.state.readonly = true;
+          }else if(isTestDeveloper && this.state.testcase.locked )
+          {
+            this.state.readonly = true;
+          }
+
         this.setState(this.state);
       })
       .catch(error => {
@@ -696,8 +714,9 @@ class TestCase extends SubComponent {
                 {!this.state.readonly && (
                   <div id="description-form" className="inplace-form" style={{ display: "none" }}>
                     <Editor
+                      tinymceScriptSrc='/tinymce/tinymce.min.js'
                       initialValue={this.state.testcase.description}
-                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
                         height: 500,
                         menubar: false,
@@ -753,8 +772,9 @@ class TestCase extends SubComponent {
                 {!this.state.readonly && (
                   <div id="preconditions-form" className="inplace-form" style={{ display: "none" }}>
                     <Editor
+                      tinymceScriptSrc='/tinymce/tinymce.min.js'
                       initialValue={this.state.testcase.preconditions}
-                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
                         height: 500,
                         menubar: false,
@@ -801,8 +821,9 @@ class TestCase extends SubComponent {
                           <div className="card-body">
                             <p className="card-text">
                               <Editor
+                                tinymceScriptSrc='/tinymce/tinymce.min.js'
                                 initialValue={this.state.testcase.steps[i].action}
-                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
                                   height: 300,
                                   menubar: false,
@@ -816,8 +837,9 @@ class TestCase extends SubComponent {
                             <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                             <p className="card-text">
                               <Editor
+                                tinymceScriptSrc='/tinymce/tinymce.min.js'
                                 initialValue={this.state.testcase.steps[i].expectation}
-                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
                                   height: 300,
                                   menubar: false,
@@ -917,8 +939,9 @@ class TestCase extends SubComponent {
                               <h6 className="card-subtitle mb-2 text-muted">{i + 1}. Step</h6>
                               <p className="card-text">
                                 <Editor
+                                  tinymceScriptSrc='/tinymce/tinymce.min.js'
                                   initialValue={this.state.testcase.steps[i].action}
-                                  apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                  // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
                                     height: 300,
                                     menubar: false,
@@ -932,8 +955,9 @@ class TestCase extends SubComponent {
                               <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                               <p className="card-text">
                                 <Editor
+                                  tinymceScriptSrc='/tinymce/tinymce.min.js'
                                   initialValue={this.state.testcase.steps[i].expectation}
-                                  apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                  // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
                                     height: 300,
                                     menubar: false,
@@ -1276,7 +1300,7 @@ class TestCase extends SubComponent {
 
           &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 
-          {!this.state.readonly && (
+          {!this.state.readonly &&  (Utils.isAdmin(this.state.session))  &&(
             <ConfirmButton
              onSubmit={this.removeTestcase}
              buttonClass={"btn btn-danger float-right"}

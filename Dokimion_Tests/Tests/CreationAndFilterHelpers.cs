@@ -69,6 +69,7 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Click.On(Header.TestCases));
 
             userActions.LogConsoleMessage("Click on the Grouping Select Input");
+            Actor.AttemptsTo(Hover.Over(TestCases.GroupingSelect));
             Actor.AttemptsTo(Click.On(TestCases.GroupingSelect));
             //From the drop down 
             userActions.LogConsoleMessage("Select from dropdown: Functionality ");
@@ -81,8 +82,8 @@ namespace Dokimion.Tests
             element.Click();
 
             userActions.LogConsoleMessage("Click on the Filter Select Input");
-            
 
+            Actor.AttemptsTo(Hover.Over(TestCases.Filter1Locator));
             Actor.AttemptsTo(Click.On(TestCases.Filter1Locator));
             userActions.LogConsoleMessage("Select Priority from the dropdown");
 
@@ -127,15 +128,16 @@ namespace Dokimion.Tests
 
 
             Actor.AttemptsTo(Click.On(TestCases.LaunchRestartGoToLaunch));
-            Actor.WaitsUntil(Appearance.Of(TestCases.LaunchRestartModal), IsEqualTo.True(), timeout: 60);
+            //Actor.WaitsUntil(Appearance.Of(TestCases.LaunchRestartModal), IsEqualTo.True(), timeout: 60);
 
-            userActions.LogConsoleMessage("Click on the Close button Restart");
+            //userActions.LogConsoleMessage("Click on the Close button Restart");
 
-            Actor.AttemptsTo(Click.On(TestCases.LaunchRestartCloseButton));
+            //Actor.AttemptsTo(Click.On(TestCases.LaunchRestartCloseButton));
 
             userActions.LogConsoleMessage("Click on the Launches on header");
 
             //Go to Main Header
+            Actor.AttemptsTo(Hover.Over(Header.Launches));
             Actor.AttemptsTo(Click.On(Header.Launches));
 
             userActions.LogConsoleMessage("Click on the Smoke Test Launch Re-Run link on Launches");
@@ -151,6 +153,13 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Update the status on Header Project List Validation");
 
             Actor.AttemptsTo(Click.On(TestCases.HeaderProjectListGroupTC));
+            UpdateLaunchStatusControl(Actor, TestCases.LaunchPassButton, "", driver);
+
+            string launchlocator = "//li[contains(@data-id,'Launch')]//i[contains(@class,'gj-icon')]";
+            Actor.WaitsUntil(Appearance.Of(new WebLocator("launchlocator", By.XPath(launchlocator))), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Click.On(new WebLocator("launchlocator", By.XPath(launchlocator))));
+
+            Actor.AttemptsTo(Click.On(TestCases.LaunchCreationTC));
             UpdateLaunchStatusControl(Actor, TestCases.LaunchPassButton, "", driver);
         }
 

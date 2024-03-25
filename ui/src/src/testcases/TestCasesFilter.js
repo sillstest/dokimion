@@ -60,6 +60,8 @@ class TestCasesFilter extends Component {
     this.handleBulkRemoveAttributes=this.handleBulkRemoveAttributes.bind(this);
     this.getSession = this.getSession.bind(this);
     this.onSessionChange = this.onSessionChange.bind(this);
+    this.handleClose = this.handleClose.bind(this);
+    this.handleLockAllTestCases =this.handleLockAllTestCases.bind(this);
   }
 
   onSessionChange(session) {
@@ -248,19 +250,38 @@ class TestCasesFilter extends Component {
     suiteToSave.filter.filters.forEach(function (filter) {
       delete filter.title;
     });
-    Backend.post(this.props.match.params.project + "/testsuite/", suiteToSave)
+    //Added code for Issue 41
+    if(suiteToSave && typeof suiteToSave.name === "string" && suiteToSave.name.length === 0){
+      this.setState({errorMessage:'Enter valid Suite Name'});
+    }else{
+    //retrieve existing names
+    Backend.get(this.props.match.params.project + "/testsuite")
       .then(response => {
-        this.state.testSuite = response;
-        this.state.testSuiteNameToDisplay = this.state.testSuite.name;
-        this.setState(this.state);
-        $("#suite-modal").modal("toggle");
-        this.props.history.push(
-          "/" + this.props.match.params.project + "/testcases?testSuite=" + this.state.testSuite.id,
-        );
+       var testSuites = response.map(ts=>ts.name);
+       var duplicate = testSuites && testSuites.filter(val => val.toLowerCase() === suiteToSave.name.toLowerCase()).length > 0 ? true : false;
+        if(duplicate){
+          this.setState({errorMessage:'Duplicate Suite Name', testSuiteNameToDisplay:''});
+        }else{
+           Backend.post(this.props.match.params.project + "/testsuite/", suiteToSave)
+            .then(response => {
+              this.state.testSuite = response;
+              this.state.testSuiteNameToDisplay = this.state.testSuite.name;
+              this.setState(this.state);
+              $("#suite-modal").modal("toggle");
+              this.props.history.push(
+                "/" + this.props.match.params.project + "/testcases?testSuite=" + this.state.testSuite.id,
+              );
+            })
+            .catch(error => {
+              this.setState({errorMessage: "Couldn't save testsuite: " + error});
+            });
+        }
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't save testsuite: " + error});
+        this.setState({errorMessage: "Couldn't get testsuites: " + error});
       });
+
+    }
     event.preventDefault();
   }
 
@@ -300,6 +321,21 @@ async  handleBulkRemoveAttributes(){
    console.log(`Execution time of Bulk Remove Attributes operation : ${performance.now() - start} ms  with value ${result}`);  
   }
 
+  handleClose(event) {
+    console.log("Entered in the close n reset values in testSuites" + JSON.stringify(this.state.testSuite.name));
+    this.state.errorMessage="";
+    this.state.testSuiteNameToDisplay="";
+    this.state.testSuite.name="";
+    this.setState(this.state);
+    event.preventDefault();
+  }
+
+  handleLockAllTestCases(){
+    const start = performance.now();
+    console.log("Entered in handleLockAllTestCases : " + start)
+    let result =  this.props.handleLockAllTestCases(this.state.testSuite.filter.filters);
+    console.log(`Execution time of Lock All Testcases operation : ${performance.now() - start} ms  with value ${result}`);
+  }
 
   render() {
     return (
@@ -405,19 +441,18 @@ async  handleBulkRemoveAttributes(){
           <div className="col-2"></div>
         
           {Utils.isAdmin(this.state.session) &&
-          <div className="col-3 btn-group" role="group">
-            
-            
+          <div className="col-4 btn-group" role="group">
             <button type="button" className="btn btn-primary" title="Add Attributes" data-toggle="modal" onClick={this.handleBulkAddAttributes}>
               Add Attributes
               </button>
               <button type="button" className="btn btn-danger" title="Remove Attributes" data-toggle="modal" onClick={this.handleBulkRemoveAttributes}>
                 Remove Attributes
               </button>
-              
-    
+              <button type="button" className="btn btn-warning" title="Lock All Testcases" data-toggle="modal" onClick={this.handleLockAllTestCases}>
+                Lock All Testcases
+              </button>
             </div>
-  }
+          }
           </div>
          
 
@@ -432,7 +467,7 @@ async  handleBulkRemoveAttributes(){
           aria-labelledby="launchLabel"
           aria-hidden="true"
         >
-          <LaunchForm launch={this.state.createdLaunch} testSuite={this.state.testSuite} />
+          <LaunchForm launch={this.state.createdLaunch} testSuite={this.state.testSuite} modalName="launch-modal"/>
         </div>
 
         <div
@@ -444,12 +479,13 @@ async  handleBulkRemoveAttributes(){
           aria-hidden="true"
         >
           <div className="modal-dialog" role="document">
+          <ControlledPopup popupMessage={this.state.errorMessage}/>
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title" id="editAttributeLabel">
                   Test Suite
                 </h5>
-                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.handleClose}>
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
@@ -474,7 +510,7 @@ async  handleBulkRemoveAttributes(){
               </div>
 
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-dismiss="modal">
+                <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.handleClose}>
                   Close
                 </button>
                 <button type="button" className="btn btn-primary" onClick={this.saveSuite}>

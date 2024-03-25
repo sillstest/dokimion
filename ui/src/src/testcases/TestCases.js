@@ -45,6 +45,15 @@ class TestCases extends SubComponent {
     loading: true,
     showCasesSelectCheckboxes: false,
     errorMessage: "",
+    tcSizesFilter: {
+      skip: 0,
+      limit: 20,
+      orderby: "name",
+      orderdir: "ASC",
+      includedFields: "name,minLines,maxLines",
+    },
+    tcSizes: {},
+    totalNoofTestCase: 0,
   };
 
   constructor(props) {
@@ -62,7 +71,43 @@ class TestCases extends SubComponent {
     this.processElementChecked = this.processElementChecked.bind(this);
     this.handleBulkAddAttributes=this.handleBulkAddAttributes.bind(this);
     this.handleBulkRemoveAttributes=this.handleBulkRemoveAttributes.bind(this);
+    this.handleGetTCSizes = this.handleGetTCSizes.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.getTotalNumberOfTestCases = this.getTotalNumberOfTestCases.bind(this);
+  }
+
+  //Get the count of all testcases from DB without any limit Issue 28
+  getTotalNumberOfTestCases(){
+    delete this.state.filter.skip
+    delete this.state.filter.limit
+    Backend.get(
+      this.props.match.params.project + "/testcase/count?" + this.getFilterApiRequestParams(this.state.filter),
+      ).then(response => {
+        //Added for Issue 28
+        this.state.totalNoofTestCase = response;
+        this.setState(this.state);
+      })
+      .catch(error => {
+        this.setState({errorMessage: "Couldn't fetch testcases number: " + error});
+      });
+    this.handleLockAllTestCases = this.handleLockAllTestCases.bind(this);
+  }
+
+  handleGetTCSizes() {
+
+    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery(this.state.tcSizesFilter))
+      .then(response => {
+        this.state.tcSizes = response;
+        this.setState(this.state);
+      })
+      .catch(() => {
+        console.log("Error in handleGetTCsizes");
+      });
+
+  }
+
+  componentWillMount() {
+    this.handleGetTCSizes();
   }
 
   componentDidMount() {
@@ -78,6 +123,7 @@ class TestCases extends SubComponent {
       };
       this.setState(this.state);
     }
+
     Backend.get(this.props.match.params.project + "/attribute")
       .then(response => {
         this.state.projectAttributes = response.sort((a, b) => (a.name || "").localeCompare(b.name));
@@ -121,7 +167,7 @@ class TestCases extends SubComponent {
       this.state.selectedTestCase = { id: params.testcase };
     }
 
-    if (!filter.groups || filter.groups.length == 0) {
+    if (!filter.groups || filter.groups.length == 0 ) {
       filter.skip = filter.skip || 0;
       filter.limit = this.testCasesFetchLimit;
     }
@@ -136,11 +182,15 @@ class TestCases extends SubComponent {
     this.state.filter = filter;
     this.state.loading = true;
     this.setState(this.state);
+    
     Backend.get(this.props.match.params.project + "/testcase/tree?" + this.getFilterApiRequestParams(filter))
       .then(response => {
+        this.state.totolNoofTestCase = response.count;
         this.state.testcasesTree = response;
         this.state.loading = false;
         this.setState(this.state);
+        //Added to reflect Total TC Issue 28
+        this.getTotalNumberOfTestCases();
         this.refreshTree();
         if (onResponse) {
           onResponse();
@@ -172,6 +222,8 @@ class TestCases extends SubComponent {
 
   loadMoreTestCases(event) {
     this.state.filter.skip = (this.state.filter.skip || 0) + this.testCasesFetchLimit;
+    //Added for Issue 28
+    this.state.filter.limit = this.testCasesFetchLimit;
     Backend.get(this.props.match.params.project + "/testcase?" + this.getFilterApiRequestParams(this.state.filter))
       .then(response => {
         if (response) {
@@ -238,7 +290,7 @@ class TestCases extends SubComponent {
       uiLibrary: "bootstrap4",
       checkboxes: true,
       checkedField: "checked",
-      dataSource: Utils.parseTree(this.state.testcasesTree, this.state.filter.notFields.id),
+      dataSource: Utils.parseTree(this.state.testcasesTree, this.state.filter.notFields.id, this.state.tcSizes),
     });
     this.tree.on(
       "select",
@@ -533,6 +585,24 @@ class TestCases extends SubComponent {
     return "OK";
   }
 
+//Added for Issue 84
+handleLockAllTestCases(){
+  console.log("Entered here in the handleLockAllTestcases in Testcases.js");
+  Backend.post( this.props.match.params.project +"/testcase/lockall")
+  .then(response => {
+    console.log("Locked all testcases : " + JSON.stringify(response));
+    // if(response.status === 200 ){
+      this.setState({errorMessage:"Locked All Testcases"});
+    // }
+  })
+  .catch(error => {
+    this.setState({errorMessage: "Couldn't lock all testcases: " + error});
+  });
+  this.props.history.push(
+    "/" + this.props.match.params.project +"/testcases"
+  );
+}
+
   render() {
     return (
       <div>
@@ -544,6 +614,7 @@ class TestCases extends SubComponent {
             project={this.props.match.params.project}
             handleBulkAddAttributes={this.handleBulkAddAttributes}
             handleBulkRemoveAttributes={this.handleBulkRemoveAttributes}
+            handleLockAllTestCases={this.handleLockAllTestCases}
           />
         </div>
 
@@ -563,6 +634,11 @@ class TestCases extends SubComponent {
               onTestCaseAdded={this.onTestCaseAdded}
             />
           </div>
+        </div>
+        <div className="row filter-control-row">
+            <div className="col-6">
+              Number of Test Cases : <span style={{fontWeight : 'bold'}}>{this.state.totalNoofTestCase}</span>
+            </div>
         </div>
         <div className="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />

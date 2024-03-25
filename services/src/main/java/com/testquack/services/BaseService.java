@@ -101,10 +101,7 @@ public abstract class BaseService<E extends Entity> {
     public List<E> findFiltered(Session session, String projectId, Filter filter){
 System.out.println("BaseService:findFiltered - projectId: " + projectId);
 System.out.flush();
-        return userCanReadProject(session, projectId) ?
-                getRepository().find(getCurrOrganizationId(session), projectId, filter).stream()
-                        .map(entity -> beforeReturn(session, projectId, entity)).collect(Collectors.toList()) :
-                Collections.emptyList();
+        return getRepository().find(getCurrOrganizationId(session), projectId, filter).stream().map(entity -> beforeReturn(session, projectId, entity)).collect(Collectors.toList());
     }
 
     public E findOneUnfiltered(Session session, String projectId, String id){
@@ -432,13 +429,13 @@ System.out.flush();
         try{
             lock.tryLock(lockTtl, TimeUnit.MINUTES);
             E existingEntity = findOneUnfiltered(session, projectId, entity.getId());
-            beforeUpdate(session, projectId, existingEntity, entity);
             if (existingEntity != null) {
                 if (existingEntity.getLastModifiedTime() > entity.getLastModifiedTime()) {
                     throw new EntityValidationException("Entity has been changed previously. Changes will cause lost updates.");
                 }
                 entity = (E) converter.transform(existingEntity, entity);
             }
+            beforeUpdate(session, projectId, existingEntity, entity);
             entity = doSave(session, projectId, entity);
             afterUpdate(session, projectId, existingEntity, entity);
             return entity;

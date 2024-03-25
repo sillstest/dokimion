@@ -51,7 +51,7 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
-                // Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
+                //Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
                 //Page is redirected after initial URL
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
             }
@@ -70,7 +70,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Login Page is loaded successfully on count " + count + " " + welcomeMessage);
 
             userActions.LogConsoleMessage("Set Up : ");
-            userActions.LogConsoleMessage("Login as User");
+            userActions.LogConsoleMessage("Login as Admin");
             Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
             Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 15);
             Actor.AttemptsTo(Click.On(Header.DokimionProject));

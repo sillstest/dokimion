@@ -77,7 +77,7 @@ class LaunchTestcaseControls extends Component {
         <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#broken-dialog">
           Broken
         </button>
-        <button type="button" class="btn btn-warning" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
+        <button type="button" class="btn btn-secondary" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
           X
         </button>
       </div>

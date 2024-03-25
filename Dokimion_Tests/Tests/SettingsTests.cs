@@ -51,7 +51,7 @@ namespace Dokimion.Tests
             {
                 Actor.Can(BrowseTheWeb.With(driver));
                 Actor.AttemptsTo(Navigate.ToUrl(userActions.DokimionUrl));
-               // Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
+                // Actor.AttemptsTo(Navigate.ToUrl("http://192.168.56.103"));
                 //Page is redirected after initial URL
                 Actor.AttemptsTo(Wait.Until(Appearance.Of(LoginPage.NameInput), IsEqualTo.True()));
             }
@@ -70,7 +70,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Login Page is loaded successfully on count " + count + " " + welcomeMessage);
 
             userActions.LogConsoleMessage("Set Up : ");
-            userActions.LogConsoleMessage("Login as User");
+            userActions.LogConsoleMessage("Login as Admin");
             Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
         }
 
@@ -99,14 +99,21 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Click on the Dokimion project settings icon on right");
 
             Actor.WaitsUntil(Appearance.Of(Settings.DokimionProjectSettingsLink), IsEqualTo.True());
-            ReadOnlyCollection<IWebElement> listOfAttributes = Settings.DokimionProjectSettingsLink.FindElements(driver);
+            var projectName = Actor.AskingFor(Text.Of(Settings.DokimionProjectSettingsLink));
+            StringAssert.Contains("Dokimion", projectName);
+            //Different environments have different name for dokimion
+            IWebElement dokimionSettingLink ;
+          
+            try
+            {
+                dokimionSettingLink = driver.FindElement(By.XPath("//div[@class='card-header']/span/a[contains(@href, 'dokimion/settings')]"));
+            }
+            catch
+            {
+                dokimionSettingLink = driver.FindElement(By.XPath("//div[@class='card-header']/span/a[contains(@href, 'Dokimion/settings')]"));
+            }
 
-            IWebElement element = listOfAttributes[0];
-
-            StringAssert.Contains("Dokimion", element.Text);
-            element = listOfAttributes[1];
-            element.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='cogs'])[1]")).Click();
-
+            dokimionSettingLink?.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='cogs'])[1]")).Click();
 
             userActions.LogConsoleMessage("Enter Window and Mac in the Environments input");
             Actor.WaitsUntil(Appearance.Of(Settings.EnvironmentInput), IsEqualTo.True(), timeout: 60);

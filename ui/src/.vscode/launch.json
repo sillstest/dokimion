@@ -1,17 +1,12 @@
 {
+    "version": "0.2.0",
     "configurations": [
-    {
-        "command": "npm start",
-        "name": "Run npm start",
+      {
+        "type": "chrome",
         "request": "launch",
-        "type": "node-terminal",
-        "skipFiles": [
-            "<node_internals>/**"
-        ],
-        "env": {
-            "NODE_OPTIONS": "--openssl-legacy-provider",
-        },
-
-    }
+        "name": "Launch Chrome against localhost",
+        "url": "http://192.168.56.107",
+        "webRoot": "${workspaceFolder}"
+      }
     ]
-}
+  }
