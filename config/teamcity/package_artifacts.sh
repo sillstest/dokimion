@@ -1,6 +1,6 @@
 #!/bin/bash
-cd dokimion
 pwd
+cd ../
 cd ui
 pwd
 /bin/tar cvzf ui.tgz src/
