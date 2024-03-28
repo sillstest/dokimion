@@ -14,6 +14,7 @@ cp ../tools/mongodb_TestcaseSizes_init.js .
 cp ../tools/mongodb_DefaultProjectAttributes_init.js .
 cp ../config/common/startup_dokimion_server.sh .
 cp ../config/common/startup_dokimion_ui.sh .
+/bin/tar cvzf tools.tgz aes.java RoleCapability.java AdminPassword.java TestcaseSizes.java DefautlProjectAttributes.java mongodb_RoleCapability_init.js mongodb_TestcaseSizes_init.js mongodb_DefaultProjectAttributes_init.js startup_dokimion_server.sh startup_dokimion_ui.sh
 chmod -R a+w *
 chmod -R a+w .
 cd src
