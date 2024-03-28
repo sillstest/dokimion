@@ -1,4 +1,5 @@
 #!/bin/bash
+cd dokimion
 pwd
 cd ui
 pwd
