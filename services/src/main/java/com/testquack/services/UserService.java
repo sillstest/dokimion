@@ -65,6 +65,8 @@ System.out.flush();
     @Override
     protected boolean userCanDelete(Session session, String projectId, String id) {
 	User user = findOne(session, projectId, id);
+System.out.println("UserService::userCanDelete - user: " + user);
+System.out.flush();
 	if (user.isLocked()) {
 	   return false;
 	}
@@ -176,12 +178,21 @@ System.out.flush();
         return user.withPassword(null).withToken(null);
     }
 
-    public boolean setLocked(Session session, String login, boolean lockedValue) {
+    public boolean setLocked(Session session, boolean lockedValue) {
 
-       if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, login) == false) {
+       String userLogin = session.getPerson().getLogin();
+       String userPassword = session.getPerson().getPassword();
 
-          User user = findOne(session, null, login);
+ System.out.println("setLocked - userLogin: " + userLogin);
+ System.out.println("setLocked - userPassword: " + userPassword);
+
+       if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
+
+          User user = findOne(session, null, userLogin);
           user.setLocked(lockedValue);
+          user.setLogin(userLogin);
+	  if (!userPassword.equals("")) 
+             user.setPassword(userPassword);
 
           User updatedUser = save(session, null, user);
 System.out.println("setLocked - updatedUser: " + updatedUser);
@@ -201,3 +212,5 @@ System.out.flush();
     }
 
 }
+
+
