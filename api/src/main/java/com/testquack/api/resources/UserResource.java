@@ -214,6 +214,8 @@ System.out.println("UserResource::login - role: " + thisRole);
         person.setRoles(roles);
         session.setPerson(person);
 
+	service.setLocked(getSession(), login, true);
+
         return session;
         //return authProvider.doAuth(request, response);
     }

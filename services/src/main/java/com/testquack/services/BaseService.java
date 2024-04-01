@@ -479,9 +479,8 @@ System.out.flush();
 System.out.println("BaseService.delete - after call of userCanUpdateProject");
 System.out.flush();
            findFiltered(session, projectId, filter).forEach(entity -> {
-                  entity.setDeleted(true);
-                  getRepository().save(getCurrOrganizationId(session), projectId, 
-                  entity);
+                  getRepository().delete(getCurrOrganizationId(session), projectId, 
+                  entity.getId());
            });
         }
     }
@@ -507,7 +506,7 @@ System.out.flush();
 
     protected boolean isUserInOrganization(Session session, Organization organization){
         if (organizationsEnabled) {
-            if (organization == null || organization.isDeleted()) {
+            if (organization == null) {
                 throw new EntityNotFoundException(format("Organization %s does not exist", organization.getId()));
             }
             return organization.getAllowedGroups().stream().anyMatch(session.getPerson().getGroups()::contains) ||
