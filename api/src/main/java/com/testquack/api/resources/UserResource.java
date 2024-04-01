@@ -268,6 +268,7 @@ System.out.println("UserResource::login - role: " + thisRole);
     @DELETE
     @Path("/logout")
     public Response logout() {
+	service.setLocked(getSession(), getSession().getPerson().getLogin(), false);
         authProvider.doLogout(request, response);
         return Response.ok().build();
     }
