@@ -1,0 +1,12 @@
+
+/var/log/mongodb/*.log {
+   daily
+   missingok
+   rotate 15
+   compress
+   notifempty
+   create 0650 www-data www-data
+   sharedscripts
+   postrotate
+      systemctl reload mongod5.service
+   endscript

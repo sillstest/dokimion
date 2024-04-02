@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ru.greatbit.utils.string.StringUtils;
+import ru.greatbit.whoru.auth.utils.HttpUtils;
 import ru.greatbit.whoru.auth.AuthProvider;
 import ru.greatbit.whoru.auth.Person;
 import ru.greatbit.whoru.auth.RedirectResponse;
@@ -26,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
@@ -77,6 +79,10 @@ System.out.flush();
 System.out.println("UserResource::delete - login: " + login);
 System.out.flush();
         service.delete(getSession(), null, getUser(login).getId());
+
+        System.out.println("UserResource::delete - session id: " + getSession().getId());
+        System.out.flush();
+
         return Response.ok().build();
     }
 
@@ -196,7 +202,7 @@ System.out.flush();
     public Session login(@QueryParam("login") String login,
                          @QueryParam("password") String password) {
         Session session = authProvider.doAuth(request, response);
-        System.out.println("UserResource.login - session: " + session);
+        System.out.println("UserResource::login - session: " + session);
 
         Person person = session.getPerson();
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
@@ -213,6 +219,11 @@ System.out.println("UserResource::login - role: " + thisRole);
         roles.add(thisRole);
         person.setRoles(roles);
         session.setPerson(person);
+
+	if (service.setLocked(session, true) == false) {
+	   System.out.println("UserResource::login - setLocked failed");
+	   System.out.flush();
+        }
 
         return session;
         //return authProvider.doAuth(request, response);
@@ -266,7 +277,22 @@ System.out.println("UserResource::login - role: " + thisRole);
     @DELETE
     @Path("/logout")
     public Response logout() {
+
+	Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
+System.out.println("UserResource:::logout - sid: " + sid);
+System.out.flush();
+        Session session = sessionProvider.getSessionById(sid.getValue());
+
+System.out.println("UserResource::logout - session: " + session);
+System.out.flush();
+
+	if (service.setLocked(session, false) == false) {
+	   System.out.println("UserResource::logout - setLocked false failed");
+	   System.out.flush();
+	}
+
         authProvider.doLogout(request, response);
+
         return Response.ok().build();
     }
 

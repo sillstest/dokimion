@@ -139,7 +139,7 @@ class CreateUser extends Component {
                   onChange={this.handleChange}
                 >
                   <option key="role" value="TESTER">TESTER</option>
-                  <option key="role" value="TEST DEVELOPER">TEST DEVELOPER</option>
+                  <option key="role" value="TESTDEVELOPER">TESTDEVELOPER</option>
 		  <option key="role" value="ADMIN">ADMINISTRATOR</option>
                 </select>
               </div>

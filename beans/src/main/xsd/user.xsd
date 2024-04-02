@@ -23,6 +23,7 @@
                     <xs:element name="email" type="xs:string"/>
                     <xs:element name="role" type="xs:string"/>
                     <xs:element name="token" type="xs:string"/>
+                    <xs:element name="locked" type="xs:boolean"/>
                     <xs:element name="groups" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="passwordChangeRequired" type="xs:boolean"/>
                     <xs:element name="organizations" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
