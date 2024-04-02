@@ -1,5 +1,6 @@
 #!/bin/bash
-ls -R
+cd ../
+pwd
 cd ui
 pwd
 /bin/tar cvzf ui.tgz src/
