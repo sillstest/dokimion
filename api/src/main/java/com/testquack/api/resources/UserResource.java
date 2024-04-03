@@ -73,18 +73,19 @@ System.out.flush();
         return service.findOne(getSession(), null, login);
     }
 
-    @DELETE
-    @Path("/{login}")
-    public Response delete(@PathParam("login") String login) {
+
+    @POST
+    @Path("/delete")
+    public Response delete(@QueryParam("login") String login) {
 System.out.println("UserResource::delete - login: " + login);
 System.out.flush();
-        service.delete(getSession(), null, getUser(login).getId());
 
-        System.out.println("UserResource::delete - session id: " + getSession().getId());
-        System.out.flush();
+        User user = getUser(login);
+        service.delete(getSession(), null, user.getId());
 
         return Response.ok().build();
     }
+
 
     @POST
     @Path("/forgot_password")
@@ -202,7 +203,8 @@ System.out.flush();
     public Session login(@QueryParam("login") String login,
                          @QueryParam("password") String password) {
         Session session = authProvider.doAuth(request, response);
-        System.out.println("UserResource::login - session: " + session);
+System.out.println("UserResource::login - session: " + session);
+System.out.flush();
 
         Person person = session.getPerson();
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
@@ -214,6 +216,7 @@ System.out.flush();
         String thisRole = mongoDBInterface.getRole(login);
 
 System.out.println("UserResource::login - role: " + thisRole);
+System.out.flush();
 
         List<String> roles = new ArrayList<String>();
         roles.add(thisRole);
@@ -225,6 +228,8 @@ System.out.println("UserResource::login - role: " + thisRole);
 	   System.out.flush();
         }
 
+System.out.println("UserResource::login - setLocked call successful");
+System.out.flush();
         return session;
         //return authProvider.doAuth(request, response);
     }
@@ -291,7 +296,11 @@ System.out.flush();
 	   System.out.flush();
 	}
 
+System.out.println("UserResource::logout - setLocked call successful");
+System.out.flush();
         authProvider.doLogout(request, response);
+System.out.println("UserResource::logout - after authProvider.doLogout call");
+System.out.flush();
 
         return Response.ok().build();
     }
