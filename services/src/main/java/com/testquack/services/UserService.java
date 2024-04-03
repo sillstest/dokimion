@@ -64,7 +64,13 @@ System.out.flush();
 
     @Override
     protected boolean userCanDelete(Session session, String projectId, String id) {
-        return userCanSave(session, id);
+	User user = findOne(session, projectId, id);
+System.out.println("UserService::userCanDelete - user: " + user);
+System.out.flush();
+	if (user.isLocked()) {
+	   return false;
+	}
+	return userCanSave(session, id);
     }
 
     @Override
@@ -87,7 +93,7 @@ System.out.println("UserService.findOne - session: " + session);
 System.out.flush();
 
         //return cleanUserSesitiveData(super.findOne(session, projectId, id));
-        User user = cleanUserSesitiveData(super.findOne(session, projectId, id));
+        User user = cleanUserSensitiveData(super.findOne(session, projectId, id));
 
 System.out.println("UserService.findOne - user: " + user);
 System.out.flush();
@@ -168,9 +174,43 @@ System.out.flush();
     }
 
 
-    private User cleanUserSesitiveData(User user){
+    private User cleanUserSensitiveData(User user){
         return user.withPassword(null).withToken(null);
     }
 
+    public boolean setLocked(Session session, boolean lockedValue) {
+
+       String userLogin = session.getPerson().getLogin();
+       String userPassword = session.getPerson().getPassword();
+
+ System.out.println("setLocked - userLogin: " + userLogin);
+ System.out.println("setLocked - userPassword: " + userPassword);
+
+       if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
+
+          User user = findOne(session, null, userLogin);
+          user.setLocked(lockedValue);
+          user.setLogin(userLogin);
+	  if (!userPassword.equals("")) 
+             user.setPassword(userPassword);
+
+          User updatedUser = save(session, null, user);
+System.out.println("setLocked - updatedUser: " + updatedUser);
+System.out.flush();
+          if (updatedUser == null) {
+             System.out.println("UserService::setLocked - updatedUser = null");
+             System.out.flush();
+             return false;
+          }
+ System.out.println("setLocked - set lock = " + lockedValue);
+ System.out.flush();
+          return true;
+
+       }
+
+       return false;
+    }
 
 }
+
+

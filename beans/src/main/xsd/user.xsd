@@ -27,6 +27,7 @@
                     <xs:element name="passwordChangeRequired" type="xs:boolean"/>
                     <xs:element name="organizations" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="adminOfOrganizations" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="locked" type="xs:boolean"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>

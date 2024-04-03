@@ -131,6 +131,26 @@ System.out.flush();
 
    }
 
+  public static boolean isAdmin(
+                          UserRepository           userRepository, 
+                          RoleCapabilityRepository roleCapRepository,
+                          String                   loginId ) {
+
+     if (loginId.equals("admin") == true) 
+        return true;
+
+     User user = (User)userRepository.findOne(null, null, loginId);
+     Role userRole = translateRoleFormat(user.getRole());
+
+System.out.println("UserSecurity::isAdmin - role: " + userRole);
+System.out.flush();
+     if (userRole.equals("ADMIN") == true)
+        return true;
+
+     return false;
+
+ }
+
 
   private static Role translateRoleFormat(String role) {
 
