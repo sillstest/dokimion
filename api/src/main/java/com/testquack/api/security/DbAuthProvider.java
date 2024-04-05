@@ -91,6 +91,10 @@ System.out.flush();
             person = findPersonByLogin(login);
         }
 
+System.out.println("dbAuthByLoginPassword - person.login: " + person.getLogin());
+System.out.println("dbAuthByLoginPassword - person.isActive: " + person.isActive());
+System.out.println("dbAuthByLoginPassword - getMD5: " + getMd5(password, login));
+System.out.flush();
         if (person!= null
                 && login.equals(person.getLogin())
                 && person.isActive()
@@ -122,7 +126,6 @@ System.out.flush();
         final String login = emptyIfNull(request.getParameter(PARAM_LOGIN));
         final String password = emptyIfNull(request.getParameter(PARAM_PASSWORD));
 System.out.println("DbAuthProvider::doAuth - login: " + login);
-System.out.println("DbAuthProvider::doAuth - password: " + password);
 System.out.flush();
 
 
@@ -153,18 +156,11 @@ System.out.flush();
 
     @Override
     protected Person getAdminPerson(String login, String password) {
-System.out.println("DbAuthProvider.getAdminPerson() - login, password: " + login + ", " + password);
-System.out.flush();
 
          final String secretKey = "al;jf;lda1_+_!!()!!!!";
          String decryptedAdminPassword = aes.decrypt(adminPassword, secretKey) ;
 
         if (!isEmpty(login) && !isEmpty(password) && login.equals(adminLogin) && password.equals(decryptedAdminPassword)){
-
-System.out.println("DbAuthProvider.getAdminPerson() - admin validated successfully");
-System.out.flush();
-
-
             return new Person().withLogin(adminLogin).withFirstName("admin");
         }
         throw new UnauthorizedException();
@@ -180,13 +176,12 @@ System.out.flush();
 
     @Override
     protected Person findPersonByLogin(String login) {
+
         Person person = convertUser(userService.findOne(null, new Filter().withField("login", login)));
         System.out.println("DbAuthProvider.findPersonByLogin - person: " + person);
         System.out.flush();
-        //return convertUser(userService.findOne(null, new Filter().withField("login", login)));
 
-
-        return person;
+        return convertUser(userService.findOne(null, new Filter().withField("login", login)));
     }
 
     @Override
@@ -196,18 +191,9 @@ System.out.flush();
 
     @Override
     public Set<String> getAllUsers(HttpServletRequest request) {
-        /*return userService.findAll().stream().
+        return userService.findAll().stream().
                 map(User::getLogin).
-                collect(Collectors.toSet()); */
-        Set<String> usersSet = userService.findAll().stream().
-                map(User::getLogin).
-                collect(Collectors.toSet());
-        for (String user : usersSet) {
-           System.out.println("DbAuthProvider::getAllUsers() - user: " + user);
-           System.out.flush();
-        }
-
-        return usersSet;
+                collect(Collectors.toSet()); 
     }
 
     @Override
@@ -232,9 +218,6 @@ System.out.flush();
     private Person convertUser(User user){
 
         System.out.println("convertUser");
-        System.out.flush();
-
-        System.out.println("userService.getMongoDBReplicaSet - " + userService.getMongoReplicaSet());
         System.out.flush();
 
         MongoDBInterface mongoDBInterface = new MongoDBInterface();

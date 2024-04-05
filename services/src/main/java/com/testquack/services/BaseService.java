@@ -111,6 +111,9 @@ System.out.flush();
         if (entity == null){
             throw new EntityNotFoundException();
         }
+        System.out.println("BaseService:findOneUnfiltered -after getRepo");
+        System.out.flush();
+
         if (userCanRead(session, projectId, entity) == false) {
              throw new EntityAccessDeniedException(
                     format("User %s can't read entity %s", session.getPerson().getLogin(), id)
@@ -475,6 +478,9 @@ System.out.println("BaseService.delete - projectId: " + projectId);
 System.out.flush();
         List<E> entityList = findFiltered(session, projectId, filter);
 
+        System.out.println("BaseService.delete - after findFiltered call");
+        System.out.flush();
+
         if (userCanUpdateProject(session, projectId, entityList)) {
 System.out.println("BaseService.delete - after call of userCanUpdateProject");
 System.out.flush();
@@ -483,6 +489,8 @@ System.out.flush();
                   entity.getId());
            });
         }
+        System.out.println("BaseService.delete - end of method");
+        System.out.flush();
     }
 
     public String getCurrOrganizationId(Session session){
@@ -530,9 +538,6 @@ System.out.flush();
 
     protected boolean isUserOrganizationAdmin(Session session, Organization organization){
         if (organizationsEnabled) {
-            if (organization.isDeleted()) {
-                throw new EntityNotFoundException(format("Organization %s does not exist", organization.getId()));
-            }
             return organization.getAdmins().stream().anyMatch(session.getPerson().getLogin()::equals);
         } return false;
     }

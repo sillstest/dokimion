@@ -70,6 +70,11 @@ class CreateUser extends Component {
        this.setState({message: "Number of users with role = \'ADMIN\' is MAXIMUM already"});
        return;
     }
+    if (this.state.oneUser.login == "" || this.state.oneUser.firstName == "" ||
+	this.state.oneUser.lastName == "" || this.state.oneUser.password == "") {
+        this.setState({message: "All fields must have a non-null value"});
+	return;
+    }
     Backend.post("user", this.state.oneUser)
         .then(response => {
           window.location = decodeURI("/user/profile/" + response.login);

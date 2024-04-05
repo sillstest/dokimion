@@ -73,14 +73,19 @@ System.out.flush();
         return service.findOne(getSession(), null, login);
     }
 
-    @DELETE
-    @Path("/{login}")
-    public Response delete(@PathParam("login") String login) {
+
+    @POST
+    @Path("/delete")
+    public Response delete(@QueryParam("login") String login) {
 System.out.println("UserResource::delete - login: " + login);
 System.out.flush();
-        service.delete(getSession(), null, getUser(login).getId());
+
+        User user = getUser(login);
+        service.delete(getSession(), null, user.getId());
+
         return Response.ok().build();
     }
+
 
     @POST
     @Path("/forgot_password")
@@ -212,18 +217,20 @@ System.out.flush();
         String thisRole = mongoDBInterface.getRole(login);
 
 System.out.println("UserResource::login - role: " + thisRole);
+System.out.flush();
 
         List<String> roles = new ArrayList<String>();
         roles.add(thisRole);
         person.setRoles(roles);
         session.setPerson(person);
 
-
 	if (service.setLocked(session, true) == false) {
 	   System.out.println("UserResource::login - setLocked failed");
 	   System.out.flush();
 	}
 
+System.out.println("UserResource::login - end of setLocked call");
+System.out.flush();
         return session;
         //return authProvider.doAuth(request, response);
     }
@@ -291,6 +298,9 @@ System.out.flush();
 	}
 
         authProvider.doLogout(request, response);
+System.out.println("UserResource::logout - after authProvider.doLogout call");
+System.out.flush();
+
         return Response.ok().build();
     }
 

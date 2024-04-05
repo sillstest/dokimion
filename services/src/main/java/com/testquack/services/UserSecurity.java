@@ -69,7 +69,6 @@ System.out.flush();
 
      User user = (User)userRepository.findOne(organizationId, projectId, loginId);
 
-
      Role userRole = translateRoleFormat(user.getRole());
 
      List<RoleCapability> roleCapList = roleCapRepository.find(
@@ -150,7 +149,6 @@ System.out.flush();
      return false;
 
  }
-
 
   private static Role translateRoleFormat(String role) {
 
