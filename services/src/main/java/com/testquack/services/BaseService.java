@@ -435,6 +435,10 @@ System.out.flush();
                 }
                 entity = (E) converter.transform(existingEntity, entity);
             }
+System.out.println("BaseService::update - entity: " + entity);
+System.out.println("BaseService::update - existingEntity: " + existingEntity);
+System.out.flush();
+
             beforeUpdate(session, projectId, existingEntity, entity);
             entity = doSave(session, projectId, entity);
             afterUpdate(session, projectId, existingEntity, entity);

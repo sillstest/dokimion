@@ -59,6 +59,8 @@ public class TestCaseResource extends BaseCrudResource<TestCase> {
     @GET
     @Path("/tree")
     public TestCaseTree findFilteredTree(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId) {
+System.out.println("TestCaseResource::findFiltered - projectId: " + projectId);
+System.out.flush();
         return service.findFilteredTree(getUserSession(), projectId, (TestcaseFilter) initFilter(request));
     }
 
@@ -70,6 +72,8 @@ public class TestCaseResource extends BaseCrudResource<TestCase> {
                               @FormDataParam("size") long size,
                               @PathParam("projectId") String projectId,
                               @PathParam("testcaseId") String testcaseId) throws IOException {
+System.out.println("TestCaseResource::upload - testcaseId: " + testcaseId + ", fileDetail: " + fileDetail);
+System.out.flush();
         if (fileDetail == null) {
             throw new EntityValidationException();
         }
@@ -83,6 +87,9 @@ public class TestCaseResource extends BaseCrudResource<TestCase> {
             @PathParam("projectId") String projectId,
             @PathParam("testcaseId") final String testcaseId,
             @PathParam("attachmentId") final String attachmentId) {
+System.out.println("TestCaseResource::downloadAttachment - testcaseId: " + testcaseId + ", attachmentId: " + attachmentId);
+System.out.flush();
+
         Attachment attachment = service.getAttachment(getUserSession(), projectId, testcaseId, attachmentId);
         try {
             return Response
@@ -100,6 +107,8 @@ public class TestCaseResource extends BaseCrudResource<TestCase> {
             @PathParam("projectId") String projectId,
             @PathParam("testcaseId") final String testcaseId,
             @PathParam("attachmentId") final String attachmentId) throws IOException {
+System.out.println("TestCaseResource::deleteAttachment - testcaseId: " + testcaseId + ", attachmentId: " + attachmentId);
+System.out.flush();
         return service.deleteAttachment(getUserSession(), projectId, testcaseId, attachmentId);
     }
 
@@ -177,8 +186,6 @@ System.out.flush();
                                  @PathParam("testcaseId") final String testcaseId)
                                  throws Exception {
 System.out.println("TestCaseResource::LockTestCase - projectId: " + projectId);
-System.out.println("TestCaseResource::LockTestCase - testcaseId: " + testcaseId);
-System.out.println("TestCaseResource::LockTestCase - stubbed out");
 System.out.flush();
 /*
 TestCase tc = new TestCase();
