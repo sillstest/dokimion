@@ -3,11 +3,10 @@
 //
 db = db.getSiblingDB('dokimion')
 
-db.DefaultProjectAttributes.drop()
-db.DefaultProjectAttributes.insertOne(
-{
-  "project": "paratext",
-  "attributes": [ "Full Regression", "Manual", "All" ]
-});
+db.DefaultProjectAttributes.update( 
+	{ project: "paratext" }, 
+	{ $setOnInsert: {project: "paratext", attributes: ["Full Regression", "Manual", "All"]}}, 
+	{upsert: true}
+)
 
 
