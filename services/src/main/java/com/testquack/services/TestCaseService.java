@@ -175,7 +175,24 @@ System.out.flush();
     @Override
     protected void beforeUpdate(Session session, String projectId, TestCase existingEntity, TestCase entity) {
         super.beforeUpdate(session, projectId, existingEntity, entity);
-        existingEntity.setAttachments(entity.getAttachments());
+
+        // append attachment lists without any duplicates
+        List<Attachment> newAttachmentsList = entity.getAttachments();
+        existingEntity.getAttachments().forEach(existingEntityAttachment -> {
+
+           boolean equalsFlag = false;
+           for (int i = 0; i < newAttachmentsList.size(); i++) {
+              if (newAttachmentsList.get(i).getTitle().equals(existingEntityAttachment.getTitle())) {
+                 equalsFlag = true;
+              }
+           }
+           if (equalsFlag == false) {
+              newAttachmentsList.add(existingEntityAttachment);
+           }
+        });
+        entity.setAttachments(newAttachmentsList);
+
+
 
         if (existingEntity != null) {
             eventService.create(session, projectId,
@@ -268,6 +285,7 @@ System.out.flush();
     public TestCase uploadAttachment(Session userSession, String projectId, String testcaseId, InputStream uploadedInputStream, String fileName, long size) throws IOException {
 
 System.out.println("TestCaseService::uploadAttachment - filename, size" + fileName + size);
+System.out.println("TestCaseService::uploadAttachment - uploadedInputStream: " + uploadedInputStream);
 System.out.flush();
 
         Attachment uploadedAttachment = storage.upload(getCurrOrganizationId(userSession), projectId, uploadedInputStream, fileName, size);

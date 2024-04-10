@@ -62,6 +62,8 @@ class Attachments extends SubComponent {
   }
 
   removeAttachment() {
+console.log("Attachments::removeAttachment");
+
     Backend.delete(
       this.state.projectId + "/testcase/" + this.state.testcase.id + "/attachment/" + this.attachmentToRemove,
     )

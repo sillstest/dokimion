@@ -73,6 +73,7 @@ System.out.flush();
                               @PathParam("projectId") String projectId,
                               @PathParam("testcaseId") String testcaseId) throws IOException {
 System.out.println("TestCaseResource::upload - testcaseId: " + testcaseId + ", fileDetail: " + fileDetail);
+System.out.println("TestCaseResource::upload - uploadedInputStream: " + uploadedInputStream);
 System.out.flush();
         if (fileDetail == null) {
             throw new EntityValidationException();
