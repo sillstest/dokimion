@@ -315,8 +315,21 @@ System.out.flush();
     }
 
     public Attachment getAttachment(Session userSession, String projectId, String testcaseId, String attachmentId) {
+
+System.out.println("TestCaseService::getAttachment - projectId: " + projectId + ", testcaseId: " + testcaseId + ", attachmentid:" + attachmentId);
+System.out.flush();
+
         TestCase testCase = findOneUnfiltered(userSession, projectId, testcaseId);
-        return getAttachment(testCase, attachmentId);
+
+System.out.println("TestCaseService::getAttachment - testCase: " + testCase);
+System.out.flush();
+
+        Attachment attach = getAttachment(testCase, attachmentId);
+System.out.println("TestCaseService::getAttachment - attach: " + attach);
+System.out.flush();
+
+        return attach;
+        //return getAttachment(testCase, attachmentId);
     }
 
     public TestCase deleteAttachment(Session userSession, String projectId, String testcaseId, String attachmentId) throws IOException {

@@ -39,11 +39,6 @@ System.out.flush();
                 getEntityClass(),
                 getCollectionName(organizationId, projectId));
 
-        for (E ent : listEntity) {
-          System.out.println("CommonRepositoryImpl::find - ent: " + ent);
-          System.out.flush();
-        }
-
         return listEntity;
 
 /*
