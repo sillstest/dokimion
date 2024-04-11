@@ -29,18 +29,15 @@ System.out.println("CommonRepositoryImpl::find - projectId: " + projectId);
 System.out.println("CommonRepositoryImpl::find - filter: " + filter);
 System.out.flush();
 
-        List<E> listEntity = mongoOperations.find(DBUtils.getQuery(getEntityClass(), filter),
-                getEntityClass(),
-                getCollectionName(organizationId, projectId));
-        for (E ent : listEntity) {
-          System.out.println("CommonRepositoryImpl::find - ent: " + ent);
-          System.out.flush();
-        }
         String collName = getCollectionName(organizationId, projectId);
         System.out.println("collName - " + collName);
         System.out.println("entity class - " + getEntityClass());
         System.out.println("query - " + DBUtils.getQuery(getEntityClass(), filter));
         System.out.flush();
+
+        List<E> listEntity = mongoOperations.find(DBUtils.getQuery(getEntityClass(), filter),
+                getEntityClass(),
+                getCollectionName(organizationId, projectId));
 
         return listEntity;
 
