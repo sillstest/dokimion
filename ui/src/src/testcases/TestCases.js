@@ -74,6 +74,8 @@ class TestCases extends SubComponent {
     this.handleGetTCSizes = this.handleGetTCSizes.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.getTotalNumberOfTestCases = this.getTotalNumberOfTestCases.bind(this);
+    this.handleLockAllTestCases = this.handleLockAllTestCases.bind(this);
+    this.handleUnLockAllTestCases=this.handleUnLockAllTestCases.bind(this);
   }
 
   //Get the count of all testcases from DB without any limit Issue 28
@@ -603,6 +605,25 @@ handleLockAllTestCases(){
   );
 }
 
+handleUnLockAllTestCases(){
+  console.log("Entered here in the handleUnLockAllTestcases in Testcases.js");
+  Backend.post( this.props.match.params.project +"/testcase/unlockall")
+  .then(response => {
+    console.log("UnLocked all testcases : " + JSON.stringify(response));
+    // if(response.status === 200 ){
+      this.setState({errorMessage:"Unlocked All Testcases"});
+    // }
+  })
+  .catch(error => {
+    this.setState({errorMessage: "Couldn't unlock all testcases: " + error});
+  });
+  this.props.history.push(
+    "/" + this.props.match.params.project +"/testcases"
+  );
+  
+}
+
+
   render() {
     return (
       <div>
@@ -615,6 +636,7 @@ handleLockAllTestCases(){
             handleBulkAddAttributes={this.handleBulkAddAttributes}
             handleBulkRemoveAttributes={this.handleBulkRemoveAttributes}
             handleLockAllTestCases={this.handleLockAllTestCases}
+            handleUnLockAllTestCases={this.handleUnLockAllTestCases}
           />
         </div>
 

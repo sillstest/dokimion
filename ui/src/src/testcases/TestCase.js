@@ -148,6 +148,8 @@ class TestCase extends SubComponent {
       this.state.loading = false;
     } else if (nextProps.testcaseId) {
       this.projectId = nextProps.projectId;
+      //Need to reset the readonly flag for changes between TCS
+      this.state.readonly=false;
       this.getTestCase(nextProps.projectId, nextProps.testcaseId);
     }
     if (nextProps.projectAttributes) {

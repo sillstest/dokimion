@@ -5,8 +5,8 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-User=root
-Group=root
+User=mongod
+Group=mongod
 EnvironmentFile=
 ExecStart=/usr/bin/mongod -vvvv --config /etc/mongod5.conf
 PIDFile=/run/mongod/mongod5.pid

@@ -1,6 +1,11 @@
 #!/bin/bash
+<<<<<<< HEAD
 pwd
 cd ../
+=======
+cd ../
+pwd
+>>>>>>> 8aa932da35eccfea332e8b37e78ef027d57bb33b
 cd ui
 pwd
 /bin/tar cvzf ui.tgz src/
@@ -17,6 +22,6 @@ cp ../config/common/startup_dokimion_ui.sh .
 chmod -R a+w *
 chmod -R a+w .
 cd src
-cp -r node_modules/tinymce* .
+cp -r src/node_modules/tinymce .
 
 
