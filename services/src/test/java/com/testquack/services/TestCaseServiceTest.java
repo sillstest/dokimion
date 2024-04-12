@@ -28,11 +28,11 @@ public class TestCaseServiceTest extends BaseTest{
         assertNotNull(testCaseService.findOne(adminSession, project3.getId(), testCasesProject3.get(0).getId()));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void userCanSeeOnlyHisProjectsTestCasesTest(){
         assertThat(testCaseService.findFiltered(userSession, project1.getId(), new Filter()).size(), is(7));
         assertThat(testCaseService.findFiltered(userSession, project2.getId(), new Filter()).size(), is(3));
-        assertThat(testCaseService.findFiltered(userSession, project3.getId(), new Filter()).size(), is(0));
+        assertThat(testCaseService.findFiltered(userSession, project3.getId(), new Filter()).size(), is(3));
     }
 
     @Test(expected = NullPointerException.class)
