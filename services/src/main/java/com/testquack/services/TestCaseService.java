@@ -176,25 +176,6 @@ System.out.flush();
     protected void beforeUpdate(Session session, String projectId, TestCase existingEntity, TestCase entity) {
         super.beforeUpdate(session, projectId, existingEntity, entity);
 
-        // append attachment lists without any duplicates
-	/*
-        List<Attachment> newAttachmentsList = entity.getAttachments();
-        existingEntity.getAttachments().forEach(existingEntityAttachment -> {
-
-           boolean equalsFlag = false;
-           for (int i = 0; i < newAttachmentsList.size(); i++) {
-              if (newAttachmentsList.get(i).getTitle().equals(existingEntityAttachment.getTitle())) {
-                 equalsFlag = true;
-              }
-           }
-           if (equalsFlag == false) {
-              newAttachmentsList.add(existingEntityAttachment);
-           }
-        });
-        entity.setAttachments(newAttachmentsList);
-	*/
-
-
         if (existingEntity != null) {
             eventService.create(session, projectId,
                     new Event().withEventType(EventType.UPDATED.toString()).
