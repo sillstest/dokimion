@@ -5,6 +5,7 @@ import SubComponent from "../common/SubComponent";
 import TestCase from "../testcases/TestCase";
 import LaunchTestcaseControls from "../launches/LaunchTestcaseControls";
 import LaunchAttributeStatsChart from "../launches/LaunchAttributeStatsChart";
+import LaunchFilterByStatus from "./LaunchFilterByStatus";
 import LaunchForm from "../launches/LaunchForm";
 import { Link } from "react-router-dom";
 import * as Utils from "../common/Utils";
@@ -70,7 +71,7 @@ class Launch extends SubComponent {
       .then(response => {
         this.state.projectAttributes = response;
         this.setState(this.state);
-        this.getLaunch(true);
+        this.getLaunch(true,[]);
       })
       .catch(error => console.log(error));
     this.interval = setInterval(this.getLaunch, 30000);
@@ -89,7 +90,7 @@ class Launch extends SubComponent {
 
    }
 
-  getLaunch(buildTree) {
+  getLaunch(buildTree, filterLaunch) {
     Backend.get(this.state.projectId + "/launch/" + this.props.match.params.launchId)
       .then(response => {
         this.state.launch = response;
@@ -109,6 +110,8 @@ class Launch extends SubComponent {
         this.state.attributesStatus = {};
         this.buildAttributesStatusMap(this.state.launch.testCaseTree);
         this.addUnknownAttributesToAttributesStatusMap(this.state.launch.testCaseTree);
+        //AAdded logic to filter TCS on launch
+        this.state.launch.testCaseTree = this.filterLaunchTestCasesOnStatus(this.state.launch.testCaseTree, filterLaunch)
         this.setState(this.state);
         if (buildTree) {
           this.buildTree();
@@ -148,24 +151,24 @@ class Launch extends SubComponent {
         this.setState(this.state);
       }.bind(this),
     );
-    if (this.state.selectedTestCase && this.state.selectedTestCase.uuid) {
-      var node = this.tree.getNodeById(this.state.selectedTestCase.uuid);
+  
+    if (!(this.state.selectedTestCase === undefined) &&
+      (!(this.state.selectedTestCase.id === undefined)) &&
+      (this.state.selectedTestCase.id)) {
+      var node = this.tree.getNodeById(this.state.selectedTestCase.id);
+      if (!node) return;
       this.tree.select(node);
       this.state.launch.testSuite.filter.groups.forEach(
         function (groupId) {
-          var selectedTestCaseInTree = Utils.getTestCaseFromTree(
-            this.state.selectedTestCase.uuid,
-            this.state.launch.testCaseTree,
-            function (testCase, id) {
-              return testCase.uuid === id;
-            },
-          );
-          var attributes = selectedTestCaseInTree.attributes || [];
-          var attribute =
-            attributes.find(function (attribute) {
-              return attribute.id === groupId;
-            }) || {};
-          var values = attribute.values || ["None"];
+          var attributes =
+            Utils.getTestCaseFromTree(
+              this.state.selectedTestCase.id,
+              this.state.launch.testCaseTree,
+              function (testCase, id) {
+                return testCase.uuid === id;
+              },
+            ).attributes || {};
+          var values = attributes[groupId] || ["None"];
           values.forEach(
             function (value) {
               var node = this.tree.getNodeById(groupId + ":" + value);
@@ -310,21 +313,56 @@ class Launch extends SubComponent {
     event.preventDefault();
   }
 
+  filterLaunchTestCasesOnStatus(testcasesTree, filterLaunch) {
+    var testCases = [];
+    if (filterLaunch && filterLaunch.length > 0) {
+      if (testcasesTree.testCases && testcasesTree.testCases.length > 0) {
+  
+        filterLaunch.forEach(status => {
+          testCases = testCases.concat(this.state.launch.testCaseTree?.testCases.filter((tc) => tc.launchStatus.includes(status)));
+        });
+        if (testCases && testCases.length > 0) {
+          this.state.launch.testCaseTree.testCases = testCases;
+        }
+  
+      } else if (testcasesTree.children && testcasesTree.children.length > 0) {
+  
+        filterLaunch.forEach(status => {
+          testCases = testCases.concat(testcasesTree.children[0].testCases.filter((tc) => tc.launchStatus.includes(status)));
+        }
+        );
+        if (testCases && testCases.length > 0) {
+          testcasesTree.children[0].testCases = testCases;
+        }
+      }
+    }
+    return testcasesTree;
+  }
+  
+
   render() {
     return (
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="launch-title">
-          <h3>
-            <Link to={"/" + this.state.projectId + "/launch/" + this.state.launch.id} onClick={this.showLaunchStats}>
-              {this.state.launch.name}
-            </Link>
-          </h3>
-          {/* Added for Issue 82 */}
-          <div>
-            Number of Testcases : <span style={{fontWeight : 'bold'}}>{this.state.launch.launchStats.total}</span>
-          </div>
+        <div className="row filter-control-row">
+            <div className="col-3">
+              <h3>
+                <Link to={"/" + this.state.projectId + "/launch/" + this.state.launch.id} onClick={this.showLaunchStats}>
+                  {this.state.launch.name}
+                </Link>
+              </h3>
+            </div>
+            <div className="col-1"></div>
+            <LaunchFilterByStatus
+                launchStats={this.state.launch.launchStats}
+                callback={this.getLaunch} />
+      
         </div>
+          {/* Added for Issue 82 */}
+        <div>
+          Number of Testcases : <span style={{fontWeight : 'bold'}}>{this.state.launch.launchStats.total}</span>
+        </div>
+        <br/>
         <div className="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
