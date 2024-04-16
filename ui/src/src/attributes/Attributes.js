@@ -24,15 +24,13 @@ class Attributes extends SubComponent {
   }
 
   onAttributeAdded(attribute) {
-    if (this.state.attributes.find != null) {
-       var attributeToUpdate = this.state.attributes.find(function (attr) {
-         return attr.id === attribute.id;
-       });
-       if (!attributeToUpdate) {
-         this.state.attributes.push(attribute);
-       } else {
-         this.state.attributes[this.state.attributes.indexOf(attributeToUpdate)] = attribute;
-       }
+    var attributeToUpdate = this.state.attributes.find(function (attr) {
+      return attr.id === attribute.id;
+    });
+    if (!attributeToUpdate) {
+      this.state.attributes.push(attribute);
+    } else {
+      this.state.attributes[this.state.attributes.indexOf(attributeToUpdate)] = attribute;
     }
     this.state.attributeToEdit = {
       id: null,
