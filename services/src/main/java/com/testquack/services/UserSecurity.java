@@ -164,6 +164,9 @@ System.out.flush();
         case "admin":
            returnRole = Role.ADMIN;
            break;
+        case "nontestgroup":
+           returnRole = Role.NONTESTGROUP;
+           break;
         default:
            System.out.println("translateRoleFormat - role: " + role);
            System.out.flush();
