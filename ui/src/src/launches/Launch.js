@@ -5,7 +5,6 @@ import SubComponent from "../common/SubComponent";
 import TestCase from "../testcases/TestCase";
 import LaunchTestcaseControls from "../launches/LaunchTestcaseControls";
 import LaunchAttributeStatsChart from "../launches/LaunchAttributeStatsChart";
-import LaunchFilterByStatus from "./LaunchFilterByStatus";
 import LaunchForm from "../launches/LaunchForm";
 import { Link } from "react-router-dom";
 import * as Utils from "../common/Utils";
@@ -47,7 +46,23 @@ class Launch extends SubComponent {
       includedFields: "name,minLines,maxLines",
      },
      tcSizes: {},
+     count:0,
+     filterLaunch:[],
+     notRun: 0,
+     passButtonCounter: 0,
+     failButtonCounter: 0,
+     brokenButtonCounter: 0,
+     NotrunButtonCounter: 0,
+     refreshTree:false,
   };
+
+  LAUNCH_STATUS = Object.freeze({
+    PASSED: 'PASSED',
+    FAILED: 'FAILED',
+    BROKEN: 'BROKEN',
+    RUNNABLE: 'RUNNABLE',
+    RUNNING: 'RUNNING',
+  });
 
   constructor(props) {
     super(props);
@@ -62,6 +77,8 @@ class Launch extends SubComponent {
     this.buildAttributesStatusMap = this.buildAttributesStatusMap.bind(this);
     this.addUnknownAttributesToAttributesStatusMap = this.addUnknownAttributesToAttributesStatusMap.bind(this);
     this.handleGetTCSizes = this.handleGetTCSizes.bind(this);
+    this.updateCount = this.updateCount.bind(this);
+    this.renderLaunchFilter = this.renderLaunchFilter.bind(this);
   }
 
   componentDidMount() {
@@ -90,7 +107,7 @@ class Launch extends SubComponent {
 
    }
 
-  getLaunch(buildTree, filterLaunch) {
+  getLaunch(buildTree) {
     Backend.get(this.state.projectId + "/launch/" + this.props.match.params.launchId)
       .then(response => {
         this.state.launch = response;
@@ -111,12 +128,14 @@ class Launch extends SubComponent {
         this.buildAttributesStatusMap(this.state.launch.testCaseTree);
         this.addUnknownAttributesToAttributesStatusMap(this.state.launch.testCaseTree);
         //AAdded logic to filter TCS on launch
-        this.state.launch.testCaseTree = this.filterLaunchTestCasesOnStatus(this.state.launch.testCaseTree, filterLaunch)
+        this.state.launch.testCaseTree = this.filterLaunchTestCasesOnStatus(this.state.launch.testCaseTree, this.state.filterLaunch);
         this.setState(this.state);
         if (buildTree) {
+          this.updateCount();
           this.buildTree();
         }
         this.checkUpdatedTestCases();
+    
       })
       .catch(error => {
         console.log(error);
@@ -230,6 +249,7 @@ class Launch extends SubComponent {
   }
 
   onTestcaseStateChanged(testcase) {
+
     var updatedTestCase = Utils.getTestCaseFromTree(
       testcase.uuid,
       this.state.launch.testCaseTree,
@@ -238,13 +258,14 @@ class Launch extends SubComponent {
       },
     );
     Object.assign(updatedTestCase, testcase);
-    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes);
-
+    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes) || [];
     var testCaseHtmlNode = $("li[data-id='" + testcase.uuid + "']").find("img");
     testCaseHtmlNode.attr("src", Utils.getStatusImg(testcase));
 
     if (this.state.selectedTestCase.uuid == testcase.uuid) {
       this.state.selectedTestCase = testcase;
+      //Need to rerender buttons and count when state changed
+      this.state.refreshTree = true;
       this.setState(this.state);
     }
 
@@ -262,6 +283,14 @@ class Launch extends SubComponent {
             $(htmlImageNode).attr("src", nodeImage);
           });
       }
+    }
+     //rerender buttons, tree and update number
+    if(this.state.refreshTree){
+      this.getUpdatedLaunch();
+      this.state.launch.testCaseTree = this.filterLaunchTestCasesOnStatus();
+      this.buildTree();
+      this.updateCount();
+      this.renderLaunchFilter();
     }
   }
 
@@ -285,6 +314,7 @@ class Launch extends SubComponent {
         this.updateTestCasesStateFromLaunch(child);
       }.bind(this),
     );
+    
   }
 
   buildTestCasesStateMap(tree) {
@@ -313,32 +343,165 @@ class Launch extends SubComponent {
     event.preventDefault();
   }
 
-  filterLaunchTestCasesOnStatus(testcasesTree, filterLaunch) {
+  filterLaunchTestCasesOnStatus() {
+    let testcasesTree = this.state.launch.testCaseTree; 
+    let filterLaunch = this.state.filterLaunch;
     var testCases = [];
-    if (filterLaunch && filterLaunch.length > 0) {
-      if (testcasesTree.testCases && testcasesTree.testCases.length > 0) {
+    if (filterLaunch && filterLaunch.length>0) {
+      if (testcasesTree.testCases && testcasesTree.testCases.length>0) {
   
         filterLaunch.forEach(status => {
           testCases = testCases.concat(this.state.launch.testCaseTree?.testCases.filter((tc) => tc.launchStatus.includes(status)));
         });
-        if (testCases && testCases.length > 0) {
+        if (testCases ) {
           this.state.launch.testCaseTree.testCases = testCases;
         }
   
-      } else if (testcasesTree.children && testcasesTree.children.length > 0) {
+      } else if (testcasesTree.children && testcasesTree.children.length>0) {
   
         filterLaunch.forEach(status => {
           testCases = testCases.concat(testcasesTree.children[0].testCases.filter((tc) => tc.launchStatus.includes(status)));
         }
         );
-        if (testCases && testCases.length > 0) {
+
+        
+        //TODO
+        if (testCases ) {
           testcasesTree.children[0].testCases = testCases;
+
         }
       }
     }
     return testcasesTree;
   }
   
+  updateCount() {
+    let testCases = [];
+    if (this.state.launch.testCaseTree) {
+    let  tcTree = this.state.launch.testCaseTree;
+      if (tcTree.testCases && tcTree.testCases.length>0) {
+
+        this.state.count = tcTree.testCases.length;
+      } else if(tcTree.children && tcTree.children.length>0) {
+
+        tcTree.children.forEach(child=> 
+          {
+             testCases = testCases.concat(child.testCases)
+          })
+
+        // this.state.count = tcTree.children[0].testCases.length;
+        this.state.count = testCases.length;
+
+      }
+    }
+   this.setState(this.state);
+  }
+
+  getUpdatedLaunch(){
+    //
+    Backend.get(this.state.projectId + "/launch/" + this.props.match.params.launchId)
+    .then(response => {
+      this.state.launch = response;
+      this.state.refreshTree=false;
+      this.setState(this.state);
+
+    })
+    .catch(error => {
+      console.log(error);
+      this.setState({errorMessage: "Couldn't get launch: " + error});
+      this.state.loading = false;
+      this.setState(this.state);
+    });
+  }
+
+
+
+
+  renderLaunchFilter(){
+    this.state.notRun = this.state.launch.launchStats.statusCounters.RUNNABLE + this.state.launch.launchStats.statusCounters.RUNNING; 
+      return (
+        
+        <div className="col-6 btn-group" role="group">
+          <button type="button" className={this.state.passButtonCounter === 0 ? 'btn btn-success' : 'btn btn-success disabled'}
+            onClick={e => this.handleSubmit("PASSED", e)} >
+            Passed &nbsp;
+            <span className="badge badge-light text-dark" > {this.state.launch.launchStats.statusCounters.PASSED}
+            </span>
+          </button>
+          <button type="button" className={this.state.failButtonCounter === 0 ? 'btn btn-danger' : 'btn btn-danger disabled'}
+            onClick={e => this.handleSubmit(this.LAUNCH_STATUS.FAILED, e)} >
+            Fail  &nbsp;
+            <span className="badge badge-light text-dark" > {this.state.launch.launchStats.statusCounters.FAILED}
+            </span>
+          </button>
+          <button type="button" className={this.state.brokenButtonCounter === 0 ? 'btn btn-warning' : 'btn btn-warning disabled'}
+            onClick={e => this.handleSubmit(this.LAUNCH_STATUS.BROKEN, e)} >
+            Broken &nbsp;<span className="badge badge-light text-dark" > {this.state.launch.launchStats.statusCounters.BROKEN}
+            </span>
+          </button>
+          <button type="button" className={this.state.NotrunButtonCounter === 0 ? 'btn btn-secondary' : 'btn btn-secondary disabled'}
+            onClick={e => this.handleSubmit(this.LAUNCH_STATUS.RUNNABLE, e)} >
+            Not Run &nbsp;
+            <span className="badge badge-light text-dark" > {this.state.notRun}
+            </span>
+          </button>
+        </div>
+      );
+  }
+
+
+  handleSubmit(status, event) {
+  
+    switch (status) {
+      case this.LAUNCH_STATUS.PASSED:
+        this.state.filterLaunch.push(this.LAUNCH_STATUS.PASSED);
+        this.state.passButtonCounter++;
+            if (this.state.passButtonCounter > 1) {
+          this.state.filterLaunch = this.state.filterLaunch.filter((stat) => stat !== status);
+          this.state.passButtonCounter = 0;
+        }
+        break;
+      case this.LAUNCH_STATUS.FAILED:
+        this.state.filterLaunch.push(this.LAUNCH_STATUS.FAILED);
+        this.state.failButtonCounter++;
+        if (this.state.failButtonCounter > 1) {
+          this.state.filterLaunch = this.state.filterLaunch.filter((stat) => stat !== status);
+          this.state.failButtonCounter = 0;
+        }
+        break;
+      case this.LAUNCH_STATUS.BROKEN:
+
+      this.state.filterLaunch.push(this.LAUNCH_STATUS.BROKEN);
+        this.state.brokenButtonCounter++
+
+        if (this.state.brokenButtonCounter > 1) {
+          this.state.filterLaunch = this.state.filterLaunch.filter((stat) => stat !== status);
+          this.state.brokenButtonCounter = 0;
+        }
+        break;
+      case this.LAUNCH_STATUS.RUNNING:
+      case this.LAUNCH_STATUS.RUNNABLE:
+        this.state.filterLaunch.push(this.LAUNCH_STATUS.RUNNING);
+        this.state.filterLaunch.push(this.LAUNCH_STATUS.RUNNABLE);
+        this.state.NotrunButtonCounter++;
+        if (this.state.NotrunButtonCounter > 1) {
+          this.state.filterLaunch = this.state.filterLaunch.filter((stat) => (stat !== this.LAUNCH_STATUS.RUNNABLE) && (stat !== this.LAUNCH_STATUS.RUNNING));
+          this.state.NotrunButtonCounter = 0;
+          
+        }
+        break;
+      default:
+        console.log(`Wrong selection`);
+    }
+    
+    this.getLaunch(true);
+    // this.getLaunch(false);
+    event.preventDefault();
+
+  }
+
+
+
 
   render() {
     return (
@@ -353,14 +516,11 @@ class Launch extends SubComponent {
               </h3>
             </div>
             <div className="col-1"></div>
-            <LaunchFilterByStatus
-                launchStats={this.state.launch.launchStats}
-                callback={this.getLaunch} />
-      
+           { this.renderLaunchFilter()}
         </div>
           {/* Added for Issue 82 */}
         <div>
-          Number of Testcases : <span style={{fontWeight : 'bold'}}>{this.state.launch.launchStats.total}</span>
+          Number of Testcases : <span style={{fontWeight : 'bold'}}>{this.state.count}</span>
         </div>
         <br/>
         <div className="sweet-loading">
