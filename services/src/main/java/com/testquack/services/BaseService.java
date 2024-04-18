@@ -283,7 +283,11 @@ System.out.flush();
               return false;
            }
         } else if ((entity instanceof Launch) || (entity instanceof Event)) {
-           // allow anybody to write to a launch
+
+	   if (UserSecurity.allowLaunchWriteRequest(session.getPerson().getRoles(), entity) == false) {
+              return false;
+	   }
+
            System.out.println("userCanUpdateProject - entity is a Launch or Event");
            System.out.flush();
            return true;

@@ -27,7 +27,7 @@
             <xs:enumeration value="TESTER"/>
             <xs:enumeration value="TESTDEVELOPER"/>
             <xs:enumeration value="ADMIN"/>
-            <xs:enumeration value="NONTESTGROUP"/>
+            <xs:enumeration value="OBSERVERONLY"/>
         </xs:restriction>
     </xs:simpleType>
 

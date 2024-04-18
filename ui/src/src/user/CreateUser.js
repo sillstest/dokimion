@@ -146,7 +146,7 @@ class CreateUser extends Component {
                   <option key="role" value="TESTER">TESTER</option>
                   <option key="role" value="TESTDEVELOPER">TESTDEVELOPER</option>
 		  <option key="role" value="ADMIN">ADMINISTRATOR</option>
-		  <option key="role" value="NONTESTGROUP">NONTESTGROUP</option>
+		  <option key="role" value="OBSERVERONLY">OBSERVERONLY</option>
                 </select>
               </div>
            </div>
