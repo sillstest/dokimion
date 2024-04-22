@@ -130,6 +130,52 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
       return getUserCollectionAttribute(loginToFind, "role");
    }
 
+   public String getCollectionAttributeValue(String collectionName, String attributeNameToSearch)
+   {
+
+      System.out.println("MongoDBInterface::getCollectionAttributeValue - collectionName, attributeNameToSearch: " + collectionName + ", " + attributeNameToSearch);
+      System.out.flush();
+
+      MongoClient mongoClient = getMongoClient();
+      MongoDatabase db = mongoClient.getDatabase(mongoDBname);
+
+      MongoCollection<Document> collection = db.getCollection(collectionName);
+      String attributeValue ="";
+
+      JSONParser parser = new JSONParser();
+
+      System.out.println("MongoDBInterface::getCollectionAttributeValue  - after parser call");
+      System.out.flush();
+
+      for (Document doc : collection.find())
+      {
+	      String jsonStr = doc.toJson();
+
+         System.out.println("MongoDBInterface::getCollectionAttributeValue - for loop after toJson");
+         System.out.flush();
+
+	      Object obj = null;
+	      try {
+	         obj = parser.parse(jsonStr);
+	      } catch (ParseException e) {
+            System.out.println("MongoDBInterface::getCollectionAttributeValue  - ParseException - jsonStr: " + jsonStr);
+	      }
+
+	      JSONObject jsonObj = (JSONObject)obj;
+
+	      attributeValue = (String)jsonObj.get(attributeNameToSearch);
+
+         System.out.println("MongoDBInterface::getCollectionAttributeValue - bottom of for loop, atttributeValue: " + attributeValue);
+         System.out.flush();
+
+      }
+
+      mongoClient.close();
+
+
+      return attributeValue;
+   }
+
    private String getUserCollectionAttribute(String loginToFind, String userAttribute)
    {
       MongoClient mongoClient = getMongoClient();

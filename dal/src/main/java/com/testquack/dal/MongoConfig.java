@@ -69,8 +69,8 @@ System.out.flush();
            final String secretKey = "al;jf;lda1_+_!!()!!!!";
            String decryptedPasswd = aes.decrypt(password, secretKey) ;
 
-System.out.println("MongoDBInterface - decryptedPasswd: " + decryptedPasswd);
-System.out.flush();
+//System.out.println("MongoDBInterface - decryptedPasswd: " + decryptedPasswd);
+//System.out.flush();
 
             settingsBuilder.credential(MongoCredential.createCredential(username, "admin", 
                decryptedPasswd.toCharArray()));
