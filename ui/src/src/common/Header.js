@@ -253,18 +253,20 @@ class Header extends Component {
                   Launches
                 </Link>
               </li>
+              {(this.state.session.person.roles != null && this.state.session.person.roles[0] != "OBSERVERONLY") &&
               <li className="nav-item">
                 <Link className="nav-link" to={"/" + this.props.project + "/testsuites"}>
                   Suites
                 </Link>
                   </li>
-                  {Utils.isAdmin(this.state.session) &&
+               } 
+               {(this.state.session.person.roles != null && this.state.session.person.roles[0] != "OBSERVERONLY" || Utils.isAdmin(this.state.session)) &&
                     <li className="nav-item">
                       <Link className="nav-link" to={"/" + this.props.project + "/attributes"}>
                         Attributes
                       </Link>
                     </li>
-                  }
+               } 
             </ul>
           )}
           <ul className="navbar-nav">

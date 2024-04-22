@@ -6,6 +6,7 @@ import com.testquack.beans.Capability;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
 import com.testquack.beans.Entity;
+import com.testquack.beans.Launch;
 import ru.greatbit.whoru.auth.Session;
 
 import com.testquack.dal.UserRepository;
@@ -98,6 +99,21 @@ System.out.flush();
      return false;
   }
 
+  public static boolean allowLaunchWriteRequest(List<String> roles, Entity entity) {
+
+System.out.println("allowLaunchWriteRequest - roles, roles[0]: " + roles + ", " + roles.get(0));
+System.out.println("allowLaunchWriteRequest - entity instanceof Launch: " + (entity instanceof Launch));
+System.out.flush();
+
+     if (entity instanceof Launch && roles.isEmpty() == false && roles.get(0).equals("OBSERVERONLY")) {
+System.out.println("allowLaunchWriteRequest - launch write NOT allowed");
+System.out.flush();
+        return false;
+     }
+
+     return true;
+  }
+
 
   public static boolean allowUserWriteRequest(
                           String                   organizationId, 
@@ -163,6 +179,9 @@ System.out.flush();
            break;
         case "admin":
            returnRole = Role.ADMIN;
+           break;
+        case "observeronly":
+           returnRole = Role.OBSERVERONLY;
            break;
         default:
            System.out.println("translateRoleFormat - role: " + role);
