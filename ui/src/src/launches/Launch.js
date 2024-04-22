@@ -108,6 +108,7 @@ class Launch extends SubComponent {
    }
 
   getLaunch(buildTree) {
+    // console.log("In getLaunch: " + buildTree + " refresh: "  + this.state.refreshTree);
     Backend.get(this.state.projectId + "/launch/" + this.props.match.params.launchId)
       .then(response => {
         this.state.launch = response;
@@ -127,8 +128,9 @@ class Launch extends SubComponent {
         this.state.attributesStatus = {};
         this.buildAttributesStatusMap(this.state.launch.testCaseTree);
         this.addUnknownAttributesToAttributesStatusMap(this.state.launch.testCaseTree);
-        //AAdded logic to filter TCS on launch
+        //Added logic to filter TCS on launch
         this.state.launch.testCaseTree = this.filterLaunchTestCasesOnStatus(this.state.launch.testCaseTree, this.state.filterLaunch);
+        this.state.refreshTree=false;
         this.setState(this.state);
         if (buildTree) {
           this.updateCount();
@@ -358,14 +360,12 @@ class Launch extends SubComponent {
         }
   
       } else if (testcasesTree.children && testcasesTree.children.length>0) {
-  
+        
         filterLaunch.forEach(status => {
           testCases = testCases.concat(testcasesTree.children[0].testCases.filter((tc) => tc.launchStatus.includes(status)));
         }
         );
-
         
-        //TODO
         if (testCases ) {
           testcasesTree.children[0].testCases = testCases;
 
@@ -377,19 +377,21 @@ class Launch extends SubComponent {
   
   updateCount() {
     let testCases = [];
+    let groups = this.state.launch.testSuite.filter.groups ;
+   
+    this.state.count = this.state.launch.launchStats.total;
     if (this.state.launch.testCaseTree) {
     let  tcTree = this.state.launch.testCaseTree;
-      if (tcTree.testCases && tcTree.testCases.length>0) {
+      if (tcTree.testCases && (groups && groups.length===0)) {
 
         this.state.count = tcTree.testCases.length;
-      } else if(tcTree.children && tcTree.children.length>0) {
+      } else if(tcTree.children && (groups && groups.length>0)) {
 
         tcTree.children.forEach(child=> 
           {
              testCases = testCases.concat(child.testCases)
           })
 
-        // this.state.count = tcTree.children[0].testCases.length;
         this.state.count = testCases.length;
 
       }
@@ -398,7 +400,7 @@ class Launch extends SubComponent {
   }
 
   getUpdatedLaunch(){
-    //
+    //console.log("In updated launchh : " + this.state.projectId + "/launch/" + this.props.match.params.launchId);
     Backend.get(this.state.projectId + "/launch/" + this.props.match.params.launchId)
     .then(response => {
       this.state.launch = response;
@@ -495,7 +497,7 @@ class Launch extends SubComponent {
     }
     
     this.getLaunch(true);
-    // this.getLaunch(false);
+
     event.preventDefault();
 
   }
