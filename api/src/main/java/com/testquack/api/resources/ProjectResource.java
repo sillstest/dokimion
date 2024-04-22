@@ -91,7 +91,9 @@ System.out.flush();
 
             System.out.println("ProjectResource::create: checkProject returned TRUE - found it");
             System.out.flush();
-            return (Project)null;
+
+            Project project = null;
+            return project;
         }
 
         return service.createProject(getUserSession(), entity);
@@ -117,7 +119,8 @@ System.out.flush();
             System.out.println("ProjectResource::findOne: checkProject returned FALSE - did NOT find it");
             System.out.flush();
 
-            return (Project)null;
+            Project project = null;
+            return project;
         }
 
         return getService().save(getUserSession(), null, entity);
@@ -143,7 +146,8 @@ System.out.flush();
             System.out.println("ProjectResource::findOne: checkProject returned FALSE - did NOT find it");
             System.out.flush();
 
-            return (Response)null;
+            Response response = null;
+            return response;
         }
 
         getService().delete(getUserSession(), null, id);
