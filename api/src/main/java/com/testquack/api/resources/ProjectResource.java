@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Project;
@@ -50,6 +51,21 @@ public class ProjectResource extends BaseResource<Project> {
             @ApiResponse(code = 200, message = "Successful operation")
     })
     public Project findOne(@ApiParam(value = "Entity Id", required = true) @PathParam("id") String id) {
+
+        System.out.println("ProjectResource::findOne: id: " + id);
+        System.out.flush();
+        
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+                                    getService().getMongoUsername(),
+                                    getService().getMongoPassword(),
+                                    getService().getMongoDBName(),
+                                    id) == false) {
+
+System.out.println("ProjectResource::findOne: checkProject returned FALSE");
+System.out.flush();
+
+           return null;
+        }
         return getService().findOne(getUserSession(), id, id);
     }
 
@@ -76,6 +92,19 @@ System.out.flush();
     public Project update(@ApiParam(value = "Entity", required = true) Project entity) {
 System.out.println("ProjectResource::update - project: " + entity);
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            entity.getId()) == false) {
+
+            System.out.println("ProjectResource::findOne: checkProject returned FALSE");
+            System.out.flush();
+
+            return null;
+        }
+
         return getService().save(getUserSession(), null, entity);
     }
 
@@ -88,6 +117,18 @@ System.out.flush();
             @ApiResponse(code = 200, message = "Successful operation")
     })
     public Response delete(@ApiParam(value = "Id", required = true) @PathParam("id") String id) {
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            id) == false) {
+
+            System.out.println("ProjectResource::findOne: checkProject returned FALSE");
+            System.out.flush();
+
+            return null;
+        }
         getService().delete(getUserSession(), null, id);
         return ok().build();
     }

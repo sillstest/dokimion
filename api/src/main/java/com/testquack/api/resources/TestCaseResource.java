@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.api.utils.APIValidation;
 import com.testquack.beans.Attachment;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Issue;
@@ -61,6 +62,21 @@ public class TestCaseResource extends BaseCrudResource<TestCase> {
     public TestCaseTree findFilteredTree(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId) {
 System.out.println("TestCaseResource::findFiltered - projectId: " + projectId);
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("TestCaseResource::findFilteredTree: checkProject returned FALSE - did NOT find project id");
+            System.out.flush();
+
+
+            TestCaseTree tcTree = null;
+            return tcTree;
+        }
+
         return service.findFilteredTree(getUserSession(), projectId, (TestcaseFilter) initFilter(request));
     }
 
@@ -75,6 +91,34 @@ System.out.flush();
 System.out.println("TestCaseResource::upload - testcaseId: " + testcaseId + ", fileDetail: " + fileDetail);
 System.out.println("TestCaseResource::upload - uploadedInputStream: " + uploadedInputStream);
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("TestCaseResource::upload: checkTestCase returned FALSE - did NOT find project id");
+            System.out.flush();
+
+            TestCase tc = null;
+            return tc;
+        }
+        if (APIValidation.checkTestCaseId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId,
+            testcaseId) == false) {
+
+            System.out.println("TestCaseResource::upload: checkTestCase returned FALSE - did NOT find testcase id");
+            System.out.flush();
+
+            TestCase tc = null;
+            return tc;
+        }
+
+
         if (fileDetail == null) {
             throw new EntityValidationException();
         }
@@ -90,6 +134,46 @@ System.out.flush();
             @PathParam("attachmentId") final String attachmentId) {
 System.out.println("TestCaseResource::downloadAttachment - testcaseId: " + testcaseId + ", attachmentId: " + attachmentId);
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("TestCaseResource::downloadAttachment: checkTestCase returned FALSE - did NOT find project id");
+            System.out.flush();
+
+            Response response = null;
+            return response;
+        }
+        if (APIValidation.checkTestCaseId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId,
+            testcaseId) == false) {
+
+            System.out.println("TestCaseResource::downloadAttachment: checkTestCase returned FALSE - did NOT find testcase id");
+            System.out.flush();
+
+            Response response = null;
+            return response;
+        }
+        if (APIValidation.checkAttachmentId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId,
+            testcaseId,
+            attachmentId) == false) {
+
+            System.out.println("TestCaseResource::downloadAttachment: checkTestCase returned FALSE - did NOT find attachment id");
+            System.out.flush();
+
+            Response response = null;
+            return response;
+        }
 
         Attachment attachment = service.getAttachment(getUserSession(), projectId, testcaseId, attachmentId);
         try {
@@ -110,6 +194,47 @@ System.out.flush();
             @PathParam("attachmentId") final String attachmentId) throws IOException {
 System.out.println("TestCaseResource::deleteAttachment - testcaseId: " + testcaseId + ", attachmentId: " + attachmentId);
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("TestCaseResource::deleteAttachment: checkTestCase returned FALSE - did NOT find project id");
+            System.out.flush();
+
+            TestCase tc = null;
+            return tc;
+        }
+        if (APIValidation.checkTestCaseId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId,
+            testcaseId) == false) {
+
+            System.out.println("TestCaseResource::deleteAttachment: checkTestCase returned FALSE - did NOT find testcase id");
+            System.out.flush();
+
+            TestCase tc = null;
+            return tc;
+        }
+        if (APIValidation.checkAttachmentId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId,
+            testcaseId,
+            attachmentId) == false) {
+
+            System.out.println("TestCaseResource::deleteAttachment: checkTestCase returned FALSE - did NOT find attachment id");
+            System.out.flush();
+
+            TestCase tc = null;
+            return tc;
+        }
+
         return service.deleteAttachment(getUserSession(), projectId, testcaseId, attachmentId);
     }
 
@@ -127,6 +252,19 @@ System.out.flush();
                                  throws Exception {
 System.out.println("TestCaseResource::LockAllTestCases - projectId: " + projectId);
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("TestCaseResource::LockAllTestCases: checkTestCase returned FALSE - did NOT find project id");
+            System.out.flush();
+
+            Response response = null;
+            return response;
+        }
 
         List<TestCase> testcasesList = service.findAll(getUserSession(), projectId);
         JSONArray jsonAry = new JSONArray();
@@ -158,6 +296,19 @@ System.out.flush();
 System.out.println("TestCaseResource::UnlockAllTestCases - projectId: " + projectId);
 System.out.flush();
 
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("TestCaseResource::UnlockAllTestCases: checkTestCase returned FALSE - did NOT find project id");
+            System.out.flush();
+
+            Response response = null;
+            return response;
+        }
+
         List<TestCase> testcasesList = service.findAll(getUserSession(), projectId);
         JSONArray jsonAry = new JSONArray();
 
@@ -188,6 +339,33 @@ System.out.flush();
                                  throws Exception {
 System.out.println("TestCaseResource::LockTestCase - projectId: " + projectId);
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("TestCaseResource::LockTestCase: checkTestCase returned FALSE - did NOT find project id");
+            System.out.flush();
+
+            TestCase tc = null;
+            return tc;
+        }
+        if (APIValidation.checkTestCaseId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId,
+            testcaseId) == false) {
+
+            System.out.println("TestCaseResource::LockTestCase: checkTestCase returned FALSE - did NOT find testcase id");
+            System.out.flush();
+
+
+            TestCase tc = null;
+            return tc;
+        }
 /*
 TestCase tc = new TestCase();
 return tc;
@@ -204,6 +382,34 @@ System.out.println("TestCaseResource::UnlockTestCase - projectId: " + projectId)
 System.out.println("TestCaseResource::UnlockTestCase - testcaseId: " + testcaseId);
 System.out.println("TestCaseResource::LockTestCase - stubbed out");
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("TestCaseResource::UnlockTestCase: checkTestCase returned FALSE - did NOT find project id");
+            System.out.flush();
+
+
+            TestCase tc = null;
+            return tc;
+        }
+        if (APIValidation.checkTestCaseId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId,
+            testcaseId) == false) {
+
+            System.out.println("TestCaseResource::UnlockTestCase: checkTestCase returned FALSE - did NOT find testcase id");
+            System.out.flush();
+
+
+            TestCase tc = null;
+            return tc;
+        }
 /*
 TestCase tc = new TestCase();
 return tc;
@@ -245,12 +451,41 @@ return tc;
     @Path("/issue/projects/suggest")
     public List<TrackerProject> suggestProjects(@PathParam("projectId") String projectId,
                                                 @QueryParam("text") String text) throws Exception {
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+                getService().getMongoUsername(),
+                getService().getMongoPassword(),
+                getService().getMongoDBName(),
+                projectId) == false) {
+                                        
+            System.out.println("TestCaseResource::suggestProjects: checkProjectId returned FALSE - did NOT find project id");
+            System.out.flush();
+                                        
+                                        
+            List<TrackerProject>  list_tp = null;
+            return list_tp;
+        }
+                                                                    
         return service.suggestProjects(request, getUserSession(), projectId, text);
     }
 
     @GET
     @Path("/issue/projects")
     public List<TrackerProject> getProjects(@PathParam("projectId") String projectId) throws Exception {
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+                getService().getMongoUsername(),
+                getService().getMongoPassword(),
+                getService().getMongoDBName(),
+                projectId) == false) {
+                                        
+            System.out.println("TestCaseResource::getProjects: checkProjectId returned FALSE - did NOT find project id");
+            System.out.flush();
+                                        
+                                        
+            List<TrackerProject>  list_tp = null;
+            return list_tp;
+        }
         return service.getAllProjects(request, getUserSession(), projectId);
     }
 
@@ -279,6 +514,34 @@ return tc;
     @Path("/{testcaseId}/clone")
     public TestCase cloneTestCase(@PathParam("projectId") String projectId,
                                   @PathParam("testcaseId") final String testcaseId) {
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+                getService().getMongoUsername(),
+                getService().getMongoPassword(),
+                getService().getMongoDBName(),
+                projectId) == false) {
+                                                            
+            System.out.println("TestCaseResource::getProjects: v returned FALSE - did NOT find project id");
+            System.out.flush();
+                                                            
+                                                            
+            TestCase tc = null;
+            return tc;
+        }
+        if (APIValidation.checkTestCaseId(getService().getMongoReplicaSet(),
+                getService().getMongoUsername(),
+                getService().getMongoPassword(),
+                getService().getMongoDBName(),
+                projectId,
+                testcaseId) == false) {
+                                                            
+            System.out.println("TestCaseResource::cloneTestCase: checkTestCaseId returned FALSE - did NOT find testcase id");
+            System.out.flush();
+                                                            
+                                                            
+            TestCase tc = null;
+            return tc;
+        }
         return service.cloneTestCase(getUserSession(), projectId, testcaseId);
     }
 
