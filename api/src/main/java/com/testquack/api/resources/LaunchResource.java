@@ -1,6 +1,5 @@
 package com.testquack.api.resources;
 
-import com.testquack.api.utils.APIValidation;
 import com.testquack.beans.FailureDetails;
 import com.testquack.beans.Launch;
 import com.testquack.beans.LaunchStatistics;
@@ -66,34 +65,6 @@ public class LaunchResource extends BaseCrudResource<Launch> {
 
 System.out.println("LaunchResource::updateLaunchTestCaseStatus - launch id: " + launchId);
 System.out.flush();
-
-        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
-            getService().getMongoUsername(),
-            getService().getMongoPassword(),
-            getService().getMongoDBName(),
-            projectId) == false) {
-
-            System.out.println("LaunchResource::updateLaunchTestCaseStatus: checkProject returned FALSE - did NOT find it");
-            System.out.flush();
-
-            LaunchTestCase launchTestCase = null;
-            return launchTestCase;
-        }
-
-        if (APIValidation.checkLaunchIdNTestCaseUUID(getService().getMongoReplicaSet(),
-            getService().getMongoUsername(),
-            getService().getMongoPassword(),
-            getService().getMongoDBName(),
-            projectId,
-            launchId,
-            testcaseUUID) == false) {
-                                
-System.out.println("LaunchResource::updateLaunchTestCaseStatus: checkLaunchTestCaseIdNUUID returned FALSE - did NOT find launch id");
-System.out.flush();
-                                                           
-            LaunchTestCase launchTestCase = null;
-            return launchTestCase;
-        }
 
         return service.updateLaunchTestCaseStatus(request, getUserSession(), projectId, launchId, testcaseUUID, status, failureDetails);
     }
