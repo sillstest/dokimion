@@ -283,7 +283,11 @@ System.out.flush();
               return false;
            }
         } else if ((entity instanceof Launch) || (entity instanceof Event)) {
-           // allow anybody to write to a launch
+
+	   if (UserSecurity.allowLaunchWriteRequest(session.getPerson().getRoles(), entity) == false) {
+              return false;
+	   }
+
            System.out.println("userCanUpdateProject - entity is a Launch or Event");
            System.out.flush();
            return true;
@@ -438,6 +442,10 @@ System.out.flush();
                 }
                 entity = (E) converter.transform(existingEntity, entity);
             }
+System.out.println("BaseService::update - entity: " + entity);
+System.out.println("BaseService::update - existingEntity: " + existingEntity);
+System.out.flush();
+
             beforeUpdate(session, projectId, existingEntity, entity);
             entity = doSave(session, projectId, entity);
             afterUpdate(session, projectId, existingEntity, entity);

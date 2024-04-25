@@ -61,8 +61,7 @@ class ProjectSettings extends SubComponent {
     this.handleLauncherChange = this.handleLauncherChange.bind(this);
   }
 
-  componentDidMount() {
-    super.componentDidMount();
+  componentWillMount() {
     Backend.get("project/" + this.state.projectId)
       .then(response => {
         this.state.project = response;
@@ -70,10 +69,14 @@ class ProjectSettings extends SubComponent {
         this.refreshGroupsToDisplay();
         this.refreshUsersToDisplay();
         this.setState(this.state);
-      })
+       })
       .catch(error => {
         this.setState({errorMessage: "Couldn't get project: " + error});
       });
+  }
+
+  componentDidMount() {
+    super.componentDidMount();
 
     Backend.get("launcher/descriptors")
       .then(response => {
@@ -81,7 +84,7 @@ class ProjectSettings extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get launcher descriptors: " + error});
+        console.log("Couldn't get launcher descriptors: " + error);
       });
   }
 

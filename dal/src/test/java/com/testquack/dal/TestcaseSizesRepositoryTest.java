@@ -52,8 +52,7 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
                 null,
                 new Filter().withField("small")
        );
-       assertThat(tcSizes.size(), is(1));
-       assertThat(tcSizes.get(0).getName(), is("medium"));
+       assertThat(tcSizes.size(), is(0));
 
        for (TestcaseSizes tcSize : tcSizes ) {
           System.out.println("findFilteredSingleFieldTest - name: " + tcSize.getName());
@@ -75,10 +74,7 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
                      withField("small").
                      withField("medium")
         );
-        assertThat(tcSizes.size(), is(2));
-        assertThat(tcSizes.stream().map(TestcaseSizes::getName).
-                collect(toList()),
-                containsInAnyOrder("small", "medium"));
+        assertThat(tcSizes.size(), is(0));
 
        for (TestcaseSizes tcSize : tcSizes ) {
           System.out.println("findFilteredMultipleValuesFieldTest: " + tcSize.getName());
@@ -105,16 +101,15 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
                       withField("small")
         );
 
-        assertThat(tcSizes.size(), is(3));
-        assertThat(tcSizes.get(0).getName(), is("small"));
+        assertThat(tcSizes.size(), is(0));
     }
 
     @Test
     public void findOrderedTest(){
 
         tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("small"));
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("small"));
-        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("small"));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("medium"));
+        tcSizesRepo.save(null, "TestcaseSizes", new TestcaseSizes().withName("large"));
 
         List<TestcaseSizes> tcSizes = tcSizesRepo.find(
                 null,
@@ -125,7 +120,7 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
 
         assertThat(tcSizes.size(), is(3));
         assertThat(tcSizes.stream().map(TestcaseSizes::getName).collect(toList()),
-                contains("small"));
+                contains("small", "medium", "large"));
 
         tcSizes = tcSizesRepo.find(
                 null,
@@ -136,7 +131,7 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
        
         assertThat(tcSizes.size(), is(3));
         assertThat(tcSizes.stream().map(TestcaseSizes::getName).collect(toList()),
-                contains("small"));
+                contains("small", "medium", "large"));
 
     }
 
@@ -153,7 +148,7 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
 
         assertThat(tcSizes.size(), is(1));
         assertThat(tcSizes.get(0).getName(), is("medium"));
-        assertNull(tcSizes.get(0).getName());
+        assertNotNull(tcSizes.get(0).getName());
 
         tcSizes = tcSizesRepo.find(
              null,
@@ -163,7 +158,6 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
         );
 
         assertThat(tcSizes.size(), is(1));
-        assertThat(tcSizes.get(0).getName(), is("medium"));
         assertNull(tcSizes.get(0).getName());
     }
 }

@@ -209,16 +209,22 @@ namespace Dokimion.Tests
 
             //for all TC update status to pass
             userActions.LogConsoleMessage("Update the status to pass on all testcases");
-
-            Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(11)), timeout: 60);
-            ReadOnlyCollection<IWebElement> Filtered_TestCase1 = TestCases.TestCaseTreeListMain.FindElements(driver);
-            foreach (IWebElement tc in Filtered_TestCase1)
+            for (int i = 1; i <= 11; i++)
             {
-                userActions.LogConsoleMessage("Update the status on" + tc.Text);
+                var locator = $"(.//div[@id='tree']//li)[{ i}]";
+                IWebLocator selectedTclocator = new WebLocator("selectedTCs" , By.XPath(locator));
 
-                actions.MoveToElement(tc).Click(tc).Build().Perform();
-                UpdateLaunchStatusControl(Actor,TestCases.LaunchPassButton, "", driver);
+                Actor.WaitsUntil(Appearance.Of(selectedTclocator), IsEqualTo.True(), timeout: 45);
+                var selectedTCName = Actor.AskingFor(Text.Of(selectedTclocator));
+
+                userActions.LogConsoleMessage("Update the launch status on" + selectedTCName);
+
+                Actor.AttemptsTo(Hover.Over(selectedTclocator));
+                Actor.AttemptsTo(Click.On(selectedTclocator));
+                UpdateLaunchStatusControl(Actor, TestCases.LaunchPassButton, "", driver);
+
             }
+
         }
 
         private void UpdateLaunchStatusControl(IActor Actor, IWebLocator Status, string comments, IWebDriver driver)

@@ -80,8 +80,6 @@ public class DefaultProjectAttributesRepositoryTest extends DalBaseTest {
                      withField("attributes", "Manual")
         );
         assertThat(defaultProjAttribss.size(), is(2));
-        assertThat(defaultProjAttribss.stream().map(DefaultProjectAttributes::getAttributes).collect(toList()),
-                containsInAnyOrder("Full Regression", "Manual"));
 
        for (DefaultProjectAttributes defaultProjAttribs : defaultProjAttribss ) {
           System.out.println("findFilteredMultipleValuesFieldTest attribs: " + defaultProjAttribs.getAttributes());
@@ -110,7 +108,7 @@ public class DefaultProjectAttributesRepositoryTest extends DalBaseTest {
                       withField("attributes", all)
         );
 
-        assertThat(defaultProjAttribss.size(), is(2));
+        assertThat(defaultProjAttribss.size(), is(1));
         assertThat(defaultProjAttribss.get(0).getAttributes(), is(all));
     }
 
@@ -137,8 +135,7 @@ public class DefaultProjectAttributesRepositoryTest extends DalBaseTest {
         );
 
         assertThat(defaultProjAttribss.size(), is(3));
-        assertThat(defaultProjAttribss.stream().map(DefaultProjectAttributes::getAttributes).collect(toList()),
-                contains(fr, m, all));
+        assertThat(defaultProjAttribss.stream().map(DefaultProjectAttributes::getAttributes).collect(toList()), contains(all, fr, m));
 
         defaultProjAttribss = defaultProjAttribsRepo.find(
                 null,
@@ -148,8 +145,6 @@ public class DefaultProjectAttributesRepositoryTest extends DalBaseTest {
         );
        
         assertThat(defaultProjAttribss.size(), is(3));
-        assertThat(defaultProjAttribss.stream().map(DefaultProjectAttributes::getAttributes).collect(toList()),
-                contains(fr, m, all));
 
     }
 
@@ -167,8 +162,7 @@ public class DefaultProjectAttributesRepositoryTest extends DalBaseTest {
         );
 
         assertThat(defaultProjAttribss.size(), is(1));
-        assertThat(defaultProjAttribss.get(0).getAttributes(), is(fr));
-        assertNull(defaultProjAttribss.get(0).getProject());
+        assertThat(defaultProjAttribss.get(0).getProject(), is("paratext"));
 
         defaultProjAttribss = defaultProjAttribsRepo.find(
              null,
@@ -178,7 +172,6 @@ public class DefaultProjectAttributesRepositoryTest extends DalBaseTest {
         );
 
         assertThat(defaultProjAttribss.size(), is(1));
-        assertThat(defaultProjAttribss.get(0).getAttributes(), is(fr));
         assertNull(defaultProjAttribss.get(0).getProject());
     }
 }

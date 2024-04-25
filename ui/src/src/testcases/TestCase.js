@@ -173,6 +173,8 @@ class TestCase extends SubComponent {
   }
 
   getTestCase(projectId, testcaseId) {
+console.log("TestCase::getTestCase");
+
     Backend.get(projectId + "/testcase/" + testcaseId)
       .then(response => {
         this.state.testcase = response;
@@ -207,6 +209,7 @@ class TestCase extends SubComponent {
   }
 
   cloneTestCase(){
+console.log("TestCase::cloneTestCase");
       Backend.post(this.projectId  + "/testcase/" + this.state.testcase.id + "/clone")
             .then(response => {
               window.location.href = window.location.href.replace('testcase=' + this.state.testcase.id, 'testcase=' + response.id)
@@ -245,6 +248,7 @@ class TestCase extends SubComponent {
   }
 
   handleSubmit(fieldName, event, index, ignoreToggleEdit) {
+console.log("TestCase::handleSubmit");
     Backend.put(this.projectId + "/testcase/", this.state.testcase)
       .then(response => {
         this.state.testcase = response;
@@ -446,6 +450,7 @@ class TestCase extends SubComponent {
   }
 
   removeTestcase() {
+console.log("TestCase::removeTestCase");
     Backend.delete(this.projectId + "/testcase/" + this.state.testcase.id)
       .then(response => {
         window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");

@@ -417,7 +417,14 @@ namespace Dokimion.Tests
                 Assert.That(title, Is.EqualTo("Smoke Test Launch"));
 
                 userActions.LogConsoleMessage("Verify : Failure message is for test");
+                //Need to open the Project to have access 
+                userActions.LogConsoleMessage("Click on the Project");
+                string locator3 = "//li[contains(@data-id,'Projects')]//i[contains(@class,'gj-icon')]";
+                driver.FindElement(By.XPath(locator3)).Click();
 
+                userActions.LogConsoleMessage("Click on the Header Project List Validation TC");
+                Actor.WaitsUntil(Appearance.Of(TestCases.HeaderProjectListGroupTC), IsEqualTo.True(), timeout:45);
+                Actor.AttemptsTo(Hover.Over(TestCases.HeaderProjectListGroupTC));
                 Actor.AttemptsTo(Click.On(TestCases.HeaderProjectListGroupTC));
                 //Actuall code - Check if Failure is on the testcase
                 Actor.WaitsUntil(Appearance.Of(TestCases.FailureLink), IsEqualTo.True(), timeout: 60);
@@ -432,6 +439,13 @@ namespace Dokimion.Tests
 
                 string Authentication_Priority = Actor.AskingFor(Text.Of(TestCases.AuthenticationGroupTC));
                 Assert.That(Authentication_Priority, Is.EqualTo("Authentication"));
+
+                userActions.LogConsoleMessage("Click on the Authentication");
+                string locator4 = $"(//li[contains(@data-id,'Authentication')]//i[contains(@class,'gj-icon')])[1]";
+                driver.FindElement(By.XPath(locator4)).Click();
+
+                userActions.LogConsoleMessage("Click on the Validate login TC");
+                Actor.WaitsUntil(Appearance.Of(TestCases.ValidateLoginGroupTC), IsEqualTo.True(), timeout:45);
                 string validateLogin = Actor.AskingFor(Text.Of(TestCases.ValidateLoginGroupTC));
                 Assert.That(validateLogin.Contains("Validate login"), Is.True);
 
@@ -458,8 +472,6 @@ namespace Dokimion.Tests
         }
 
         [Test]
-        //TODO The restart-launch GotoLaunch brings up Modal instead of newly created Launch
-        //Need to close the modal explicitly
         public void TC19LaunchRestartFailed()
         {
             //create a group with Functionality and Priority high
@@ -509,11 +521,11 @@ namespace Dokimion.Tests
                     StringAssert.Contains("pass", passImg);
                 }
             }
-            finally { 
+            finally {
 
-            //Delete the launch
-            userActions.LogConsoleMessage("Clean up : Delete Launch Testcase");
-            Actor.AttemptsTo(DeleteLaunch.For(driver));
+                //Delete the launch
+                userActions.LogConsoleMessage("Clean up : Delete Launch Testcase");
+                Actor.AttemptsTo(DeleteLaunch.For(driver));
             }
         }
 
