@@ -202,6 +202,7 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
    {
 
       System.out.println("MongoDBInterface::getCollectionAttributeValue - collectionName, attributeNames ToSearch: " + collectionName + ", " + attribute1NameToSearch + ", " + attribute2NameToSearch);
+      System.out.println("MongoDBInterface::getCollectionAttributeValue - attributeValues ToSearch: " + attribute1ValueToSearch + ", " + attribute2ValueToSearch);
       System.out.flush();
 
       MongoClient mongoClient = getMongoClient();
@@ -223,6 +224,7 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
          System.out.println("MongoDBInterface::getCollectionAttributeValue - for loop after toJson, jsonStr: " + jsonStr);
          System.out.flush();
 
+/*
 	 Object obj = null;
 	 try {
 	   obj = parser.parse(jsonStr);
@@ -234,15 +236,67 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
 
          System.out.println("MongoDBInterface::getCollectionAttributeValue  - jsonObj: " + jsonObj);
          System.out.flush();
-         
-	 String attributeValue_1 = (String)jsonObj.get(attribute1NameToSearch);
-	 String attributeValue_2 = (String)jsonObj.get(attribute2NameToSearch);
+*/
+         JSONObject jsonObj = new JSONObject(jsonStr);
 
-         System.out.println("MongoDBInterface::getCollectionAttributeValue - 1 bottom of for loop, atttributeValue_1, attributeValue_2: " + attributeValue_1 + ", " + attributeValue_2);
+         String attributeValue_1="";
+         boolean attr1ValueFoundFlag = false;
+         if (attribute1NameToSearch.equals("attachments")) {
+System.out.println("MongoDBInterface::getCollectionAttributeValue  - attachments 1 found");
+System.out.println("1 jsonObj.get(attribute1NameToSearch): " + jsonObj.get(attribute1NameToSearch));
+System.out.flush();
+
+            if (jsonObj.get(attribute1NameToSearch) instanceof JSONArray) {
+System.out.println("MongoDBInterface::getCollectionAttributeValue  - JSONArray 1 found");
+System.out.println("2 jsonObj.get(attribute1NameToSearch): " + jsonObj.get(attribute2NameToSearch));
+System.out.flush();
+               JSONArray ary = (JSONArray)jsonObj.get(attribute1NameToSearch);
+               for (int i = 0; i < ary.length(); i++) {
+                  JSONObject aryObj = (JSONObject)ary.getJSONObject(i);
+                  String id = (String)aryObj.get("_id");
+System.out.println("MongoDBInterface::getCollectionAttributeValue  - 1 JSON array loop: " + id);
+System.out.flush();
+                  if (id.equals(attribute1ValueToSearch)) {
+System.out.println("MongoDBInterface::getCollectionAttributeValue  - 1 attr1ValueFoundFlag = true");
+System.out.flush();
+                     attr1ValueFoundFlag = true;
+                     break;
+                  }
+               }
+           }
+         } else {
+           attributeValue_1 = (String)jsonObj.get(attribute1NameToSearch);
+         }
+
+         String attributeValue_2="";
+         boolean attr2ValueFoundFlag = false;
+         if (attribute2NameToSearch.equals("attachments")) {
+System.out.println("MongoDBInterface::getCollectionAttributeValue  - attachments 2 found");
+System.out.println("1 jsonObj.get(attribute2NameToSearch): " + jsonObj.get(attribute2NameToSearch));
+System.out.flush();
+            JSONArray ary = jsonObj.getJSONArray(attribute2NameToSearch);
+            for (int i = 0; i < ary.length(); i++) {
+                JSONObject aryObj = ary.getJSONObject(i);
+                String id = aryObj.getString("_id");
+System.out.println("MongoDBInterface::getCollectionAttributeValue  - 2 JSON array loop: " + id);
+System.out.flush();
+                if (id.equals(attribute2ValueToSearch)) {
+System.out.println("MongoDBInterface::getCollectionAttributeValue  - 2 attr1ValueFoundFlag = true");
+System.out.flush();
+                   attr2ValueFoundFlag = true;
+                }
+            }
+         } else {
+	    attributeValue_2 = (String)jsonObj.get(attribute2NameToSearch);
+         }
+
+         System.out.println("MongoDBInterface::getCollectionAttributeValue - bottom of for loop, atttributeValue_1, attributeValue_2: " + attributeValue_1 + ", " + attributeValue_2);
          System.out.flush();
 
-         if (attribute1ValueToSearch.equals(attributeValue_1) &&
-            (attribute2ValueToSearch.equals(attributeValue_2))) {
+         if ((attr1ValueFoundFlag == true || 
+              attribute1ValueToSearch.equals(attributeValue_1)) &&
+             (attr2ValueFoundFlag == true || 
+              attribute2ValueToSearch.equals(attributeValue_2))) {
             return true;
          }
 
