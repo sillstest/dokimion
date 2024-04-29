@@ -71,7 +71,7 @@ System.out.flush();
     public User getUser(@PathParam("login") String login) {
 System.out.println("UserResource::getUser - login: " + login);
 System.out.flush();
-
+/*
         if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -84,6 +84,7 @@ System.out.flush();
             User user = null;
             return user;
         }
+*/
         return service.findOne(getSession(), null, login);
     }
 
@@ -277,7 +278,7 @@ System.out.println("UserResource.login - session: " + session);
 System.out.println("UserResource.login - login: " + login);
 System.out.flush();
 
-
+/*
         if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -290,7 +291,7 @@ System.out.flush();
             Session session1 = null;
             return session1;
         }
-
+*/
         Person person = session.getPerson();
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
