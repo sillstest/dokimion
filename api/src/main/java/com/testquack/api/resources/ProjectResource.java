@@ -67,7 +67,7 @@ System.out.flush();
            return null;
         }
 	*/
-        return getService().findOne(getUserSession(), id, id);
+        return getService().findOne(getUserSession(), null, id);
     }
 
     @POST
@@ -106,7 +106,12 @@ System.out.flush();
             return null;
         }
 	*/
-        return getService().save(getUserSession(), entity.getId(), entity);
+
+        Project dbEntity = getService().findOne(getUserSession(), null, entity.getId());
+System.out.println("ProjectResource::update - dbEntity: " + dbEntity);
+System.out.flush();
+        
+        return getService().save(getUserSession(), null, entity);
     }
 
 
@@ -125,12 +130,12 @@ System.out.flush();
             getService().getMongoDBName(),
             id) == false) {
 
-            System.out.println("ProjectResource::findOne: checkProject returned FALSE");
+            System.out.println("ProjectResource::delete: checkProject returned FALSE");
             System.out.flush();
 
             return null;
         }
-        getService().delete(getUserSession(), id, id);
+        getService().delete(getUserSession(), null, id);
         return ok().build();
     }
 
