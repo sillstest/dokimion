@@ -106,7 +106,7 @@ System.out.flush();
             return null;
         }
 	*/
-        return getService().save(getUserSession(), null, entity);
+        return getService().save(getUserSession(), entity.getId(), entity);
     }
 
 
@@ -130,7 +130,7 @@ System.out.flush();
 
             return null;
         }
-        getService().delete(getUserSession(), null, id);
+        getService().delete(getUserSession(), id, id);
         return ok().build();
     }
 

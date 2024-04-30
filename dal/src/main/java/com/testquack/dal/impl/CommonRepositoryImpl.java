@@ -63,7 +63,7 @@ System.out.flush();
 
     @Override
     public E save(String organizationId, String projectId, E entity) {
-System.out.println("CommonRepositoryImpl::save");
+System.out.println("CommonRepositoryImpl::save - entity: " + entity);
 System.out.flush();
 
         mongoOperations.save(entity, getCollectionName(organizationId, projectId));
