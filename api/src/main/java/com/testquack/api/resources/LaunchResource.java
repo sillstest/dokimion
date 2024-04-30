@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.api.utils.APIValidation;
 import com.testquack.beans.FailureDetails;
 import com.testquack.beans.Launch;
 import com.testquack.beans.LaunchStatistics;
@@ -66,6 +67,35 @@ public class LaunchResource extends BaseCrudResource<Launch> {
 System.out.println("LaunchResource::updateLaunchTestCaseStatus - launch id: " + launchId);
 System.out.flush();
 
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("LaunchResource::updateLaunchTestCaseStatus: checkProjectId returned FALSE - did NOT find project id");
+            System.out.flush();
+
+
+            LaunchTestCase lt = null;
+            return lt;
+        }
+        if (APIValidation.checkLaunchIdNTestCaseUUID(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId,
+            launchId,
+            testcaseUUID) == false) {
+
+            System.out.println("LaunchResource::updateLaunchTestCaseStatus: checkLaunchIdNTestCaseUUID returned FALSE - did NOT find project id");
+            System.out.flush();
+
+
+            LaunchTestCase lt = null;
+            return lt;
+        }
+
         return service.updateLaunchTestCaseStatus(request, getUserSession(), projectId, launchId, testcaseUUID, status, failureDetails);
     }
 
@@ -75,6 +105,19 @@ System.out.flush();
 
 System.out.println("LaunchResource::getLaunchesStatistics - project id: " + projectId);
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("LaunchResource::getLaunchStatistics: checkProjectId returned FALSE - did NOT find project id");
+            System.out.flush();
+
+            Map<String, LaunchStatistics> ls = null;
+            return ls;
+        }
 
         Map<String, LaunchStatistics> rs = service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
 	System.out.println("LaunchResource - after call to service.getLaunchStatistics");
@@ -96,6 +139,20 @@ System.out.flush();
 System.out.println("LaunchResource::getLaunchTestcasesHeatMap - project id: " + projectId);
 System.out.flush();
 
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("LaunchResource::getLaunchTestcasesHeatMap: checkProjectId returned FALSE - did NOT find project id");
+            System.out.flush();
+
+            Collection<LaunchTestcaseStats> ls = null;
+            return ls;
+        }
+
+
         return service.getTestCasesHeatMap(getUserSession(), projectId, initFilter(request), statsTopLimit);
     }
 
@@ -105,6 +162,20 @@ System.out.flush();
 
 System.out.println("LaunchResource::create - project id, launch: " + projectId + ", " + launch);
 System.out.flush();
+
+        if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            projectId) == false) {
+
+            System.out.println("LaunchResource::create: checkProject returned FALSE - did NOT find project id");
+            System.out.flush();
+
+
+            Launch laun = null;
+            return laun;
+        }
 
         if (launch.getEnvironments().isEmpty()) {
             return create(projectId, Collections.singletonList(launch)).get(0);

@@ -224,19 +224,6 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
          System.out.println("MongoDBInterface::getCollectionAttributeValue - for loop after toJson, jsonStr: " + jsonStr);
          System.out.flush();
 
-/*
-	 Object obj = null;
-	 try {
-	   obj = parser.parse(jsonStr);
-	 } catch (ParseException e) {
-           System.out.println("MongoDBInterface::getCollectionAttributeValue  - ParseException - jsonStr: " + jsonStr);
-	 }
-
-	 org.json.simple.JSONObject jsonObj = (org.json.simple.JSONObject)obj;
-
-         System.out.println("MongoDBInterface::getCollectionAttributeValue  - jsonObj: " + jsonObj);
-         System.out.flush();
-*/
          JSONObject jsonObj = new JSONObject(jsonStr);
 
          String attributeValue_1="";
@@ -246,22 +233,17 @@ System.out.println("MongoDBInterface::getCollectionAttributeValue  - attachments
 System.out.println("1 jsonObj.get(attribute1NameToSearch): " + jsonObj.get(attribute1NameToSearch));
 System.out.flush();
 
-            if (jsonObj.get(attribute1NameToSearch) instanceof JSONArray) {
-System.out.println("MongoDBInterface::getCollectionAttributeValue  - JSONArray 1 found");
-System.out.println("2 jsonObj.get(attribute1NameToSearch): " + jsonObj.get(attribute2NameToSearch));
-System.out.flush();
-               JSONArray ary = (JSONArray)jsonObj.get(attribute1NameToSearch);
-               for (int i = 0; i < ary.length(); i++) {
-                  JSONObject aryObj = (JSONObject)ary.getJSONObject(i);
-                  String id = (String)aryObj.get("_id");
+            JSONArray ary = jsonObj.getJSONArray(attribute1NameToSearch);
+            for (int i = 0; i < ary.length(); i++) {
+               JSONObject aryObj = ary.getJSONObject(i);
+               String id = aryObj.getString("_id");
 System.out.println("MongoDBInterface::getCollectionAttributeValue  - 1 JSON array loop: " + id);
 System.out.flush();
-                  if (id.equals(attribute1ValueToSearch)) {
+               if (id.equals(attribute1ValueToSearch)) {
 System.out.println("MongoDBInterface::getCollectionAttributeValue  - 1 attr1ValueFoundFlag = true");
 System.out.flush();
-                     attr1ValueFoundFlag = true;
-                     break;
-                  }
+                  attr1ValueFoundFlag = true;
+                  break;
                }
            }
          } else {
