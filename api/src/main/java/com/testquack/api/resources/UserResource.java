@@ -71,7 +71,7 @@ System.out.flush();
     public User getUser(@PathParam("login") String login) {
 System.out.println("UserResource::getUser - login: " + login);
 System.out.flush();
-/*
+
         if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -84,7 +84,7 @@ System.out.flush();
             User user = null;
             return user;
         }
-*/
+
         return service.findOne(getSession(), null, login);
     }
 
@@ -95,20 +95,6 @@ System.out.flush();
 System.out.println("UserResource::delete - login: " + login);
 System.out.flush();
 
-/*
-        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
-            getService().getMongoUsername(),
-            getService().getMongoPassword(),
-            getService().getMongoDBName(),
-            login) == false) {
-
-            System.out.println("UserResource::getUser: checkLoginId returned FALSE - did NOT find login");
-            System.out.flush();
-
-            Response resp = null;
-            return resp;
-        }
-*/
         User user = getUser(login);
         service.delete(getSession(), null, user.getId());
 
@@ -123,7 +109,6 @@ System.out.flush();
       System.out.println("getEmail - login: " + login);
       System.out.flush();
 
-/*
        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -136,7 +121,6 @@ System.out.flush();
             Response resp = null;
             return resp;
        }
-*/
 
        MongoDBInterface mongoDBInterface = new MongoDBInterface();
        mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
@@ -203,7 +187,6 @@ System.out.flush();
         System.out.println("UserResource::createUser: session - " + getSession());
         System.out.flush();
 
-/*
         if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -216,7 +199,6 @@ System.out.flush();
             User user1 = null;
             return user1;
         }
-*/
 
         return service.save(getSession(), null, user);
     }
@@ -225,7 +207,6 @@ System.out.flush();
     @Path("/")
     public User updateUser(User user){
 
-/*
         if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -238,7 +219,7 @@ System.out.flush();
             User user1 = null;
             return user1;
         }
-*/
+
         return service.save(getSession(), null, user);
     }
 
@@ -281,7 +262,6 @@ System.out.println("UserResource.login - session: " + session);
 System.out.println("UserResource.login - login: " + login);
 System.out.flush();
 
-/*
         if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -294,7 +274,6 @@ System.out.flush();
             Session session1 = null;
             return session1;
         }
-*/
 
         Person person = session.getPerson();
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
@@ -356,7 +335,6 @@ System.out.flush();
         Session session = getSession();
         String login = changePasswordRequest.getLogin() == null ? getSession().getPerson().getLogin() : changePasswordRequest.getLogin();
 
-/*
         if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -369,7 +347,7 @@ System.out.flush();
             Response resp = null;
             return resp;
         }
-*/
+
         service.changePassword(session, login, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword());
         session.getPerson().setDefaultPassword(false);
         sessionProvider.replaceSession(session);
