@@ -6,6 +6,7 @@
 
 import sys
 import re
+import codecs
 
 if (len(sys.argv) != 2):
     print("Unsupported number of arguments");
@@ -13,8 +14,8 @@ if (len(sys.argv) != 2):
 
 fileName = sys.argv[1];
 
-fd = open(fileName, "r");
-lines = fd.readlines();
+with codecs.open(fileName, 'r', encoding='utf-8', errors='ignore') as fd:
+   lines = fd.readlines();
 
 parsedData = {};
 
@@ -35,13 +36,9 @@ for line in lines:
        m = p.search(newLine);
 
        if m:
-           print("login match found");
-
            found = m.group(0);
 
            login = found[len(loginMatch) :];
-
-           print("login: " + login);
 
            if parsedData.get(login):
               list_of_lists = parsedData[login];
@@ -59,13 +56,9 @@ for line in lines:
        m = p.search(newLine);
 
        if m:
-           print("logout match found");
-
            found = m.group(0);
 
            logout = found[len(logoutMatch) :];
-
-           print("logout: " + logout);
 
            if parsedData.get(logout):
               list_of_lists = parsedData[logout];
