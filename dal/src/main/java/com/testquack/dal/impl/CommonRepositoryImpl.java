@@ -1,5 +1,6 @@
 package com.testquack.dal.impl;
 
+import com.testquack.beans.Project;
 import com.testquack.beans.EntityPreview;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -66,6 +67,15 @@ System.out.flush();
 System.out.println("CommonRepositoryImpl::save - entity: " + entity);
 System.out.flush();
 
+if (entity instanceof Project) {
+   Project proj = (Project)entity;
+   if (proj.getReadWriteUsers() == null || proj.getReadWriteUsers().size() == 0) {
+      System.out.println("CommonRepositoryImpl::save - readWriteUsers: " + proj.getReadWriteUsers());
+      System.out.println("CommonRepositoryImpl::save - collectionName: " + getCollectionName(null, projectId));
+      System.out.println("CommonRepositoryImpl::save - entity class: " +  getEntityClass());
+      System.out.flush();
+   }
+}
         mongoOperations.save(entity, getCollectionName(organizationId, projectId));
         return entity;
     }

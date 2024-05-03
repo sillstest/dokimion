@@ -203,8 +203,8 @@ System.out.flush();
     public Session login(@QueryParam("login") String login,
                          @QueryParam("password") String password) {
         Session session = authProvider.doAuth(request, response);
-System.out.println("UserResource.login - session: " + session);
-System.out.println("UserResource.login - login: " + login);
+System.out.println("UserResource::login - session: " + session);
+System.out.println("UserResource::login - login: " + login);
 System.out.flush();
 
         Person person = session.getPerson();
@@ -289,7 +289,7 @@ System.out.println("UserResource::logout - sid: " + sid);
 System.out.flush();
         Session session = sessionProvider.getSessionById(sid.getValue());
 
-System.out.println("UserResource::logout - session: " + session);
+System.out.println("UserResource::logout - login: " + session.getLogin());
 System.out.flush();
 
 	if (service.setLocked(session, false) == false) {

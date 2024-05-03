@@ -110,7 +110,11 @@ System.out.flush();
         Project dbEntity = getService().findOne(getUserSession(), null, entity.getId());
 System.out.println("ProjectResource::update - dbEntity: " + dbEntity);
 System.out.flush();
-        
+
+        // workaround for problem where paratexct users are cleared out unintentionally
+        if (dbEntity.getReadWriteUsers() != null && entity.getReadWriteUsers() == null) {
+	   entity.setReadWriteUsers(dbEntity.getReadWriteUsers());
+	}
         return getService().save(getUserSession(), null, entity);
     }
 
