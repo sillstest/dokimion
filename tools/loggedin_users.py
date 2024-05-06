@@ -13,29 +13,26 @@ if (len(sys.argv) != 2):
     sys.exit(-1);
 
 fileName = sys.argv[1];
-
-with codecs.open(fileName, 'r', encoding='utf-8', errors='ignore') as fd:
-   lines = fd.readlines();
-
 parsedData = {};
 
-for line in lines:
+with codecs.open(fileName, 'r', encoding='utf-8', errors='ignore') as fd:
+    for line in fd:
 
-    tokens = line.split();
+      tokens = line.split();
 
-    month = tokens[0];
-    day = tokens[1];
-    time = tokens[2];
+      month = tokens[0];
+      day = tokens[1];
+      time = tokens[2];
 
-    newLine = ''.join(tokens[3:]);
+      newLine = ''.join(tokens[3:]);
 
-    loginMatch = "login-login:";
-    if loginMatch in newLine:
+      loginMatch = "login-login:";
+      if loginMatch in newLine:
 
-       p = re.compile(loginMatch + '\S+');
-       m = p.search(newLine);
+        p = re.compile(loginMatch + '\S+');
+        m = p.search(newLine);
 
-       if m:
+        if m:
            found = m.group(0);
 
            login = found[len(loginMatch) :];
@@ -49,13 +46,13 @@ for line in lines:
 
            continue;
 
-    logoutMatch = "logout-login:";
-    if logoutMatch in newLine:
+      logoutMatch = "logout-login:";
+      if logoutMatch in newLine:
 
-       p = re.compile(logoutMatch + '\S+');
-       m = p.search(newLine);
+        p = re.compile(logoutMatch + '\S+');
+        m = p.search(newLine);
 
-       if m:
+        if m:
            found = m.group(0);
 
            logout = found[len(logoutMatch) :];
