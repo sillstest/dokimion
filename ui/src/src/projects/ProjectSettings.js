@@ -39,6 +39,7 @@ class ProjectSettings extends SubComponent {
       launcherDescriptors: [],
       launcherIndexToRemove: null,
       errorMessage: "",
+      session: {person: {}},
     };
     this.state.projectId = this.props.match.params.project;
     this.changeGroups = this.changeGroups.bind(this);
@@ -58,7 +59,22 @@ class ProjectSettings extends SubComponent {
     this.addLauncher = this.addLauncher.bind(this);
     this.removeLauncher = this.removeLauncher.bind(this);
     this.cancelRemoveLauncherConfirmation = this.cancelRemoveLauncherConfirmation.bind(this);
-    this.handleLauncherChange = this.handleLauncherChange.bind(this);
+    this.getSession = this.getSession.bind(this);
+    this.onSessionChange = this.onSessionChange.bind(this);
+
+  }
+
+  getSession() {
+    Backend.get("user/session")
+      .then(response => {
+        this.state.session = response;
+	this.setState(this.state);
+	})
+      .catch(() => {console.log("Unable to fetch session");});
+  }
+
+  onSessionChange(session) {
+    this.props.onSessionChange(session);
   }
 
   componentWillMount() {
@@ -86,6 +102,9 @@ class ProjectSettings extends SubComponent {
       .catch(error => {
         console.log("Couldn't get launcher descriptors: " + error);
       });
+
+    this.getSession();
+
   }
 
   getGroups(literal, callback) {
@@ -325,6 +344,7 @@ class ProjectSettings extends SubComponent {
           </div>
         </div>
 
+	{Utils.isAdmin(this.state.session)  && (
         <div className="project-settings-section">
           <h3>Permissions</h3>
 
@@ -360,6 +380,7 @@ class ProjectSettings extends SubComponent {
             </div>
           </form>
         </div>
+        )}
 
         <div className="project-settings-section">
           <h3>Launchers</h3>

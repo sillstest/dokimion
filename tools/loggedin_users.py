@@ -17,7 +17,8 @@ fileName = sys.argv[1];
 with codecs.open(fileName, 'r', encoding='utf-8', errors='ignore') as fd:
    lines = fd.readlines();
 
-parsedData = {};
+dataByLogin = {};
+dataByDate = {};
 
 for line in lines:
 
@@ -27,6 +28,7 @@ for line in lines:
     day = tokens[1];
     time = tokens[2];
 
+    date = month + day;
     newLine = ''.join(tokens[3:]);
 
     loginMatch = "login-login:";
@@ -40,12 +42,19 @@ for line in lines:
 
            login = found[len(loginMatch) :];
 
-           if parsedData.get(login):
-              list_of_lists = parsedData[login];
+           if dataByLogin.get(login):
+              list_of_lists = dataByLogin[login];
            else:
               list_of_lists = [];
            list_of_lists.append(["login", month, day, time ]);
-           parsedData[login] = list_of_lists;
+           dataByLogin[login] = list_of_lists;
+
+           if dataByDate.get(date):
+              list_of_lists = dataByDate[date];
+           else:
+              list_of_lists = [];
+           list_of_lists.append(["login", login, time]);
+           dataByDate[date] = list_of_lists;
 
            continue;
 
@@ -60,18 +69,87 @@ for line in lines:
 
            logout = found[len(logoutMatch) :];
 
-           if parsedData.get(logout):
-              list_of_lists = parsedData[logout];
+           if dataByLogin.get(logout):
+              list_of_lists = dataByLogin[logout];
            else:
               list_of_lists = [];
            list_of_lists.append(["logout", month, day, time ]);
-           parsedData[logout] = list_of_lists;
+           dataByLogin[logout] = list_of_lists;
+
+           if dataByDate.get(date):
+              list_of_lists = dataByDate[date];
+           else:
+              list_of_lists = [];
+           list_of_lists.append(["logout", logout, time]);
+           dataByDate[date] = list_of_lists;
 
            continue;
 
 
+print("Data by Login");
+print(dataByLogin);
 
-print(parsedData);
+logins = {};
+logouts = {};
+
+for login in dataByLogin.keys():
+    if dataByLogin[login][0][0] == "login":
+       if logins.get(login):
+          logins[login] += 1;
+       else:
+          logins[login] = 1;
+    if dataByLogin[login][0][0] == "logout":
+       if logouts.get(login):
+          logouts[login] += 1;
+       else:
+          logouts[login] = 1;
+
+print("LOGINS");
+print(logins);
+print("LOGOUTS");
+print(logouts);
 
 
+
+print("Data by Date");
+print(dataByDate);
+
+
+logins = {};
+logouts = {};
+
+#{'Apr24': [['login', 'bob_beck@sil.org', '20:56:20'], ['login', 'admin', '20:59:13'], ['login', 'Tester', '20:59:48'], ['login', 'Tester', '20:59:50'], ['login', 'Tester', '20:59:53'], ['login', 'Tester', '20:59:56'], ['login', 'Tester', '21:00:02'], ['login', 'Tester
+
+for date in dataByDate.keys():
+    for loginLogoutTuple in dataByDate[date]:
+        login = loginLogoutTuple[1];
+        if loginLogoutTuple[0] == "login":
+            if logins.get(date):
+                if logins[date].get(login):
+                   logins[date][login] += 1;
+                else:
+                   logins[date][login] = 1;
+            else:
+               logins[date] = {};
+               logins[date][login] = 1;
+
+
+        if loginLogoutTuple[0] == "logout":
+            if logouts.get(date):
+                if logouts[date].get(login):
+                   logouts[date][login] += 1;
+                else:
+                   logouts[date][login] = 1;
+            else:
+               logouts[date] = {};
+               logouts[date][login] = 1;
+
+
+
+
+
+print("LOGINS");
+print(logins);
+print("LOGOUTS");
+print(logouts);
 
