@@ -84,6 +84,11 @@ public class APIValidation {
         String launchId,
         String launchTestCaseUUID) {
 
+System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - projectId: " + projectId);
+System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - launchId: " + launchId);
+System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - launchTestCaseUUID: " + launchTestCaseUUID);
+System.out.flush();
+
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(replicaSet,
                 username,

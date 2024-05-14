@@ -136,6 +136,8 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
    {
 
       System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - collectionName: " + collectionName);
+      System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - attributeName1ToSearch: " + attributeName1ToSearch);
+      System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - attributeName2ToSearch: " + attributeName2ToSearch);
       System.out.flush();
 
       MongoClient mongoClient = getMongoClient();
@@ -157,38 +159,52 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
          System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - for loop after toJson, jsonStr: " + jsonStr);
          System.out.flush();
 
-         JSONObject jsonObj1 = jsonObj.getJSONObject("_id");
-         System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - for loop after toJson, jsonObj1: " + jsonObj1);
+         JSONObject idObj = jsonObj.getJSONObject("_id");
+         System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - idObj: " + idObj);
          System.out.flush();
 
-         String launchId = jsonObj1.getString("$oid");
-         System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - for loop after toJson, launchId: " + launchId);
+	 String launchId = idObj.getString("$oid");
+         System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - launchId: " + launchId);
          System.out.flush();
 
-         JSONObject testCaseTreeObj = jsonObj.getJSONObject("testCaseTree");
+	 if (launchId.equals(attributeName1ToSearch)) {
 
-         System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - testCaseTree" + testCaseTreeObj);
-         System.out.flush();
+            System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - launchId = attributeName1ToSearch");
+            System.out.flush();
 
-         JSONArray testCasesArrayObj = testCaseTreeObj.getJSONArray("testCases");
-         System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - testCasesArray" + testCasesArrayObj);
-         System.out.flush();
+	    if (attributeName2ToSearch == "") return true;
 
-         for (int i = 0; i < testCasesArrayObj.length(); i++) {
+            JSONObject testCaseTreeObj = jsonObj.getJSONObject("testCaseTree");
 
-           JSONObject tcJsonObj = testCasesArrayObj.getJSONObject(i);
-           String testCasesUUID = tcJsonObj.getString("uuid");
+            System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - testCaseTree: " + testCaseTreeObj);
+            System.out.flush();
 
-           System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - testCasesUUID: " + testCasesUUID);
-           System.out.flush();
+            JSONArray childrenArrayObj = testCaseTreeObj.getJSONArray("children");
+            System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - children: " + childrenArrayObj);
+            System.out.flush();
 
-           if (attributeName2ToSearch != "") {
-              if ((launchId.indexOf(attributeName1ToSearch) != -1) && testCasesUUID.equals(attributeName2ToSearch))
-                 return true;
-           } else {
-              if (launchId.indexOf(attributeName1ToSearch) != -1)
-                 return true;
-           }
+            for (int i = 0; i < childrenArrayObj.length(); i++) {
+
+	       JSONObject childrenObj = childrenArrayObj.getJSONObject(i);
+	       JSONArray testCasesArrayObj = childrenObj.getJSONArray("testCases");
+
+               System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - testCasesArrayObj: " + 
+			    testCasesArrayObj);
+               System.out.flush();
+
+	       for (int j = 0; j < testCasesArrayObj.length(); j++) {
+
+	          JSONObject testCasesObj = testCasesArrayObj.getJSONObject(j);
+
+	          String uuid = testCasesObj.getString("uuid");
+                  System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - uuid: " + uuid);
+                  System.out.flush();
+
+                 if (uuid.equals(attributeName2ToSearch))
+                    return true;
+               }
+	    }
+	break;
         }
       }
       mongoClient.close();

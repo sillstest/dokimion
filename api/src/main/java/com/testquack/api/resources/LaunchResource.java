@@ -80,6 +80,9 @@ System.out.flush();
             LaunchTestCase lt = null;
             return lt;
         }
+System.out.println("LaunchResource::updateLaunchTestCaseStatus - successful checkProjectId");
+System.out.flush();
+
         if (APIValidation.checkLaunchIdNTestCaseUUID(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -88,13 +91,15 @@ System.out.flush();
             launchId,
             testcaseUUID) == false) {
 
-            System.out.println("LaunchResource::updateLaunchTestCaseStatus: checkLaunchIdNTestCaseUUID returned FALSE - did NOT find project id");
+            System.out.println("LaunchResource::updateLaunchTestCaseStatus: checkLaunchIdNTestCaseUUID returned FALSE - did NOT find testcaseUUID");
             System.out.flush();
 
 
             LaunchTestCase lt = null;
             return lt;
         }
+System.out.println("LaunchResource::updateLaunchTestCaseStatus - successful checkLaunchIdNTestCaseUUID");
+System.out.flush();
 
         return service.updateLaunchTestCaseStatus(request, getUserSession(), projectId, launchId, testcaseUUID, status, failureDetails);
     }
