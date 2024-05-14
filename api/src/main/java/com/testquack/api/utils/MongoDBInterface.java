@@ -127,7 +127,7 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
 
    public String getRole(String loginToFind)
    {
-      System.out.println("MongoDBInterface getEmail");
+      System.out.println("MongoDBInterface getRole");
 
       return getUserCollectionAttribute(loginToFind, "role");
    }
