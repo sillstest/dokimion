@@ -1,0 +1,31 @@
+/var/log/dokimion/dokimon_server_2.log {
+        daily
+        missingok
+        rotate 52
+        compress
+        delaycompress
+        notifempty
+        create 640 dokimion dokimion
+        sharedscripts
+        postrotate
+                if [ -f /run/dokimion/dokimion_server_2.pid ]; then
+                        kill -USR1 `cat /run/dokimion/dokimion_server_2.pid`
+                fi
+        endscript
+}
+
+/var/log/dokimion/dokimon_ui_2.log {
+        daily
+        missingok
+        rotate 52
+        compress
+        delaycompress
+        notifempty
+        create 640 dokimion dokimion
+        sharedscripts
+        postrotate
+                if [ -f /run/dokimion/dokimion_ui_2.pid ]; then
+                        kill -USR1 `cat /run/dokimion/dokimion_ui_2.pid`
+                fi
+        endscript
+}
