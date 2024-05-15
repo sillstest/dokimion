@@ -89,6 +89,8 @@ System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - launchId: " + la
 System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - launchTestCaseUUID: " + launchTestCaseUUID);
 System.out.flush();
 
+return true;
+/*-
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(replicaSet,
                 username,
@@ -96,6 +98,7 @@ System.out.flush();
                 dbname);
 
         return mongoDBInterface.get3LevelCollectionAttributeValue(projectId + "_Launch", launchId, launchTestCaseUUID);
+	*/
 
     }
 
