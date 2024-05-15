@@ -13,6 +13,7 @@
     <xs:include schemaLocation="testcase.xsd"/>
     <xs:include schemaLocation="testsuite.xsd"/>
     <xs:include schemaLocation="launcher.xsd"/>
+    <xs:include schemaLocation="attributes.xsd"/>
 
     <xs:element name="launch" type="LaunchBase"/>
     <xs:complexType name="LaunchBase">
@@ -33,6 +34,7 @@
                     <xs:element name="environments" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="launchGroup" type="xs:string"/>
                     <xs:element name="duration" type="xs:long"/>
+                    <xs:element name="attributes" type="Attribute"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>

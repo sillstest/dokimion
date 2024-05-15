@@ -5,6 +5,9 @@ import { Link } from "react-router-dom";
 import { withRouter } from "react-router";
 import CreatableSelect from "react-select/lib/Creatable";
 import LauncherForm from "../launches/LauncherForm";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
+import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
@@ -19,6 +22,12 @@ class LaunchForm extends SubComponent {
         name: "",
         testSuite: { filter: {} },
         properties: [],
+        attributes: {},
+        launcherConfig: { properties: {} },
+      },
+      originalLaunch: {
+        testSuite: { filter: {} },
+        attributes: {},
         launcherConfig: { properties: {} },
       },
       project: {
@@ -28,6 +37,8 @@ class LaunchForm extends SubComponent {
         allowedGroups: [],
         launcherConfigs: [],
       },
+      projectAttributes: [],
+      attributesInEdit: new Set(),
       launcherDescriptors: [],
       restart: props.restart || false,
       failedOnly: props.failedOnly || false,
@@ -38,7 +49,16 @@ class LaunchForm extends SubComponent {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.changeEnvironments = this.changeEnvironments.bind(this);
+    this.addAttribute = this.addAttribute.bind(this);
+    this.getAttributes = this.getAttributes.bind(this);
+    this.getAttributeName = this.getAttributeName.bind(this);
+    this.getAttributeValues = this.getAttributeValues.bind(this);
+    this.editAttributeKey = this.editAttributeKey.bind(this);
+    this.editAttributeValues = this.editAttributeValues.bind(this);
+    this.toggleEdit = this.toggleEdit.bind(this);
+    this.getAttributeKeysToAdd = this.getAttributeKeysToAdd.bind(this);
+    this.cancelEditAttributeKey = this.cancelEditAttributeKey.bind(this);
+    this.cancelEditAttributeValues = this.cancelEditAttributeValues.bind(this);
     this.handleLauncherChange = this.handleLauncherChange.bind(this);
   }
 
@@ -73,6 +93,7 @@ class LaunchForm extends SubComponent {
         }
         this.state.restart = false;
         this.state.loading = false;
+        this.state.attributesInEdit.clear();
         this.setState(this.state);
       })
       .catch(error => {
@@ -80,7 +101,7 @@ class LaunchForm extends SubComponent {
         this.setState(this.state);
         this.setState({errorMessage: "Couldn't save launch: " + error});
       });
-    event.preventDefault();
+    //event.preventDefault();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -92,6 +113,12 @@ class LaunchForm extends SubComponent {
     if (nextProps.launch && nextProps.launch.id) {
       this.state.launch = nextProps.launch;
     }
+    if (nextProps.projectAttributes) {
+      this.state.projectAttributes = nextProps.projectAttributes;
+    } else {
+      this.getAttributes();
+    }
+
     if(nextProps.modalName){
       this.state.modalName = nextProps.modalName;
     }
@@ -100,6 +127,7 @@ class LaunchForm extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
+    this.state.attributesInEdit.clear();
 
     Backend.get("project/" + this.props.match.params.project)
       .then(response => {
@@ -130,8 +158,160 @@ class LaunchForm extends SubComponent {
     this.setState(this.state);
   }
 
-  changeEnvironments(values) {
-    this.state.launch.environments = values.map(function (value) {
+  getAttributeKeysToAdd() {
+    return (this.state.projectAttributes || [])
+      .filter(attribute => !(Object.keys(this.state.launch.attributes || {}) || []).includes(attribute.id))
+      .map(attribute => ({ value: attribute.id, label: attribute.name }));
+  }
+
+
+  getAttributes(reRender) {
+    Backend.get(this.state.project.id + "/attribute")
+      .then(response => {
+        this.state.projectAttributes = response;
+        this.setState(this.state);
+      })
+      .catch(error => {
+        this.setState({errorMessage: "Couldn't fetch attributes: " + error});
+      });
+  }
+
+  toggleEdit(fieldName, event, index) {
+    var fieldId = fieldName;
+    if (index !== undefined) {
+      fieldId = fieldId + "-" + index;
+    }
+    if ($("#" + fieldId + "-display").offsetParent !== null) {
+      if (index) {
+        this.state.originalLaunch[fieldName][index] = JSON.parse(
+          JSON.stringify(this.state.launch[fieldName][index] || ""),
+        );
+      } else {
+        this.state.originalLaunch[fieldName] = JSON.parse(JSON.stringify(this.state.launch[fieldName] || ""));
+      }
+    }
+    $("#" + fieldId + "-display").toggle();
+    $("#" + fieldId + "-form").toggle();
+    if (event) {
+      //event.preventDefault();
+    }
+  }
+
+  getAttributeName(id) {
+    return Utils.getProjectAttribute(this.state.projectAttributes, id).name || "";
+  }
+
+  getAttributeValues(id) {
+    return Utils.getProjectAttribute(this.state.projectAttributes, id).attrValues || [];
+  }
+
+  editAttributeKey(key, data, reRender) {
+    if (
+      this.state.projectAttributes.find(function (attribute) {
+        return attribute.id === data.value;
+      }) == undefined
+    ) {
+      this.state.projectAttributes.push({ id: data.value, name: data.value });
+    }
+    this.state.attributesInEdit.delete(key);
+    this.state.attributesInEdit.add(data.value);
+    this.state.launch.attributes[data.value] = this.state.launch.attributes[key];
+    delete this.state.launch.attributes[key];
+    if (reRender) {
+      this.setState(this.state);
+    }
+  }
+
+
+  editAttributeValues(key, values) {
+    this.state.originalTestcase["attributes"][key] = this.state.launch["attributes"][key];
+    this.state.launch["attributes"][key] = values.map(function (value) {
+      return value.value;
+    });
+    this.setState(this.state);
+  }
+
+  cancelEditAttributeValues(event, key) {
+    this.state.launch["attributes"][key] = this.state.originalLaunch["attributes"][key];
+    this.state.attributesInEdit.delete(key);
+    this.setState(this.state);
+    this.toggleEdit("attributes", event, key);
+  }
+
+  cancelEditAttributeKey(event, key) {
+    if (
+      this.state.launch.attributes[key] === undefined ||
+      key === undefined ||
+      this.state.launch.attributes[key].values === undefined ||
+      this.state.launch.attributes[key].values === null ||
+      this.state.launch.attributes[key].values.length == 0
+    )
+      delete this.state.launch.attributes[key];
+    this.state.attributesInEdit.delete(key);
+    this.setState(this.state);
+  }
+
+  removeAttribute(key, event) {
+    delete this.state.launch.attributes[key];
+    this.state.attributesInEdit.delete(key);
+    this.handleSubmit("attributes", event, 0, true);
+  }
+
+  addAttribute(event) {
+    if (!this.state.launch.attributes) {
+      this.state.launch.attributes = {};
+    }
+    this.state.launch.attributes[null] = [];
+    this.state.attributesInEdit.add(null);
+    this.setState(this.state);
+  }
+
+  editAttributeValues(key, values) {
+    this.state.originalLaunch["attributes"][key] = this.state.launch["attributes"][key];
+    this.state.launch["attributes"][key] = values.map(function (value) {
+      return value.value;
+    });
+    this.setState(this.state);
+  }
+
+  cancelEditAttributeValues(event, key) {
+    this.state.launch["attributes"][key] = this.state.originalLaunch["attributes"][key];
+    this.state.attributesInEdit.delete(key);
+    this.setState(this.state);
+    this.toggleEdit("attributes", event, key);
+  }
+
+  cancelEditAttributeKey(event, key) {
+    if (
+      this.state.launch.attributes[key] === undefined ||
+      key === undefined ||
+      this.state.launch.attributes[key].values === undefined ||
+      this.state.launch.attributes[key].values === null ||
+      this.state.launch.attributes[key].values.length == 0
+    )
+      delete this.state.launch.attributes[key];
+    this.state.attributesInEdit.delete(key);
+    this.setState(this.state);
+  }
+
+  removeAttribute(key, event) {
+    delete this.state.launch.attributes[key];
+    this.state.attributesInEdit.delete(key);
+    this.handleSubmit("attributes", event, 0, true);
+  }
+
+
+  addAttribute(event) {
+    if (!this.state.launch.attributes) {
+      this.state.launch.attributes = {};
+    }
+    this.state.launch.attributes[null] = [];
+    this.state.attributesInEdit.add(null);
+    this.setState(this.state);
+  }
+
+  changeAttributes(values) {
+    this.state.launch.attributes = values.map(function (value) {
       return value.value;
     });
     this.setState(this.state);
@@ -181,7 +361,6 @@ class LaunchForm extends SubComponent {
     } else {
       modalBody = (
         <div className="modal-body" id="launch-creation-form">
-          <form>
             <div className="form-group row">
               <label className="col-4 col-form-label">Name</label>
               <div className="col-8">
@@ -194,62 +373,125 @@ class LaunchForm extends SubComponent {
                 />
               </div>
             </div>
+            <div id="attributes" className="mb-4">
+              <h5>Attributes</h5>
+              {Object.keys(this.state.launch.attributes || {}).map(
+                function (attributeId, i) {
+                  var attributeValues = this.state.launch.attributes[attributeId] || [];
+                  if (attributeId && attributeId != "null") {
+                    return (
+                      <div key={i} className="form-group attribute-block">
+                        <div
+                          id={"attributes-" + attributeId + "-display"}
+                          className="inplace-display"
+                          style={{ display: this.state.attributesInEdit.has(attributeId) ? "none" : "block" }}
+                        >
+                          <div index={attributeId} className="card">
+                            <div className="card-header">
+                              <b>
+                                {this.getAttributeName(attributeId)}
+                                {!this.state.readonly && (
+                                  <span
+                                    className="edit edit-icon clickable"
+                                    onClick={e => {
+                                      this.toggleEditAttribute(attributeId);
+                                    }}
+                                  >
+                                    <FontAwesomeIcon icon={faPencilAlt} />
+                                  </span>
+                                )}
+                                {!this.state.readonly && (
+                                  <span
+                                    className="clickable edit-icon red"
+                                    index={attributeId}
+                                    onClick={e => this.removeAttribute(attributeId, e)}
+                                  >
+                                    <FontAwesomeIcon icon={faMinusCircle} />
+                                  </span>
+                                )}
+                              </b>
+                            </div>
+                            {<div className="card-body">{attributeValues.join(", ")}</div>}
+                          </div>
+                        </div>
+                        {!this.state.readonly && (
+                          <div
+                            id={"attributes-" + attributeId + "-form"}
+                            className="inplace-form"
+                            style={{ display: this.state.attributesInEdit.has(attributeId) ? "block" : "none" }}
+                          >
+                            <form>
+                              <div index={attributeId} className="card">
+                                <div className="card-header">
+                                  <b>{this.getAttributeName(attributeId)}</b>
+                                </div>
+                                <div className="card-body">
+                                  <CreatableSelect
+                                    value={(attributeValues || []).map(function (val) {
+                                      return { value: val, label: val };
+                                    })}
+                                    isMulti
+                                    isClearable
+                                    onChange={e => this.editAttributeValues(attributeId, e)}
+                                    options={this.getAttributeValues(attributeId).map(function (attrValue) {
+                                      return { value: attrValue.value, label: attrValue.value };
+                                    })}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="btn btn-light"
+                                    onClick={e => this.cancelEditAttributeValues(e, attributeId)}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    onClick={e => this.handleSubmit("attributes", e, attributeId, true)}
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            </form>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="form-group attribute-block">
+                        <div id={"attributes-" + attributeId + "-form"} className="inplace-form">
+                          <div index={attributeId} className="card">
+                            <div className="card-header">
+                              <CreatableSelect
+                                onChange={e => this.editAttributeKey(attributeId, e, true)}
+                                options={this.getAttributeKeysToAdd()}
+                              />
+                              <button
+                                type="button"
+                                className="btn btn-light"
+                                onClick={e => this.cancelEditAttributeKey(e, attributeId)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                }.bind(this),
+              )}
 
-            <div className="form-group row">
-              <label className="col-4 col-form-label">Environments</label>
-              <div className="col-8">
-                <CreatableSelect
-                  value={(this.state.launch.environments || []).map(function (val) {
-                    return { value: val, label: val };
-                  })}
-                  isMulti
-                  isClearable
-                  cacheOptions
-                  onChange={this.changeEnvironments}
-                  options={(this.state.project.environments || []).map(function (val) {
-                    return { value: val, label: val };
-                  })}
-                />
-              </div>
+              {!this.state.readonly && (
+                <div className>
+                  <button type="button" className="btn btn-primary" onClick={e => this.addAttribute(e)}>
+                    Add Attribute 
+                  </button>
+                </div>
+              )}
             </div>
-
-            <div className="form-group row">
-              <label className="col-4 col-form-label">Launcher</label>
-              <div className="col-8">
-                <select
-                  id="launcherUUID"
-                  className="form-control"
-                  onChange={e => this.handleLauncherChange(e, 0, "uuid")}
-                >
-                  <option> </option>
-                  {(this.state.project.launcherConfigs || []).map(
-                    function (config) {
-                      var selected = config.uuid == (this.state.launch.launcherConfig || {}).uuid;
-                      if (selected) {
-                        return (
-                          <option value={config.uuid} selected>
-                            {config.name}
-                          </option>
-                        );
-                      }
-                      return <option value={config.uuid}>{config.name}</option>;
-                    }.bind(this),
-                  )}
-                </select>
-              </div>
-            </div>
-          </form>
-          <div>
-            {this.state.launch.launcherConfig && this.state.launch.launcherConfig.uuid && (
-              <LauncherForm
-                launcherConfig={this.state.launch.launcherConfig}
-                configIndex={0}
-                selectableType={false}
-                handleLauncherChange={this.handleLauncherChange}
-                launcherDescriptors={this.state.launcherDescriptors}
-              />
-            )}
-          </div>
         </div>
       );
     }
