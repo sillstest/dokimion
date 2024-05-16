@@ -100,4 +100,4 @@ Testcases Import
 
 Liken - AB-testing QuAck capable launcher
 ==========
-[Liken](https://github.com/greatbit/liken) Liken is a web-based service that allows to perform A-B comparison regression testing for web-based UI. Fully compatible with QuAck.
+[Liken](https://github.com/greatbit/liken) Liken is a web-based service that allows to perform A-B comparison regression testing for web-based UI. Fully compatible with QuAck

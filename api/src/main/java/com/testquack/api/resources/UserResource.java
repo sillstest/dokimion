@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.PasswordGeneration;
 import com.testquack.api.utils.MongoDBInterface;
 import com.testquack.api.utils.SendEmail;
@@ -70,6 +71,20 @@ System.out.flush();
     public User getUser(@PathParam("login") String login) {
 System.out.println("UserResource::getUser - login: " + login);
 System.out.flush();
+
+        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            login) == false) {
+
+            System.out.println("UserResource::getUser : checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
+
+            User user = null;
+            return user;
+        }
+
         return service.findOne(getSession(), null, login);
     }
 
@@ -91,61 +106,74 @@ System.out.flush();
     @Path("/forgot_password")
     public Response getEmail(@QueryParam("login") String login) {
 
-	System.out.println("getEmail - login: " + login);
-	System.out.flush();
+      System.out.println("getEmail - login: " + login);
+      System.out.flush();
 
-	MongoDBInterface mongoDBInterface = new MongoDBInterface();
-        mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+       if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            login) == false) {
+
+            System.out.println("UserResource::getEmail: checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
+
+            Response resp = null;
+            return resp;
+       }
+
+       MongoDBInterface mongoDBInterface = new MongoDBInterface();
+       mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
                                               getService().getMongoUsername(),
                                               getService().getMongoPassword(),
                                               getService().getMongoDBName());
 
-	String email = mongoDBInterface.getEmail(login);
+       String email = mongoDBInterface.getEmail(login);
 
-	System.out.println("Fetched mongodb emails");
-	System.out.flush();
+       System.out.println("Fetched mongodb emails");
+       System.out.flush();
 
-        JSONObject jsonObj = new JSONObject();
-	jsonObj.put("email", email);
+       JSONObject jsonObj = new JSONObject();
+       jsonObj.put("email", email);
 
-	boolean doneGeneratingPassword = true;
-	String password="";
-	int loopCounter = 0;
-	do {
+       boolean doneGeneratingPassword = true;
+       String password="";
+       int loopCounter = 0;
+       do {
 
-	   loopCounter += 1;
+          loopCounter += 1;
 
-	   password = PasswordGeneration.generatePassword();
+	  password = PasswordGeneration.generatePassword();
 
-	   String uriStr = "http://quack.com/" + password;
-	   try {
-	      URI uri = new URI(uriStr);
-	   }
-	   catch (URISyntaxException e)
-	   {
-              doneGeneratingPassword = false;
-	      System.out.println("URI Syntax exception for URI: " + uriStr);
-	      System.out.flush();
-	   }
-	} while (doneGeneratingPassword == true || loopCounter > 3);
+	  String uriStr = "http://dokimion.com/" + password;
+	  try {
+	    URI uri = new URI(uriStr);
+	  }
+	  catch (URISyntaxException e)
+	  {
+            doneGeneratingPassword = false;
+	    System.out.println("URI Syntax exception for URI: " + uriStr);
+	    System.out.flush();
+	  }
+       } while (doneGeneratingPassword == true || loopCounter > 3);
+  
 
 
-	SendEmail sendEmailObj = new SendEmail();
-	sendEmailObj.send(email, password);
+       SendEmail sendEmailObj = new SendEmail();
+       sendEmailObj.send(email, password);
 
-	System.out.println("Sent email to: " + email);
-	System.out.flush();
+       System.out.println("Sent email to: " + email);
+       System.out.flush();
 
-	String encryptedPass = "";
-	try {
-	    encryptedPass = StringUtils.getMd5String(password + login);
-	} catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-	}
+       String encryptedPass = "";
+       try {
+	 encryptedPass = StringUtils.getMd5String(password + login);
+       } catch (NoSuchAlgorithmException e) {
+         throw new RuntimeException(e);
+       }
+       mongoDBInterface.updatePassword(login, encryptedPass);
 
-	mongoDBInterface.updatePassword(login, encryptedPass);
-
-        return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
+       return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
     }
 
     @POST
@@ -159,12 +187,39 @@ System.out.flush();
         System.out.println("UserResource::createUser: session - " + getSession());
         System.out.flush();
 
+        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            user.getLogin()) == true) {
+
+            System.out.println("UserResource::createUser: checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
+
+            User user1 = null;
+            return user1;
+        }
+
         return service.save(getSession(), null, user);
     }
 
     @PUT
     @Path("/")
     public User updateUser(User user){
+
+        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            user.getLogin()) == false) {
+
+            System.out.println("UserResource::updateUser: checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
+
+            User user1 = null;
+            return user1;
+        }
+
         return service.save(getSession(), null, user);
     }
 
@@ -203,9 +258,22 @@ System.out.flush();
     public Session login(@QueryParam("login") String login,
                          @QueryParam("password") String password) {
         Session session = authProvider.doAuth(request, response);
-System.out.println("UserResource.login - session: " + session);
-System.out.println("UserResource.login - login: " + login);
+System.out.println("UserResource::login - session: " + session);
+System.out.println("UserResource::login - login: " + login);
 System.out.flush();
+
+        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            login) == false) {
+
+            System.out.println("UserResource::login: checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
+
+            Session session1 = null;
+            return session1;
+        }
 
         Person person = session.getPerson();
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
@@ -266,6 +334,20 @@ System.out.flush();
 
         Session session = getSession();
         String login = changePasswordRequest.getLogin() == null ? getSession().getPerson().getLogin() : changePasswordRequest.getLogin();
+
+        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
+            getService().getMongoUsername(),
+            getService().getMongoPassword(),
+            getService().getMongoDBName(),
+            login) == false) {
+
+            System.out.println("UserResource::changePassword: checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
+
+            Response resp = null;
+            return resp;
+        }
+
         service.changePassword(session, login, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword());
         session.getPerson().setDefaultPassword(false);
         sessionProvider.replaceSession(session);
@@ -289,7 +371,7 @@ System.out.println("UserResource::logout - sid: " + sid);
 System.out.flush();
         Session session = sessionProvider.getSessionById(sid.getValue());
 
-System.out.println("UserResource::logout - session: " + session);
+System.out.println("UserResource::logout - login: " + session.getLogin());
 System.out.flush();
 
 	if (service.setLocked(session, false) == false) {
