@@ -106,14 +106,16 @@ namespace Dokimion.Tests
           
             try
             {
-                dokimionSettingLink = driver.FindElement(By.XPath("//div[@class='card-header']/span/a[contains(@href, 'dokimion/settings')]"));
+                dokimionSettingLink = driver.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='cogs'])//ancestor::a[contains(@href, 'dokimion/settings')]"));
+                    //"//div[@class='card-header']/span/a[contains(@href, 'dokimion/settings')]"));
             }
             catch
             {
-                dokimionSettingLink = driver.FindElement(By.XPath("//div[@class='card-header']/span/a[contains(@href, 'Dokimion/settings')]"));
+                dokimionSettingLink = driver.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='cogs'])//ancestor::a[contains(@href, 'Dokimion/settings')]"));
+                    //("//div[@class='card-header']/span/a[contains(@href, 'Dokimion/settings')]"));
             }
 
-            dokimionSettingLink?.FindElement(By.XPath("(//*[local-name()='svg' and @data-icon='cogs'])[1]")).Click();
+            dokimionSettingLink?.Click();
 
             userActions.LogConsoleMessage("Enter Window and Mac in the Environments input");
             Actor.WaitsUntil(Appearance.Of(Settings.EnvironmentInput), IsEqualTo.True(), timeout: 60);
