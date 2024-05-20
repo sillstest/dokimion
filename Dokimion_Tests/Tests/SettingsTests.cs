@@ -152,9 +152,9 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Hover.Over(Settings.RemoveEnvironments));
             Actor.AttemptsTo(Click.On(Settings.RemoveEnvironments));
 
-            Actor.WaitsUntil(Appearance.Of(Settings.RemoveEnvironments), IsEqualTo.True(), timeout: 60);
-            Actor.AttemptsTo(Hover.Over(Settings.RemoveEnvironments));
-            Actor.AttemptsTo(Click.On(Settings.RemoveEnvironments));
+            //Actor.WaitsUntil(Appearance.Of(Settings.RemoveEnvironments), IsEqualTo.True(), timeout: 60);
+            //Actor.AttemptsTo(Hover.Over(Settings.RemoveEnvironments));
+            //Actor.AttemptsTo(Click.On(Settings.RemoveEnvironments));
 
             userActions.LogConsoleMessage("Clean up : Click on Save button");
             Actor.WaitsUntil(Appearance.Of(Settings.SettingsSaveButton), IsEqualTo.True());

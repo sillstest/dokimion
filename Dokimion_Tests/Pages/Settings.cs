@@ -20,8 +20,10 @@ namespace Dokimion.Pages
 
         public static IWebLocator SettingsSaveButton => L("SettingsSaveButton", By.XPath("//div[@class='project-settings-control row']//button[text()='Save']"));
 
-        public static IWebLocator RemoveEnvironments => L("RemoveEnvironments", By.XPath("(//*[local-name()='svg' and @class='css-19bqh2r'])[6]"));
-        
+        public static IWebLocator RemoveEnvironments => L("RemoveEnvironments",
+            By.XPath("(//label[contains(text(),'Environments')]//following-sibling::div//div[@class='css-16pqwjk-indicatorContainer'])[1]"));
+           // By.XPath("(//*[local-name()='svg' and @class='css-19bqh2r'])[6]"));
+
         public static IWebLocator EnvironmentList => L("EnvironmentList", By.XPath("(//div[@class='project-settings-section']//div[@class='css-1hwfws3'])[3]/*"));
 
         public static IWebLocator DisplayMessage => L("DisplayMessage", By.XPath("//div[@class='popup-content']"));
