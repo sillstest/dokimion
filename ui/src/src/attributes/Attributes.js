@@ -87,7 +87,15 @@ class Attributes extends SubComponent {
                 </h5>
                 <p>{attribute.description}</p>
                 <hr />
-                <p className="mb-0">{attribute.attrValues.map(val => val.value).join(", ")}</p>
+                  {attribute.attrValues.map(
+                   function (val) {
+                      if (attribute.name === "Configuration") {
+                         return val.key + ": " +  val.value;
+                      } else {
+                         return val.value;
+                      }
+                    }).join(", ")
+                   }
               </div>
             );
           }.bind(this),
