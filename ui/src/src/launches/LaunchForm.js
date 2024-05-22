@@ -14,6 +14,7 @@ import { FadeLoader } from "react-spinners";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
+
 class LaunchForm extends SubComponent {
   constructor(props) {
     super(props);
@@ -55,7 +56,7 @@ class LaunchForm extends SubComponent {
     this.getAttributeValues = this.getAttributeValues.bind(this);
     this.editAttributeKey = this.editAttributeKey.bind(this);
     this.editAttributeValues = this.editAttributeValues.bind(this);
-    this.toggleEdit = this.toggleEdit.bind(this);
+    this.toggleEditAttribute = this.toggleEditAttribute.bind(this);
     this.getAttributeKeysToAdd = this.getAttributeKeysToAdd.bind(this);
     this.cancelEditAttributeKey = this.cancelEditAttributeKey.bind(this);
     this.cancelEditAttributeValues = this.cancelEditAttributeValues.bind(this);
@@ -168,15 +169,21 @@ class LaunchForm extends SubComponent {
   getAttributes(reRender) {
     Backend.get(this.state.project.id + "/attribute")
       .then(response => {
-        this.state.projectAttributes = response;
-        this.setState(this.state);
+        for (let i = 0; i < response.length; i++) {
+           if (response[i].name === "Configuration") {
+              this.state.projectAttributes = [];
+              this.state.projectAttributes.length = 1;
+              this.state.projectAttributes[0] = response[i];
+              this.setState(this.state);
+           }
+        }
       })
       .catch(error => {
         this.setState({errorMessage: "Couldn't fetch attributes: " + error});
       });
   }
 
-  toggleEdit(fieldName, event, index) {
+  toggleEditAttribute(fieldName, event, index) {
     var fieldId = fieldName;
     if (index !== undefined) {
       fieldId = fieldId + "-" + index;
@@ -235,7 +242,7 @@ class LaunchForm extends SubComponent {
     this.state.launch["attributes"][key] = this.state.originalLaunch["attributes"][key];
     this.state.attributesInEdit.delete(key);
     this.setState(this.state);
-    this.toggleEdit("attributes", event, key);
+    this.toggleEditAttribute("attributes", event, key);
   }
 
   cancelEditAttributeKey(event, key) {
@@ -278,7 +285,7 @@ class LaunchForm extends SubComponent {
     this.state.launch["attributes"][key] = this.state.originalLaunch["attributes"][key];
     this.state.attributesInEdit.delete(key);
     this.setState(this.state);
-    this.toggleEdit("attributes", event, key);
+    this.toggleEditAttribute("attributes", event, key);
   }
 
   cancelEditAttributeKey(event, key) {
@@ -428,13 +435,13 @@ class LaunchForm extends SubComponent {
                                 <div className="card-body">
                                   <CreatableSelect
                                     value={(attributeValues || []).map(function (val) {
-                                      return { value: val, label: val };
+                                      return { key: val, label: val };
                                     })}
-                                    isMulti
                                     isClearable
+                                    isMulti
                                     onChange={e => this.editAttributeValues(attributeId, e)}
                                     options={this.getAttributeValues(attributeId).map(function (attrValue) {
-                                      return { value: attrValue.value, label: attrValue.value };
+                                      return { value: attrValue.key + ", " + attrValue.value, label: attrValue.key + ", " + attrValue.value };
                                     })}
                                   />
                                   <button
