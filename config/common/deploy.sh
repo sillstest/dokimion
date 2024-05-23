@@ -18,6 +18,7 @@ cp ~1/tools/aes.java .
 cp ~1/tools/RoleCapability.java .
 cp ~1/tools/AdminPassword.java .
 cp ~1/tools/TestcaseSizes.java .
+cp ~1/tools/Users.java .
 cp ~1/tools/DefaultProjectAttributes.java .
 cp ~1/tools/mongodb_RoleCapability_init.js .
 cp ~1/tools/mongodb_TestcaseSizes_init.js .
