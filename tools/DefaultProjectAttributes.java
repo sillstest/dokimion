@@ -12,8 +12,8 @@ public class DefaultProjectAttributes {
     String adminPassword = AdminPassword.getDecryptedString();
 
     try {
-       //ProcessBuilder pb = new ProcessBuilder("/usr/bin/mongosh")
-       ProcessBuilder pb = new ProcessBuilder("/usr/bin/mongosh", "-u", "admin", "-p", adminPassword)
+       ProcessBuilder pb = new ProcessBuilder("/usr/bin/mongosh")
+       //ProcessBuilder pb = new ProcessBuilder("/usr/bin/mongosh", "-u", "admin", "-p", adminPassword)
 		  .redirectInput(new File("./mongodb_DefaultProjectAttributes_init.js"))
                   .redirectOutput(Redirect.INHERIT)
 		  .redirectError(Redirect.INHERIT);

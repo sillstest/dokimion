@@ -17,11 +17,12 @@ class AttributeForm extends Component {
       edit : props.edit,
     };
 
-    this.handleChange = this.handleChange.bind(this);
+    this.handleNameChange = this.handleNameChange.bind(this);
+    this.handleKeyChange = this.handleKeyChange.bind(this);
     this.handleValueChange = this.handleValueChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.addValue = this.addValue.bind(this);
-    this.removeValue = this.removeValue.bind(this);
+    this.addKeyValue = this.addKeyValue.bind(this);
+    this.removeKeyValue = this.removeKeyValue.bind(this);
     this.handleRemove = this.handleRemove.bind(this);
     this.handleClose = this.handleClose.bind(this);
   }
@@ -32,8 +33,13 @@ class AttributeForm extends Component {
       edit: nextProps.edit});
   }
 
-  handleChange(event) {
+  handleNameChange(event) {
     this.state.attribute[event.target.name] = event.target.value;
+    this.setState(this.state);
+  }
+
+  handleKeyChange(i, event) {
+    this.state.attribute.attrValues[i].key = event.target.value;
     this.setState(this.state);
   }
 
@@ -42,7 +48,8 @@ class AttributeForm extends Component {
     this.setState(this.state);
   }
 
-  removeValue(i, event) {
+
+  removeKeyValue(i, event) {
     this.state.attribute.attrValues.splice(i, 1);
     this.setState(this.state);
   }
@@ -107,8 +114,8 @@ class AttributeForm extends Component {
   }
 
 
-  addValue(event) {
-    this.state.attribute.attrValues.push({ value: "" });
+  addKeyValue(event) {
+    this.state.attribute.attrValues.push({ key: "", value: "" });
     this.setState(this.state);
   }
 
@@ -148,7 +155,7 @@ class AttributeForm extends Component {
                     name="name"
                     className="col-sm-12"
                     value={this.state.attribute.name}
-                    onChange={this.handleChange}
+                    onChange={this.handleNameChange}
                   />
                 </div>
               </div>
@@ -156,6 +163,20 @@ class AttributeForm extends Component {
               {this.state.attribute.attrValues.map((value, i) => {
                 return (
                   <div key={i} className="form-group row">
+                    <div>
+                    <label className="col-sm-2 col-form-label">Key</label>
+                    <div className="col-sm-8">
+                      <input
+                        type="text"
+                        name="key"
+                        index={i}
+                        value={value.key}
+                        className="col-sm-12"
+                        onChange={e => this.handleKeyChange(i, e)}
+                      />
+                    </div>
+                    </div>
+                    <div>
                     <label className="col-sm-2 col-form-label">Value</label>
                     <div className="col-sm-8">
                       <input
@@ -167,8 +188,9 @@ class AttributeForm extends Component {
                         onChange={e => this.handleValueChange(i, e)}
                       />
                     </div>
+                    </div>
                     <div className="col-sm-1">
-                      <span className="clickable red" index={i} onClick={e => this.removeValue(i, e)}>
+                      <span className="clickable red" index={i} onClick={e => this.removeKeyValue(i, e)}>
                         <FontAwesomeIcon icon={faMinusCircle} />
                       </span>
                     </div>
@@ -176,7 +198,7 @@ class AttributeForm extends Component {
                 );
               })}
 
-              <button type="button" className="btn" onClick={this.addValue}>
+              <button type="button" className="btn" onClick={this.addKeyValue}>
                 Add value
               </button>
             </form>
