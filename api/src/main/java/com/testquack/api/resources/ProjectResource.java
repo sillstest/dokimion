@@ -54,7 +54,7 @@ public class ProjectResource extends BaseResource<Project> {
 
         System.out.println("ProjectResource::findOne: id: " + id);
         System.out.flush();
-	/*
+
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
                                     getService().getMongoUsername(),
                                     getService().getMongoPassword(),
@@ -66,8 +66,7 @@ System.out.flush();
 
            return null;
         }
-	*/
-        return getService().findOne(getUserSession(), id, id);
+        return getService().findOne(getUserSession(), null, id);
     }
 
     @POST
@@ -93,7 +92,7 @@ System.out.flush();
     public Project update(@ApiParam(value = "Entity", required = true) Project entity) {
 System.out.println("ProjectResource::update - project: " + entity);
 System.out.flush();
-/*
+
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -105,7 +104,6 @@ System.out.flush();
 
             return null;
         }
-	*/
         return getService().save(getUserSession(), null, entity);
     }
 
@@ -125,7 +123,7 @@ System.out.flush();
             getService().getMongoDBName(),
             id) == false) {
 
-            System.out.println("ProjectResource::findOne: checkProject returned FALSE");
+            System.out.println("ProjectResource::delete: checkProject returned FALSE");
             System.out.flush();
 
             return null;

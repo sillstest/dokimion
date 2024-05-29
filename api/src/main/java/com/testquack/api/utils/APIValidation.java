@@ -19,9 +19,7 @@ public class APIValidation {
                                               dbname);
 
 
-        String attributeValue = mongoDBInterface.getCollectionAttributeValue("projects", "_id");
-
-        return projectId.equals(attributeValue);
+        return mongoDBInterface.getCollectionAttributeValue("projects", "_id", projectId);
 
     }
                                               
@@ -38,9 +36,7 @@ public class APIValidation {
                                               password,
                                               dbname);
 
-        String attributeValue = mongoDBInterface.getCollectionAttributeValue(projectId + "_TestCase", "_id");
-
-        return testcaseId.equals(attributeValue);
+        return mongoDBInterface.getCollectionAttributeValue(projectId + "_TestCase", "_id", testcaseId);
 
     }
                
@@ -59,9 +55,7 @@ public class APIValidation {
                                               password,
                                               dbname);
 
-        String attributeValue = mongoDBInterface.getCollectionAttributeValue(projectId + "_TestCase", "attachments");
-
-        return attachmentId.equals(attributeValue);
+        return mongoDBInterface.getCollectionAttributeValue(projectId + "_TestCase", "_id", testcaseId, "attachments", attachmentId);
 
     }
 
@@ -78,9 +72,7 @@ public class APIValidation {
                                               password,
                                               dbname);
 
-        String attributeValue = mongoDBInterface.getCollectionAttributeValue(projectId + "_Launch", "_id");
-
-        return launchId.equals(attributeValue);
+        return mongoDBInterface.get3LevelCollectionAttributeValue(projectId + "_Launch", launchId, "");
 
     }
 
@@ -92,20 +84,45 @@ public class APIValidation {
         String launchId,
         String launchTestCaseUUID) {
 
+System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - projectId: " + projectId);
+System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - launchId: " + launchId);
+System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - launchTestCaseUUID: " + launchTestCaseUUID);
+System.out.flush();
+
+return true;
+/*-
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(replicaSet,
                 username,
                 password,
                 dbname);
 
-        String attributeValue = mongoDBInterface.get3LevelCollectionAttributeValue(projectId + "_Launch", "_id");
+        return mongoDBInterface.get3LevelCollectionAttributeValue(projectId + "_Launch", launchId, launchTestCaseUUID);
+	*/
 
-        attributeValue = mongoDBInterface.getCollectionAttributeValue(projectId + "_Launch",  "_id");
-            
-        attributeValue = mongoDBInterface.getCollectionAttributeValue(projectId + "_Launch",  "_id");
+    }
 
-        return launchTestCaseUUID.equals(attributeValue);
+    static public boolean checkLoginId(String replicaSet,
+        String username,
+        String password,
+        String dbname,
+        String loginId) {
 
+System.out.println("APIValidation::checkLoginId - loginId: " + loginId);
+System.out.flush();
+
+	if (loginId.toLowerCase().equals("admin")) {
+	   return true;
+	}
+
+        MongoDBInterface mongoDBInterface = new MongoDBInterface();
+        mongoDBInterface.setMongoDBProperties(replicaSet,
+                username,
+                password,
+                dbname);
+
+
+        return mongoDBInterface.getCollectionAttributeValue("users", "login", loginId);
 
     }
 

@@ -15,7 +15,8 @@ namespace Dokimion.Pages
         public static IWebLocator DokimionProjectSettingsLink => L("DokimionProjectSettingsLink",
               By.XPath("(//div[@class='card-header'])/span/child::a[text()='Dokimion']"));
 
-        public static IWebLocator EnvironmentInput => L("EnvironmentInput", By.XPath("//*[@id='react-select-4-input']"));
+        public static IWebLocator EnvironmentInput => L("EnvironmentInput",
+            By.XPath("(//div[@class='project-settings-section'])[2]//div[@class='css-1g6gooi']//input"));
 
         public static IWebLocator SettingsSaveButton => L("SettingsSaveButton", By.XPath("//div[@class='project-settings-control row']//button[text()='Save']"));
 
