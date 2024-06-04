@@ -210,7 +210,7 @@ class LaunchForm extends SubComponent {
   }
 
   getAttributeValues(id) {
-    return this.state.launch.attributes[id].value;
+    return this.state.launch.attributes;
     //return Utils.getProjectAttribute(this.state.projectAttributes, id).attrValues || [];
   }
 
@@ -410,7 +410,7 @@ class LaunchForm extends SubComponent {
                                      isClearable
                                      isMulti
                                      onChange={e => this.editAttributeValues(attributeId, e)}
-                                     options={this.getAttributeValues(attributeId).key}
+                                     options={this.getAttributeValues(attributeId)}
                                      //options={this.getAttributeValues(attributeId).map(function (attrValue) {
                                        //return { value: attrValue.key + ", " + attrValue.value, label: attrValue.key + ", " + attrValue.value };
                                      //})}
