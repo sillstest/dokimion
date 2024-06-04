@@ -160,9 +160,10 @@ class LaunchForm extends SubComponent {
   }
 
   getAttributeKeysToAdd() {
-    return (this.state.projectAttributes || [])
-      .filter(attribute => !(Object.keys(this.state.launch.attributes || {}) || []).includes(attribute.id))
-      .map(attribute => ({ value: attribute.id, label: attribute.name }));
+    return this.state.launch.attributes;
+    //return (this.state.projectAttributes || [])
+      //.filter(attribute => !(Object.keys(this.state.launch.attributes || {}) || []).includes(attribute.id))
+      //.map(attribute => ({ value: attribute.id, label: attribute.name }));
   }
 
 
@@ -171,9 +172,8 @@ class LaunchForm extends SubComponent {
       .then(response => {
         for (let i = 0; i < response.length; i++) {
            if (response[i].name === "Configuration") {
-              this.state.projectAttributes = [];
-              this.state.projectAttributes.length = 1;
-              this.state.projectAttributes[0] = response[i];
+              this.state.projectAttributes = JSON.parse(JSON.stringify(response[i]));
+              this.state.launch.attributes = JSON.parse(JSON.stringify(response[i].attrValues));
               this.setState(this.state);
            }
         }
@@ -205,11 +205,13 @@ class LaunchForm extends SubComponent {
   }
 
   getAttributeName(id) {
-    return Utils.getProjectAttribute(this.state.projectAttributes, id).name || "";
+    return this.state.launch.attributes[id].key;
+    //return Utils.getProjectAttribute(this.state.projectAttributes, id).name || "";
   }
 
   getAttributeValues(id) {
-    return Utils.getProjectAttribute(this.state.projectAttributes, id).attrValues || [];
+    return this.state.launch.attributes[id].value;
+    //return Utils.getProjectAttribute(this.state.projectAttributes, id).attrValues || [];
   }
 
   editAttributeKey(key, data, reRender) {
@@ -381,46 +383,13 @@ class LaunchForm extends SubComponent {
               </div>
             </div>
             <div id="attributes" className="mb-4">
-              <h5>Attributes</h5>
+              <h5>Configuration Attribute</h5>
               {Object.keys(this.state.launch.attributes || {}).map(
                 function (attributeId, i) {
                   var attributeValues = this.state.launch.attributes[attributeId] || [];
                   if (attributeId && attributeId != "null") {
                     return (
                       <div key={i} className="form-group attribute-block">
-                        <div
-                          id={"attributes-" + attributeId + "-display"}
-                          className="inplace-display"
-                          style={{ display: this.state.attributesInEdit.has(attributeId) ? "none" : "block" }}
-                        >
-                          <div index={attributeId} className="card">
-                            <div className="card-header">
-                              <b>
-                                {this.getAttributeName(attributeId)}
-                                {!this.state.readonly && (
-                                  <span
-                                    className="edit edit-icon clickable"
-                                    onClick={e => {
-                                      this.toggleEditAttribute(attributeId);
-                                    }}
-                                  >
-                                    <FontAwesomeIcon icon={faPencilAlt} />
-                                  </span>
-                                )}
-                                {!this.state.readonly && (
-                                  <span
-                                    className="clickable edit-icon red"
-                                    index={attributeId}
-                                    onClick={e => this.removeAttribute(attributeId, e)}
-                                  >
-                                    <FontAwesomeIcon icon={faMinusCircle} />
-                                  </span>
-                                )}
-                              </b>
-                            </div>
-                            {<div className="card-body">{attributeValues.join(", ")}</div>}
-                          </div>
-                        </div>
                         {!this.state.readonly && (
                           <div
                             id={"attributes-" + attributeId + "-form"}
@@ -434,15 +403,17 @@ class LaunchForm extends SubComponent {
                                 </div>
                                 <div className="card-body">
                                   <CreatableSelect
-                                    value={(attributeValues || []).map(function (val) {
-                                      return { key: val, label: val };
-                                    })}
-                                    isClearable
-                                    isMulti
-                                    onChange={e => this.editAttributeValues(attributeId, e)}
-                                    options={this.getAttributeValues(attributeId).map(function (attrValue) {
-                                      return { value: attrValue.key + ", " + attrValue.value, label: attrValue.key + ", " + attrValue.value };
-                                    })}
+                                     //value={(attributeValues || []).map(function (val) {
+                                       //return { key: val, label: val };
+                                     //})}
+                                     value={attributeValues.key + attributeValues.value}
+                                     isClearable
+                                     isMulti
+                                     onChange={e => this.editAttributeValues(attributeId, e)}
+                                     options={this.getAttributeValues(attributeId).key}
+                                     //options={this.getAttributeValues(attributeId).map(function (attrValue) {
+                                       //return { value: attrValue.key + ", " + attrValue.value, label: attrValue.key + ", " + attrValue.value };
+                                     //})}
                                   />
                                   <button
                                     type="button"
