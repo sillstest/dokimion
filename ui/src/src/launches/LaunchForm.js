@@ -20,6 +20,11 @@ class LaunchForm extends SubComponent {
         testSuite: { filter: {} },
         properties: [],
         launcherConfig: { properties: {} },
+        attributes: [{ name: "", values: [] }],
+        attributeNames: [],
+        selectedAttributeName: "",
+        selectedAttributeIndex: 0,
+        selectedAttributeValues: [],
       },
       project: {
         id: null,
@@ -38,8 +43,37 @@ class LaunchForm extends SubComponent {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.changeEnvironments = this.changeEnvironments.bind(this);
+    this.getAttributes = this.getAttributes.bind(this);
+    this.changeLaunchConfigAttribute = this.changeLaunchConfigAttribute.bind(this);
+    this.changeLaunchConfigAttributeValues = this.changeLaunchConfigAttributeValues.bind(this);
     this.handleLauncherChange = this.handleLauncherChange.bind(this);
+  }
+
+  getAttributes() {
+    Backend.get(this.props.match.params.project + "/attribute")
+      .then(response => {
+
+        this.state.launch.attributes = []
+        for (let i = 0; i < response.length; i++) {
+
+          if (response[i].name.startsWith("Configuration_")) {
+
+             var tempAttrib = {name: "", values: []};
+             tempAttrib.name = response[i].name;
+             this.state.launch.attributeNames.push(tempAttrib.name);
+
+             var tempValues = [];
+             for (let j = 0; j < response[i].attrValues.length; j++) {
+                tempValues.push(response[i].attrValues[j].value);
+             }
+             tempAttrib.values = tempValues;
+             this.state.launch.attributes.push(tempAttrib);
+          }
+
+        }
+        this.setState(this.state);
+      })
+      .catch(error => console.log(error));
   }
 
   handleChange(event) {
@@ -100,6 +134,7 @@ class LaunchForm extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
+    this.getAttributes();
 
     Backend.get("project/" + this.props.match.params.project)
       .then(response => {
@@ -130,11 +165,23 @@ class LaunchForm extends SubComponent {
     this.setState(this.state);
   }
 
-  changeEnvironments(values) {
-    this.state.launch.environments = values.map(function (value) {
-      return value.value;
-    });
+  changeLaunchConfigAttribute(values) {
+    for (let i = 0; i < this.state.launch.attributeNames.length; i++) {
+       if (this.state.launch.attributeNames[i] == values.value) {
+          this.state.launch.selectedAttributeName = values.value;
+          this.state.launch.selectedAttributeIndex = i;
+          break;
+       }
+    }
+    this.state.launch.selectedAttributeValues = [];
     this.setState(this.state);
+  }
+
+  changeLaunchConfigAttributeValues(values) {
+     for (let i = 0; i < values.length; i++) {
+        this.state.launch.selectedAttributeValues.push(values[i].value);
+     }
+     this.setState(this.state);
   }
 
   launchModalDismiss() {
@@ -196,18 +243,27 @@ class LaunchForm extends SubComponent {
             </div>
 
             <div className="form-group row">
-              <label className="col-4 col-form-label">Environments</label>
+              <label className="col-4 col-form-label">Launch Configuration Attribute</label>
               <div className="col-8">
                 <CreatableSelect
-                  value={(this.state.launch.environments || []).map(function (val) {
-                    return { value: val, label: val };
+                  value={this.state.launch.selectedAttributeName}
+                  onChange={this.changeLaunchConfigAttribute}
+                  options={(this.state.launch.attributeNames || []).map(function (val) {
+                    return { value: val, label: val};
                   })}
+                />
+              </div>
+            </div>
+
+            <div className="form-group row">
+              <label className="col-4 col-form-label">Launch Configuration Attribute Values</label>
+              <div className="col-8">
+                <CreatableSelect
+                  value={this.state.launch.selectedAttributeValues}
                   isMulti
-                  isClearable
-                  cacheOptions
-                  onChange={this.changeEnvironments}
-                  options={(this.state.project.environments || []).map(function (val) {
-                    return { value: val, label: val };
+                  onChange={this.changeLaunchConfigAttributeValues}
+                  options={(this.state.launch.attributes[this.state.launch.selectedAttributeIndex].values || []).map(function (val) {
+                    return { value: val, label: val};
                   })}
                 />
               </div>
