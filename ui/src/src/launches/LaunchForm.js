@@ -20,10 +20,10 @@ class LaunchForm extends SubComponent {
         testSuite: { filter: {} },
         properties: [],
         launcherConfig: { properties: {} },
-        attributes: [{ name: "", values: [] }],
         attributeNames: [],
-        selectedAttributeName: "",
+        attributes: [{ name: "", values: [] }],
         selectedAttributeIndex: 0,
+        selectedAttributeName: "",
         selectedAttributeValues: [],
       },
       project: {
@@ -43,6 +43,7 @@ class LaunchForm extends SubComponent {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleSaveAttribChanges = this.handleSaveAttribChanges.bind(this);
     this.getAttributes = this.getAttributes.bind(this);
     this.changeLaunchConfigAttribute = this.changeLaunchConfigAttribute.bind(this);
     this.changeLaunchConfigAttributeValues = this.changeLaunchConfigAttributeValues.bind(this);
@@ -75,6 +76,20 @@ class LaunchForm extends SubComponent {
       })
       .catch(error => console.log(error));
   }
+
+  handleSaveAttribChanges() {
+    // save attribute changes on screen to database
+/*
+    Backend.post(this.props.match.params.project + "/launch/" + this.state.launch.id + "/configattribs/" + JSON.stringify(this.state.launch.attributes))
+      .then(response => {
+        //
+      })
+      .catch(error => {
+        this.setState({errorMessage: "Couldn't save launch configuration attributes: " + error});
+      });
+*/
+  }
+
 
   handleChange(event) {
     this.state.launch[event.target.name] = event.target.value;
@@ -166,14 +181,14 @@ class LaunchForm extends SubComponent {
   }
 
   changeLaunchConfigAttribute(values) {
+
     for (let i = 0; i < this.state.launch.attributeNames.length; i++) {
-       if (this.state.launch.attributeNames[i] == values.value) {
+       if (this.state.attributeNames[i] == values.value) {
           this.state.launch.selectedAttributeName = values.value;
           this.state.launch.selectedAttributeIndex = i;
           break;
        }
     }
-    this.state.launch.selectedAttributeValues = [];
     this.setState(this.state);
   }
 
@@ -246,8 +261,7 @@ class LaunchForm extends SubComponent {
               <label className="col-4 col-form-label">Launch Configuration Attribute</label>
               <div className="col-8">
                 <CreatableSelect
-                  value={this.state.launch.selectedAttributeName}
-                  onChange={this.changeLaunchConfigAttribute}
+                  onChange={value => this.changeLaunchConfigAttribute}
                   options={(this.state.launch.attributeNames || []).map(function (val) {
                     return { value: val, label: val};
                   })}
@@ -259,9 +273,8 @@ class LaunchForm extends SubComponent {
               <label className="col-4 col-form-label">Launch Configuration Attribute Values</label>
               <div className="col-8">
                 <CreatableSelect
-                  value={this.state.launch.selectedAttributeValues}
                   isMulti
-                  onChange={this.changeLaunchConfigAttributeValues}
+                  onChange={value => this.changeLaunchConfigAttributeValues}
                   options={(this.state.launch.attributes[this.state.launch.selectedAttributeIndex].values || []).map(function (val) {
                     return { value: val, label: val};
                   })}
@@ -270,30 +283,12 @@ class LaunchForm extends SubComponent {
             </div>
 
             <div className="form-group row">
-              <label className="col-4 col-form-label">Launcher</label>
-              <div className="col-8">
-                <select
-                  id="launcherUUID"
-                  className="form-control"
-                  onChange={e => this.handleLauncherChange(e, 0, "uuid")}
-                >
-                  <option> </option>
-                  {(this.state.project.launcherConfigs || []).map(
-                    function (config) {
-                      var selected = config.uuid == (this.state.launch.launcherConfig || {}).uuid;
-                      if (selected) {
-                        return (
-                          <option value={config.uuid} selected>
-                            {config.name}
-                          </option>
-                        );
-                      }
-                      return <option value={config.uuid}>{config.name}</option>;
-                    }.bind(this),
-                  )}
-                </select>
-              </div>
-            </div>
+             <div className="col-sm-4">
+               <button type="button" className="btn btn-primary" onClick={this.handleSaveAttribChanges}>
+               Save changes
+               </button>
+             </div>
+             </div>
           </form>
           <div>
             {this.state.launch.launcherConfig && this.state.launch.launcherConfig.uuid && (
