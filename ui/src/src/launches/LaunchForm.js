@@ -20,12 +20,13 @@ class LaunchForm extends SubComponent {
         testSuite: { filter: {} },
         properties: [],
         launcherConfig: { properties: {} },
-        attributeNames: [],
         attributes: [{ name: "", values: [] }],
-        selectedAttributeIndex: 0,
-        selectedAttributeName: "",
-        selectedAttributeValues: [],
       },
+      projectAttributeNames: [],
+      projectAttributes: [{ name: "", values: [] }],
+      displayAttributeIndex: {},
+      displayAttributeName: {},
+      displayAttributeValues: {},
       project: {
         id: null,
         name: "",
@@ -41,6 +42,13 @@ class LaunchForm extends SubComponent {
       modalName : props.modalName,
     };
 
+    this.state.displayAttributeIndex["top"] = 0;
+    this.state.displayAttributeIndex["bottom"] = 0;
+    this.state.displayAttributeName["top"] = "";
+    this.state.displayAttributeName["bottom"] = "";
+    this.state.displayAttributeValues["top"] = [];
+    this.state.displayAttributeValues["bottom"] = [];
+
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleSaveAttribChanges = this.handleSaveAttribChanges.bind(this);
@@ -55,13 +63,14 @@ class LaunchForm extends SubComponent {
       .then(response => {
 
         this.state.launch.attributes = []
+        this.state.projectAttributes = []
         for (let i = 0; i < response.length; i++) {
 
           if (response[i].name.startsWith("Configuration_")) {
 
              var tempAttrib = {name: "", values: []};
              tempAttrib.name = response[i].name;
-             this.state.launch.attributeNames.push(tempAttrib.name);
+             this.state.projectAttributeNames.push(tempAttrib.name);
 
              var tempValues = [];
              for (let j = 0; j < response[i].attrValues.length; j++) {
@@ -69,6 +78,7 @@ class LaunchForm extends SubComponent {
              }
              tempAttrib.values = tempValues;
              this.state.launch.attributes.push(tempAttrib);
+             this.state.projectAttributes.push(tempAttrib);
           }
 
         }
@@ -78,18 +88,21 @@ class LaunchForm extends SubComponent {
   }
 
   handleSaveAttribChanges() {
-    // save attribute changes on screen to database
-/*
-    Backend.post(this.props.match.params.project + "/launch/" + this.state.launch.id + "/configattribs/" + JSON.stringify(this.state.launch.attributes))
-      .then(response => {
-        //
-      })
-      .catch(error => {
-        this.setState({errorMessage: "Couldn't save launch configuration attributes: " + error});
-      });
-*/
-  }
 
+     // copy display attribute  name, values to launch.attributes
+     let found = false;
+     for (let i = 0; i < this.state.attributes.length; i++) {
+       if (this.state.displayAttributeName == this.state.attributes[i].name) {
+          this.state.launch.attributes[i].values = JSON.parse(JSON.stringify(this.state.displaySelectedValues));
+          found = true;
+       }
+     }
+     if (found == false) {
+        this.state.launch.attributes.push({name: this.state.displayAttributeName, values: JSON.parse(JSON.stringify(this.state.displayAttributeValues))});
+     }
+
+
+  }
 
   handleChange(event) {
     this.state.launch[event.target.name] = event.target.value;
@@ -114,6 +127,8 @@ class LaunchForm extends SubComponent {
         url += "?failedOnly=true";
       }
     }
+    // Configuration attributes
+
     Backend.post(url, this.state.launch)
       .then(response => {
         this.state.launch = response;
@@ -180,12 +195,13 @@ class LaunchForm extends SubComponent {
     this.setState(this.state);
   }
 
-  changeLaunchConfigAttribute(values) {
+  changeLaunchConfigAttribute = (values, position) => {
 
-    for (let i = 0; i < this.state.launch.attributeNames.length; i++) {
-       if (this.state.attributeNames[i] == values.value) {
-          this.state.launch.selectedAttributeName = values.value;
-          this.state.launch.selectedAttributeIndex = i;
+    for (let i = 0; i < this.state.projectAttributes.length; i++) {
+       if (this.state.projectAttributes[i].name == values.value) {
+          this.state.displayAttributeName[position] = values.value;
+          this.state.displayAttributeIndex[position] = i;
+          //this.state.launch.attributes.push({name: values.value, values: []});
           break;
        }
     }
@@ -193,8 +209,17 @@ class LaunchForm extends SubComponent {
   }
 
   changeLaunchConfigAttributeValues(values) {
+
      for (let i = 0; i < values.length; i++) {
-        this.state.launch.selectedAttributeValues.push(values[i].value);
+        this.state.displayAttributeValues["top"] = values[i].value;
+
+/*
+        for (let j = 0; j < this.state.launch.attributes.length; j++) {
+          if (this.state.launch.attributes[j].name == displayAttributeName[info.position]) {
+             this.state.launch.attributes[j].values = JSON.parse(JSON.stringify(this.state.displayAttributeValues[info.position]));
+          }
+        }
+*/
      }
      this.setState(this.state);
   }
@@ -258,11 +283,11 @@ class LaunchForm extends SubComponent {
             </div>
 
             <div className="form-group row">
-              <label className="col-4 col-form-label">Launch Configuration Attribute</label>
+              <label className="col-4 col-form-label">Launch Configuration Attribute #1</label>
               <div className="col-8">
                 <CreatableSelect
-                  onChange={value => this.changeLaunchConfigAttribute}
-                  options={(this.state.launch.attributeNames || []).map(function (val) {
+                  onChange={(value) => this.changeLaunchConfigAttribute(value, "top")}
+                  options={(this.state.projectAttributeNames || []).map(function (val) {
                     return { value: val, label: val};
                   })}
                 />
@@ -270,12 +295,37 @@ class LaunchForm extends SubComponent {
             </div>
 
             <div className="form-group row">
-              <label className="col-4 col-form-label">Launch Configuration Attribute Values</label>
+              <label className="col-4 col-form-label">Launch Configuration Attribute Values #1</label>
               <div className="col-8">
                 <CreatableSelect
                   isMulti
                   onChange={value => this.changeLaunchConfigAttributeValues}
-                  options={(this.state.launch.attributes[this.state.launch.selectedAttributeIndex].values || []).map(function (val) {
+                  options={(this.state.projectAttributes[this.state.displayAttributeIndex["top"]].values || []).map(function (val) {
+                    return { value: val, label: val};
+                  })}
+                />
+              </div>
+            </div>
+
+            <div className="form-group row">
+              <label className="col-4 col-form-label">Launch Configuration Attribute #2</label>
+              <div className="col-8">
+                <CreatableSelect
+                  onChange={(value) => this.changeLaunchConfigAttribute(value, "bottom")}
+                  options={(this.state.projectAttributeNames || []).map(function (val) {
+                    return { value: val, label: val};
+                  })}
+                />
+              </div>
+            </div>
+
+            <div className="form-group row">
+              <label className="col-4 col-form-label">Launch Configuration Attribute Values #2</label>
+              <div className="col-8">
+                <CreatableSelect
+                  isMulti
+                  onChange={values => this.changeLaunchConfigAttributeValues}
+                  options={(this.state.projectAttributes[this.state.displayAttributeIndex["bottom"]].values || []).map(function (val) {
                     return { value: val, label: val};
                   })}
                 />
