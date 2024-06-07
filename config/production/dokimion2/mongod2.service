@@ -5,23 +5,24 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-User=root
-Group=root
+User=mongod
+Group=mongod
 EnvironmentFile=
-ExecStart=/usr/bin/mongod --config /etc/mongod2.conf
+ExecStart=/usr/bin/mongod -vvvv --config /etc/mongod2.conf
 PIDFile=/run/mongod/mongod2.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
 LimitCPU=infinity
 # virtual memory size
-LimitAS=infinity
+#LimitAS=infinity
+LimitAS=4000M
 # open files
 LimitNOFILE=64000
 # processes/threads
 LimitNPROC=64000
 # locked memory
-LimitMEMLOCK=infinity
+LimitMEMLOCK=480M
 # total threads (user+kernel)
 TasksMax=infinity
 TasksAccounting=false
