@@ -20,7 +20,7 @@ class LaunchForm extends SubComponent {
         testSuite: { filter: {} },
         properties: [],
         launcherConfig: { properties: {} },
-        configurationAttributes: [{ name: "", values: [] }],
+        configAttributePairs: [],
       },
       projectAttributeNames: [],
       projectAttributes: [{ name: "", values: [] }],
@@ -88,13 +88,13 @@ class LaunchForm extends SubComponent {
   handleSaveAttribChanges() {
 
      // copy display attributes  (name, values) to launch.configurationAttributes
-     this.state.launch.configurationAttributes = [];
-     this.state.launch.configurationAttributes.push(
-             {name:   this.state.displayAttributeName["top"],
-              values: JSON.parse(JSON.stringify(this.state.displayAttributeValues["top"]))});
-     this.state.launch.configurationAttributes.push(
-             {name:   this.state.displayAttributeName["bottom"],
-              values: JSON.parse(JSON.stringify(this.state.displayAttributeValues["bottom"]))});
+     this.state.launch.configAttributePairs.push(
+                  {name: this.state.displayAttributeName["top"],
+                   value: this.state.displayAttributeValues["top"]});
+
+     this.state.launch.configAttributePairs.push(
+                  {name: this.state.displayAttributeName["bottom"],
+                   value: this.state.displayAttributeValues["bottom"]});
   }
 
   handleChange(event) {
