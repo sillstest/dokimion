@@ -22,6 +22,7 @@ class LaunchForm extends SubComponent {
         launcherConfig: { properties: {} },
         configAttributePairs: [],
       },
+      noAttributes: 0,
       projectAttributeNames: [],
       projectAttributes: [{ name: "", values: [] }],
       displayAttributeIndex: {},
@@ -48,10 +49,9 @@ class LaunchForm extends SubComponent {
     this.state.displayAttributeName["bottom"] = "";
     this.state.displayAttributeValues["top"] = [];
     this.state.displayAttributeValues["bottom"] = [];
-
+    this.handleAddAttribute = this.handleAddAttribute.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleSaveAttribChanges = this.handleSaveAttribChanges.bind(this);
     this.getAttributes = this.getAttributes.bind(this);
     this.changeLaunchConfigAttribute = this.changeLaunchConfigAttribute.bind(this);
     this.changeLaunchConfigAttributeValues = this.changeLaunchConfigAttributeValues.bind(this);
@@ -85,17 +85,17 @@ class LaunchForm extends SubComponent {
       .catch(error => console.log(error));
   }
 
-  handleSaveAttribChanges() {
+  handleAddAttribute() {
 
-     // copy display attributes  (name, values) to launch.configurationAttributes
-     this.state.launch.configAttributePairs.push(
-                  {name: this.state.displayAttributeName["top"],
-                   value: this.state.displayAttributeValues["top"]});
+     if (this.state.noAttributes <= 1) {
+        this.state.noAttributes += 1;
+        this.setState(this.state);
+     } else {
+        this.setState({errorMessage: "Maximum number attributes = 2"});
+     }
 
-     this.state.launch.configAttributePairs.push(
-                  {name: this.state.displayAttributeName["bottom"],
-                   value: this.state.displayAttributeValues["bottom"]});
   }
+
 
   handleChange(event) {
     this.state.launch[event.target.name] = event.target.value;
@@ -120,6 +120,15 @@ class LaunchForm extends SubComponent {
         url += "?failedOnly=true";
       }
     }
+    // copy display attributes  (name, values) to launch.configurationAttributes
+    this.state.launch.configAttributePairs.push(
+                  {name: this.state.displayAttributeName["top"],
+                   value: this.state.displayAttributeValues["top"]});
+
+    this.state.launch.configAttributePairs.push(
+                  {name: this.state.displayAttributeName["bottom"],
+                   value: this.state.displayAttributeValues["bottom"]});
+
     Backend.post(url, this.state.launch)
       .then(response => {
         this.state.launch = response;
@@ -265,6 +274,16 @@ class LaunchForm extends SubComponent {
             </div>
 
             <div className="form-group row">
+             <div className="col-sm-4">
+               <button type="button" className="btn btn-primary" onClick={this.handleAddAttribute}>
+               Add Attribute
+               </button>
+             </div>
+            </div>
+
+            {(this.state.noAttributes >= 1) ? (
+            <>
+            <div className="form-group row">
               <label className="col-4 col-form-label">Launch Configuration Attribute #1</label>
               <div className="col-8">
                 <CreatableSelect
@@ -288,7 +307,12 @@ class LaunchForm extends SubComponent {
                 />
               </div>
             </div>
-
+            </>
+            ) : (
+            <></>
+            )}
+            {(this.state.noAttributes === 2) ? (
+            <>
             <div className="form-group row">
               <label className="col-4 col-form-label">Launch Configuration Attribute #2</label>
               <div className="col-8">
@@ -313,14 +337,11 @@ class LaunchForm extends SubComponent {
                 />
               </div>
             </div>
-
-            <div className="form-group row">
-             <div className="col-sm-4">
-               <button type="button" className="btn btn-primary" onClick={this.handleSaveAttribChanges}>
-               Save changes
-               </button>
-             </div>
-             </div>
+            </>
+            ) : (
+            // nop
+            <></>
+            )}
           </form>
           <div>
             {this.state.launch.launcherConfig && this.state.launch.launcherConfig.uuid && (
