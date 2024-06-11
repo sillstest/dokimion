@@ -287,12 +287,14 @@ class TestCases extends SubComponent {
     if (this.tree) {
       this.tree.destroy();
     }
+
+    var objTestcasesTree = {testCaseTree: this.state.testcasesTree};
     this.tree = $("#tree").tree({
       primaryKey: "id",
       uiLibrary: "bootstrap4",
       checkboxes: true,
       checkedField: "checked",
-      dataSource: Utils.parseTree(this.state.testcasesTree, this.state.filter.notFields.id, this.state.tcSizes),
+      dataSource: Utils.parseTree(objTestcasesTree, this.state.filter.notFields.id, this.state.tcSizes),
     });
     this.tree.on(
       "select",
