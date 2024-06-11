@@ -8,18 +8,57 @@ export function intDiv(val, by) {
   return (val - (val % by)) / by;
 }
 
-export function parseTree(testcasesTree, uncheckedList, tcSizes) {
-  sortTestcaseTree(testcasesTree);
-  return getTreeNode(testcasesTree, [], uncheckedList, tcSizes).children || [];
+export function parseTree(obj, uncheckedList, tcSizes, configAttributePairs) {
+  sortTestcaseTree(obj);
+  return getTreeNode(obj, [], uncheckedList, tcSizes, configAttributePairs).
+         children || [];
 }
 
-export function getTreeNode(node, parentsToUpdate, uncheckedList, tcSizes) {
+export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, 
+                            configAttributePairs) {
+
+  // double testCaseTree if 2 attributes
+  var launchSuffixZero = "";
+  var launchSuffixOne = "";
+  if (configAttributePairs !== undefined) {
+     if (configAttributePairs.length === 2) {
+        // deep clone and concatenate - need to use specific fields
+        let clonedTestCases = [];
+        if (nodeObj.testCaseTree.testCases && nodeObj.testCaseTree.testCases.length > 0) {
+           let i = 0;
+           nodeObj.testCaseTree.testCases.forEach(function (testCase) {
+              clonedTestCases[i] = JSON.parse(JSON.stringify(testCase));
+              clonedTestCases[i++].uuid = JSON.parse(JSON.stringify(testCase.uuid * 2));
+           });
+        }
+        let j = 0;
+        let origLength = nodeObj.testCaseTree.testCases.length;
+        nodeObj.testCaseTree.testCases.length *= 2;
+        nodeObj.testCaseTree.count *= 2;
+        clonedTestCases.forEach(function (clonedTestCase) {
+           nodeObj.testCaseTree.testCases[origLength + j++] = clonedTestCase;
+        });
+     }
+
+     for (let i = 0; i < configAttributePairs.length; i++) {
+         if (configAttributePairs[i].name !== "") {
+            if (i % 2 == 0) {
+               launchSuffixZero += ", " + configAttributePairs[i].name + ":" + 
+                            configAttributePairs[i].value;
+            } else {
+               launchSuffixOne += ", " + configAttributePairs[i].name + ":" + 
+                            configAttributePairs[i].value;
+            }
+         }
+     }
+   }
+
   uncheckedList = uncheckedList || [];
   var resultNode = {
-    text: "<b>" + node.title + "</b>",
+    text: "<b>" + nodeObj.testCaseTree.title + "</b>",
     isLeaf: false,
-    id: node.id,
-    uuid: node.uuid
+    id: nodeObj.testCaseTree.id,
+    uuid: nodeObj.testCaseTree.uuid
   };
   resultNode.TOTAL = 0;
   resultNode.PASSED = 0;
@@ -28,11 +67,19 @@ export function getTreeNode(node, parentsToUpdate, uncheckedList, tcSizes) {
   resultNode.RUNNING = 0;
   resultNode.RUNNABLE = 0;
   parentsToUpdate.push(resultNode);
-  if (node.testCases && node.testCases.length > 0) {
+  if (nodeObj.testCaseTree.testCases && nodeObj.testCaseTree.testCases.length > 0) {
     resultNode.children = [];
-    node.testCases.forEach(function (testCase) {
+    let i = 0;
+    nodeObj.testCaseTree.testCases.forEach(function (testCase) {
+
+      var launchSuffix = launchSuffixZero;
+      if (i > (nodeObj.testCaseTree.testCases.length/2 - 1)) {
+         launchSuffix = launchSuffixOne;
+      }
+      i += 1;
+
       resultNode.children.push({
-        text: getSizeOfTestcase(tcSizes, testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + "<span class='text-muted'> (" + testCase.id + ")</span>",
+        text: getSizeOfTestcase(tcSizes, testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + launchSuffix + "<span class='text-muted'> (" + testCase.id + ")</span>",
         id: testCase.id,
         uuid: testCase.uuid,
         isLeaf: true,
@@ -49,8 +96,8 @@ export function getTreeNode(node, parentsToUpdate, uncheckedList, tcSizes) {
       });
     });
   }
-  if (node.children && node.children.length > 0) {
-    resultNode.children = node.children.map(function (child) {
+  if (nodeObj.testCaseTree.children && nodeObj.testCaseTree.children.length > 0) {
+    resultNode.children = nodeObj.testCaseTree.children.map(function (child) {
       return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList, tcSizes);
     });
   }
@@ -436,15 +483,16 @@ export function getSizeOfTestcase(tcSizes, steps) {
   return html 
 }
 
-function sortTestcaseTree(testcasesTree){
+function sortTestcaseTree(objTestcasesTree){
+
    //Add generic logic to sort the testcasesTree on Id Issue 28
-   if(testcasesTree.testCases && testcasesTree.testCases.length>0){
+   if (objTestcasesTree.testCaseTree.testCases && objTestcasesTree.testCaseTree.testCases.length>0){
 
-    testcasesTree.testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+    objTestcasesTree.testCaseTree.testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
 
-  }else if(testcasesTree.children && testcasesTree.children.length >0){
+  } else if (objTestcasesTree.testCaseTree.children && objTestcasesTree.testCaseTree.children.length >0){
 
-    testcasesTree.children[0].testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+    objTestcasesTree.testCaseTree.children[0].testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
   }
 
 }
