@@ -103,8 +103,12 @@ class LaunchForm extends SubComponent {
   handleAddAttribute() {
 
      if (this.state.noAttributes <= 1) {
-        this.state.noAttributes += 1;
-        this.setState(this.state);
+        if (this.state.projectAttributes.length >= 1) {
+           this.state.noAttributes += 1;
+           this.setState(this.state);
+        } else {
+           this.setState({errorMessage: "Invalid number of configuration attributes"});
+        }
      } else {
         this.setState({errorMessage: "Maximum number attributes = 2"});
      }
@@ -310,7 +314,7 @@ class LaunchForm extends SubComponent {
              </div>
             </div>
 
-            {(this.state.noAttributes >= 1) ? (
+            {(this.state.noAttributes >= 1 && this.state.projectAttributes.length >= 1) ? (
             <>
             <div className="form-group row">
               <label className="col-4 col-form-label">Launch Configuration Attribute #1</label>
@@ -340,7 +344,7 @@ class LaunchForm extends SubComponent {
             ) : (
             <></>
             )}
-            {(this.state.noAttributes === 2) ? (
+            {(this.state.noAttributes === 2 && this.state.projectAttributes.length >= 2) ? (
             <>
             <div className="form-group row">
               <label className="col-4 col-form-label">Launch Configuration Attribute #2</label>
