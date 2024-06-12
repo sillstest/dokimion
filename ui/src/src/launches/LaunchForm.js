@@ -41,6 +41,15 @@ class LaunchForm extends SubComponent {
       loading: false,
       errorMessage: "",
       modalName : props.modalName,
+      configurationAttributes: [],
+      configAttributesFilter: {
+        skip: 0,
+        limit: 20,
+        orderby: "project",
+        orderdir: "ASC",
+        includedFields: "project, names",
+      },
+
     };
 
     this.state.displayAttributeIndex["top"] = 0;
@@ -49,6 +58,7 @@ class LaunchForm extends SubComponent {
     this.state.displayAttributeName["bottom"] = "";
     this.state.displayAttributeValues["top"] = [];
     this.state.displayAttributeValues["bottom"] = [];
+    this.loadConfigAttributes = this.loadConfigAttributes.bind(this);
     this.handleAddAttribute = this.handleAddAttribute.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -63,23 +73,28 @@ class LaunchForm extends SubComponent {
       .then(response => {
 
         this.state.projectAttributes = []
-        for (let i = 0; i < response.length; i++) {
+        response.forEach(
+          function(response) {
 
-          if (response[i].name.startsWith("Configuration_")) {
-
-             var tempAttrib = {name: "", values: []};
-             tempAttrib.name = response[i].name;
-             this.state.projectAttributeNames.push(tempAttrib.name);
-
-             var tempValues = [];
-             for (let j = 0; j < response[i].attrValues.length; j++) {
-                tempValues.push(response[i].attrValues[j].value);
-             }
-             tempAttrib.values = tempValues;
-             this.state.projectAttributes.push(tempAttrib);
-          }
-
-        }
+            this.state.configurationAttributes.forEach(
+              function(oneConfigAttrib) {
+                for (let i = 0; i < oneConfigAttrib.names.length; i++) {
+                  if (response.name === oneConfigAttrib.names[i]) {
+                     var tempAttrib = {name: "", values: []};
+                     tempAttrib.name = response.name;
+                     this.state.projectAttributeNames.push(tempAttrib.name);
+                     var tempValues = [];
+                     for (let j = 0; j < response.attrValues.length; j++) {
+                        tempValues.push(response.attrValues[j].value);
+                     }
+                     tempAttrib.values = tempValues;
+                     this.state.projectAttributes.push(tempAttrib);
+                }
+               }
+             }.bind(this),
+           );
+          }.bind(this),
+        );
         this.setState(this.state);
       })
       .catch(error => console.log(error));
@@ -94,6 +109,20 @@ class LaunchForm extends SubComponent {
         this.setState({errorMessage: "Maximum number attributes = 2"});
      }
 
+  }
+
+  loadConfigAttributes() {
+
+    Backend.get("/configurationattributes/getall/" + 
+                this.props.match.params.project + "?" +
+                Utils.filterToQuery(this.state.configAttributesFilter))
+      .then(response => {
+         this.state.configurationAttributes = response;
+         if (this.state.configurationAttributes.length != 0) {
+            this.getAttributes();
+         }
+      })
+      .catch(error => console.log(error));
   }
 
 
@@ -164,7 +193,7 @@ class LaunchForm extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
-    this.getAttributes();
+    this.loadConfigAttributes();
 
     Backend.get("project/" + this.props.match.params.project)
       .then(response => {
