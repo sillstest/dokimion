@@ -154,13 +154,17 @@ class LaunchForm extends SubComponent {
       }
     }
     // copy display attributes  (name, values) to launch.configurationAttributes
-    this.state.launch.configAttributePairs.push(
+    if (this.state.displayAttributeName["top"] !== "") {
+       this.state.launch.configAttributePairs.push(
                   {name: this.state.displayAttributeName["top"],
                    value: this.state.displayAttributeValues["top"]});
+    }
 
-    this.state.launch.configAttributePairs.push(
+    if (this.state.displayAttributeName["bottom"] !== "") {
+       this.state.launch.configAttributePairs.push(
                   {name: this.state.displayAttributeName["bottom"],
                    value: this.state.displayAttributeValues["bottom"]});
+    }
 
     Backend.post(url, this.state.launch)
       .then(response => {
