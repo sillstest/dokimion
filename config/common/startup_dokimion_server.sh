@@ -9,8 +9,8 @@ cd /home/dokimion/dokimion
 /usr/bin/java TestcaseSizes
 /usr/bin/javac DefaultProjectAttributes.java aes.java AdminPassword.java
 /usr/bin/java DefaultProjectAttributes
-/usr/bin/javac Users.java aes.java AdminPassword.java
-/usr/bin/java Users
+/usr/bin/javac User.java aes.java AdminPassword.java
+/usr/bin/java User
 /usr/bin/javac ConfigurationAttributes.java aes.java AdminPassword.java
 /usr/bin/java ConfigurationAttributes
 
