@@ -262,19 +262,6 @@ System.out.println("UserResource::login - session: " + session);
 System.out.println("UserResource::login - login: " + login);
 System.out.flush();
 
-        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
-            getService().getMongoUsername(),
-            getService().getMongoPassword(),
-            getService().getMongoDBName(),
-            login) == false) {
-
-            System.out.println("UserResource::login: checkLoginId returned FALSE - did NOT find login");
-            System.out.flush();
-
-            Session session1 = null;
-            return session1;
-        }
-
         Person person = session.getPerson();
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
