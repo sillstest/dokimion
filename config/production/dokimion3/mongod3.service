@@ -1,5 +1,5 @@
 [Unit]
-Description=MongoDB Database Server #2
+Description=MongoDB Database Server #3
 Documentation=https://docs.mongodb.org/manual
 After=network-online.target
 Wants=network-online.target
@@ -8,8 +8,8 @@ Wants=network-online.target
 User=mongod
 Group=mongod
 EnvironmentFile=
-ExecStart=/usr/bin/mongod -vvvv --config /etc/mongod2.conf
-PIDFile=/run/mongod/mongod2.pid
+ExecStart=/usr/bin/mongod -vvvv --config /etc/mongod3.conf
+PIDFile=/run/mongod/mongod3.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
