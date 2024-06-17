@@ -12,13 +12,13 @@ Environment="PATH=/usr/bin:$PATH"
 Environment="NODE_OPTIONS=--openssl-legacy-provider"
 WorkingDirectory=/home/dokimion/dokimion/src
 ExecStart=/home/dokimion/bin/startup_dokimion_ui.sh 5
-#ExecStart=npm start 
 PIDFile=/run/dokimion/dokimion_ui_5.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
 LimitCPU=infinity
 # virtual memory size
+#LimitAS=6000M
 # open files
 LimitNOFILE=64000
 # processes/threads
