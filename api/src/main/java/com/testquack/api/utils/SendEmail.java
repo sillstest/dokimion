@@ -1,7 +1,8 @@
 package com.testquack.api.utils;
 
-import java.util.Properties;
+import com.testquack.dal.Logger;
 
+import java.util.Properties;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
@@ -38,18 +39,18 @@ public class SendEmail {
 
 	Session session = Session.getInstance(properties, null);
 
-	System.out.println("After session instantiation"); 
+	Logger.info("After session instantiation"); 
 
         // Used to debug SMTP issues
         session.setDebug(true);
 
-	System.out.println("After session setDebug");
+	Logger.info("After session setDebug");
 
         try {
             // Create a default MimeMessage object.
             MimeMessage message = new MimeMessage(session);
 
-	    System.out.println("After MimeMessage constructor");
+	    Logger.info("After MimeMessage constructor");
 
             // Set From: header field of the header.
             message.setFrom(new InternetAddress(from));
@@ -63,20 +64,20 @@ public class SendEmail {
             // Now set the actual message
             message.setText("Quack Forgot Password code: " + passwordCode);
 
-            System.out.println("sending...");
+            Logger.info("sending...");
             // Send message
             //Transport.send(message);
 	    Transport tr = session.getTransport("smtp");
-            System.out.println("after getTransport");
+            Logger.info("after getTransport");
 
 	    tr.connect(host, "siltester.bob@gmail.com", "tihkugzmcsohgxix");
-            System.out.println("after transport connect");
+            Logger.info("after transport connect");
 
 	    tr.sendMessage(message, message.getAllRecipients());
-            System.out.println("after transport sendMessage");
+            Logger.info("after transport sendMessage");
 
 	    tr.close();
-            System.out.println("after transport close");
+            Logger.info("after transport close");
 
         } catch (MessagingException mex) {
             mex.printStackTrace();

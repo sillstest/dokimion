@@ -1,5 +1,6 @@
 package com.testquack.dal;
 
+import com.testquack.dal.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,8 +59,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
        assertThat(roleCaps.get(0).getRole(), is(Role.TESTDEVELOPER));
 
        for (RoleCapability roleCap : roleCaps ) {
-          System.out.println("findFilteredSingleFieldTest - role: " + roleCap.getRole().value());
-          System.out.flush();
+          Logger.info("findFilteredSingleFieldTest - role: " + roleCap.getRole().value());
        }
     }
 
@@ -83,8 +83,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
                 containsInAnyOrder(Capability.READWRITE, Capability.ADMIN));
 
        for (RoleCapability roleCap : roleCaps ) {
-          System.out.println("findFilteredMultipleValuesFieldTest capability: " + roleCap.getCapability().value());
-          System.out.flush();
+          Logger.info("findFilteredMultipleValuesFieldTest capability: " + roleCap.getCapability().value());
        }
 
 

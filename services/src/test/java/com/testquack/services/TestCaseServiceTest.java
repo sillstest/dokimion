@@ -1,5 +1,6 @@
 package com.testquack.services;
 
+import com.testquack.dal.Logger;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -78,11 +79,9 @@ public class TestCaseServiceTest extends BaseTest{
 
 
       } catch (FileNotFoundException exc) {
-         System.out.println("userCanUploadAttachment - Filename: " + attachmentFileName + " not found");
-         System.out.flush();
+         Logger.info("userCanUploadAttachment - Filename: " + attachmentFileName + " not found");
       } catch (IOException exc) {
-         System.out.println("userCanUploadAttachment - Filename: " + attachmentFileName + " not found");
-         System.out.flush();
+         Logger.info("userCanUploadAttachment - Filename: " + attachmentFileName + " not found");
       }
 
    }
@@ -102,11 +101,9 @@ public class TestCaseServiceTest extends BaseTest{
          assertNotNull(testCaseService.uploadAttachment(adminSession, project3.getId(), testCasesProject3.get(0).getId(), attachmentInputStream, attachmentFileName, attachmentInputStream.available()));
 
       } catch (FileNotFoundException exc) {
-         System.out.println("userCanNOTUploadAttachment - Filename: " + attachmentFileName + " not found");
-         System.out.flush();
+         Logger.info("userCanNOTUploadAttachment - Filename: " + attachmentFileName + " not found");
       } catch (IOException exc) {
-         System.out.println("userCanNOTUploadAttachment - Filename: " + attachmentFileName + " not found");
-         System.out.flush();
+         Logger.info("userCanNOTUploadAttachment - Filename: " + attachmentFileName + " not found");
       }
 
    }
@@ -120,13 +117,11 @@ public class TestCaseServiceTest extends BaseTest{
       assertNotNull(project3.getId());
       assertNotNull(testCasesProject3.get(0).getId());
 
-      System.out.println("userSession: " + userSession);
-      System.out.flush();
+      Logger.info("userSession: " + userSession);
 
       com.testquack.beans.TestCase testCase = testCaseService.findOne(adminSession, project3.getId(), testCasesProject3.get(0).getId());
 
-      System.out.println("tc: " + testCase);
-      System.out.flush();
+      Logger.info("tc: " + testCase);
       assertNotNull(testCase);
 
       Attachment attach = testCaseService.getAttachment(adminSession, project3.getId(), testCase.getId(), c_attachmentId);
@@ -143,8 +138,7 @@ public class TestCaseServiceTest extends BaseTest{
 
       com.testquack.beans.TestCase testCase = testCaseService.findOne(adminSession, project3.getId(), testCasesProject3.get(0).getId());
 
-      System.out.println("tc: " + testCase);
-      System.out.flush();
+      Logger.info("tc: " + testCase);
       assertNotNull(testCase);
 
       assertNull(testCaseService.getAttachment(adminSession, project3.getId(), testCase.getId(), attachmentId));
@@ -160,15 +154,13 @@ public class TestCaseServiceTest extends BaseTest{
 
       com.testquack.beans.TestCase testCase = testCaseService.findOne(adminSession, project3.getId(), testCasesProject3.get(0).getId());
 
-      System.out.println("tc: " + testCase);
-      System.out.flush();
+      Logger.info("tc: " + testCase);
       assertNotNull(testCase);
 
       try {
          assertNotNull(testCaseService.deleteAttachment(adminSession, project3.getId(), testCase.getId(), c_attachmentId));
       } catch (IOException exc) {
-         System.out.println("userCanDeleteAttachment - attachmentId: " + c_attachmentId);
-         System.out.flush();
+         Logger.info("userCanDeleteAttachment - attachmentId: " + c_attachmentId);
       }
 
    }
@@ -182,15 +174,13 @@ public class TestCaseServiceTest extends BaseTest{
 
       com.testquack.beans.TestCase testCase = testCaseService.findOne(adminSession, project3.getId(), testCasesProject3.get(0).getId());
 
-      System.out.println("tc: " + testCase);
-      System.out.flush();
+      Logger.info("tc: " + testCase);
       assertNotNull(testCase);
 
       try {
          assertNotNull(testCaseService.deleteAttachment(adminSession, project3.getId(), testCase.getId(), attachmentId));
       } catch (IOException exc) {
-         System.out.println("userCanNOTDeleteAttachment - attachmentId: " + attachmentId);
-         System.out.flush();
+         Logger.info("userCanNOTDeleteAttachment - attachmentId: " + attachmentId);
       }
 
    }

@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.dal.Logger;
 import com.testquack.beans.Filter;
 import com.testquack.beans.LauncherConfigDescriptor;
 import com.testquack.beans.Project;
@@ -76,13 +77,11 @@ public class LauncherResource extends BaseResource<Project> {
     public Response delete(@PathParam("projectId") String projectId,
                            @PathParam("launchId") String launchId) {
 
-System.out.println("LauncherResource - delete: projectId, launchId: " + projectId + ", " + launchId);
-System.out.flush();
+Logger.info("LauncherResource - delete: projectId, launchId: " + projectId + ", " + launchId);
 
        service.delete(getUserSession(), projectId, launchId);
 
-System.out.println("LauncherResource - delete: - after service.delete call");
-System.out.flush();
+Logger.info("LauncherResource - delete: - after service.delete call");
 
         return Response.ok().build();
     }

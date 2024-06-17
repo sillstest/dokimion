@@ -1,5 +1,6 @@
 package com.testquack.services;
 
+import com.testquack.dal.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.testquack.beans.RoleCapability;
 import com.testquack.beans.Role;
@@ -31,10 +32,9 @@ public class RoleCapabilityService extends BaseService<RoleCapability> {
 
     @Override
     public List<RoleCapability> findFiltered(Session session, String projectId, Filter filter) {
-System.out.println("RoleCapService.findFiltered - session: " + session);
-System.out.println("RoleCapService.findFiltered - projectId: " + projectId);
-System.out.println("RoleCapService.findFiltered - filter: " + filter);
-System.out.flush();
+Logger.info("RoleCapService.findFiltered - session: " + session);
+Logger.info("RoleCapService.findFiltered - projectId: " + projectId);
+Logger.info("RoleCapService.findFiltered - filter: " + filter);
         return getRepository().find(getCurrOrganizationId(session), projectId, filter);
     }
 

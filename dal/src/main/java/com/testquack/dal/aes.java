@@ -36,7 +36,7 @@ public class aes {
       return Base64.getEncoder()
         .encodeToString(cipher.doFinal(strToEncrypt.getBytes("UTF-8")));
     } catch (Exception e) {
-      System.out.println("Error while encrypting: " + e.toString());
+      Logger.error("Error while encrypting: " + e.toString());
     }
     return null;
   }
@@ -49,7 +49,7 @@ public class aes {
       return new String(cipher.doFinal(Base64.getDecoder()
         .decode(strToDecrypt.getBytes("UTF-8"))), Charset.forName("UTF-8"));
     } catch (Exception e) {
-      System.out.println("Error while decrypting: " + e.toString());
+      Logger.error("Error while decrypting: " + e.toString());
     }
     return null;
   }

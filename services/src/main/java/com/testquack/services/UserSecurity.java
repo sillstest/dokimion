@@ -1,5 +1,6 @@
 package com.testquack.services;
 
+import com.testquack.dal.Logger;
 import com.testquack.beans.RoleCapability;
 import com.testquack.beans.Role;
 import com.testquack.beans.Capability;
@@ -9,6 +10,7 @@ import com.testquack.beans.Entity;
 import com.testquack.beans.Launch;
 import ru.greatbit.whoru.auth.Session;
 
+import com.testquack.dal.Logger;
 import com.testquack.dal.UserRepository;
 import com.testquack.dal.RoleCapabilityRepository;
 
@@ -25,27 +27,23 @@ public class UserSecurity {
                           String                   loginId) {
      User user = (User)userRepository.findOne(organizationId, projectId, loginId);
 
-System.out.println("allowUserReadRequest - user: " + user);
-System.out.flush();
+Logger.info("allowUserReadRequest - user: " + user);
 
      Role userRole = translateRoleFormat(user.getRole());
 
      List<RoleCapability> roleCapList = roleCapRepository.find(
              organizationId, projectId, new Filter());
 
-System.out.println("allowUserReadRequest - roleCapList: " + roleCapList);
-System.out.flush();
+Logger.info("allowUserReadRequest - roleCapList: " + roleCapList);
 
      for (RoleCapability roleCap : roleCapList) {
         if (userRole == roleCap.getRole()) {
-System.out.println("allowUserReadRequest - roleCap matched role: " + roleCap.getRole());
-System.out.println("allowUserReadRequest - cap: " + roleCap.getCapability().value());
-System.out.flush();
+Logger.info("allowUserReadRequest - roleCap matched role: " + roleCap.getRole());
+Logger.info("allowUserReadRequest - cap: " + roleCap.getCapability().value());
            if ((roleCap.getCapability() == Capability.READ) ||
                (roleCap.getCapability() == Capability.READWRITE) ||
                (roleCap.getCapability() == Capability.ADMIN)) {
-System.out.println("allowUserReadRequest - roleCap allowed READ: " + roleCap);
-System.out.flush();
+Logger.info("allowUserReadRequest - roleCap allowed READ: " + roleCap);
               return true;
            } 
         }
@@ -63,10 +61,9 @@ System.out.flush();
                           String                   projectId,
                           String                   loginId) {
 
-System.out.println("allowUserWriteRequest - org id: " + organizationId);
-System.out.println("allowUserWriteRequest - projectId: " + projectId);
-System.out.println("allowUserWriteRequest - loginId: " + loginId);
-System.out.flush();
+Logger.info("allowUserWriteRequest - org id: " + organizationId);
+Logger.info("allowUserWriteRequest - projectId: " + projectId);
+Logger.info("allowUserWriteRequest - loginId: " + loginId);
 
      User user = (User)userRepository.findOne(organizationId, projectId, loginId);
 
@@ -75,39 +72,33 @@ System.out.flush();
      List<RoleCapability> roleCapList = roleCapRepository.find(
              organizationId, projectId, new Filter());
 
-System.out.println("allowUserWriteequest - roleCapList: " + roleCapList);
-System.out.flush();
+Logger.info("allowUserWriteequest - roleCapList: " + roleCapList);
 
      for (RoleCapability roleCap : roleCapList) {
         if (userRole == roleCap.getRole()) {
-System.out.println("allowUserWriteRequest - matched role: " + roleCap.getRole().value());
-System.out.println("allowUserWriteRequest - cap: " + roleCap.getCapability().value());
-System.out.flush();
+Logger.info("allowUserWriteRequest - matched role: " + roleCap.getRole().value());
+Logger.info("allowUserWriteRequest - cap: " + roleCap.getCapability().value());
 
            if ((roleCap.getCapability() == Capability.READWRITE) || 
                (roleCap.getCapability() == Capability.ADMIN)) {
-System.out.println("allowUserWriteRequest - roleCap allowed READWRITE or ADMIN: " + roleCap);
-System.out.flush();
+Logger.info("allowUserWriteRequest - roleCap allowed READWRITE or ADMIN: " + roleCap);
 
               return true;
            } 
         }
      }
  
-System.out.println("allowUserWriteRequest - returning false");
-System.out.flush();
+Logger.info("allowUserWriteRequest - returning false");
      return false;
   }
 
   public static boolean allowLaunchWriteRequest(List<String> roles, Entity entity) {
 
-System.out.println("allowLaunchWriteRequest - roles, roles[0]: " + roles + ", " + roles.get(0));
-System.out.println("allowLaunchWriteRequest - entity instanceof Launch: " + (entity instanceof Launch));
-System.out.flush();
+Logger.info("allowLaunchWriteRequest - roles, roles[0]: " + roles + ", " + roles.get(0));
+Logger.info("allowLaunchWriteRequest - entity instanceof Launch: " + (entity instanceof Launch));
 
      if (entity instanceof Launch && roles.isEmpty() == false && roles.get(0).equals("OBSERVERONLY")) {
-System.out.println("allowLaunchWriteRequest - launch write NOT allowed");
-System.out.flush();
+Logger.info("allowLaunchWriteRequest - launch write NOT allowed");
         return false;
      }
 
@@ -123,8 +114,7 @@ System.out.flush();
                           String                   loginId,
                           List<Entity>             entityList ) {
 
-System.out.println("allowUserWriteRequest - no body 1");
-System.out.flush();
+Logger.info("allowUserWriteRequest - no body 1");
 
       return true;
 
@@ -139,8 +129,7 @@ System.out.flush();
                           String                   loginId,
                           Collection<Entity>       entityCollection ) {
 
-System.out.println("allowUserWriteRequest - no body 2");
-System.out.flush();
+Logger.info("allowUserWriteRequest - no body 2");
 
       return true;
 
@@ -157,8 +146,7 @@ System.out.flush();
      User user = (User)userRepository.findOne(null, null, loginId);
      Role userRole = translateRoleFormat(user.getRole());
 
-System.out.println("UserSecurity::isAdmin - role: " + userRole);
-System.out.flush();
+Logger.info("UserSecurity::isAdmin - role: " + userRole);
      if (userRole.equals("ADMIN") == true)
         return true;
 
@@ -184,8 +172,7 @@ System.out.flush();
            returnRole = Role.OBSERVERONLY;
            break;
         default:
-           System.out.println("translateRoleFormat - role: " + role);
-           System.out.flush();
+           Logger.info("translateRoleFormat - role: " + role);
            break;
       }
       return returnRole;

@@ -1,5 +1,6 @@
 package com.testquack.dal;
 
+import com.testquack.dal.Logger;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoClientSettings;
@@ -59,18 +60,13 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
                         builder.hosts(addresses)
                 );
 
-System.out.println("MongoConfig::mongoClient - username: " + username );
-System.out.println("MongoConfig::mongoClient - dbname: " + dbname );
-System.out.println("MongoConfig::mongoClient - password: " + password );
-System.out.flush();
+Logger.info("MongoConfig::mongoClient - username: " + username );
+Logger.info("MongoConfig::mongoClient - dbname: " + dbname );
 
 
         if (!isEmpty(username)){
            final String secretKey = "al;jf;lda1_+_!!()!!!!";
            String decryptedPasswd = aes.decrypt(password, secretKey) ;
-
-System.out.println("MongoDBInterface - decryptedPasswd: " + decryptedPasswd);
-System.out.flush();
 
             settingsBuilder.credential(MongoCredential.createCredential(username, "admin", 
                decryptedPasswd.toCharArray()));

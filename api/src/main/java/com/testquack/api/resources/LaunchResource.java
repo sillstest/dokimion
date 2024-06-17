@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.dal.Logger;
 import com.testquack.api.utils.APIValidation;
 import com.testquack.beans.FailureDetails;
 import com.testquack.beans.Launch;
@@ -64,8 +65,7 @@ public class LaunchResource extends BaseCrudResource<Launch> {
             @ApiParam(value = "New Status", required = true) @PathParam("status") LaunchStatus status,
             FailureDetails failureDetails) throws Exception {
 
-System.out.println("LaunchResource::updateLaunchTestCaseStatus - launch id: " + launchId);
-System.out.flush();
+Logger.info("LaunchResource::updateLaunchTestCaseStatus - launch id: " + launchId);
 
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -73,15 +73,12 @@ System.out.flush();
             getService().getMongoDBName(),
             projectId) == false) {
 
-            System.out.println("LaunchResource::updateLaunchTestCaseStatus: checkProjectId returned FALSE - did NOT find project id");
-            System.out.flush();
-
+            Logger.info("LaunchResource::updateLaunchTestCaseStatus: checkProjectId returned FALSE - did NOT find project id");
 
             LaunchTestCase lt = null;
             return lt;
         }
-System.out.println("LaunchResource::updateLaunchTestCaseStatus - successful checkProjectId");
-System.out.flush();
+Logger.info("LaunchResource::updateLaunchTestCaseStatus - successful checkProjectId");
 
         if (APIValidation.checkLaunchIdNTestCaseUUID(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -91,15 +88,13 @@ System.out.flush();
             launchId,
             testcaseUUID) == false) {
 
-            System.out.println("LaunchResource::updateLaunchTestCaseStatus: checkLaunchIdNTestCaseUUID returned FALSE - did NOT find testcaseUUID");
-            System.out.flush();
+            Logger.info("LaunchResource::updateLaunchTestCaseStatus: checkLaunchIdNTestCaseUUID returned FALSE - did NOT find testcaseUUID");
 
 
             LaunchTestCase lt = null;
             return lt;
         }
-System.out.println("LaunchResource::updateLaunchTestCaseStatus - successful checkLaunchIdNTestCaseUUID");
-System.out.flush();
+Logger.info("LaunchResource::updateLaunchTestCaseStatus - successful checkLaunchIdNTestCaseUUID");
 
         return service.updateLaunchTestCaseStatus(request, getUserSession(), projectId, launchId, testcaseUUID, status, failureDetails);
     }
@@ -108,8 +103,7 @@ System.out.flush();
     @Path("/statistics")
     public Map<String, LaunchStatistics> getLaunchesStatistics(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId) throws Exception {
 
-System.out.println("LaunchResource::getLaunchesStatistics - project id: " + projectId);
-System.out.flush();
+Logger.info("LaunchResource::getLaunchesStatistics - project id: " + projectId);
 
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -117,19 +111,17 @@ System.out.flush();
             getService().getMongoDBName(),
             projectId) == false) {
 
-            System.out.println("LaunchResource::getLaunchStatistics: checkProjectId returned FALSE - did NOT find project id");
-            System.out.flush();
+            Logger.info("LaunchResource::getLaunchStatistics: checkProjectId returned FALSE - did NOT find project id");
 
             Map<String, LaunchStatistics> ls = null;
             return ls;
         }
 
         Map<String, LaunchStatistics> rs = service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
-	System.out.println("LaunchResource - after call to service.getLaunchStatistics");
+	Logger.info("LaunchResource - after call to service.getLaunchStatistics");
 	for (Map.Entry<String, LaunchStatistics> entry : rs.entrySet()) {
-	   System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
+	   Logger.info("Key: " + entry.getKey() + ", Value: " + entry.getValue());
 	}
-System.out.flush();
 
         return rs;
         //return service.getLaunchesStatistics(getUserSession(), projectId, initFilter(request));
@@ -141,8 +133,7 @@ System.out.flush();
                                                                      @PathParam("projectId") String projectId,
                                                                      @QueryParam("statsTopLimit") int statsTopLimit) throws Exception {
 
-System.out.println("LaunchResource::getLaunchTestcasesHeatMap - project id: " + projectId);
-System.out.flush();
+Logger.info("LaunchResource::getLaunchTestcasesHeatMap - project id: " + projectId);
 
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -150,8 +141,7 @@ System.out.flush();
             getService().getMongoDBName(),
             projectId) == false) {
 
-            System.out.println("LaunchResource::getLaunchTestcasesHeatMap: checkProjectId returned FALSE - did NOT find project id");
-            System.out.flush();
+            Logger.info("LaunchResource::getLaunchTestcasesHeatMap: checkProjectId returned FALSE - did NOT find project id");
 
             Collection<LaunchTestcaseStats> ls = null;
             return ls;
@@ -165,8 +155,7 @@ System.out.flush();
     @Override
     public Launch create(String projectId, Launch launch) {
 
-System.out.println("LaunchResource::create - project id, launch: " + projectId + ", " + launch);
-System.out.flush();
+Logger.info("LaunchResource::create - project id, launch: " + projectId + ", " + launch);
 
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -174,9 +163,7 @@ System.out.flush();
             getService().getMongoDBName(),
             projectId) == false) {
 
-            System.out.println("LaunchResource::create: checkProject returned FALSE - did NOT find project id");
-            System.out.flush();
-
+            Logger.info("LaunchResource::create: checkProject returned FALSE - did NOT find project id");
 
             Launch laun = null;
             return laun;

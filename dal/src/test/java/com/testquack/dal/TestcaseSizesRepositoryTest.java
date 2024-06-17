@@ -1,5 +1,6 @@
 package com.testquack.dal;
 
+import com.testquack.dal.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,8 +56,7 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
        assertThat(tcSizes.size(), is(0));
 
        for (TestcaseSizes tcSize : tcSizes ) {
-          System.out.println("findFilteredSingleFieldTest - name: " + tcSize.getName());
-          System.out.flush();
+          Logger.info("findFilteredSingleFieldTest - name: " + tcSize.getName());
        }
     }
 
@@ -77,8 +77,7 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
         assertThat(tcSizes.size(), is(0));
 
        for (TestcaseSizes tcSize : tcSizes ) {
-          System.out.println("findFilteredMultipleValuesFieldTest: " + tcSize.getName());
-          System.out.flush();
+          Logger.info("findFilteredMultipleValuesFieldTest: " + tcSize.getName());
        }
 
 

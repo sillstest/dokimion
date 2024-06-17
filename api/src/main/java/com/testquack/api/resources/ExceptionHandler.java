@@ -68,9 +68,8 @@ public class ExceptionHandler implements ExceptionMapper<Exception> {
     private Response createResponse(Response.StatusType status, Exception e, boolean logWarn) {
         if (logWarn){
 
-System.out.println("ExceptionHandler::createResponse - status: " + status);
-System.out.println("ExceptionHandler::createResponse - exception: " + e);
-System.out.flush();
+com.testquack.dal.Logger.info("ExceptionHandler::createResponse - status: " + status);
+com.testquack.dal.Logger.info("ExceptionHandler::createResponse - exception: " + e);
 
             logger.warn("Exception has occurred for user {} : {}",
                     (securityContext != null && getUserSession() != null) ? getUserSession().getName() : "Unknown",

@@ -1,5 +1,6 @@
 package com.testquack.services;
 
+import com.testquack.dal.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.testquack.beans.DefaultProjectAttributes;
 import com.testquack.beans.Role;
@@ -31,10 +32,9 @@ public class DefaultProjectAttributesService extends BaseService<DefaultProjectA
 
     @Override
     public List<DefaultProjectAttributes> findFiltered(Session session, String projectId, Filter filter) {
-System.out.println("DefaultProjectAttributesService.findFiltered - session: " + session);
-System.out.println("DefaultProjectAttributesService.findFiltered - projectId: " + projectId);
-System.out.println("DefaultProjectAttributesService.findFiltered - filter: " + filter);
-System.out.flush();
+Logger.info("DefaultProjectAttributesService.findFiltered - session: " + session);
+Logger.info("DefaultProjectAttributesService.findFiltered - projectId: " + projectId);
+Logger.info("DefaultProjectAttributesService.findFiltered - filter: " + filter);
         return getRepository().find(getCurrOrganizationId(session), projectId, filter);
     }
 

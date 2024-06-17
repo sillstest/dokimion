@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.dal.Logger;
 import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.Filter;
@@ -52,8 +53,7 @@ public class ProjectResource extends BaseResource<Project> {
     })
     public Project findOne(@ApiParam(value = "Entity Id", required = true) @PathParam("id") String id) {
 
-        System.out.println("ProjectResource::findOne: id: " + id);
-        System.out.flush();
+        Logger.info("ProjectResource::findOne: id: " + id);
 
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
                                     getService().getMongoUsername(),
@@ -61,8 +61,7 @@ public class ProjectResource extends BaseResource<Project> {
                                     getService().getMongoDBName(),
                                     id) == false) {
 
-System.out.println("ProjectResource::findOne: checkProject returned FALSE");
-System.out.flush();
+Logger.info("ProjectResource::findOne: checkProject returned FALSE");
 
            return null;
         }
@@ -77,9 +76,8 @@ System.out.flush();
     })
     public Project create(@ApiParam(value = "Entity", required = true) Project entity) {
         ProjectService service = (ProjectService) getService();
-System.out.println("ProjectResource:create - service: " + service);
-System.out.println("ProjectResource.create - getUserSession: " + getUserSession());
-System.out.flush();
+Logger.info("ProjectResource:create - service: " + service);
+Logger.info("ProjectResource.create - getUserSession: " + getUserSession());
         return service.createProject(getUserSession(), entity);
     }
 
@@ -90,8 +88,7 @@ System.out.flush();
             @ApiResponse(code = 200, message = "Updated entity")
     })
     public Project update(@ApiParam(value = "Entity", required = true) Project entity) {
-System.out.println("ProjectResource::update - project: " + entity);
-System.out.flush();
+Logger.info("ProjectResource::update - project: " + entity);
 
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -99,8 +96,7 @@ System.out.flush();
             getService().getMongoDBName(),
             entity.getId()) == false) {
 
-            System.out.println("ProjectResource::findOne: checkProject returned FALSE");
-            System.out.flush();
+            Logger.info("ProjectResource::findOne: checkProject returned FALSE");
 
             return null;
         }
@@ -123,8 +119,7 @@ System.out.flush();
             getService().getMongoDBName(),
             id) == false) {
 
-            System.out.println("ProjectResource::delete: checkProject returned FALSE");
-            System.out.flush();
+            Logger.info("ProjectResource::delete: checkProject returned FALSE");
 
             return null;
         }

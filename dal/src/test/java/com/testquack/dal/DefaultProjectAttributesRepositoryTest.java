@@ -1,5 +1,6 @@
 package com.testquack.dal;
 
+import com.testquack.dal.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,8 +57,7 @@ public class DefaultProjectAttributesRepositoryTest extends DalBaseTest {
        assertThat(defaultProjAttribss.get(0).getProject(), is("paratext"));
 
        for (DefaultProjectAttributes defaultProjAttribs : defaultProjAttribss ) {
-          System.out.println("findFilteredSingleFieldTest - project: " + defaultProjAttribs.getProject());
-          System.out.flush();
+          Logger.info("findFilteredSingleFieldTest - project: " + defaultProjAttribs.getProject());
        }
     }
 
@@ -82,8 +82,7 @@ public class DefaultProjectAttributesRepositoryTest extends DalBaseTest {
         assertThat(defaultProjAttribss.size(), is(2));
 
        for (DefaultProjectAttributes defaultProjAttribs : defaultProjAttribss ) {
-          System.out.println("findFilteredMultipleValuesFieldTest attribs: " + defaultProjAttribs.getAttributes());
-          System.out.flush();
+          Logger.info("findFilteredMultipleValuesFieldTest attribs: " + defaultProjAttribs.getAttributes());
        }
 
 

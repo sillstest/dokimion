@@ -1,5 +1,6 @@
 package com.testquack.dal.impl;
 
+import com.testquack.dal.Logger;
 import com.testquack.beans.Project;
 import com.testquack.beans.EntityPreview;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,15 +27,13 @@ public abstract class CommonRepositoryImpl<E extends EntityPreview> implements C
 
     @Override
     public List<E> find(String organizationId, String projectId, Filter filter) {
-System.out.println("CommonRepositoryImpl::find - projectId: " + projectId);
-System.out.println("CommonRepositoryImpl::find - filter: " + filter);
-System.out.flush();
+Logger.info("CommonRepositoryImpl::find - projectId: " + projectId);
+Logger.info("CommonRepositoryImpl::find - filter: " + filter);
 
         String collName = getCollectionName(organizationId, projectId);
-        System.out.println("collName - " + collName);
-        System.out.println("entity class - " + getEntityClass());
-        System.out.println("query - " + DBUtils.getQuery(getEntityClass(), filter));
-        System.out.flush();
+        Logger.info("collName - " + collName);
+        Logger.info("entity class - " + getEntityClass());
+        Logger.info("query - " + DBUtils.getQuery(getEntityClass(), filter));
 
         List<E> listEntity = mongoOperations.find(DBUtils.getQuery(getEntityClass(), filter),
                 getEntityClass(),
@@ -53,8 +52,7 @@ System.out.flush();
 
     @Override
     public long count(String organizationId, String projectId, Filter filter) {
-System.out.println("CommonRepositoryImpl::count");
-System.out.flush();
+Logger.info("CommonRepositoryImpl::count");
 
         return mongoOperations.count(DBUtils.getQuery(getEntityClass(), filter),
                 getEntityClass(),
@@ -64,16 +62,14 @@ System.out.flush();
 
     @Override
     public E save(String organizationId, String projectId, E entity) {
-System.out.println("CommonRepositoryImpl::save - entity: " + entity);
-System.out.flush();
+Logger.info("CommonRepositoryImpl::save - entity: " + entity);
 
 if (entity instanceof Project) {
    Project proj = (Project)entity;
    if (proj.getReadWriteUsers() == null || proj.getReadWriteUsers().size() == 0) {
-      System.out.println("CommonRepositoryImpl::save - readWriteUsers: " + proj.getReadWriteUsers());
-      System.out.println("CommonRepositoryImpl::save - collectionName: " + getCollectionName(null, projectId));
-      System.out.println("CommonRepositoryImpl::save - entity class: " +  getEntityClass());
-      System.out.flush();
+      Logger.info("CommonRepositoryImpl::save - readWriteUsers: " + proj.getReadWriteUsers());
+      Logger.info("CommonRepositoryImpl::save - collectionName: " + getCollectionName(null, projectId));
+      Logger.info("CommonRepositoryImpl::save - entity class: " +  getEntityClass());
    }
 }
         mongoOperations.save(entity, getCollectionName(organizationId, projectId));
@@ -82,16 +78,14 @@ if (entity instanceof Project) {
 
     @Override
     public void delete(String organizationId, String projectId, String entityId) {
-System.out.println("CommonRepositoryImpl::delete");
-System.out.flush();
+Logger.info("CommonRepositoryImpl::delete");
 
         E entity = findOne(organizationId, projectId, entityId);
         mongoOperations.remove(entity, getCollectionName(organizationId, projectId));
     }
 
     public static String getCollectionName(String organizationId, String projectId, Class clazz) {
-System.out.println("CommonRepositoryImpl::getCollectionName");
-System.out.flush();
+Logger.info("CommonRepositoryImpl::getCollectionName");
 
         return isEmpty(organizationId) ?
                 projectId + "_" + clazz.getSimpleName() :
@@ -99,8 +93,7 @@ System.out.flush();
     }
 
     protected String getCollectionName(String organizationId, String projectId){
-System.out.println("CommonRepositoryImpl::getCollectionName");
-System.out.flush();
+Logger.info("CommonRepositoryImpl::getCollectionName");
 
         return getCollectionName(organizationId, projectId, getEntityClass());
     }
@@ -108,16 +101,14 @@ System.out.flush();
     @Override
     public E findOne(String organizationId, String projectId, String id) {
 
-System.out.println("CommonRepositoryImpl::findOne - getCollectionName: " + getCollectionName(organizationId, projectId));
-System.out.println("CommonRepositoryImpl::findOne - getEntityClass: " + getEntityClass());
-System.out.flush();
+Logger.info("CommonRepositoryImpl::findOne - getCollectionName: " + getCollectionName(organizationId, projectId));
+Logger.info("CommonRepositoryImpl::findOne - getEntityClass: " + getEntityClass());
         return mongoOperations.findOne(new Query(Criteria.where("id").is(id)), getEntityClass(), getCollectionName(organizationId, projectId));
     }
 
     @Override
     public Collection<E> save(String organizationId, String projectId, Collection<E> entities) {
-System.out.println("CommonRepositoryImpl::save");
-System.out.flush();
+Logger.info("CommonRepositoryImpl::save");
 
         entities.forEach(element -> mongoOperations.save(element, getCollectionName(organizationId, projectId)));
         return entities;
@@ -134,7 +125,6 @@ System.out.flush();
         Update update = new Update().set("deleted", true);
         mongoOperations.updateMulti(query, update, getCollectionName(organizationId, projectId));
         //mongoOperations.remove(entity, getCollectionName(organizationId, projectId));
-System.out.println("CommonRepositoryImpl - end of delete without entity");
-System.out.flush();
+Logger.info("CommonRepositoryImpl - end of delete without entity");
     }
 }

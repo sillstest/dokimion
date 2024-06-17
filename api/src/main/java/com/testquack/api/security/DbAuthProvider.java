@@ -1,5 +1,6 @@
 package com.testquack.api.security;
 
+import com.testquack.dal.Logger;
 import com.testquack.dal.aes;
 import com.testquack.api.utils.MongoDBInterface;
 import com.testquack.beans.Filter;
@@ -73,17 +74,12 @@ public class DbAuthProvider extends BaseDbAuthProvider {
 
         final String login = request.getParameter(PARAM_LOGIN);
         final String password = request.getParameter(PARAM_PASSWORD);
-System.out.println("dbAuthByLoginPassword - login: " + login);
-System.out.println("dbAuthByLoginPassword - password: " + password);
-System.out.println("dbAuthByLoginPassword - this.adminPassword: " + this.adminPassword);
-System.out.flush();
+Logger.info("dbAuthByLoginPassword - login: " + login);
 
         Person person;
         final String secretKey = "al;jf;lda1_+_!!()!!!!";
         String decryptedAdminPassword = aes.decrypt(this.adminPassword, secretKey) ;
 
-System.out.println("dbAuthByLoginPassword - decrypted Admin password: " + decryptedAdminPassword);
-System.out.flush();
 
         if (login.equalsIgnoreCase(this.adminLogin) && getMd5(password, login).equals(getMd5(decryptedAdminPassword, this.adminLogin))) {
             person = getAdminPerson(login, password);
@@ -91,10 +87,8 @@ System.out.flush();
             person = findPersonByLogin(login);
         }
 
-System.out.println("dbAuthByLoginPassword - person.login: " + person.getLogin());
-System.out.println("dbAuthByLoginPassword - person.isActive: " + person.isActive());
-System.out.println("dbAuthByLoginPassword - getMD5: " + getMd5(password, login));
-System.out.flush();
+Logger.info("dbAuthByLoginPassword - person.login: " + person.getLogin());
+Logger.info("dbAuthByLoginPassword - person.isActive: " + person.isActive());
         if (person!= null
                 && login.equals(person.getLogin())
                 && person.isActive()
@@ -125,8 +119,7 @@ System.out.flush();
     public Session doAuth(HttpServletRequest request, HttpServletResponse response){
         final String login = emptyIfNull(request.getParameter(PARAM_LOGIN));
         final String password = emptyIfNull(request.getParameter(PARAM_PASSWORD));
-System.out.println("DbAuthProvider::doAuth - login: " + login);
-System.out.flush();
+Logger.info("DbAuthProvider::doAuth - login: " + login);
 
 
         final String secretKey = "al;jf;lda1_+_!!()!!!!";
@@ -178,8 +171,7 @@ System.out.flush();
     protected Person findPersonByLogin(String login) {
 
         Person person = convertUser(userService.findOne(null, new Filter().withField("login", login)));
-        System.out.println("DbAuthProvider.findPersonByLogin - person: " + person);
-        System.out.flush();
+        Logger.info("DbAuthProvider.findPersonByLogin - person: " + person);
 
         return convertUser(userService.findOne(null, new Filter().withField("login", login)));
     }
@@ -217,8 +209,7 @@ System.out.flush();
 
     private Person convertUser(User user){
 
-        System.out.println("convertUser");
-        System.out.flush();
+        Logger.info("convertUser");
 
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(userService.getMongoReplicaSet(),

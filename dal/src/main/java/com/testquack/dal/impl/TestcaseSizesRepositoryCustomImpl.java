@@ -1,5 +1,6 @@
 package com.testquack.dal.impl;
 
+import com.testquack.dal.Logger;
 import com.testquack.beans.TestcaseSizes;
 import com.testquack.dal.TestcaseSizesRepositoryCustom;
 
@@ -24,15 +25,13 @@ public class TestcaseSizesRepositoryCustomImpl extends CommonRepositoryImpl<Test
 
         String collName = isEmpty(organizationId) ? "TestcaseSizes" : organizationId + "_testcaseSizes";
 
-System.out.println("TestcaseSizesRepositoryCustomImpl::getCollectionName - " + collName);
-System.out.flush();
+Logger.info("TestcaseSizesRepositoryCustomImpl::getCollectionName - " + collName);
         return collName;
     }
 
     @Override
     public List<TestcaseSizes> suggestTestcaseSizes(String organizationId, String literal) {
-System.out.println("TestcaseSizesRepositoryCustomImpl::suggestTestcaseSizes");
-System.out.flush();
+Logger.info("TestcaseSizesRepositoryCustomImpl::suggestTestcaseSizes");
         Criteria criteria = new Criteria();
         criteria.orOperator(
                 Criteria.where("small").regex(literal, "i"),

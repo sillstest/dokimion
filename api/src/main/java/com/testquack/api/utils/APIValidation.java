@@ -1,6 +1,9 @@
 
 package com.testquack.api.utils;
 
+import com.testquack.dal.aes;
+import com.testquack.dal.Logger;
+
 import static java.lang.String.format;
 
 public class APIValidation {
@@ -84,10 +87,9 @@ public class APIValidation {
         String launchId,
         String launchTestCaseUUID) {
 
-System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - projectId: " + projectId);
-System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - launchId: " + launchId);
-System.out.println("APIValidation::checkLaunchIdNTestCaseUUID - launchTestCaseUUID: " + launchTestCaseUUID);
-System.out.flush();
+Logger.info("APIValidation::checkLaunchIdNTestCaseUUID - projectId: " + projectId);
+Logger.info("APIValidation::checkLaunchIdNTestCaseUUID - launchId: " + launchId);
+Logger.info("APIValidation::checkLaunchIdNTestCaseUUID - launchTestCaseUUID: " + launchTestCaseUUID);
 
 return true;
 /*-
@@ -108,8 +110,7 @@ return true;
         String dbname,
         String loginId) {
 
-System.out.println("APIValidation::checkLoginId - loginId: " + loginId);
-System.out.flush();
+Logger.info("APIValidation::checkLoginId - loginId: " + loginId);
 
 	if (loginId.toLowerCase().equals("admin")) {
 	   return true;

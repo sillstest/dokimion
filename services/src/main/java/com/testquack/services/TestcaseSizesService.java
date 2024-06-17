@@ -1,7 +1,5 @@
 package com.testquack.services;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.testquack.beans.Filter;
 import com.testquack.beans.TestcaseSizes;
 import com.testquack.dal.OrganizationRepository;
@@ -10,6 +8,7 @@ import com.testquack.services.errors.EntityValidationException;
 import com.testquack.services.errors.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.testquack.dal.Logger;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.TestcaseSizesRepository;
 import ru.greatbit.utils.string.StringUtils;
@@ -37,14 +36,12 @@ public class TestcaseSizesService extends BaseService<TestcaseSizes> {
 
     @Override
     public List<TestcaseSizes> findFiltered(Session session, String projectId, Filter filter) {
-System.out.println("TestcaseSizesService.findFiltered - session: " + session);
-System.out.println("TestcaseSizesService.findFiltered - projectId: " + projectId);
-System.out.println("TestcaseSizesService.findFiltered - filter: " + filter);
-System.out.flush();
+Logger.info("TestcaseSizesService.findFiltered - session: " + session);
+Logger.info("TestcaseSizesService.findFiltered - projectId: " + projectId);
+Logger.info("TestcaseSizesService.findFiltered - filter: " + filter);
         List<TestcaseSizes> listTCSizes = getRepository().find(getCurrOrganizationId(session), projectId, filter);
         for (TestcaseSizes tcSize : listTCSizes) {
-           System.out.println("TestcaseSizesService::findFiltered - tcSize: " + tcSize);
-           System.out.flush();
+           Logger.info("TestcaseSizesService::findFiltered - tcSize: " + tcSize);
         }
         return listTCSizes;
 
@@ -54,13 +51,11 @@ System.out.flush();
 
     public List<TestcaseSizes> findAll() {
 
-System.out.println("TestcaseSizesService::findAll");
-System.out.flush();
+Logger.info("TestcaseSizesService::findAll");
 
         List<TestcaseSizes> tcSizesList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
         for (TestcaseSizes tcSize : tcSizesList) {
-           System.out.println("TestcaseSizesService.findAll() - tcSize: " + tcSize);
-           System.out.flush();
+           Logger.info("TestcaseSizesService.findAll() - tcSize: " + tcSize);
         }
 
 

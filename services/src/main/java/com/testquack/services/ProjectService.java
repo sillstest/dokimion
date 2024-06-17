@@ -1,5 +1,6 @@
 package com.testquack.services;
 
+import com.testquack.dal.Logger;
 import com.testquack.beans.Organization;
 import com.testquack.services.errors.EntityValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,12 +46,9 @@ public class ProjectService extends BaseService<Project> {
     }
 
     public Project createProject(Session user, Project entity) {
-System.out.println("ProjectService::createProject - entity: " + entity);
-System.out.flush();
-System.out.println("ProjectService::createProject - id: " + entity.getId());
-System.out.flush();
-System.out.println("ProjectService::createProject - rep exists: " + repository.exists(getCurrOrganizationId(user), null, entity.getId()));
-System.out.flush();
+Logger.info("ProjectService::createProject - entity: " + entity);
+Logger.info("ProjectService::createProject - id: " + entity.getId());
+Logger.info("ProjectService::createProject - rep exists: " + repository.exists(getCurrOrganizationId(user), null, entity.getId()));
         if (entity.getId() != null && repository.exists(getCurrOrganizationId(user), null, entity.getId())) {
             throw new EntityValidationException(format("Project with id %s already exists", entity.getId()));
         }
@@ -81,12 +79,9 @@ System.out.flush();
 
     @Override
     protected boolean userCanCreate(Session session, String projectId, Project project){
-System.out.println("ProjectService::userCanCreate - session: " + session);
-System.out.flush();
-System.out.println("ProjectService::userCanCreate - projectId: " + projectId);
-System.out.flush();
-System.out.println("ProjectService::userCanCreate - project: " + project);
-System.out.flush();
+Logger.info("ProjectService::userCanCreate - session: " + session);
+Logger.info("ProjectService::userCanCreate - projectId: " + projectId);
+Logger.info("ProjectService::userCanCreate - project: " + project);
 
         if (!organizationsEnabled){
             return super.userCanCreate(session, projectId, project);

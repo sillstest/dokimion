@@ -1,5 +1,6 @@
 package com.testquack.api.utils;
 
+import com.testquack.dal.Logger;
 import org.passay.CharacterCharacteristicsRule;
 import org.passay.CharacterRule;
 import org.passay.EnglishCharacterData;
@@ -35,7 +36,7 @@ public class PasswordGeneration {
       PasswordGenerator passwordGenerator = new PasswordGenerator();        
       String password = passwordGenerator.generatePassword(16, rules);
 
-      System.out.println("Password generated: " + password);
+      Logger.info("Password generated: " + password);
 
       return password;
    }
