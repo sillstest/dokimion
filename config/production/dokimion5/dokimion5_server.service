@@ -9,19 +9,20 @@ User=dokimion
 Group=dokimion
 Environment="SERVER_NO=5"
 ExecStart=/home/dokimion/bin/startup_dokimion_server.sh $SERVER_NO
+#ExecStart=/usr/bin/cgexec -g memory:DokimionServer /home/dokimion/bin/startup_dokimion_server.sh $SERVER_NO
 PIDFile=/run/dokimion/dokimion_server_5.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
 LimitCPU=infinity
 # virtual memory size
-LimitAS=infinity
+LimitAS=6000M
 # open files
 LimitNOFILE=64000
 # processes/threads
 LimitNPROC=64000
 # locked memory
-LimitMEMLOCK=infinity
+LimitMEMLOCK=480M
 # total threads (user+kernel)
 TasksMax=infinity
 TasksAccounting=false
