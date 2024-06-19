@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+import CreatableSelect from "react-select/lib/Creatable";
 import * as Utils from "../common/Utils";
 import equal from "fast-deep-equal";
 
@@ -24,6 +25,7 @@ class AttributeForm extends Component {
     this.removeValue = this.removeValue.bind(this);
     this.handleRemove = this.handleRemove.bind(this);
     this.handleClose = this.handleClose.bind(this);
+    this.handleAttributeTypeChange = this.handleAttributeTypeChange.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -31,6 +33,10 @@ class AttributeForm extends Component {
       projectAttributes:nextProps.projectAttributes, 
       edit: nextProps.edit});
   }
+
+  handleAttributeTypeChange() {
+  }
+
 
   handleChange(event) {
     this.state.attribute[event.target.name] = event.target.value;
@@ -152,6 +158,23 @@ class AttributeForm extends Component {
                   />
                 </div>
               </div>
+              <div style={{
+                     display: 'flex',
+                     justifyContent: 'left',
+                     alignItems: 'center',
+                   }} className="form-group row">
+                <label className="col-sm-2 col-form-label">Type</label>
+                <div className="col-sm-8">
+                  <select
+                    name="Attribute Type"
+                    value={this.state.attributeTypes}
+                    onChange={this.handleAttributeTypeChange}
+                  >
+                    <option key="attrType" value="TESTCASE">TESTCASE</option>
+                    <option key="attrType" value="LAUNCH">LAUNCH</option>
+                  </select>
+                </div>
+              </div>
 
               {this.state.attribute.attrValues.map((value, i) => {
                 return (
@@ -176,9 +199,11 @@ class AttributeForm extends Component {
                 );
               })}
 
-              <button type="button" className="btn" onClick={this.addValue}>
-                Add value
-              </button>
+              <div className="form-group row">
+                <button type="button" className="btn" onClick={this.addValue}>
+                  Add value
+                </button>
+              </div>
             </form>
           </div>
           <div className="modal-footer">
