@@ -56,7 +56,6 @@ public class MongoDBInterface  {
       mongoDBname = dbname;
 System.out.println("setMongoDBProperties - replicaSet: " + replicaSet);
 System.out.println("setMongoDBProperties - username: " + username);
-System.out.println("setMongoDBProperties - password: " + password);
 System.out.println("setMongoDBProperties - dbname: " + dbname);
 
    }
@@ -94,9 +93,6 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
 
          final String secretKey = "al;jf;lda1_+_!!()!!!!";
          String decryptedPasswd = aes.decrypt(mongoPassword, secretKey) ;
-
-         System.out.println("MongoDBInterface - decryptedPasswd: " + decryptedPasswd);
-         System.out.flush();
 
          MongoCredential credential = MongoCredential.createCredential(mongoUsername, "admin",
                                    decryptedPasswd.toCharArray());
