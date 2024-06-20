@@ -11,8 +11,10 @@ cd /home/dokimion/dokimion
 /usr/bin/java DefaultProjectAttributes
 /usr/bin/javac User.java aes.java AdminPassword.java
 /usr/bin/java User
+/usr/bin/javac ConfigurationAttributes.java aes.java AdminPassword.java
+/usr/bin/java ConfigurationAttributes
 
-/usr/bin/java -XX:MetaspaceSize32m -XX:MaxMetaspaceSize64m -Xms512m -Xmx1024m -Xss512k -Dmail.debug=true -Xbootclasspath/a:/etc/dokimion -jar /home/dokimion/dokimion/jetty-runner.jar /home/dokimion/dokimion/dokimion.war | awk -v SERVER_NO=$1 '{printf "dokimion_server_" SERVER_NO; print $0}' | logger -p user.info
+/usr/bin/java -XX:+UseParallelGC -Xmx1024m -XX:MetaspaceSize=80m -XX:MaxMetaspaceSize=1500m -Dmail.debug=true -Xbootclasspath/a:/etc/dokimion -jar /home/dokimion/dokimion/jetty-runner.jar /home/dokimion/dokimion/dokimion.war | awk -v SERVER_NO=$1 '{printf "dokimion_server_" SERVER_NO; print $0}' | logger -p user.info
 
 
 
