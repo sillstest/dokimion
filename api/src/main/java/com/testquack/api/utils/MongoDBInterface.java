@@ -364,6 +364,11 @@ System.out.flush();
 
       JSONParser parser = new JSONParser();
 
+      if (collection != null) {
+	 System.out.println("getUserCollectionAttribute - collection = null");
+	 System.out.flush();
+      }
+
       for (Document doc : collection.find())
       {
 	 String jsonStr = doc.toJson();
