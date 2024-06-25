@@ -9,6 +9,7 @@ User=dokimion
 Group=dokimion
 Environment="SERVER_NO=5"
 ExecStart=/home/dokimion/bin/startup_dokimion_server.sh $SERVER_NO
+#ExecStart=/usr/bin/cgexec -g memory:DokimionServer /home/dokimion/bin/startup_dokimion_server.sh $SERVER_NO
 PIDFile=/run/dokimion/dokimion_server_5.pid
 # file size
 LimitFSIZE=infinity

@@ -20,7 +20,14 @@ class LaunchForm extends SubComponent {
         testSuite: { filter: {} },
         properties: [],
         launcherConfig: { properties: {} },
+        configAttributePairs: [],
       },
+      noAttributes: 0,
+      projectAttributeNames: [],
+      projectAttributes: [{ name: "", values: [] }],
+      displayAttributeIndex: {},
+      displayAttributeName: {},
+      displayAttributeValues: {},
       project: {
         id: null,
         name: "",
@@ -34,13 +41,94 @@ class LaunchForm extends SubComponent {
       loading: false,
       errorMessage: "",
       modalName : props.modalName,
+      configurationAttributes: [],
+      configAttributesFilter: {
+        skip: 0,
+        limit: 20,
+        orderby: "project",
+        orderdir: "ASC",
+        includedFields: "project, names",
+      },
+
     };
 
+    this.state.displayAttributeIndex["top"] = 0;
+    this.state.displayAttributeIndex["bottom"] = 0;
+    this.state.displayAttributeName["top"] = "";
+    this.state.displayAttributeName["bottom"] = "";
+    this.state.displayAttributeValues["top"] = [];
+    this.state.displayAttributeValues["bottom"] = [];
+    this.loadConfigAttributes = this.loadConfigAttributes.bind(this);
+    this.handleAddAttribute = this.handleAddAttribute.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.changeEnvironments = this.changeEnvironments.bind(this);
+    this.getAttributes = this.getAttributes.bind(this);
+    this.changeLaunchConfigAttribute = this.changeLaunchConfigAttribute.bind(this);
+    this.changeLaunchConfigAttributeValues = this.changeLaunchConfigAttributeValues.bind(this);
     this.handleLauncherChange = this.handleLauncherChange.bind(this);
   }
+
+  getAttributes() {
+    Backend.get(this.props.match.params.project + "/attribute")
+      .then(response => {
+
+        this.state.projectAttributes = []
+        response.forEach(
+          function(response) {
+
+            this.state.configurationAttributes.forEach(
+              function(oneConfigAttrib) {
+                for (let i = 0; i < oneConfigAttrib.names.length; i++) {
+                  if (response.name === oneConfigAttrib.names[i]) {
+                     var tempAttrib = {name: "", values: []};
+                     tempAttrib.name = response.name;
+                     this.state.projectAttributeNames.push(tempAttrib.name);
+                     var tempValues = [];
+                     for (let j = 0; j < response.attrValues.length; j++) {
+                        tempValues.push(response.attrValues[j].value);
+                     }
+                     tempAttrib.values = tempValues;
+                     this.state.projectAttributes.push(tempAttrib);
+                }
+               }
+             }.bind(this),
+           );
+          }.bind(this),
+        );
+        this.setState(this.state);
+      })
+      .catch(error => console.log(error));
+  }
+
+  handleAddAttribute() {
+
+     if (this.state.noAttributes <= 1) {
+        if (this.state.projectAttributes.length >= 1) {
+           this.state.noAttributes += 1;
+           this.setState(this.state);
+        } else {
+           this.setState({errorMessage: "Invalid number of configuration attributes"});
+        }
+     } else {
+        this.setState({errorMessage: "Maximum number attributes = 2"});
+     }
+
+  }
+
+  loadConfigAttributes() {
+
+    Backend.get("/configurationattributes/getall/" + 
+                this.props.match.params.project + "?" +
+                Utils.filterToQuery(this.state.configAttributesFilter))
+      .then(response => {
+         this.state.configurationAttributes = response;
+         if (this.state.configurationAttributes.length != 0) {
+            this.getAttributes();
+         }
+      })
+      .catch(error => console.log(error));
+  }
+
 
   handleChange(event) {
     this.state.launch[event.target.name] = event.target.value;
@@ -65,6 +153,19 @@ class LaunchForm extends SubComponent {
         url += "?failedOnly=true";
       }
     }
+    // copy display attributes  (name, values) to launch.configurationAttributes
+    if (this.state.displayAttributeName["top"] !== "") {
+       this.state.launch.configAttributePairs.push(
+                  {name: this.state.displayAttributeName["top"],
+                   value: this.state.displayAttributeValues["top"]});
+    }
+
+    if (this.state.displayAttributeName["bottom"] !== "") {
+       this.state.launch.configAttributePairs.push(
+                  {name: this.state.displayAttributeName["bottom"],
+                   value: this.state.displayAttributeValues["bottom"]});
+    }
+
     Backend.post(url, this.state.launch)
       .then(response => {
         this.state.launch = response;
@@ -100,6 +201,7 @@ class LaunchForm extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
+    this.loadConfigAttributes();
 
     Backend.get("project/" + this.props.match.params.project)
       .then(response => {
@@ -130,11 +232,24 @@ class LaunchForm extends SubComponent {
     this.setState(this.state);
   }
 
-  changeEnvironments(values) {
-    this.state.launch.environments = values.map(function (value) {
-      return value.value;
-    });
+  changeLaunchConfigAttribute = (values, position) => {
+
+    for (let i = 0; i < this.state.projectAttributes.length; i++) {
+       if (this.state.projectAttributes[i].name == values.value) {
+          this.state.displayAttributeName[position] = values.value;
+          this.state.displayAttributeIndex[position] = i;
+          break;
+       }
+    }
     this.setState(this.state);
+  }
+
+  changeLaunchConfigAttributeValues = (values, position) => {
+
+     for (let i = 0; i < values.length; i++) {
+        this.state.displayAttributeValues[position] = values[i].value;
+     }
+     this.setState(this.state);
   }
 
   launchModalDismiss() {
@@ -196,48 +311,74 @@ class LaunchForm extends SubComponent {
             </div>
 
             <div className="form-group row">
-              <label className="col-4 col-form-label">Environments</label>
+             <div className="col-sm-4">
+               <button type="button" className="btn btn-primary" onClick={this.handleAddAttribute}>
+               Add Attribute
+               </button>
+             </div>
+            </div>
+
+            {(this.state.noAttributes >= 1 && this.state.projectAttributes.length >= 1) ? (
+            <>
+            <div className="form-group row">
+              <label className="col-4 col-form-label">Launch Configuration Attribute #1</label>
               <div className="col-8">
                 <CreatableSelect
-                  value={(this.state.launch.environments || []).map(function (val) {
-                    return { value: val, label: val };
-                  })}
-                  isMulti
-                  isClearable
-                  cacheOptions
-                  onChange={this.changeEnvironments}
-                  options={(this.state.project.environments || []).map(function (val) {
-                    return { value: val, label: val };
+                  onChange={(value) => this.changeLaunchConfigAttribute(value, "top")}
+                  options={(this.state.projectAttributeNames || []).map(function (val) {
+                    return { value: val, label: val};
                   })}
                 />
               </div>
             </div>
 
             <div className="form-group row">
-              <label className="col-4 col-form-label">Launcher</label>
+              <label className="col-4 col-form-label">Launch Configuration Attribute Values #1</label>
               <div className="col-8">
-                <select
-                  id="launcherUUID"
-                  className="form-control"
-                  onChange={e => this.handleLauncherChange(e, 0, "uuid")}
-                >
-                  <option> </option>
-                  {(this.state.project.launcherConfigs || []).map(
-                    function (config) {
-                      var selected = config.uuid == (this.state.launch.launcherConfig || {}).uuid;
-                      if (selected) {
-                        return (
-                          <option value={config.uuid} selected>
-                            {config.name}
-                          </option>
-                        );
-                      }
-                      return <option value={config.uuid}>{config.name}</option>;
-                    }.bind(this),
-                  )}
-                </select>
+                <CreatableSelect
+                  isMulti
+                  onChange={(value) => this.changeLaunchConfigAttributeValues(value, "top")}
+                  options={(this.state.projectAttributes[this.state.displayAttributeIndex["top"]].values || []).map(function (val) {
+                    return { value: val, label: val};
+                  })}
+                />
               </div>
             </div>
+            </>
+            ) : (
+            <></>
+            )}
+            {(this.state.noAttributes === 2 && this.state.projectAttributes.length >= 2) ? (
+            <>
+            <div className="form-group row">
+              <label className="col-4 col-form-label">Launch Configuration Attribute #2</label>
+              <div className="col-8">
+                <CreatableSelect
+                  onChange={(value) => this.changeLaunchConfigAttribute(value, "bottom")}
+                  options={(this.state.projectAttributeNames || []).map(function (val) {
+                    return { value: val, label: val};
+                  })}
+                />
+              </div>
+            </div>
+
+            <div className="form-group row">
+              <label className="col-4 col-form-label">Launch Configuration Attribute Values #2</label>
+              <div className="col-8">
+                <CreatableSelect
+                  isMulti
+                  onChange={(values) => this.changeLaunchConfigAttributeValues(values, "bottom")}
+                  options={(this.state.projectAttributes[this.state.displayAttributeIndex["bottom"]].values || []).map(function (val) {
+                    return { value: val, label: val};
+                  })}
+                />
+              </div>
+            </div>
+            </>
+            ) : (
+            // nop
+            <></>
+            )}
           </form>
           <div>
             {this.state.launch.launcherConfig && this.state.launch.launcherConfig.uuid && (

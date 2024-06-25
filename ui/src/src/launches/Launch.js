@@ -32,6 +32,7 @@ class Launch extends SubComponent {
       testSuite: {},
       restartFailedOnly: false,
     },
+    configAttributePairs: [],
     selectedTestCase: {
       uuid: null,
     },
@@ -112,6 +113,7 @@ class Launch extends SubComponent {
     Backend.get(this.state.projectId + "/launch/" + this.props.match.params.launchId)
       .then(response => {
         this.state.launch = response;
+        this.state.configAttributePairs = response.configAttributePairs;
         if (!this.state.launch.testSuite || !this.state.launch.testSuite.filter) {
           this.state.launch.testSuite = { filter: { groups: [] } };
         }
@@ -133,8 +135,8 @@ class Launch extends SubComponent {
         this.state.refreshTree=false;
         this.setState(this.state);
         if (buildTree) {
+          this.buildTree(this.state.configAttributePairs);
           this.updateCount();
-          this.buildTree();
         }
         this.checkUpdatedTestCases();
     
@@ -147,15 +149,18 @@ class Launch extends SubComponent {
       });
   }
 
-  buildTree() {
+  buildTree(configAttributePairs) {
     if (this.tree) {
       this.tree.destroy();
     }
+
+    var obj = {testCaseTree: this.state.launch.testCaseTree};
     this.tree = $("#tree").tree({
       primaryKey: "uuid",
       uiLibrary: "bootstrap4",
       imageHtmlField: "statusHtml",
-      dataSource: Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes),
+      dataSource: Utils.parseTree(obj, [], this.state.tcSizes,
+                                  this.state.configAttributePairs),
     });
 
     this.tree.on(
@@ -260,7 +265,8 @@ class Launch extends SubComponent {
       },
     );
     Object.assign(updatedTestCase, testcase);
-    this.tree.dataSource = Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes) || [];
+    var obj = {testCaseTree: this.state.launch.testCaseTree};
+    this.tree.dataSource = Utils.parseTree(obj, [], this.state.tcSizes, this.state.configAttributePairs) || [];
     var testCaseHtmlNode = $("li[data-id='" + testcase.uuid + "']").find("img");
     testCaseHtmlNode.attr("src", Utils.getStatusImg(testcase));
 
@@ -290,7 +296,7 @@ class Launch extends SubComponent {
     if(this.state.refreshTree){
       this.getUpdatedLaunch();
       this.state.launch.testCaseTree = this.filterLaunchTestCasesOnStatus();
-      this.buildTree();
+      this.buildTree(this.state.configAttributePairs);
       this.updateCount();
       this.renderLaunchFilter();
     }

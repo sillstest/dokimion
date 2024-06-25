@@ -11,6 +11,10 @@ Group=dokimion
 Environment="PATH=/usr/bin:$PATH"
 Environment="NODE_OPTIONS=--openssl-legacy-provider"
 WorkingDirectory=/home/dokimion/dokimion/src
+<<<<<<< HEAD
+=======
+#ExecStart=/usr/bin/cgexec -g memory cgDokimionUI /home/dokimion/bin/startup_dokimion_ui.sh 5
+>>>>>>> origin/configattribs
 ExecStart=/home/dokimion/bin/startup_dokimion_ui.sh 5
 #ExecStart=npm start 
 PIDFile=/run/dokimion/dokimion_ui_5.pid
@@ -19,6 +23,10 @@ LimitFSIZE=infinity
 # cpu time
 LimitCPU=infinity
 # virtual memory size
+<<<<<<< HEAD
+=======
+#LimitAS=6000M
+>>>>>>> origin/configattribs
 # open files
 LimitNOFILE=64000
 # processes/threads

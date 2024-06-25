@@ -33,9 +33,18 @@
                     <xs:element name="environments" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="launchGroup" type="xs:string"/>
                     <xs:element name="duration" type="xs:long"/>
+                    <xs:element name="configAttributePairs" type="ConfigAttributePair" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="configAttributePair" type="ConfigAttributePair"/>
+    <xs:complexType name="ConfigAttributePair">
+        <xs:sequence>
+           <xs:element name="name" type="xs:string"/>
+           <xs:element name="value" type="xs:string"/>
+        </xs:sequence>
     </xs:complexType>
 
     <xs:element name="launchTestCase" type="LaunchTestCase"/>

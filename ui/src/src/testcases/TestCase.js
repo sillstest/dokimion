@@ -191,7 +191,7 @@ console.log("TestCase::getTestCase");
 
         var isTester =  roles && roles.filter(val => val.includes('TESTER')).length >0 ? true : false;
         var isTestDeveloper =  roles && roles.filter(val => val.includes('TESTDEVELOPER')).length >0 ? true : false;
-        console.log("Role is a ?" + isTester + " " + isTestDeveloper + this.state.testcase.locked);
+        console.log("Role is a " + isTester + " " + isTestDeveloper + this.state.testcase.locked);
         if(isTester){
             this.state.readonly = true;
           }else if(isTestDeveloper && this.state.testcase.locked )
@@ -441,6 +441,7 @@ console.log("TestCase::handleSubmit");
     return (this.state.projectAttributes || [])
       .filter(attribute => !(Object.keys(this.state.testcase.attributes || {}) || []).includes(attribute.id))
       .filter(attribute => attribute.id !== 'broken')
+      .filter(attribute => attribute.type !== 'LAUNCH')
       .map(attribute => ({ value: attribute.id, label: attribute.name }));
   }
 
