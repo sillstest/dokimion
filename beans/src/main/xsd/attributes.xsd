@@ -15,12 +15,20 @@
         <xs:complexContent>
             <xs:extension base="Entity">
                 <xs:sequence>
+                    <xs:element name="type" type="AttributeType" />
                     <xs:element name="values" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
                     <xs:element name="attrValues" type="AttributeValue" maxOccurs="unbounded" minOccurs="0"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
+
+    <xs:simpleType name="AttributeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="TESTCASE"/>
+            <xs:enumeration value="LAUNCH"/>
+        </xs:restriction>
+    </xs:simpleType>
 
     <xs:complexType name="AttributeValue">
         <xs:sequence>

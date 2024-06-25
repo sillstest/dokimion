@@ -14,6 +14,7 @@ class Attributes extends SubComponent {
       attributeToEdit: {
         id: null,
         name: "",
+        type: "TESTCASE",
         attrValues: [],
       },
       loading: true,
