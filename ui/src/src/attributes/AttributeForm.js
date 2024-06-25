@@ -16,6 +16,7 @@ class AttributeForm extends Component {
       projectAttributes: props.projectAttributes,
       errorMessage: "",
       edit : props.edit,
+      attributeTypes: ["TESTCASE", "LAUNCH"],
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -34,12 +35,16 @@ class AttributeForm extends Component {
       edit: nextProps.edit});
   }
 
-  handleAttributeTypeChange() {
+  handleAttributeTypeChange(event) {
+    console.log("User selected value: ", event.target.value);
+    this.state.attribute.type = event.target.value;
+    this.setState(this.state);
   }
 
 
   handleChange(event) {
     this.state.attribute[event.target.name] = event.target.value;
+    this.state.attribute["type"] = "TESTCASE";
     this.setState(this.state);
   }
 
@@ -71,6 +76,7 @@ class AttributeForm extends Component {
             this.state.attribute = {
               id: null,
               name: "",
+              type: "",
               attrValues: [],
             };
             this.setState(this.state);
@@ -89,6 +95,7 @@ class AttributeForm extends Component {
         this.state.attribute = {
           id: null,
           name: "",
+          type: "",
           attrValues: [],
         };
         this.setState(this.state);
@@ -105,6 +112,7 @@ class AttributeForm extends Component {
         this.state.attribute = {
           id: null,
           name: "",
+          type: "",
           attrValues: [],
         };
         this.state.errorMessage='';
@@ -167,11 +175,13 @@ class AttributeForm extends Component {
                 <div className="col-sm-8">
                   <select
                     name="Attribute Type"
-                    value={this.state.attributeTypes}
+                    defaultValue={this.state.attributeTypes[0]}
+                    value={this.state.attributeTypes[0]}
                     onChange={this.handleAttributeTypeChange}
                   >
-                    <option key="attrType" value="TESTCASE">TESTCASE</option>
-                    <option key="attrType" value="LAUNCH">LAUNCH</option>
+                  {this.state.attributeTypes.map((attributeType, i) => {
+                    return (<option key={i}>{attributeType}</option>);
+                  })}
                   </select>
                 </div>
               </div>
