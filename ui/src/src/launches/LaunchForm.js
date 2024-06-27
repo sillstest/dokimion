@@ -58,7 +58,6 @@ class LaunchForm extends SubComponent {
     this.state.displayAttributeName["bottom"] = "";
     this.state.displayAttributeValues["top"] = [];
     this.state.displayAttributeValues["bottom"] = [];
-    this.loadConfigAttributes = this.loadConfigAttributes.bind(this);
     this.handleAddAttribute = this.handleAddAttribute.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -75,24 +74,17 @@ class LaunchForm extends SubComponent {
         this.state.projectAttributes = []
         response.forEach(
           function(response) {
-
-            this.state.configurationAttributes.forEach(
-              function(oneConfigAttrib) {
-                for (let i = 0; i < oneConfigAttrib.names.length; i++) {
-                  if (response.name === oneConfigAttrib.names[i]) {
-                     var tempAttrib = {name: "", values: []};
-                     tempAttrib.name = response.name;
-                     this.state.projectAttributeNames.push(tempAttrib.name);
-                     var tempValues = [];
-                     for (let j = 0; j < response.attrValues.length; j++) {
-                        tempValues.push(response.attrValues[j].value);
-                     }
-                     tempAttrib.values = tempValues;
-                     this.state.projectAttributes.push(tempAttrib);
+            if (response.type == "LAUNCH") {
+                var tempAttrib = {name: "", values: []};
+                tempAttrib.name = response.name;
+                this.state.projectAttributeNames.push(tempAttrib.name);
+                var tempValues = [];
+                for (let j = 0; j < response.attrValues.length; j++) {
+                     tempValues.push(response.attrValues[j].value);
                 }
-               }
-             }.bind(this),
-           );
+                tempAttrib.values = tempValues;
+                this.state.projectAttributes.push(tempAttrib);
+	    }
           }.bind(this),
         );
         this.setState(this.state);
@@ -107,28 +99,13 @@ class LaunchForm extends SubComponent {
            this.state.noAttributes += 1;
            this.setState(this.state);
         } else {
-           this.setState({errorMessage: "Invalid number of configuration attributes"});
+           this.setState({errorMessage: "Invalid number of LAUNCH attributes"});
         }
      } else {
-        this.setState({errorMessage: "Maximum number attributes = 2"});
+        this.setState({errorMessage: "Maximum number LAUNCH attributes = 2"});
      }
 
   }
-
-  loadConfigAttributes() {
-
-    Backend.get("/configurationattributes/getall/" + 
-                this.props.match.params.project + "?" +
-                Utils.filterToQuery(this.state.configAttributesFilter))
-      .then(response => {
-         this.state.configurationAttributes = response;
-         if (this.state.configurationAttributes.length != 0) {
-            this.getAttributes();
-         }
-      })
-      .catch(error => console.log(error));
-  }
-
 
   handleChange(event) {
     this.state.launch[event.target.name] = event.target.value;
@@ -201,7 +178,7 @@ class LaunchForm extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
-    this.loadConfigAttributes();
+    this.getAttributes();
 
     Backend.get("project/" + this.props.match.params.project)
       .then(response => {
@@ -318,7 +295,7 @@ class LaunchForm extends SubComponent {
              </div>
             </div>
 
-            {(this.state.noAttributes >= 1 && this.state.projectAttributes.length >= 1) ? (
+            {(this.state.noAttributes >= 1) ? (
             <>
             <div className="form-group row">
               <label className="col-4 col-form-label">Launch Configuration Attribute #1</label>
@@ -348,7 +325,7 @@ class LaunchForm extends SubComponent {
             ) : (
             <></>
             )}
-            {(this.state.noAttributes === 2 && this.state.projectAttributes.length >= 2) ? (
+            {(this.state.noAttributes === 2) ? (
             <>
             <div className="form-group row">
               <label className="col-4 col-form-label">Launch Configuration Attribute #2</label>

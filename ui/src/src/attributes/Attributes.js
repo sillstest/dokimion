@@ -86,6 +86,7 @@ class Attributes extends SubComponent {
                     <FontAwesomeIcon icon={faPencilAlt} />
                   </span>
                 </h5>
+                <p>Type: {attribute.type == "LAUNCH" ? "LAUNCH" : "TESTCASE"}</p>
                 <p>{attribute.description}</p>
                 <hr />
                 <p className="mb-0">{attribute.attrValues.map(val => val.value).join(", ")}</p>

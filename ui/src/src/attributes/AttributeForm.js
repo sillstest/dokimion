@@ -17,6 +17,7 @@ class AttributeForm extends Component {
       errorMessage: "",
       edit : props.edit,
       attributeTypes: ["TESTCASE", "LAUNCH"],
+      session: {person: {}},
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -26,7 +27,21 @@ class AttributeForm extends Component {
     this.removeValue = this.removeValue.bind(this);
     this.handleRemove = this.handleRemove.bind(this);
     this.handleClose = this.handleClose.bind(this);
+    this.onSessionChange = this.onSessionChange.bind(this);
     this.handleAttributeTypeChange = this.handleAttributeTypeChange.bind(this);
+  }
+
+  onSessionChange(session) {
+    this.props.onSessionChange(session);
+  }
+
+  getSession() {
+    Backend.get("user/session")
+      .then(response => {
+        this.state.session = response;
+        this.setState(this.state);
+      })
+      .catch(() => {console.log("Unable to fetch session");});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -137,6 +152,7 @@ class AttributeForm extends Component {
         })
         .catch(error => console.log(error));
     }
+    this.getSession();
   }
 
   render() {
@@ -166,6 +182,7 @@ class AttributeForm extends Component {
                   />
                 </div>
               </div>
+              {Utils.isAdmin(this.state.session) &&
               <div style={{
                      display: 'flex',
                      justifyContent: 'left',
@@ -176,7 +193,7 @@ class AttributeForm extends Component {
                   <select
                     name="Attribute Type"
                     defaultValue={this.state.attributeTypes[0]}
-                    value={this.state.attributeTypes[0]}
+                    value={this.state.attribute.type}
                     onChange={this.handleAttributeTypeChange}
                   >
                   {this.state.attributeTypes.map((attributeType, i) => {
@@ -185,6 +202,7 @@ class AttributeForm extends Component {
                   </select>
                 </div>
               </div>
+              }
 
               {this.state.attribute.attrValues.map((value, i) => {
                 return (
