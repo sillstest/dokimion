@@ -5,7 +5,7 @@ package com.testquack.dal;
 public class DokimionLogger {
 
    enum logStateEnum {OFF, ON};
-   private static logStateEnum logState = logStateEnum.OFF;
+   private static logStateEnum logState = logStateEnum.ON;
 
    public static void info(String msg) {
 
