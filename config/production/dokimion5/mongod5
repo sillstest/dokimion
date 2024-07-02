@@ -1,3 +1,5 @@
+su mongod mongod
+
 /var/log/mongodb/*.log {
         daily
         missingok
