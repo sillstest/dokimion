@@ -1,0 +1,11 @@
+/var/log/dokimion/dokimon_server_3.log {
+        daily
+        missingok
+        rotate 52
+        compress
+        delaycompress
+        notifempty
+        create 640 dokimion dokimion
+        sharedscripts
+}
+
