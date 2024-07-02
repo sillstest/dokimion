@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Project;
+import com.testquack.dal.DokimionLogger;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.ProjectRepository;
 import ru.greatbit.whoru.auth.Session;
@@ -45,12 +46,9 @@ public class ProjectService extends BaseService<Project> {
     }
 
     public Project createProject(Session user, Project entity) {
-System.out.println("ProjectService::createProject - entity: " + entity);
-System.out.flush();
-System.out.println("ProjectService::createProject - id: " + entity.getId());
-System.out.flush();
-System.out.println("ProjectService::createProject - rep exists: " + repository.exists(getCurrOrganizationId(user), null, entity.getId()));
-System.out.flush();
+DokimionLogger.info("ProjectService::createProject - entity: " + entity);
+DokimionLogger.info("ProjectService::createProject - id: " + entity.getId());
+DokimionLogger.info("ProjectService::createProject - rep exists: " + repository.exists(getCurrOrganizationId(user), null, entity.getId()));
         if (entity.getId() != null && repository.exists(getCurrOrganizationId(user), null, entity.getId())) {
             throw new EntityValidationException(format("Project with id %s already exists", entity.getId()));
         }
@@ -81,12 +79,9 @@ System.out.flush();
 
     @Override
     protected boolean userCanCreate(Session session, String projectId, Project project){
-System.out.println("ProjectService::userCanCreate - session: " + session);
-System.out.flush();
-System.out.println("ProjectService::userCanCreate - projectId: " + projectId);
-System.out.flush();
-System.out.println("ProjectService::userCanCreate - project: " + project);
-System.out.flush();
+DokimionLogger.info("ProjectService::userCanCreate - session: " + session);
+DokimionLogger.info("ProjectService::userCanCreate - projectId: " + projectId);
+DokimionLogger.info("ProjectService::userCanCreate - project: " + project);
 
         if (!organizationsEnabled){
             return super.userCanCreate(session, projectId, project);

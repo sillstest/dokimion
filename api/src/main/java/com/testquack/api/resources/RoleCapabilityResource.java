@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.dal.DokimionLogger;
 import com.testquack.beans.Filter;
 import com.testquack.beans.RoleCapability;
 import com.testquack.beans.Role;
@@ -63,10 +64,9 @@ public class RoleCapabilityResource extends BaseResource<RoleCapability> {
          RoleCapability entity) {
 
      RoleCapabilityService service = (RoleCapabilityService) getService();
-System.out.println("RoleCapabilityResource:create - RC entity: " + (RoleCapability)entity);
-System.out.println("RoleCapabilityResource:create - service: " + service);
-System.out.println("RoleCapabilityResource.create - getUserSession: " + getUserSession());
-System.out.flush();
+DokimionLogger.info("RoleCapabilityResource:create - RC entity: " + (RoleCapability)entity);
+DokimionLogger.info("RoleCapabilityResource:create - service: " + service);
+DokimionLogger.info("RoleCapabilityResource.create - getUserSession: " + getUserSession());
 
     Session session = getUserSession();
     RoleCapability roleCap = (RoleCapability)entity;
@@ -75,8 +75,7 @@ System.out.flush();
 
     RoleCapability rolecap = roleCapService.save(session, "RoleCapability", roleCap);
 
-     System.out.println("RoleCapabilityResource::addRoleCap - after service.save");
-     System.out.flush();
+     DokimionLogger.info("RoleCapabilityResource::addRoleCap - after service.save");
 
     JSONObject jsonObj = new JSONObject();
     jsonObj.put("id", rolecap.getId());
@@ -95,14 +94,12 @@ System.out.flush();
   })
   public Response delete(@ApiParam(value = "Id", required = true) @PathParam("id") String id) {
 
-     System.out.println("RoleCapabilityResource::delRoleCap - id: " + id);
-     System.out.flush();
+     DokimionLogger.info("RoleCapabilityResource::delRoleCap - id: " + id);
 
      RoleCapabilityService roleCapService = (RoleCapabilityService)getService();
      roleCapService.delete(getUserSession(), "RoleCapability", id);
 
-     System.out.println("RoleCapabilityResource::delRoleCap - after service.delete");
-     System.out.flush();
+     DokimionLogger.info("RoleCapabilityResource::delRoleCap - after service.delete");
 
      return ok().build();
   }
@@ -117,8 +114,7 @@ System.out.flush();
   })
   public List<Role> getAllRoles() {
 
-    System.out.println("RoleCapabilityResource::getAllRoles");
-    System.out.flush();
+    DokimionLogger.info("RoleCapabilityResource::getAllRoles");
 
     RoleCapabilityService roleCapService = (RoleCapabilityService)getService();
     List<RoleCapability> listRCs = roleCapService.findFiltered(getUserSession(), "RoleCapability", new Filter());
@@ -142,8 +138,7 @@ System.out.flush();
   })
   public List<Capability> getCapabilitiesForRole(@PathParam("role") String role) {
 
-    System.out.println("RoleCapabilityResource::getCapsForRole - role: " + role);
-    System.out.flush();
+    DokimionLogger.info("RoleCapabilityResource::getCapsForRole - role: " + role);
 
     RoleCapabilityService roleCapService = (RoleCapabilityService)getService();
     List<RoleCapability> listRCs = roleCapService.findFiltered(getUserSession(), "RoleCapability", new Filter().withField("role", Role.fromValue(role)));

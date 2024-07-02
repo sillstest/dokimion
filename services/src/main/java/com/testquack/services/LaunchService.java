@@ -2,6 +2,7 @@ package com.testquack.services;
 
 import com.google.common.collect.MinMaxPriorityQueue;
 import com.hazelcast.cp.lock.FencedLock;
+import com.testquack.dal.DokimionLogger;
 import com.testquack.beans.Event;
 import com.testquack.beans.FailureDetails;
 import com.testquack.beans.Filter;
@@ -104,7 +105,7 @@ public class LaunchService extends BaseService<Launch> {
 
             //Emit audit on terminal status
             if (isTerminalStatus(status)) {
-                System.out.println("Insert New Event : " + status);
+                DokimionLogger.info("Insert New Event : " + status);
                 eventService.create(session, projectId,
                         new Event().withEventType(status.toString()).
                                 withTime(System.currentTimeMillis()).
@@ -114,7 +115,7 @@ public class LaunchService extends BaseService<Launch> {
                                 withDuration(launchTestCase.getDuration())
                 );
             }
-            System.out.println("Update Launch TestCase : " + launchTestCase);
+            DokimionLogger.info("Update Launch TestCase : " + launchTestCase);
             return launchTestCase;
         } finally {
             lock.unlock();
@@ -329,7 +330,7 @@ public class LaunchService extends BaseService<Launch> {
         if(launchTestCase.getStartTime() !=0 && launchTestCase.getFinishTime()!=0 )
         {
             long tempDuration = launchTestCase.getFinishTime() - launchTestCase.getStartTime();
-            System.out.println(" Time Duration for exe" + tempDuration);
+            DokimionLogger.info(" Time Duration for exe" + tempDuration);
             launchTestCase.setDuration(tempDuration);
         }
 
@@ -351,15 +352,13 @@ public class LaunchService extends BaseService<Launch> {
     }
 
     public Collection<LaunchTestcaseStats> getTestCasesHeatMap(Session session, String projectId, Filter filter, int statsTopLimit) throws Exception {
-        System.out.println("LaunchService::getTestCasesHeatMap - projectId, statsTopLimit: " + projectId + ", " + statsTopLimit);
-        System.out.flush();
+        DokimionLogger.info("LaunchService::getTestCasesHeatMap - projectId, statsTopLimit: " + projectId + ", " + statsTopLimit);
         statsTopLimit = statsTopLimit == 0 ? 100 : statsTopLimit;
         if (userCanReadProject(session, projectId)) {
             Map<String, LaunchTestcaseStats> unsortedMap = dbUtils.mapReduce(Launch.class, getCollectionName(getCurrOrganizationId(session), projectId, Launch.class),
                     "testcaseHeatMap.js", "testcaseHeatReduce.js", filter, LaunchTestcaseStats.class);
 
-                System.out.println("LaunchService::getTestCasesHeatMap - unsortedMap: " + unsortedMap);
-                System.out.flush();
+                DokimionLogger.info("LaunchService::getTestCasesHeatMap - unsortedMap: " + unsortedMap);
 
             MinMaxPriorityQueue<LaunchTestcaseStats> topStats = MinMaxPriorityQueue.
                     orderedBy(new LaunchTestcaseStatsComparator()).
@@ -367,15 +366,13 @@ public class LaunchService extends BaseService<Launch> {
                     create();
             topStats.addAll(unsortedMap.values());
 
-            System.out.println("LaunchService::getTestCasesHeatMap - topStats: " + topStats);
-            System.out.flush();
+            DokimionLogger.info("LaunchService::getTestCasesHeatMap - topStats: " + topStats);
 
             Map<String, LaunchTestcaseStats> statsMap =
                     topStats.stream().collect(toMap(LaunchTestcaseStats::getId, Function.identity()));
 
 
-            System.out.println("LaunchService::getTestCasesHeatMap - statsMap: " + statsMap);
-            System.out.flush();
+            DokimionLogger.info("LaunchService::getTestCasesHeatMap - statsMap: " + statsMap);
 
 
             //Get current broken flag state
@@ -387,12 +384,10 @@ public class LaunchService extends BaseService<Launch> {
                             withIncludedField("importedName").
                             withField("id", statsMap.keySet().toArray()));
 
-            System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases with filter: ");
+            DokimionLogger.info("LaunchService::getTestCasesHeatMap - actualTestcases with filter: ");
             for (TestCase tc : actualTestcases) {
-            System.out.println("testcase: " + tc);
-            System.out.flush();
+            DokimionLogger.info("testcase: " + tc);
             }
-            System.out.flush();
 
 
             actualTestcases.forEach(actualTestcase -> {
@@ -403,28 +398,24 @@ public class LaunchService extends BaseService<Launch> {
             statsToUpdate.setBroken(actualTestcase.isBroken());
             statsToUpdate.setLaunchBroken(actualTestcase.isLaunchBroken());
             });
-            System.out.println("LaunchService::getTestCasesHeatMap - actualTestcases with filter 2: ");
+            DokimionLogger.info("LaunchService::getTestCasesHeatMap - actualTestcases with filter 2: ");
             for (TestCase tc : actualTestcases) {
-            System.out.println("testcase: " + tc);
-            System.out.flush();
+            DokimionLogger.info("testcase: " + tc);
             }
-            System.out.flush();
 
 
             //Sort stats by most broken
             List<LaunchTestcaseStats> sortedStats = new ArrayList<>(topStats.size());
             sortedStats.addAll(topStats);
             sortedStats.sort(new LaunchTestcaseStatsComparator());
-            System.out.println("LaunchService::getTestCasesHeatMap - sortedStats: " + sortedStats);
+            DokimionLogger.info("LaunchService::getTestCasesHeatMap - sortedStats: " + sortedStats);
             for (LaunchTestcaseStats ts : sortedStats) {
-            System.out.println("launchstats");
-            System.out.println("name: " + ts.getName());
-            System.out.println("id: " + ts.getId());
-            System.out.println("broken: " + ts.isBroken());
-            System.out.println("launchBroken: " + ts.isLaunchBroken());
-            System.out.flush();
+            DokimionLogger.info("launchstats");
+            DokimionLogger.info("name: " + ts.getName());
+            DokimionLogger.info("id: " + ts.getId());
+            DokimionLogger.info("broken: " + ts.isBroken());
+            DokimionLogger.info("launchBroken: " + ts.isLaunchBroken());
             }
-            System.out.flush();
 
             return sortedStats;
         }

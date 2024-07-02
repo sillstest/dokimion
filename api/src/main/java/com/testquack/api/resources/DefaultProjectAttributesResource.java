@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.dal.DokimionLogger;
 import com.testquack.beans.Filter;
 import com.testquack.beans.DefaultProjectAttributes;
 import com.testquack.services.BaseService;
@@ -62,14 +63,12 @@ public class DefaultProjectAttributesResource extends BaseResource<DefaultProjec
   public Collection<DefaultProjectAttributes> getAllDefaultProjectAttributes(
          @PathParam("project") String project) {
 
-    System.out.println("DefaultProjectAttributesResource::getAllDefaultProjectAttributes");
-    System.out.flush();
+    DokimionLogger.info("DefaultProjectAttributesResource::getAllDefaultProjectAttributes");
 
     DefaultProjectAttributesService defaultProjAttribService = (DefaultProjectAttributesService)getService();
     List<DefaultProjectAttributes> dpaList = defaultProjAttribService.findFiltered(getUserSession(), "DefaultProjectAttributes", new Filter().withField("project", project));
 
-    System.out.println("DefaultResource::getall - dpaList: " + dpaList);
-    System.out.flush();
+    DokimionLogger.info("DefaultResource::getall - dpaList: " + dpaList);
 
     
     return dpaList;

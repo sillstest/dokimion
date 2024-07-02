@@ -10,6 +10,7 @@ import com.testquack.services.errors.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.testquack.beans.User;
+import com.testquack.dal.DokimionLogger;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.UserRepository;
 import ru.greatbit.utils.string.StringUtils;
@@ -49,9 +50,8 @@ public class UserService extends BaseService<User> {
     }
 
     protected boolean userCanSave(Session session, String login) {
-System.out.println("UserService::userCanSave - login: " + login);
-System.out.println("UserService::userCanSave - session: " + session);
-System.out.flush();
+DokimionLogger.info("UserService::userCanSave - login: " + login);
+DokimionLogger.info("UserService::userCanSave - session: " + session);
 
         return isAdmin(session) || login.equals(session.getPerson().getLogin());
     }
@@ -64,19 +64,15 @@ System.out.flush();
     @Override
     protected boolean userCanDelete(Session session, String projectId, String id) {
 	User user = findOne(session, projectId, id);
-System.out.println("UserService::userCanDelete - user: " + user);
-System.out.flush();
-System.out.println("UserService::userCanDelete - projectId: " + projectId);
-System.out.println("UserService::userCanDelete - session: " + session);
-System.out.flush();
+DokimionLogger.info("UserService::userCanDelete - user: " + user);
+DokimionLogger.info("UserService::userCanDelete - projectId: " + projectId);
+DokimionLogger.info("UserService::userCanDelete - session: " + session);
 
         if (user.isLocked()) {
-System.out.println("UserService::userCanDelete - user locked = true");
-System.out.flush();
+DokimionLogger.info("UserService::userCanDelete - user locked = true");
            return false;
         }
-System.out.println("UserService::userCanDelete - user locked = false");
-System.out.flush();
+DokimionLogger.info("UserService::userCanDelete - user locked = false");
         return userCanSave(session, id);
     }
 
@@ -95,9 +91,8 @@ System.out.flush();
     @Override
     public User findOne(Session session, String projectId, String id) {
 
-System.out.println("UserService.findOne - projectId, id: " + projectId + "," + id);
-System.out.println("UserService.findOne - session: " + session);
-System.out.flush();
+DokimionLogger.info("UserService.findOne - projectId, id: " + projectId + "," + id);
+DokimionLogger.info("UserService.findOne - session: " + session);
 
         //return cleanUserSesitiveData(super.findOne(session, projectId, id));
         User user = cleanUserSensitiveData(super.findOne(session, projectId, id));
@@ -130,8 +125,7 @@ System.out.flush();
     }
 
     public void changePassword(Session session, String login, String oldPassword, String newPassword) {
-System.out.println("changePassword - session: " + session);
-System.out.flush();
+DokimionLogger.info("changePassword - session: " + session);
         if (userCanSave(session, login)){
             User user = findOne(getCurrOrganizationId(session), new Filter().withField("login", login));
 	    StringBuilder exceptionMessage = new StringBuilder("");
@@ -162,13 +156,11 @@ System.out.flush();
     }
 
     public List<User> findAll() {
-System.out.println("UserService::findAll");
-System.out.flush();
+DokimionLogger.info("UserService::findAll");
 
         List<User> usersList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
         for (User user : usersList) {
-           System.out.println("UserService.findAll() - user: " + user);
-           System.out.flush();
+           DokimionLogger.info("UserService.findAll() - user: " + user);
         }
         return usersList;
         //return StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
@@ -185,19 +177,16 @@ System.out.flush();
 
     public boolean setLocked(Session session, boolean lockedValue) {
 
-System.out.println("UserService::setLocked - session: " + session);
-System.out.println("UserService::setLocked - lockedValue: " + lockedValue);
-System.out.flush();
+DokimionLogger.info("UserService::setLocked - session: " + session);
+DokimionLogger.info("UserService::setLocked - lockedValue: " + lockedValue);
        String userLogin = session.getPerson().getLogin();
        String userPassword = session.getPerson().getPassword();
-System.out.println("UserService::setLocked - userLogin: " + userLogin);
-System.out.println("UserService::setLocked - userPassword: " + userPassword);
-System.out.flush();
+DokimionLogger.info("UserService::setLocked - userLogin: " + userLogin);
+DokimionLogger.info("UserService::setLocked - userPassword: " + userPassword);
 
        if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
 
-System.out.println("UserService::setLocked - NOT an admin");
-System.out.flush();
+DokimionLogger.info("UserService::setLocked - NOT an admin");
           User user = findOne(session, null, userLogin);
           user.setLocked(lockedValue);
           user.setLogin(userLogin);
@@ -205,15 +194,12 @@ System.out.flush();
              user.setPassword(userPassword);
 
           User updatedUser = save(session, null, user);
-System.out.println("setLocked - updatedUser: " + updatedUser);
-System.out.flush();
+DokimionLogger.info("setLocked - updatedUser: " + updatedUser);
           if (updatedUser == null) {
-             System.out.println("UserService::setLocked - updatedUser = null");
-             System.out.flush();
+             DokimionLogger.info("UserService::setLocked - updatedUser = null");
              return false;
           }
- System.out.println("setLocked - set lock end");
- System.out.flush();
+ DokimionLogger.info("setLocked - set lock end");
           return true;
 
        }
