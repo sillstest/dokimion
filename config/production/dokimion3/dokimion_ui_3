@@ -1,0 +1,10 @@
+/var/log/dokimion/dokimon_ui_3.log {
+        daily
+        missingok
+        rotate 52
+        compress
+        delaycompress
+        notifempty
+        create 640 dokimion dokimion
+        sharedscripts
+}

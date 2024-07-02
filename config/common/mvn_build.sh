@@ -2,6 +2,7 @@
 
 export NODE_OPTIONS=--openssl-legacy-provider
 export PATH=/opt/apache-maven-3.6.3/bin:$PATH
+export PATH=/opt/apache-maven/bin:$PATH
 mvn clean install -DskipTests
 
 # add "react-scripts --openssl-legacy-provider build/start to
