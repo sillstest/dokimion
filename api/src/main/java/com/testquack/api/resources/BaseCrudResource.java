@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.dal.DokimionLogger;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.Entity;
 import com.testquack.beans.Event;
@@ -40,13 +41,12 @@ public abstract class BaseCrudResource<E extends Entity> extends BaseResource<E>
     })
     public E findOne(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
             @ApiParam(value = "Entity Id", required = true) @PathParam("id") String id) {
-System.out.println("BaseCrudResource::findOne() - projectId: " + projectId);
-System.out.println("BaseCrudResource::findOne() - entity id: " + id);
+DokimionLogger.info("BaseCrudResource::findOne() - projectId: " + projectId);
+DokimionLogger.info("BaseCrudResource::findOne() - entity id: " + id);
         //return getService().findOne(getUserSession(), projectId, id);
 
         E entity = getService().findOne(getUserSession(), projectId, id);
-System.out.println("BaseCrudResource::findOne - entity: " + entity);
-System.out.flush();
+DokimionLogger.info("BaseCrudResource::findOne - entity: " + entity);
 
         return entity;
     }
@@ -60,14 +60,11 @@ System.out.flush();
     })
     public E create(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
             @ApiParam(value = "Entity", required = true) E entity) {
-System.out.println("BaseCrudResource::create() - entity: " + entity);
-System.out.flush();
+DokimionLogger.info("BaseCrudResource::create() - entity: " + entity);
         //return getService().save(getUserSession(), projectId, entity);
-System.out.println("BaseCrudResource::create - user session: " + getUserSession());
-System.out.flush();
+DokimionLogger.info("BaseCrudResource::create - user session: " + getUserSession());
         E new_entity = getService().save(getUserSession(), projectId, entity);
-System.out.println("BaseCrudResource::create - new entity: " + new_entity);
-System.out.flush();
+DokimionLogger.info("BaseCrudResource::create - new entity: " + new_entity);
         return new_entity;
     }
 
@@ -94,13 +91,11 @@ System.out.flush();
     public Response delete(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
             @ApiParam(value = "Id", required = true) @PathParam("id") String id) {
 
-System.out.println("BaseCrudResource:delete - projectId, launchId: " + projectId + ", " + id);
-System.out.flush();
+DokimionLogger.info("BaseCrudResource:delete - projectId, launchId: " + projectId + ", " + id);
 
         getService().delete(getUserSession(), projectId, id);
 
-System.out.println("BaseCrudResource:delete - after call to service.delete");
-System.out.flush();
+DokimionLogger.info("BaseCrudResource:delete - after call to service.delete");
 
         return ok().build();
     }

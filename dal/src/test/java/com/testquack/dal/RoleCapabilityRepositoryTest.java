@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
+import com.testquack.dal.DokimionLogger;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Order;
 import com.testquack.beans.RoleCapability;
@@ -58,8 +59,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
        assertThat(roleCaps.get(0).getRole(), is(Role.TESTDEVELOPER));
 
        for (RoleCapability roleCap : roleCaps ) {
-          System.out.println("findFilteredSingleFieldTest - role: " + roleCap.getRole().value());
-          System.out.flush();
+          DokimionLogger.info("findFilteredSingleFieldTest - role: " + roleCap.getRole().value());
        }
     }
 
@@ -83,8 +83,7 @@ public class RoleCapabilityRepositoryTest extends DalBaseTest {
                 containsInAnyOrder(Capability.READWRITE, Capability.ADMIN));
 
        for (RoleCapability roleCap : roleCaps ) {
-          System.out.println("findFilteredMultipleValuesFieldTest capability: " + roleCap.getCapability().value());
-          System.out.flush();
+          DokimionLogger.info("findFilteredMultipleValuesFieldTest capability: " + roleCap.getCapability().value());
        }
 
 

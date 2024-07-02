@@ -30,19 +30,19 @@
 
     </modules>
 
-    <name>quack System</name>
+    <name>Dokimion System</name>
     <packaging>pom</packaging>
 
     <organization>
-        <name>QuAck</name>
+        <name>Dokimion</name>
         <url>https://testquack.com</url>
     </organization>
 
     <developers>
         <developer>
             <id>owner</id>
-            <name>Aziz Namazov</name>
-            <email>azeedrums@gmail.com</email>
+            <name>Bob Beck</name>
+            <email>bob_beck@sil.org</email>
             <timezone>UTC+4</timezone>
         </developer>
     </developers>

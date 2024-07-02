@@ -2,6 +2,7 @@ package com.testquack.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import com.testquack.beans.DefaultProjectAttributes;
+import com.testquack.dal.DokimionLogger;
 import com.testquack.beans.Role;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Capability;
@@ -31,10 +32,9 @@ public class DefaultProjectAttributesService extends BaseService<DefaultProjectA
 
     @Override
     public List<DefaultProjectAttributes> findFiltered(Session session, String projectId, Filter filter) {
-System.out.println("DefaultProjectAttributesService.findFiltered - session: " + session);
-System.out.println("DefaultProjectAttributesService.findFiltered - projectId: " + projectId);
-System.out.println("DefaultProjectAttributesService.findFiltered - filter: " + filter);
-System.out.flush();
+DokimionLogger.info("DefaultProjectAttributesService.findFiltered - session: " + session);
+DokimionLogger.info("DefaultProjectAttributesService.findFiltered - projectId: " + projectId);
+DokimionLogger.info("DefaultProjectAttributesService.findFiltered - filter: " + filter);
         return getRepository().find(getCurrOrganizationId(session), projectId, filter);
     }
 

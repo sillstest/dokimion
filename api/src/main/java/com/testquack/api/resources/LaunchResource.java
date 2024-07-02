@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.dal.DokimionLogger;
 import com.testquack.api.utils.APIValidation;
 import com.testquack.beans.FailureDetails;
 import com.testquack.beans.Launch;
