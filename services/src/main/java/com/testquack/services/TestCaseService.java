@@ -1,6 +1,5 @@
 package com.testquack.services;
 
-import com.testquack.dal.DokimionLogger;
 import com.testquack.beans.Attachment;
 import com.testquack.beans.Attribute;
 import com.testquack.beans.EntityPreview;
@@ -161,8 +160,9 @@ public class TestCaseService extends BaseService<TestCase> {
         if (isEmpty(entity.getId())) {
             Sequencer sequencer = sequencerService.increment(getCurrOrganizationId(session), projectId);
             entity.setId(Long.toString(sequencer.getIndex()));
-DokimionLogger.info("TestCaseService::beforeCreate - allocating new test case id: " +
+System.out.println("TestCaseService::beforeCreate - allocating new test case id: " +
                     entity.getId());
+System.out.flush();
         }
     }
 
@@ -230,7 +230,8 @@ DokimionLogger.info("TestCaseService::beforeCreate - allocating new test case id
         if (existingTestcase.isLocked() == false) {
            existingTestcase.setLocked(true);
            save(user, projectId, existingTestcase);
-DokimionLogger.info("importTestCases - existingTestCase: " + existingTestcase);
+System.out.println("importTestCases - existingTestCase: " + existingTestcase);
+System.out.flush();
         } else {
             throw new EntityAccessDeniedException(
                     format("User %s can't update testcase %s", user.getPerson().getLogin(), 
@@ -265,12 +266,14 @@ DokimionLogger.info("importTestCases - existingTestCase: " + existingTestcase);
 
     public TestCase uploadAttachment(Session userSession, String projectId, String testcaseId, InputStream uploadedInputStream, String fileName, long size) throws IOException {
 
-DokimionLogger.info("TestCaseService::uploadAttachment - filename, size" + fileName + size);
-DokimionLogger.info("TestCaseService::uploadAttachment - uploadedInputStream: " + uploadedInputStream);
+System.out.println("TestCaseService::uploadAttachment - filename, size" + fileName + size);
+System.out.println("TestCaseService::uploadAttachment - uploadedInputStream: " + uploadedInputStream);
+System.out.flush();
 
         Attachment uploadedAttachment = storage.upload(getCurrOrganizationId(userSession), projectId, uploadedInputStream, fileName, size);
 
-DokimionLogger.info("TestCaseService::uploadAttachment - uploadedAttachment: " + uploadedAttachment);
+System.out.println("TestCaseService::uploadAttachment - uploadedAttachment: " + uploadedAttachment);
+System.out.flush();
 
        TestCase testCase = findOneUnfiltered(userSession, projectId, testcaseId);
        List<Attachment> attachmentsList = testCase.getAttachments();
@@ -281,26 +284,32 @@ DokimionLogger.info("TestCaseService::uploadAttachment - uploadedAttachment: " +
                        withDataSize(size);
        attachmentsList.add(uploadedAttachment);
 
-DokimionLogger.info("TestCaseService::uploadAttachment - attachmentsList: " + attachmentsList);
+System.out.println("TestCaseService::uploadAttachment - attachmentsList: " + attachmentsList);
+System.out.flush();
        testCase.setAttachments(attachmentsList);
 
-DokimionLogger.info("TestCaseService::uploadAttachment - testCase: " + testCase);
+System.out.println("TestCaseService::uploadAttachment - testCase: " + testCase);
+System.out.flush();
        TestCase newTestCase = update(userSession, projectId, testCase);
 
-DokimionLogger.info("TestCaseService::uploadAttachment - end of uploadAttachment - newTestCase: " + newTestCase);
+System.out.println("TestCaseService::uploadAttachment - end of uploadAttachment - newTestCase: " + newTestCase);
+System.out.flush();
        return newTestCase;
     }
 
     public Attachment getAttachment(Session userSession, String projectId, String testcaseId, String attachmentId) {
 
-DokimionLogger.info("TestCaseService::getAttachment - projectId: " + projectId + ", testcaseId: " + testcaseId + ", attachmentid:" + attachmentId);
+System.out.println("TestCaseService::getAttachment - projectId: " + projectId + ", testcaseId: " + testcaseId + ", attachmentid:" + attachmentId);
+System.out.flush();
 
         TestCase testCase = findOneUnfiltered(userSession, projectId, testcaseId);
 
-DokimionLogger.info("TestCaseService::getAttachment - testCase: " + testCase);
+System.out.println("TestCaseService::getAttachment - testCase: " + testCase);
+System.out.flush();
 
         Attachment attach = getAttachment(testCase, attachmentId);
-DokimionLogger.info("TestCaseService::getAttachment - attach: " + attach);
+System.out.println("TestCaseService::getAttachment - attach: " + attach);
+System.out.flush();
 
         return attach;
         //return getAttachment(testCase, attachmentId);
@@ -308,18 +317,21 @@ DokimionLogger.info("TestCaseService::getAttachment - attach: " + attach);
 
     public TestCase deleteAttachment(Session userSession, String projectId, String testcaseId, String attachmentId) throws IOException {
         TestCase testCase = findOneUnfiltered(userSession, projectId, testcaseId);
-DokimionLogger.info("TestCaseService::deleteAttachment - testcase: " + testCase);
+System.out.println("TestCaseService::deleteAttachment - testcase: " + testCase);
+System.out.flush();
 
         Attachment attachment = getAttachment(testCase, attachmentId);
         storage.remove(attachment);
         testCase.getAttachments().remove(attachment);
 
-DokimionLogger.info("TestCaseService::deleteAttachment after remove - testcase: " + testCase);
+System.out.println("TestCaseService::deleteAttachment after remove - testcase: " + testCase);
+System.out.flush();
 
         TestCase newTestCase;
         if (testCase.isLocked() == false) {
            newTestCase = update(userSession, projectId, testCase);
-DokimionLogger.info("TestCaseService::deleteAttachment after update - newTestCase: " + newTestCase);
+System.out.println("TestCaseService::deleteAttachment after update - newTestCase: " + newTestCase);
+System.out.flush();
         } else {
             throw new EntityAccessDeniedException(
                     format("User %s can't update testcase %s", 
@@ -347,7 +359,8 @@ DokimionLogger.info("TestCaseService::deleteAttachment after update - newTestCas
         if (testCase.isLocked() == false) {
            testCase.setLocked(true);
            newTestCase = update(userSession, projectId, testCase);
-DokimionLogger.info("createIssue - newTestCase: " + newTestCase);
+System.out.println("createIssue - newTestCase: " + newTestCase);
+System.out.flush();
         } else {
             throw new EntityAccessDeniedException(
                     format("User %s can't update testcase %s", 
@@ -371,7 +384,8 @@ DokimionLogger.info("createIssue - newTestCase: " + newTestCase);
         if (testCase.isLocked() == false) {
            testCase.setLocked(true);
            newTestCase = update(userSession, projectId, testCase);
-DokimionLogger.info("linkIssue - newTestCase: " + newTestCase);
+System.out.println("linkIssue - newTestCase: " + newTestCase);
+System.out.flush();
         } else {
             throw new EntityAccessDeniedException(
                     format("User %s can't update testcase %s", 
@@ -391,7 +405,8 @@ DokimionLogger.info("linkIssue - newTestCase: " + newTestCase);
         if (testCase.isLocked() == false) {
            testCase.setLocked(true);
            newTestCase = update(userSession, projectId, testCase);
-DokimionLogger.info("unlinkIssue - newTestCase: " + newTestCase);
+System.out.println("unlinkIssue - newTestCase: " + newTestCase);
+System.out.flush();
         } else {
             throw new EntityAccessDeniedException(
                     format("User %s can't update testcase %s", 
@@ -437,7 +452,8 @@ DokimionLogger.info("unlinkIssue - newTestCase: " + newTestCase);
     }
 
     public TestCase lockTestCase(Session userSession, String projectId, String testCaseId) {
-DokimionLogger.info("TestCaseService::lockTestCase");
+System.out.println("TestCaseService::lockTestCase");
+System.out.flush();
         TestCase testCase = new TestCase();
         try {
            testCase = findOne(userSession, projectId, testCaseId);
@@ -446,16 +462,19 @@ DokimionLogger.info("TestCaseService::lockTestCase");
         }
         TestCase updatedTestCase = testCase;
         if (testCase.isLocked() == false) {
-DokimionLogger.info("TestCaseService::lockTestCase - need to lock");
+System.out.println("TestCaseService::lockTestCase - need to lock");
+System.out.flush();
            testCase.setLocked(true);
            updatedTestCase = update(userSession, projectId, testCase);
-DokimionLogger.info("lockTestCase - updatedTestCase: " + updatedTestCase);
+System.out.println("lockTestCase - updatedTestCase: " + updatedTestCase);
+System.out.flush();
         }
         return updatedTestCase;
     }
 
     public TestCase unlockTestCase(Session userSession, String projectId, String testCaseId) {
-DokimionLogger.info("TestCaseService::unlockTestCase");
+System.out.println("TestCaseService::unlockTestCase");
+System.out.flush();
         TestCase testCase = new TestCase();
         try {
            testCase = findOne(userSession, projectId, testCaseId);
@@ -464,10 +483,12 @@ DokimionLogger.info("TestCaseService::unlockTestCase");
         }
         TestCase updatedTestCase = new TestCase();
         if (testCase.isLocked() == true) {
-DokimionLogger.info("TestCaseService::unLockTestCase - need to unlock");
+System.out.println("TestCaseService::unLockTestCase - need to unlock");
+System.out.flush();
            testCase.setLocked(false);
            updatedTestCase = update(userSession, projectId, testCase);
-DokimionLogger.info("unlockTestCase - updatedTestCase: " + updatedTestCase);
+System.out.println("unlockTestCase - updatedTestCase: " + updatedTestCase);
+System.out.flush();
         }
         return updatedTestCase;
     }

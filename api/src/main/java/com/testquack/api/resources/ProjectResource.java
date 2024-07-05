@@ -1,6 +1,5 @@
 package com.testquack.api.resources;
 
-import com.testquack.dal.DokimionLogger;
 import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.Filter;
@@ -53,7 +52,8 @@ public class ProjectResource extends BaseResource<Project> {
     })
     public Project findOne(@ApiParam(value = "Entity Id", required = true) @PathParam("id") String id) {
 
-        DokimionLogger.info("ProjectResource::findOne: id: " + id);
+        System.out.println("ProjectResource::findOne: id: " + id);
+        System.out.flush();
 
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
                                     getService().getMongoUsername(),
@@ -61,7 +61,8 @@ public class ProjectResource extends BaseResource<Project> {
                                     getService().getMongoDBName(),
                                     id) == false) {
 
-DokimionLogger.info("ProjectResource::findOne: checkProject returned FALSE");
+System.out.println("ProjectResource::findOne: checkProject returned FALSE");
+System.out.flush();
 
            return null;
         }
@@ -76,8 +77,9 @@ DokimionLogger.info("ProjectResource::findOne: checkProject returned FALSE");
     })
     public Project create(@ApiParam(value = "Entity", required = true) Project entity) {
         ProjectService service = (ProjectService) getService();
-DokimionLogger.info("ProjectResource:create - service: " + service);
-DokimionLogger.info("ProjectResource.create - getUserSession: " + getUserSession());
+System.out.println("ProjectResource:create - service: " + service);
+System.out.println("ProjectResource.create - getUserSession: " + getUserSession());
+System.out.flush();
         return service.createProject(getUserSession(), entity);
     }
 
@@ -88,7 +90,8 @@ DokimionLogger.info("ProjectResource.create - getUserSession: " + getUserSession
             @ApiResponse(code = 200, message = "Updated entity")
     })
     public Project update(@ApiParam(value = "Entity", required = true) Project entity) {
-DokimionLogger.info("ProjectResource::update - project: " + entity);
+System.out.println("ProjectResource::update - project: " + entity);
+System.out.flush();
 
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -96,7 +99,8 @@ DokimionLogger.info("ProjectResource::update - project: " + entity);
             getService().getMongoDBName(),
             entity.getId()) == false) {
 
-            DokimionLogger.info("ProjectResource::findOne: checkProject returned FALSE");
+            System.out.println("ProjectResource::findOne: checkProject returned FALSE");
+            System.out.flush();
 
             return null;
         }
@@ -119,7 +123,8 @@ DokimionLogger.info("ProjectResource::update - project: " + entity);
             getService().getMongoDBName(),
             id) == false) {
 
-            DokimionLogger.info("ProjectResource::delete: checkProject returned FALSE");
+            System.out.println("ProjectResource::delete: checkProject returned FALSE");
+            System.out.flush();
 
             return null;
         }

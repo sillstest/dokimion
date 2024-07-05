@@ -10,7 +10,6 @@ import com.testquack.services.errors.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.testquack.beans.User;
-import com.testquack.dal.DokimionLogger;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.UserRepository;
 import ru.greatbit.utils.string.StringUtils;
@@ -50,8 +49,9 @@ public class UserService extends BaseService<User> {
     }
 
     protected boolean userCanSave(Session session, String login) {
-DokimionLogger.info("UserService::userCanSave - login: " + login);
-DokimionLogger.info("UserService::userCanSave - session: " + session);
+System.out.println("UserService::userCanSave - login: " + login);
+System.out.println("UserService::userCanSave - session: " + session);
+System.out.flush();
 
         return isAdmin(session) || login.equals(session.getPerson().getLogin());
     }
@@ -64,15 +64,19 @@ DokimionLogger.info("UserService::userCanSave - session: " + session);
     @Override
     protected boolean userCanDelete(Session session, String projectId, String id) {
 	User user = findOne(session, projectId, id);
-DokimionLogger.info("UserService::userCanDelete - user: " + user);
-DokimionLogger.info("UserService::userCanDelete - projectId: " + projectId);
-DokimionLogger.info("UserService::userCanDelete - session: " + session);
+System.out.println("UserService::userCanDelete - user: " + user);
+System.out.flush();
+System.out.println("UserService::userCanDelete - projectId: " + projectId);
+System.out.println("UserService::userCanDelete - session: " + session);
+System.out.flush();
 
         if (user.isLocked()) {
-DokimionLogger.info("UserService::userCanDelete - user locked = true");
+System.out.println("UserService::userCanDelete - user locked = true");
+System.out.flush();
            return false;
         }
-DokimionLogger.info("UserService::userCanDelete - user locked = false");
+System.out.println("UserService::userCanDelete - user locked = false");
+System.out.flush();
         return userCanSave(session, id);
     }
 
@@ -91,8 +95,9 @@ DokimionLogger.info("UserService::userCanDelete - user locked = false");
     @Override
     public User findOne(Session session, String projectId, String id) {
 
-DokimionLogger.info("UserService.findOne - projectId, id: " + projectId + "," + id);
-DokimionLogger.info("UserService.findOne - session: " + session);
+System.out.println("UserService.findOne - projectId, id: " + projectId + "," + id);
+System.out.println("UserService.findOne - session: " + session);
+System.out.flush();
 
         //return cleanUserSesitiveData(super.findOne(session, projectId, id));
         User user = cleanUserSensitiveData(super.findOne(session, projectId, id));
@@ -125,7 +130,8 @@ DokimionLogger.info("UserService.findOne - session: " + session);
     }
 
     public void changePassword(Session session, String login, String oldPassword, String newPassword) {
-DokimionLogger.info("changePassword - session: " + session);
+System.out.println("changePassword - session: " + session);
+System.out.flush();
         if (userCanSave(session, login)){
             User user = findOne(getCurrOrganizationId(session), new Filter().withField("login", login));
 	    StringBuilder exceptionMessage = new StringBuilder("");
@@ -156,11 +162,13 @@ DokimionLogger.info("changePassword - session: " + session);
     }
 
     public List<User> findAll() {
-DokimionLogger.info("UserService::findAll");
+System.out.println("UserService::findAll");
+System.out.flush();
 
         List<User> usersList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
         for (User user : usersList) {
-           DokimionLogger.info("UserService.findAll() - user: " + user);
+           System.out.println("UserService.findAll() - user: " + user);
+           System.out.flush();
         }
         return usersList;
         //return StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
@@ -177,16 +185,19 @@ DokimionLogger.info("UserService::findAll");
 
     public boolean setLocked(Session session, boolean lockedValue) {
 
-DokimionLogger.info("UserService::setLocked - session: " + session);
-DokimionLogger.info("UserService::setLocked - lockedValue: " + lockedValue);
+System.out.println("UserService::setLocked - session: " + session);
+System.out.println("UserService::setLocked - lockedValue: " + lockedValue);
+System.out.flush();
        String userLogin = session.getPerson().getLogin();
        String userPassword = session.getPerson().getPassword();
-DokimionLogger.info("UserService::setLocked - userLogin: " + userLogin);
-DokimionLogger.info("UserService::setLocked - userPassword: " + userPassword);
+System.out.println("UserService::setLocked - userLogin: " + userLogin);
+System.out.println("UserService::setLocked - userPassword: " + userPassword);
+System.out.flush();
 
        if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
 
-DokimionLogger.info("UserService::setLocked - NOT an admin");
+System.out.println("UserService::setLocked - NOT an admin");
+System.out.flush();
           User user = findOne(session, null, userLogin);
           user.setLocked(lockedValue);
           user.setLogin(userLogin);
@@ -194,12 +205,15 @@ DokimionLogger.info("UserService::setLocked - NOT an admin");
              user.setPassword(userPassword);
 
           User updatedUser = save(session, null, user);
-DokimionLogger.info("setLocked - updatedUser: " + updatedUser);
+System.out.println("setLocked - updatedUser: " + updatedUser);
+System.out.flush();
           if (updatedUser == null) {
-             DokimionLogger.info("UserService::setLocked - updatedUser = null");
+             System.out.println("UserService::setLocked - updatedUser = null");
+             System.out.flush();
              return false;
           }
- DokimionLogger.info("setLocked - set lock end");
+ System.out.println("setLocked - set lock end");
+ System.out.flush();
           return true;
 
        }

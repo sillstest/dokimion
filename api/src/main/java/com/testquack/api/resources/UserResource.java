@@ -1,6 +1,5 @@
 package com.testquack.api.resources;
 
-import com.testquack.dal.DokimionLogger;
 import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.PasswordGeneration;
 import com.testquack.api.utils.MongoDBInterface;
@@ -62,14 +61,16 @@ public class UserResource extends BaseResource<User> {
 
     @Override
     protected BaseService<User> getService() {
-DokimionLogger.info("UserResource::getService - service: " + service);
+System.out.println("UserResource::getService - service: " + service);
+System.out.flush();
         return service;
     }
 
     @GET
     @Path("/{login}")
     public User getUser(@PathParam("login") String login) {
-DokimionLogger.info("UserResource::getUser - login: " + login);
+System.out.println("UserResource::getUser - login: " + login);
+System.out.flush();
 
         if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -77,7 +78,9 @@ DokimionLogger.info("UserResource::getUser - login: " + login);
             getService().getMongoDBName(),
             login) == false) {
 
-            DokimionLogger.info("UserResource::getUser : checkLoginId returned FALSE - did NOT find login");
+            System.out.println("UserResource::getUser : checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
+
             User user = null;
             return user;
         }
@@ -89,7 +92,8 @@ DokimionLogger.info("UserResource::getUser - login: " + login);
     @POST
     @Path("/delete")
     public Response delete(@QueryParam("login") String login) {
-DokimionLogger.info("UserResource::delete - login: " + login);
+System.out.println("UserResource::delete - login: " + login);
+System.out.flush();
 
         User user = getUser(login);
         service.delete(getSession(), null, user.getId());
@@ -102,14 +106,17 @@ DokimionLogger.info("UserResource::delete - login: " + login);
     @Path("/forgot_password")
     public Response getEmail(@QueryParam("login") String login) {
 
-      DokimionLogger.info("getEmail - login: " + login);
+      System.out.println("getEmail - login: " + login);
+      System.out.flush();
+
        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
             getService().getMongoDBName(),
             login) == false) {
 
-            DokimionLogger.info("UserResource::getEmail: checkLoginId returned FALSE - did NOT find login");
+            System.out.println("UserResource::getEmail: checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
 
             Response resp = null;
             return resp;
@@ -123,7 +130,8 @@ DokimionLogger.info("UserResource::delete - login: " + login);
 
        String email = mongoDBInterface.getEmail(login);
 
-       DokimionLogger.info("Fetched mongodb emails");
+       System.out.println("Fetched mongodb emails");
+       System.out.flush();
 
        JSONObject jsonObj = new JSONObject();
        jsonObj.put("email", email);
@@ -144,7 +152,8 @@ DokimionLogger.info("UserResource::delete - login: " + login);
 	  catch (URISyntaxException e)
 	  {
             doneGeneratingPassword = false;
-	    DokimionLogger.info("URI Syntax exception for URI: " + uriStr);
+	    System.out.println("URI Syntax exception for URI: " + uriStr);
+	    System.out.flush();
 	  }
        } while (doneGeneratingPassword == true || loopCounter > 3);
   
@@ -153,7 +162,8 @@ DokimionLogger.info("UserResource::delete - login: " + login);
        SendEmail sendEmailObj = new SendEmail();
        sendEmailObj.send(email, password);
 
-       DokimionLogger.info("Sent email to: " + email);
+       System.out.println("Sent email to: " + email);
+       System.out.flush();
 
        String encryptedPass = "";
        try {
@@ -171,9 +181,11 @@ DokimionLogger.info("UserResource::delete - login: " + login);
     public User createUser(User user){
 
         
-	DokimionLogger.info("UserResource::createUser - " + user);
+	System.out.println("UserResource::createUser - " + user);
+	System.out.flush();
 
-        DokimionLogger.info("UserResource::createUser: session - " + getSession());
+        System.out.println("UserResource::createUser: session - " + getSession());
+        System.out.flush();
 
         if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -181,7 +193,8 @@ DokimionLogger.info("UserResource::delete - login: " + login);
             getService().getMongoDBName(),
             user.getLogin()) == true) {
 
-            DokimionLogger.info("UserResource::createUser: checkLoginId returned FALSE - did NOT find login");
+            System.out.println("UserResource::createUser: checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
 
             User user1 = null;
             return user1;
@@ -200,7 +213,8 @@ DokimionLogger.info("UserResource::delete - login: " + login);
             getService().getMongoDBName(),
             user.getLogin()) == false) {
 
-            DokimionLogger.info("UserResource::updateUser: checkLoginId returned FALSE - did NOT find login");
+            System.out.println("UserResource::updateUser: checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
 
             User user1 = null;
             return user1;
@@ -216,7 +230,8 @@ DokimionLogger.info("UserResource::delete - login: " + login);
         Collection<User> collUsers = getService().findFiltered(getSession(), null, initFilter(request));
 
         for (User user : collUsers) {
-           DokimionLogger.info("UserResource.findFiltered - user: " + user);
+           System.out.println("UserResource.findFiltered - user: " + user);
+           System.out.flush();
         }
 
         return collUsers;
@@ -243,8 +258,9 @@ DokimionLogger.info("UserResource::delete - login: " + login);
     public Session login(@QueryParam("login") String login,
                          @QueryParam("password") String password) {
         Session session = authProvider.doAuth(request, response);
-DokimionLogger.info("UserResource::login - session: " + session);
-DokimionLogger.info("UserResource::login - login: " + login);
+System.out.println("UserResource::login - session: " + session);
+System.out.println("UserResource::login - login: " + login);
+System.out.flush();
 
         Person person = session.getPerson();
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
@@ -255,7 +271,8 @@ DokimionLogger.info("UserResource::login - login: " + login);
 
         String thisRole = mongoDBInterface.getRole(login);
 
-DokimionLogger.info("UserResource::login - role: " + thisRole);
+System.out.println("UserResource::login - role: " + thisRole);
+System.out.flush();
 
         List<String> roles = new ArrayList<String>();
         roles.add(thisRole);
@@ -263,10 +280,12 @@ DokimionLogger.info("UserResource::login - role: " + thisRole);
         session.setPerson(person);
 
 	if (service.setLocked(session, true) == false) {
-	   DokimionLogger.info("UserResource::login - setLocked failed");
+	   System.out.println("UserResource::login - setLocked failed");
+	   System.out.flush();
 	}
 
-DokimionLogger.info("UserResource::login - end of setLocked call");
+System.out.println("UserResource::login - end of setLocked call");
+System.out.flush();
         return session;
         //return authProvider.doAuth(request, response);
     }
@@ -309,7 +328,8 @@ DokimionLogger.info("UserResource::login - end of setLocked call");
             getService().getMongoDBName(),
             login) == false) {
 
-            DokimionLogger.info("UserResource::changePassword: checkLoginId returned FALSE - did NOT find login");
+            System.out.println("UserResource::changePassword: checkLoginId returned FALSE - did NOT find login");
+            System.out.flush();
 
             Response resp = null;
             return resp;
@@ -334,18 +354,21 @@ DokimionLogger.info("UserResource::login - end of setLocked call");
     public Response logout() {
 
 	Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
-DokimionLogger.info("UserResource::logout - sid: " + sid);
+System.out.println("UserResource::logout - sid: " + sid);
+System.out.flush();
         Session session = sessionProvider.getSessionById(sid.getValue());
 
-DokimionLogger.info("UserResource::logout - login: " + session.getLogin());
+System.out.println("UserResource::logout - login: " + session.getLogin());
+System.out.flush();
 
 	if (service.setLocked(session, false) == false) {
-	   DokimionLogger.info("UserResource::logout - setLocked false failed");
+	   System.out.println("UserResource::logout - setLocked false failed");
 	   System.out.flush();
 	}
 
         authProvider.doLogout(request, response);
-DokimionLogger.info("UserResource::logout - after authProvider.doLogout call");
+System.out.println("UserResource::logout - after authProvider.doLogout call");
+System.out.flush();
 
         return Response.ok().build();
     }
@@ -366,9 +389,10 @@ DokimionLogger.info("UserResource::logout - after authProvider.doLogout call");
     @Path("/users")
     public Set<String> getUsers(){
         Set<String> users = authProvider.getAllUsers(request);
-DokimionLogger.info("UserResource::getUsers");
+System.out.println("UserResource::getUsers");
 for (String user : users) {
-DokimionLogger.info("user: " + user);
+System.out.println("user: " + user);
+System.out.flush();
 }
         return users;
     }

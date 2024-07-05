@@ -5,7 +5,6 @@ import com.testquack.beans.RoleCapability;
 import com.testquack.beans.Role;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Capability;
-import com.testquack.dal.DokimionLogger;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.RoleCapabilityRepository;
 import ru.greatbit.whoru.auth.Session;
@@ -32,9 +31,10 @@ public class RoleCapabilityService extends BaseService<RoleCapability> {
 
     @Override
     public List<RoleCapability> findFiltered(Session session, String projectId, Filter filter) {
-DokimionLogger.info("RoleCapService.findFiltered - session: " + session);
-DokimionLogger.info("RoleCapService.findFiltered - projectId: " + projectId);
-DokimionLogger.info("RoleCapService.findFiltered - filter: " + filter);
+System.out.println("RoleCapService.findFiltered - session: " + session);
+System.out.println("RoleCapService.findFiltered - projectId: " + projectId);
+System.out.println("RoleCapService.findFiltered - filter: " + filter);
+System.out.flush();
         return getRepository().find(getCurrOrganizationId(session), projectId, filter);
     }
 

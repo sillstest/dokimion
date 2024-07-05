@@ -11,7 +11,6 @@ import com.testquack.services.errors.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.testquack.dal.CommonRepository;
-import com.testquack.dal.DokimionLogger;
 import com.testquack.dal.TestcaseSizesRepository;
 import ru.greatbit.utils.string.StringUtils;
 import ru.greatbit.whoru.auth.Session;
@@ -38,12 +37,14 @@ public class TestcaseSizesService extends BaseService<TestcaseSizes> {
 
     @Override
     public List<TestcaseSizes> findFiltered(Session session, String projectId, Filter filter) {
-DokimionLogger.info("TestcaseSizesService.findFiltered - session: " + session);
-DokimionLogger.info("TestcaseSizesService.findFiltered - projectId: " + projectId);
-DokimionLogger.info("TestcaseSizesService.findFiltered - filter: " + filter);
+System.out.println("TestcaseSizesService.findFiltered - session: " + session);
+System.out.println("TestcaseSizesService.findFiltered - projectId: " + projectId);
+System.out.println("TestcaseSizesService.findFiltered - filter: " + filter);
+System.out.flush();
         List<TestcaseSizes> listTCSizes = getRepository().find(getCurrOrganizationId(session), projectId, filter);
         for (TestcaseSizes tcSize : listTCSizes) {
-           DokimionLogger.info("TestcaseSizesService::findFiltered - tcSize: " + tcSize);
+           System.out.println("TestcaseSizesService::findFiltered - tcSize: " + tcSize);
+           System.out.flush();
         }
         return listTCSizes;
 
@@ -53,11 +54,13 @@ DokimionLogger.info("TestcaseSizesService.findFiltered - filter: " + filter);
 
     public List<TestcaseSizes> findAll() {
 
-DokimionLogger.info("TestcaseSizesService::findAll");
+System.out.println("TestcaseSizesService::findAll");
+System.out.flush();
 
         List<TestcaseSizes> tcSizesList = StreamSupport.stream(repository.findAll().spliterator(), false).collect(Collectors.toList());
         for (TestcaseSizes tcSize : tcSizesList) {
-           DokimionLogger.info("TestcaseSizesService.findAll() - tcSize: " + tcSize);
+           System.out.println("TestcaseSizesService.findAll() - tcSize: " + tcSize);
+           System.out.flush();
         }
 
 

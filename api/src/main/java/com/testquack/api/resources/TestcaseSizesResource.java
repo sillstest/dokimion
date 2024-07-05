@@ -1,6 +1,5 @@
 package com.testquack.api.resources;
 
-import com.testquack.dal.DokimionLogger;
 import com.testquack.beans.Filter;
 import com.testquack.beans.TestcaseSizes;
 import com.testquack.services.BaseService;
@@ -62,14 +61,17 @@ public class TestcaseSizesResource extends BaseResource<TestcaseSizes> {
 
   public Collection<TestcaseSizes> getAllTestcaseSizes() {
 
-    DokimionLogger.info("TestcaseSizesResource::getAllTestcaseSizes");
+    System.out.println("TestcaseSizesResource::getAllTestcaseSizes");
+    System.out.flush();
 
-DokimionLogger.info("getAllTestcaseSizes::filter - " + initFilter(request));
+System.out.println("getAllTestcaseSizes::filter - " + initFilter(request));
+System.out.flush();
 
     Collection<TestcaseSizes> collTCSizes = getService().findFiltered(getUserSession(), null, new Filter());
 
     for (TestcaseSizes tcSize : collTCSizes) {
-        DokimionLogger.info("TestcaseSizesResource.findFiltered - tcSize: " + tcSize);
+        System.out.println("TestcaseSizesResource.findFiltered - tcSize: " + tcSize);
+        System.out.flush();
      }
 /*
    TestcaseSizesService tcSizesService = (TestcaseSizesService)getService();
@@ -78,7 +80,7 @@ DokimionLogger.info("getAllTestcaseSizes::filter - " + initFilter(request));
 
    Collection<TestcaseSizes> collTCSizes = new LinkedList<TestcaseSizes>();
    for (String tcSizeName : tcSizesSet) {
-      DokimionLogger.info("TestcaseSizes::getallTestcaseSizes::tcSize: " + tcSizeName);
+      System.out.println("TestcaseSizes::getallTestcaseSizes::tcSize: " + tcSizeName);
       System.out.flush();
       TestcaseSizes tcSize = new TestcaseSizes();
       tcSize.setName(tcSizeName);

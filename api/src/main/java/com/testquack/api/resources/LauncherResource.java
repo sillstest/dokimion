@@ -1,6 +1,5 @@
 package com.testquack.api.resources;
 
-import com.testquack.dal.DokimionLogger;
 import com.testquack.beans.Filter;
 import com.testquack.beans.LauncherConfigDescriptor;
 import com.testquack.beans.Project;
@@ -77,11 +76,13 @@ public class LauncherResource extends BaseResource<Project> {
     public Response delete(@PathParam("projectId") String projectId,
                            @PathParam("launchId") String launchId) {
 
-DokimionLogger.info("LauncherResource - delete: projectId, launchId: " + projectId + ", " + launchId);
+System.out.println("LauncherResource - delete: projectId, launchId: " + projectId + ", " + launchId);
+System.out.flush();
 
        service.delete(getUserSession(), projectId, launchId);
 
-DokimionLogger.info("LauncherResource - delete: - after service.delete call");
+System.out.println("LauncherResource - delete: - after service.delete call");
+System.out.flush();
 
         return Response.ok().build();
     }

@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Order;
 import com.testquack.beans.TestcaseSizes;
-import com.testquack.dal.DokimionLogger;
 
 import java.util.List;
 
@@ -56,7 +55,8 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
        assertThat(tcSizes.size(), is(0));
 
        for (TestcaseSizes tcSize : tcSizes ) {
-          DokimionLogger.info("findFilteredSingleFieldTest - name: " + tcSize.getName());
+          System.out.println("findFilteredSingleFieldTest - name: " + tcSize.getName());
+          System.out.flush();
        }
     }
 
@@ -77,7 +77,8 @@ public class TestcaseSizesRepositoryTest extends DalBaseTest {
         assertThat(tcSizes.size(), is(0));
 
        for (TestcaseSizes tcSize : tcSizes ) {
-          DokimionLogger.info("findFilteredMultipleValuesFieldTest: " + tcSize.getName());
+          System.out.println("findFilteredMultipleValuesFieldTest: " + tcSize.getName());
+          System.out.flush();
        }
 
 

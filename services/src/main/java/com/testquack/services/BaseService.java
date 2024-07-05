@@ -3,7 +3,6 @@ package com.testquack.services;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.lock.FencedLock;
 import com.testquack.beans.Organization;
-import com.testquack.dal.DokimionLogger;
 import com.testquack.dal.OrganizationRepository;
 import com.testquack.services.errors.EntityAccessDeniedException;
 import com.testquack.services.errors.EntityNotFoundException;
@@ -100,86 +99,103 @@ public abstract class BaseService<E extends Entity> {
     }
 
     public List<E> findFiltered(Session session, String projectId, Filter filter){
-DokimionLogger.info("BaseService:findFiltered - projectId: " + projectId);
+System.out.println("BaseService:findFiltered - projectId: " + projectId);
+System.out.flush();
         return getRepository().find(getCurrOrganizationId(session), projectId, filter).stream().map(entity -> beforeReturn(session, projectId, entity)).collect(Collectors.toList());
     }
 
     public E findOneUnfiltered(Session session, String projectId, String id){
-DokimionLogger.info("BaseService:findOneUnfiltered - projectId, id: " + projectId + ", " + id);
+System.out.println("BaseService:findOneUnfiltered - projectId, id: " + projectId + ", " + id);
+System.out.flush();
         E entity = getRepository().findOne(getCurrOrganizationId(session), projectId, id);
         if (entity == null){
             throw new EntityNotFoundException();
         }
-        DokimionLogger.info("BaseService:findOneUnfiltered -after getRepo");
+        System.out.println("BaseService:findOneUnfiltered -after getRepo");
+        System.out.flush();
 
         if (userCanRead(session, projectId, entity) == false) {
              throw new EntityAccessDeniedException(
                     format("User %s can't read entity %s", session.getPerson().getLogin(), id)
             );
         }
-DokimionLogger.info("BaseService:findOneUnfiltered - after userCanRead call");
+System.out.println("BaseService:findOneUnfiltered - after userCanRead call");
+System.out.flush();
         return entity;
     }
 
     public E findOne(Session session, String projectId, String id){
-DokimionLogger.info("BaseService::findOne");
+System.out.println("BaseService::findOne");
+System.out.flush();
         E entity = findOneUnfiltered(session, projectId, id);
         return beforeReturn(session, projectId, entity);
     }
 
     public E save(Session user, String projectId, E entity){
-DokimionLogger.info("BaseService::save 1 - session, projectId: " + user + ", " + projectId);
-DokimionLogger.info("BaseService::save 1 - isAdmin: " + isAdmin(user));
-DokimionLogger.info("BaseService::save 1 - entity: " + entity);
+System.out.println("BaseService::save 1 - session, projectId: " + user + ", " + projectId);
+System.out.println("BaseService::save 1 - isAdmin: " + isAdmin(user));
+System.out.println("BaseService::save 1 - entity: " + entity);
+System.out.flush();
         if (!userCanSave(user, projectId, entity)) {
            throw new EntityAccessDeniedException(
                format("User %s can't save entity %s", user.getPerson().getLogin(), entity.getId()));
         } else if (entity instanceof User) {
           User userEntity = (User)entity;
-DokimionLogger.info("entity instanceof User");
+System.out.println("entity instanceof User");
+System.out.flush();
           if (isAdmin(user) == false) {
              if (user.getPerson().getLogin().equals(userEntity.getLogin())) {
               // permissions allowed to write (change) your own password
-DokimionLogger.info("Permissions allowed to change your own password");
+System.out.println("Permissions allowed to change your own password");
+System.out.flush();
               }
            }
         }
-DokimionLogger.info("user CAN save 1: " + user);
+System.out.println("user CAN save 1: " + user);
+System.out.flush();
         return isEmpty(entity.getId()) ?
                 create(user, projectId, entity) :
                 update(user, projectId, entity, (origEnt, newEnt) -> newEnt);
     }
 
     public Collection<E> save(Session user, String projectId, Collection<E> entities){
-DokimionLogger.info("BaseService::save 2 - session: " + user);
+System.out.println("BaseService::save 2 - session: " + user);
+System.out.flush();
         if (userCanSave(user, projectId, entities) == false) {
-DokimionLogger.info("user CANNOT save: " + user);
+System.out.println("user CANNOT save: " + user);
+System.out.flush();
                throw new EntityAccessDeniedException(
                        format("User %s can't save entities %s",
                             user.getPerson().getLogin(),
                             entities.stream().map(obj -> obj == null ? "null" : obj.toString()).collect(joining(", ")))
                );
         }
-DokimionLogger.info("user CAN save: " + user);
+System.out.println("user CAN save: " + user);
+System.out.flush();
         return getRepository().save(getCurrOrganizationId(user), projectId, entities);
     }
 
 
     public void delete(Session session, String projectId, String id){
-DokimionLogger.info("BaseService:delete - projectId, id: " + projectId + ", " + id);
+System.out.println("BaseService:delete - projectId, id: " + projectId + ", " + id);
+System.out.flush();
         beforeDelete(session, projectId, id);
-DokimionLogger.info("BaseService:delete - after beforeDelete");
+System.out.println("BaseService:delete - after beforeDelete");
+System.out.flush();
         if (userCanDelete(session, projectId, id) == false) {
                throw new EntityAccessDeniedException(
                     format("User %s can't delete entity %s", session.getPerson().getLogin(), id)
             );
         }
-DokimionLogger.info("BaseService:delete - after  userCanDelete");
+System.out.println("BaseService:delete - after  userCanDelete");
+System.out.flush();
         E entity = findOne(session, projectId, id);
-DokimionLogger.info("BaseService:delete - after findOne");
+System.out.println("BaseService:delete - after findOne");
+System.out.flush();
         getRepository().delete(getCurrOrganizationId(session), projectId, entity.getId());
         afterDelete(session, projectId, id);
-DokimionLogger.info("BaseService:delete - after afterDelete");
+System.out.println("BaseService:delete - after afterDelete");
+System.out.flush();
     }
 
     public long count(Session session, String projectId, Filter filter){
@@ -196,8 +212,9 @@ DokimionLogger.info("BaseService:delete - after afterDelete");
 
     protected boolean userCanReadProject(Session session, String projectId){
 
-DokimionLogger.info("BaseService:userCanReadProject - session.person: " + session.getPerson());
-DokimionLogger.info("BaseService:userCanReadProject - projectId: " + projectId);
+System.out.println("BaseService:userCanReadProject - session.person: " + session.getPerson());
+System.out.println("BaseService:userCanReadProject - projectId: " + projectId);
+System.out.flush();
 
        if (isAdmin(session) == false) {
           if (UserSecurity.allowUserReadRequest(
@@ -217,22 +234,27 @@ DokimionLogger.info("BaseService:userCanReadProject - projectId: " + projectId);
     protected boolean userCanUpdateProject(Session session, String projectId, 
                                            Collection<E> entities) {
 
-DokimionLogger.info("BaseService:userCanUpdateProject - session.person: " + session.getPerson());
-DokimionLogger.info("BaseService:userCanUpdateProject - projectId: " + projectId);
+System.out.println("BaseService:userCanUpdateProject - session.person: " + session.getPerson());
+System.out.println("BaseService:userCanUpdateProject - projectId: " + projectId);
+System.out.flush();
 
        if (isAdmin(session) == false) {
-DokimionLogger.info("BaseService:userCanUpdateProject - not an admin user");
+System.out.println("BaseService:userCanUpdateProject - not an admin user");
+System.out.flush();
           boolean rc = true;
           Iterator<E> it = entities.iterator();
           while (rc == true && it.hasNext()) {
              E entity = it.next();
-DokimionLogger.info("BaseService:userCanUpdateProject - ready to call userCanUpdateProject");
+System.out.println("BaseService:userCanUpdateProject - ready to call userCanUpdateProject");
+System.out.flush();
              rc = userCanUpdateProject(session, projectId, entity);
           }
-DokimionLogger.info("BaseService:userCanUpdateProject - end of isadmin=false branch - rc: " + rc);
+System.out.println("BaseService:userCanUpdateProject - end of isadmin=false branch - rc: " + rc);
+System.out.flush();
           return rc;
        }  else {
-DokimionLogger.info("BaseService:userCanUpdateProject - admin user");
+System.out.println("BaseService:userCanUpdateProject - admin user");
+System.out.flush();
           return true;
        }
 
@@ -242,18 +264,22 @@ DokimionLogger.info("BaseService:userCanUpdateProject - admin user");
     protected boolean userCanUpdateProject(Session session, String projectId, 
                                            E entity) {
 
-DokimionLogger.info("BaseService:userCanUpdateProject - session.person: " + session.getPerson());
-DokimionLogger.info("BaseService:userCanUpdateProject - projectId: " + projectId);
-DokimionLogger.info("BaseService:userCanUpdateProject - entity: " + entity);
+System.out.println("BaseService:userCanUpdateProject - session.person: " + session.getPerson());
+System.out.println("BaseService:userCanUpdateProject - projectId: " + projectId);
+System.out.println("BaseService:userCanUpdateProject - entity: " + entity);
+System.out.flush();
 
         if (isAdmin(session)) {
-DokimionLogger.info("BaseService:userCanUpdateProject - admin user");
+System.out.println("BaseService:userCanUpdateProject - admin user");
+System.out.flush();
            return true;
         } else if (entity instanceof TestCase) {
-DokimionLogger.info("userCanUpdateProject - entity is a TestCase"); 
+System.out.println("userCanUpdateProject - entity is a TestCase"); 
+System.out.flush();
            TestCase testcaseEntity = (TestCase)entity;
            if (testcaseEntity.isLocked() == true) {
-              DokimionLogger.info("userCanUpdateProject - entity is a locked TestCase"); 
+              System.out.println("userCanUpdateProject - entity is a locked TestCase"); 
+              System.out.flush();
               return false;
            }
         } else if ((entity instanceof Launch) || (entity instanceof Event)) {
@@ -262,16 +288,19 @@ DokimionLogger.info("userCanUpdateProject - entity is a TestCase");
               return false;
 	   }
 
-           DokimionLogger.info("userCanUpdateProject - entity is a Launch or Event");
+           System.out.println("userCanUpdateProject - entity is a Launch or Event");
+           System.out.flush();
            return true;
         }
 
-DokimionLogger.info("userCanUpdateProject - before userWriteRequest call"); 
+System.out.println("userCanUpdateProject - before userWriteRequest call"); 
+System.out.flush();
         if (UserSecurity.allowUserWriteRequest(
                          getCurrOrganizationId(session),
                          userRepository, roleCapRepository, projectId, 
                          session.getPerson().getLogin())) {
-DokimionLogger.info("BaseService:userCanUpdateProject - ready to call userCanAccessProjectCommon");
+System.out.println("BaseService:userCanUpdateProject - ready to call userCanAccessProjectCommon");
+System.out.flush();
            return userCanAccessProjectCommon(session, projectId);
         }
 
@@ -279,35 +308,42 @@ DokimionLogger.info("BaseService:userCanUpdateProject - ready to call userCanAcc
 
     }
     protected boolean userCanAccessProjectCommon(Session session, String projectId){
-DokimionLogger.info("BaseService:userCanAccessProjectCommon - session.person: " + session.getPerson());
-DokimionLogger.info("BaseService:userCanAccessProjectCommon - session.isIsAdmin: " + session.isIsAdmin());
+System.out.println("BaseService:userCanAccessProjectCommon - session.person: " + session.getPerson());
+System.out.println("BaseService:userCanAccessProjectCommon - session.isIsAdmin: " + session.isIsAdmin());
+System.out.flush();
 
         Organization organization = organizationRepository.findOne(null, null, getCurrOrganizationId(session));
-DokimionLogger.info("BaseService::userCanAccessProjectCommon - after findOne");
+System.out.println("BaseService::userCanAccessProjectCommon - after findOne");
+System.out.flush();
 
         if (!isUserInOrganization(session, organization)){
             return false;
         }
-DokimionLogger.info("BaseService::userCanAccessProjectCommon - after isUserOrganization");
+System.out.println("BaseService::userCanAccessProjectCommon - after isUserOrganization");
+System.out.flush();
 
         if (isUserOrganizationAdmin(session, organization)){
             return true;
         }
-DokimionLogger.info("BaseService::userCanAccessProjectCommon - after isUserOrganizationAdmin");
+System.out.println("BaseService::userCanAccessProjectCommon - after isUserOrganizationAdmin");
+System.out.flush();
 
         return true;
     }
     protected boolean userCanSave(Session session, String projectId, E entity){
-DokimionLogger.info("BaseService::userCanSave 1 - session: " + session);
+System.out.println("BaseService::userCanSave 1 - session: " + session);
+System.out.flush();
         return isAdmin(session)|| userCanUpdateProject(session, projectId, entity);
     }
     protected boolean userCanSave(Session session, String projectId, Collection<E> entities) {
-DokimionLogger.info("BaseService::userCanSave 2 - session, role: " + session);
+System.out.println("BaseService::userCanSave 2 - session, role: " + session);
+System.out.flush();
         return isAdmin(session) || userCanUpdateProject(session, projectId, 
                                    entities);
     }
     protected boolean userCanDelete(Session session, String projectId, String id){
-DokimionLogger.info("BaseService::userCanDelete - session, projectId, id: " + session + "," + projectId + ", " + id);
+System.out.println("BaseService::userCanDelete - session, projectId, id: " + session + "," + projectId + ", " + id);
+System.out.flush();
 
         E entity = getRepository().findOne(getCurrOrganizationId(session), 
                    projectId, id);
@@ -365,21 +401,25 @@ DokimionLogger.info("BaseService::userCanDelete - session, projectId, id: " + se
     }
 
     protected E create(Session session, String projectId, E entity){
-DokimionLogger.info("BaseService::create - session: " + session);
-DokimionLogger.info("BaseService::create - projectId: " + projectId);
-DokimionLogger.info("BaseService::create - entity: " + entity);
+System.out.println("BaseService::create - session: " + session);
+System.out.println("BaseService::create - projectId: " + projectId);
+System.out.println("BaseService::create - entity: " + entity);
+System.out.flush();
 
         beforeCreate(session, projectId, entity);
-DokimionLogger.info("BaseService::create - after beforeCreate call");
+System.out.println("BaseService::create - after beforeCreate call");
+System.out.flush();
 
         if (userCanCreate(session, projectId, entity) == false) {
             throw new EntityAccessDeniedException(getAccessDeniedMessage(session, entity, "CREATE"));
         }
 
 
-DokimionLogger.info("BaseService::create - after userCanCreate call");
+System.out.println("BaseService::create - after userCanCreate call");
+System.out.flush();
         entity = doSave(session, projectId, entity);
-DokimionLogger.info("BaseService::create - after doSave call - entity: " + entity);
+System.out.println("BaseService::create - after doSave call - entity: " + entity);
+System.out.flush();
         afterCreate(session, projectId, entity);
         return entity;
     }
@@ -402,8 +442,9 @@ DokimionLogger.info("BaseService::create - after doSave call - entity: " + entit
                 }
                 entity = (E) converter.transform(existingEntity, entity);
             }
-DokimionLogger.info("BaseService::update - entity: " + entity);
-DokimionLogger.info("BaseService::update - existingEntity: " + existingEntity);
+System.out.println("BaseService::update - entity: " + entity);
+System.out.println("BaseService::update - existingEntity: " + existingEntity);
+System.out.flush();
 
             beforeUpdate(session, projectId, existingEntity, entity);
             entity = doSave(session, projectId, entity);
@@ -415,13 +456,16 @@ DokimionLogger.info("BaseService::update - existingEntity: " + existingEntity);
     }
 
     private E doSave(Session session, String projectId, E entity){
-DokimionLogger.info("BaseService::doSave start - projectId: " + projectId);
-DokimionLogger.info("BaseService::doSave start - entity: " + entity);
+System.out.println("BaseService::doSave start - projectId: " + projectId);
+System.out.println("BaseService::doSave start - entity: " + entity);
+System.out.flush();
         beforeSave(session, projectId, entity);
         if (validateEntity(entity) || (entity instanceof Event)) {
-DokimionLogger.info("BaseService::doSave after validateEntity");
+System.out.println("BaseService::doSave after validateEntity");
+System.out.flush();
             entity = getRepository().save(getCurrOrganizationId(session), projectId, entity);
-DokimionLogger.info("BaseService::doSave after save");
+System.out.println("BaseService::doSave after save");
+System.out.flush();
             afterSave(session, projectId, entity);
             return entity;
         } else throw new EntityValidationException(getAccessDeniedMessage(session, entity, "SAVE"));
@@ -438,19 +482,23 @@ DokimionLogger.info("BaseService::doSave after save");
     }
 
     public void delete(Session session, String projectId, Filter filter) {
-DokimionLogger.info("BaseService.delete - projectId: " + projectId);
+System.out.println("BaseService.delete - projectId: " + projectId);
+System.out.flush();
         List<E> entityList = findFiltered(session, projectId, filter);
 
-        DokimionLogger.info("BaseService.delete - after findFiltered call");
+        System.out.println("BaseService.delete - after findFiltered call");
+        System.out.flush();
 
         if (userCanUpdateProject(session, projectId, entityList)) {
-DokimionLogger.info("BaseService.delete - after call of userCanUpdateProject");
+System.out.println("BaseService.delete - after call of userCanUpdateProject");
+System.out.flush();
            findFiltered(session, projectId, filter).forEach(entity -> {
                   getRepository().delete(getCurrOrganizationId(session), projectId, 
                   entity.getId());
            });
         }
-        DokimionLogger.info("BaseService.delete - end of method");
+        System.out.println("BaseService.delete - end of method");
+        System.out.flush();
     }
 
     public String getCurrOrganizationId(Session session){

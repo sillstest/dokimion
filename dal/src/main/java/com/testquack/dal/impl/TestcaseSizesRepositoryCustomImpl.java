@@ -2,7 +2,6 @@ package com.testquack.dal.impl;
 
 import com.testquack.beans.TestcaseSizes;
 import com.testquack.dal.TestcaseSizesRepositoryCustom;
-import com.testquack.dal.DokimionLogger;
 
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -25,14 +24,14 @@ public class TestcaseSizesRepositoryCustomImpl extends CommonRepositoryImpl<Test
 
         String collName = isEmpty(organizationId) ? "TestcaseSizes" : organizationId + "_testcaseSizes";
 
-DokimionLogger.info("TestcaseSizesRepositoryCustomImpl::getCollectionName - " + collName);
+System.out.println("TestcaseSizesRepositoryCustomImpl::getCollectionName - " + collName);
 System.out.flush();
         return collName;
     }
 
     @Override
     public List<TestcaseSizes> suggestTestcaseSizes(String organizationId, String literal) {
-DokimionLogger.info("TestcaseSizesRepositoryCustomImpl::suggestTestcaseSizes");
+System.out.println("TestcaseSizesRepositoryCustomImpl::suggestTestcaseSizes");
 System.out.flush();
         Criteria criteria = new Criteria();
         criteria.orOperator(
