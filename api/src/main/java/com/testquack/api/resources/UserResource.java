@@ -3,7 +3,7 @@ package com.testquack.api.resources;
 import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.PasswordGeneration;
 import com.testquack.api.utils.MongoDBInterface;
-import com.testquack.api.utils.SendEmail;
+import com.testquack.api.utils.SendEmailThread;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.ChangePasswordRequest;
 import com.testquack.beans.Filter;
@@ -158,9 +158,18 @@ System.out.flush();
        } while (doneGeneratingPassword == true || loopCounter > 3);
   
 
+       System.out.println("before starting senemail thread");
+       System.out.flush();
 
-       SendEmail sendEmailObj = new SendEmail();
-       sendEmailObj.send(email, password);
+       // start a new thread to send an email with the new password
+       try {
+          Thread thread = new Thread(new SendEmailThread(email, password));
+          thread.start();
+          thread.join();
+       } catch (InterruptedException exc) {
+	  exc.printStackTrace();
+       }
+
 
        System.out.println("Sent email to: " + email);
        System.out.flush();
