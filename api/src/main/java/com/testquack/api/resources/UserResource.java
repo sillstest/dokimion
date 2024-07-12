@@ -3,7 +3,6 @@ package com.testquack.api.resources;
 import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.PasswordGeneration;
 import com.testquack.api.utils.MongoDBInterface;
-import com.testquack.api.utils.MongoDBUpdatePasswordThread;
 import com.testquack.api.utils.SendEmail;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.ChangePasswordRequest;
