@@ -3,7 +3,8 @@ package com.testquack.api.resources;
 import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.PasswordGeneration;
 import com.testquack.api.utils.MongoDBInterface;
-import com.testquack.api.utils.SendEmailThread;
+import com.testquack.api.utils.MongoDBUpdatePasswordThread;
+import com.testquack.api.utils.SendEmail;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.ChangePasswordRequest;
 import com.testquack.beans.Filter;
@@ -136,40 +137,8 @@ System.out.flush();
        JSONObject jsonObj = new JSONObject();
        jsonObj.put("email", email);
 
-       boolean doneGeneratingPassword = true;
-       String password="";
-       int loopCounter = 0;
-       do {
-
-          loopCounter += 1;
-
-	  password = PasswordGeneration.generatePassword();
-
-	  String uriStr = "http://dokimion.com/" + password;
-	  try {
-	    URI uri = new URI(uriStr);
-	  }
-	  catch (URISyntaxException e)
-	  {
-            doneGeneratingPassword = false;
-	    System.out.println("URI Syntax exception for URI: " + uriStr);
-	    System.out.flush();
-	  }
-       } while (doneGeneratingPassword == true || loopCounter > 3);
-  
-
-       System.out.println("before starting senemail thread");
-       System.out.flush();
-
-       // start a new thread to send an email with the new password
-       try {
-          Thread thread = new Thread(new SendEmailThread(email, password));
-          thread.start();
-          thread.join();
-       } catch (InterruptedException exc) {
-	  exc.printStackTrace();
-       }
-
+       String password = PasswordGeneration.generatePassword();
+       SendEmail.send(email, password);
 
        System.out.println("Sent email to: " + email);
        System.out.flush();
@@ -180,7 +149,14 @@ System.out.flush();
        } catch (NoSuchAlgorithmException e) {
          throw new RuntimeException(e);
        }
+
        mongoDBInterface.updatePassword(login, encryptedPass);
+       /*MongoDBUpdatePasswordThread thread = new MongoDBUpdatePasswordThread(mongoDBInterface, login, encryptedPass);
+       thread.run();
+       */
+
+       System.out.println("forgotPassword: saved login, pass to mongo - " + login + ", " + encryptedPass);
+       System.out.flush();
 
        return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
     }
@@ -266,9 +242,11 @@ System.out.flush();
     @Path("/login")
     public Session login(@QueryParam("login") String login,
                          @QueryParam("password") String password) {
+System.out.println("UserResource::login - login: " + login);
+System.out.println("UserResource::login - password: " + password);
+System.out.flush();
         Session session = authProvider.doAuth(request, response);
 System.out.println("UserResource::login - session: " + session);
-System.out.println("UserResource::login - login: " + login);
 System.out.flush();
 
         Person person = session.getPerson();
@@ -280,7 +258,10 @@ System.out.flush();
 
         String thisRole = mongoDBInterface.getRole(login);
 
+        String mongopass = mongoDBInterface.getPassword(login);
+
 System.out.println("UserResource::login - role: " + thisRole);
+System.out.println("UserResource::login - mongo password: " + mongopass);
 System.out.flush();
 
         List<String> roles = new ArrayList<String>();
@@ -328,6 +309,9 @@ System.out.flush();
     @Path("/change-password")
     public Response changePassword(ChangePasswordRequest changePasswordRequest){
 
+System.out.println("changePassword");
+System.out.flush();
+
         Session session = getSession();
         String login = changePasswordRequest.getLogin() == null ? getSession().getPerson().getLogin() : changePasswordRequest.getLogin();
 
@@ -344,10 +328,36 @@ System.out.flush();
             return resp;
         }
 
-        service.changePassword(session, login, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword());
-        session.getPerson().setDefaultPassword(false);
-        sessionProvider.replaceSession(session);
+System.out.println("changePassword - after api validation");
+System.out.println("changePassword - oldpass, newpass: " + changePasswordRequest.getOldPassword() + ", " + changePasswordRequest.getNewPassword());
 
+System.out.flush();
+
+       service.changePassword(session, login, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword());
+       session.getPerson().setDefaultPassword(false);
+       sessionProvider.replaceSession(session);
+
+       /*
+       String encryptedPass = "";
+       try {
+	 encryptedPass = StringUtils.getMd5String(changePasswordRequest.getNewPassword() + login);
+       } catch (NoSuchAlgorithmException e) {
+         throw new RuntimeException(e);
+       }
+
+       MongoDBInterface mongoDBInterface = new MongoDBInterface();
+       mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+                                              getService().getMongoUsername(),
+                                              getService().getMongoPassword(),
+                                              getService().getMongoDBName());
+       String oldpass = mongoDBInterface.getPassword(login);
+       mongoDBInterface.updatePassword(login, encryptedPass);
+System.out.println("changePassword - old passwd from mongo: " + oldpass);
+System.out.flush();
+System.out.println("changePassword - new password: " + changePasswordRequest.getNewPassword());
+System.out.println("changePassword - new encrypted password: " + encryptedPass);
+System.out.flush();
+*/
         return Response.ok().build();
     }
 
@@ -367,7 +377,7 @@ System.out.println("UserResource::logout - sid: " + sid);
 System.out.flush();
         Session session = sessionProvider.getSessionById(sid.getValue());
 
-System.out.println("UserResource::logout - login: " + session.getLogin());
+System.out.println("UserResource::logout - session: " + session);
 System.out.flush();
 
 	if (service.setLocked(session, false) == false) {
@@ -375,7 +385,21 @@ System.out.flush();
 	   System.out.flush();
 	}
 
+       MongoDBInterface mongoDBInterface = new MongoDBInterface();
+       mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+                                              getService().getMongoUsername(),
+                                              getService().getMongoPassword(),
+                                              getService().getMongoDBName());
+
+       String pass = mongoDBInterface.getPassword(session.getLogin());
+System.out.println("logout - before doLogout mongo pass: " + pass);
+System.out.flush();
+
         authProvider.doLogout(request, response);
+
+        pass = mongoDBInterface.getPassword(session.getLogin());
+System.out.println("logout - after doLogout mongo pass: " + pass);
+System.out.flush();
 System.out.println("UserResource::logout - after authProvider.doLogout call");
 System.out.flush();
 

@@ -464,7 +464,7 @@ System.out.flush();
 System.out.println("BaseService::doSave after validateEntity");
 System.out.flush();
             entity = getRepository().save(getCurrOrganizationId(session), projectId, entity);
-System.out.println("BaseService::doSave after save");
+System.out.println("BaseService::doSave after save - session: " + session);
 System.out.flush();
             afterSave(session, projectId, entity);
             return entity;

@@ -62,10 +62,10 @@ public class SendEmail {
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
 
             // Set Subject: header field
-            message.setSubject("Quack Forgot Password code");
+            message.setSubject("Dokimion Forgot Password code");
 
             // Now set the actual message
-            message.setText("Quack Forgot Password code: " + passwordCode);
+            message.setText("Dokimion Forgot Password code: " + passwordCode);
 
             System.out.println("sending...");
             // Send message

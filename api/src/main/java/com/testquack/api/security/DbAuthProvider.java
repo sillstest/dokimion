@@ -14,6 +14,7 @@ import ru.greatbit.whoru.auth.Person;
 import ru.greatbit.whoru.auth.RedirectResponse;
 import ru.greatbit.whoru.auth.error.UnauthorizedException;
 import ru.greatbit.whoru.auth.providers.BaseDbAuthProvider;
+import ru.greatbit.utils.string.StringUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -82,9 +83,6 @@ System.out.flush();
         final String secretKey = "al;jf;lda1_+_!!()!!!!";
         String decryptedAdminPassword = aes.decrypt(this.adminPassword, secretKey) ;
 
-System.out.println("dbAuthByLoginPassword - decrypted Admin password: " + decryptedAdminPassword);
-System.out.flush();
-
         if (login.equalsIgnoreCase(this.adminLogin) && getMd5(password, login).equals(getMd5(decryptedAdminPassword, this.adminLogin))) {
             person = getAdminPerson(login, password);
         } else {
@@ -93,18 +91,23 @@ System.out.flush();
 
 System.out.println("dbAuthByLoginPassword - person.login: " + person.getLogin());
 System.out.println("dbAuthByLoginPassword - person.isActive: " + person.isActive());
-System.out.println("dbAuthByLoginPassword - getMD5: " + getMd5(password, login));
+System.out.println("dbAuthByLoginPassword - getMD5: " + StringUtils.getMd5String(password + login));
 System.out.flush();
         if (person!= null
                 && login.equals(person.getLogin())
                 && person.isActive()
-                && getMd5(password, login).equals(person.getPassword())){
+		&& StringUtils.getMd5String(password + login).equals(person.getPassword())) {
+                //&& getMd5(password, login).equals(person.getPassword())){
+System.out.println("dbAuthByLoginPassword - person not null");
+System.out.flush();
 
             return dbAuthAs(login, response, person);
         } else throw new UnauthorizedException("Incorrect login or password");
     }
 
     private Session dbAuthAs(String login, HttpServletResponse response, Person person) {
+System.out.println("dbAuthAs - entry");
+System.out.flush();
         if (person.getPasswordExpirationTime() > 0 && System.currentTimeMillis() > person.getPasswordExpirationTime()){
             throw new UnauthorizedException(format("Temporary password has expired for user %s. Please contact administrator to set a new one.", person.getLogin()));
         }
@@ -113,10 +116,15 @@ System.out.flush();
         if (existedSession == null) {
             sessionProvider.addSession(session);
             response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, session.getId(), authDomain, sessionTtl));
+System.out.println("dbAuthAs - new session created");
+System.out.flush();
             return session;
         }
         else
             response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, existedSession.getId(), authDomain, sessionTtl));
+
+System.out.println("dbAuthAs - end");
+System.out.flush();
         return existedSession;
     }
 

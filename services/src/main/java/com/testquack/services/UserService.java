@@ -14,6 +14,7 @@ import com.testquack.dal.CommonRepository;
 import com.testquack.dal.UserRepository;
 import ru.greatbit.utils.string.StringUtils;
 import ru.greatbit.whoru.auth.Session;
+import ru.greatbit.whoru.auth.Person;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -117,6 +118,15 @@ System.out.flush();
     }
 
     @Override
+    protected void afterSave(Session session, String projectId, User user) {
+       // copy entity's password to session
+       String entityPassword = user.getPassword();
+       Person person = session.getPerson();
+       person.setPassword(entityPassword);
+       session.setPerson(person);
+    }
+
+    @Override
     protected boolean validateEntity(User ent) {
         return !isEmpty(ent.getLogin());
     }
@@ -139,6 +149,9 @@ System.out.flush();
                user.setPassword(encryptPassword(newPassword, user.getLogin()));
                user.setPasswordChangeRequired(false);
                save(session, null, user);
+System.out.println("changePassword - after setPassword, session: " + session);
+System.out.println("changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, user.getLogin()));
+System.out.flush();
             } else {
                throw new EntityValidationException(format("User %s password %s validation error - %s", login, newPassword, exceptionMessage.toString()));
 	    }
