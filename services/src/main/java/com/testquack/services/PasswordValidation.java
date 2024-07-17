@@ -52,7 +52,20 @@ public class PasswordValidation {
       PasswordData password = new PasswordData(passwordStr);
       RuleResult result = validator.validate(password);
 
+
       if (result.isValid() == false) {
+	 // check for exception(s)
+	 int index = passwordStr.indexOf('&');
+	 if (index != -1) {
+	    String pass1 = passwordStr.substring(0,index-1);
+            String pass2 = passwordStr.substring(index+1, passwordStr.length());
+	    String pass = pass1 + pass2;
+	    passwordStr = pass;
+	    return true;
+	 } else {
+            // char not found
+	 }
+
 	 List<String> messages = validator.getMessages(result);
 	 for (String message : messages) {
 	   exceptionMessage.append(message + "; ");

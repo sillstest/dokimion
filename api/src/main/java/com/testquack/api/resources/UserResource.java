@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.UUID;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
@@ -109,6 +110,7 @@ System.out.flush();
       System.out.println("getEmail - login: " + login);
       System.out.flush();
 
+
        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
             getService().getMongoPassword(),
@@ -121,6 +123,7 @@ System.out.flush();
             Response resp = null;
             return resp;
        }
+
 
        MongoDBInterface mongoDBInterface = new MongoDBInterface();
        mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
@@ -136,25 +139,34 @@ System.out.flush();
        JSONObject jsonObj = new JSONObject();
        jsonObj.put("email", email);
 
-       String password = PasswordGeneration.generatePassword();
-       SendEmail.send(email, password);
+       String newPassword = PasswordGeneration.generatePassword();
+       SendEmail.send(email, newPassword);
 
        System.out.println("Sent email to: " + email);
        System.out.flush();
 
-       String encryptedPass = "";
-       try {
-	 encryptedPass = StringUtils.getMd5String(password + login);
-       } catch (NoSuchAlgorithmException e) {
-         throw new RuntimeException(e);
-       }
+       // create new session
+       Person person = mongoDBInterface.getPerson(login);
 
-       mongoDBInterface.updatePassword(login, encryptedPass);
+       System.out.println("getPerson() -  " + person);
+       System.out.flush();
+
+       Session session = (Session) new Session().withId(UUID.randomUUID().toString()).withTimeout(5000).withName(login).withPerson(person);
+       sessionProvider.addSession(session);
+
+       System.out.println("new session: " + session);
+       System.out.flush();
+
+       service.changePassword(session, login, person.getPassword(), newPassword);
+       System.out.println("Back from changePassword");
+       System.out.flush();
+
+       //mongoDBInterface.updatePassword(login, encryptedPass);
        /*MongoDBUpdatePasswordThread thread = new MongoDBUpdatePasswordThread(mongoDBInterface, login, encryptedPass);
        thread.run();
        */
 
-       System.out.println("forgotPassword: saved login, pass to mongo - " + login + ", " + encryptedPass);
+       System.out.println("forgotPassword: saved login - " + login);
        System.out.flush();
 
        return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
