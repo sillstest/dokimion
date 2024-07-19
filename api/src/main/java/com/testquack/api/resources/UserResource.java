@@ -107,9 +107,8 @@ System.out.flush();
     @Path("/forgot_password")
     public Response getEmail(@QueryParam("login") String login) {
 
-      System.out.println("getEmail - login: " + login);
-      System.out.flush();
-
+       System.out.println("getEmail - login: " + login);
+       System.out.flush();
 
        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
             getService().getMongoUsername(),
@@ -161,15 +160,12 @@ System.out.flush();
        System.out.println("Back from changePassword");
        System.out.flush();
 
-       //mongoDBInterface.updatePassword(login, encryptedPass);
-       /*MongoDBUpdatePasswordThread thread = new MongoDBUpdatePasswordThread(mongoDBInterface, login, encryptedPass);
-       thread.run();
-       */
-
        System.out.println("forgotPassword: saved login - " + login);
        System.out.flush();
 
        return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
+
+
     }
 
     @POST

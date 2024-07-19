@@ -15,7 +15,7 @@ if [ -z "$JAVAOUTMEM" ]
 then
   echo ""
 else
-  echo $JAVAOUTMEM | /usr/bin/mail -s "Java out of memory error" bob_beck@sil.org
+  echo $JAVAOUTMEM | /usr/bin/mail -s "Java out of memory error" dokimion@languagetechnology.org
 fi
 
 fi
@@ -31,7 +31,7 @@ if [ -z "$MONGOSOCK" ]
 then
   echo ""
 else
-  echo $MONGOSOCK | /usr/bin/mail -s "Mongo Socket Exception" bob_beck@sil.org
+  echo $MONGOSOCK | /usr/bin/mail -s "Mongo Socket Exception" dokimion@languagetechnology.org
 fi
 
 fi
