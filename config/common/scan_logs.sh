@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash 
 #
 SERVERNO=$1
 
@@ -20,7 +20,7 @@ fi
 
 fi
 
-MONGOSOCK=`grep -i mongosocket /var/log/dokimion/dokimion_server_$SERVERNO.log`
+MONGOSOCK=`grep -i mongosocket /var/log/syslog`
 MONGOSOCKDATE=`echo $MONGOSOCK | awk -F" " '{print $1 $2}'`
 
 if [[ "$MONGOSOCKDATE" == "$TODAYSDATE" ]]
