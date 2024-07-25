@@ -201,6 +201,13 @@ System.out.flush();
 System.out.println("UserService::setLocked - session: " + session);
 System.out.println("UserService::setLocked - lockedValue: " + lockedValue);
 System.out.flush();
+
+       if (session == null) {
+	  System.out.println("UserService::setLocked - session null");
+	  System.out.flush();
+          return false;
+       }
+
        String userLogin = session.getPerson().getLogin();
        String userPassword = session.getPerson().getPassword();
 System.out.println("UserService::setLocked - userLogin: " + userLogin);
