@@ -4,7 +4,7 @@ data seg size               (kbytes, -d) unlimited
 scheduling priority                 (-e) 0
 file size                   (blocks, -f) unlimited
 pending signals                     (-i) 23229
-max locked memory           (kbytes, -l) 757940
+max locked memory           (kbytes, -l) 1024000
 max memory size             (kbytes, -m) unlimited
 open files                          (-n) 74000
 pipe size                (512 bytes, -p) 8
