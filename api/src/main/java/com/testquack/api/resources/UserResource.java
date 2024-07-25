@@ -253,6 +253,13 @@ System.out.println("UserResource::login - login: " + login);
 System.out.println("UserResource::login - password: " + password);
 System.out.flush();
         Session session = authProvider.doAuth(request, response);
+
+	if (session == null) {
+	   System.out.println("UserResource::login - failed");
+	   System.out.flush();
+	   return null;
+	}
+
 System.out.println("UserResource::login - session: " + session);
 System.out.flush();
 
