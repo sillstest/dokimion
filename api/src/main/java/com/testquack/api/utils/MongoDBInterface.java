@@ -110,7 +110,7 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
 		 .applyToConnectionPoolSettings(builder -> 
 				 builder.minSize(10)
 				 .maxSize(100)
-				 .maxWaitTime(8, TimeUnit.MINUTES)
+				 .maxWaitTime(5, TimeUnit.SECONDS)
 		);
          return MongoClients.create(settingsBuilder.build());
 
