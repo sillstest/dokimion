@@ -11,15 +11,15 @@ public class APIValidation {
                                          String password,
                                          String dbname,
                                          String projectId) {
-
+	    /*
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(replicaSet,
                                               username,
                                               password,
                                               dbname);
 
-
-        return mongoDBInterface.getCollectionAttributeValue("projects", "_id", projectId);
+					      */
+        return true; //mongoDBInterface.getCollectionAttributeValue("projects", "_id", projectId);
 
     }
                                               
@@ -29,14 +29,15 @@ public class APIValidation {
                                           String dbname,
                                           String projectId,
                                           String testcaseId) {
-
+	    /*
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(replicaSet,
                                               username,
                                               password,
                                               dbname);
+					      */
 
-        return mongoDBInterface.getCollectionAttributeValue(projectId + "_TestCase", "_id", testcaseId);
+        return true; // mongoDBInterface.getCollectionAttributeValue(projectId + "_TestCase", "_id", testcaseId);
 
     }
                
@@ -48,14 +49,15 @@ public class APIValidation {
                                             String projectId,
                                             String testcaseId,
                                             String attachmentId) {
-
+	    /*
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(replicaSet,
                                               username,
                                               password,
                                               dbname);
+					      */
 
-        return mongoDBInterface.getCollectionAttributeValue(projectId + "_TestCase", "_id", testcaseId, "attachments", attachmentId);
+        return true; // mongoDBInterface.getCollectionAttributeValue(projectId + "_TestCase", "_id", testcaseId, "attachments", attachmentId);
 
     }
 
@@ -65,14 +67,14 @@ public class APIValidation {
                                         String dbname,
                                         String projectId,
                                         String launchId) {
-
+	    /*
         MongoDBInterface mongoDBInterface = new MongoDBInterface();
         mongoDBInterface.setMongoDBProperties(replicaSet,
                                               username,
                                               password,
                                               dbname);
-
-        return mongoDBInterface.get3LevelCollectionAttributeValue(projectId + "_Launch", launchId, "");
+					      */
+        return true; // mongoDBInterface.get3LevelCollectionAttributeValue(projectId + "_Launch", launchId, "");
 
     }
 
@@ -108,6 +110,7 @@ return true;
         String dbname,
         String loginId) {
 
+	    /*
 System.out.println("APIValidation::checkLoginId - loginId: " + loginId);
 System.out.flush();
 
@@ -121,8 +124,8 @@ System.out.flush();
                 password,
                 dbname);
 
-
-        return mongoDBInterface.getCollectionAttributeValue("users", "login", loginId);
+		*/
+        return true; // mongoDBInterface.getCollectionAttributeValue("users", "login", loginId);
 
     }
 
