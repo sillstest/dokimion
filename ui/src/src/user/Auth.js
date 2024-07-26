@@ -15,12 +15,14 @@ class Auth extends Component {
         var retpath = params.retpath || "";
         if(!response.strictUrl){
             var retpathParamName = response.retpathParamName || "retpath";
+		/*
             if (
               retpath.startsWith(window.location.origin + "/auth") ||
               retpath.startsWith(window.location.origin + "/login")
             ) {
               retpath = "/";
-            }
+            } */
+            retpath = "/";
 
             url = url + "?" + retpathParamName + "=" + encodeURIComponent(retpath);
         }
