@@ -214,29 +214,35 @@ System.out.println("UserService::setLocked - userLogin: " + userLogin);
 System.out.println("UserService::setLocked - userPassword: " + userPassword);
 System.out.flush();
 
-       if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
+       //if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
+       if (!session.isIsAdmin()) {
+		       
+          if (UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
 
 System.out.println("UserService::setLocked - NOT an admin");
 System.out.flush();
-          User user = findOne(session, null, userLogin);
-          user.setLocked(lockedValue);
-          user.setLogin(userLogin);
-	  if (!userPassword.equals("")) 
-             user.setPassword(userPassword);
+             User user = findOne(session, null, userLogin);
+             user.setLocked(lockedValue);
+             user.setLogin(userLogin);
+	     if (!userPassword.equals("")) 
+                user.setPassword(userPassword);
 
-          User updatedUser = save(session, null, user);
+             User updatedUser = save(session, null, user);
 System.out.println("setLocked - updatedUser: " + updatedUser);
 System.out.flush();
-          if (updatedUser == null) {
-             System.out.println("UserService::setLocked - updatedUser = null");
-             System.out.flush();
-             return false;
-          }
+             if (updatedUser == null) {
+                System.out.println("UserService::setLocked - updatedUser = null");
+                System.out.flush();
+                return false;
+             }
  System.out.println("setLocked - set lock end");
  System.out.flush();
-          return true;
+             return true;
 
-       }
+	  } else
+	    return true;
+
+       } 
 
        return false;
     }

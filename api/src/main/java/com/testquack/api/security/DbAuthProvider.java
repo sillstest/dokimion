@@ -63,9 +63,13 @@ public class DbAuthProvider extends BaseDbAuthProvider {
             sendRedirect(request, response);
             return sessionProvider.getSessionById(sid.getValue());
         } catch (UnauthorizedException e){
+System.out.println("DbAuthProvider::authImpl - throw UnauthorizedException 1");
+System.out.flush();
             throw e;
         } catch (Exception e){
             logger.error("Can't authenticate user", e);
+System.out.println("DbAuthProvider::authImpl - throw UnauthorizedException 2");
+System.out.flush();
             throw new UnauthorizedException(e);
         }
     }
@@ -102,7 +106,11 @@ System.out.println("dbAuthByLoginPassword - person not null");
 System.out.flush();
 
             return dbAuthAs(login, response, person);
-        } else throw new UnauthorizedException("Incorrect login or password");
+        } else {
+System.out.println("DbAuthProvider::dbAuthByLoginPassword - throw UnauthorizedException");
+System.out.flush();
+		throw new UnauthorizedException("Incorrect login or password");
+	}
     }
 
     private Session dbAuthAs(String login, HttpServletResponse response, Person person) {
@@ -171,6 +179,8 @@ System.out.flush();
         if (!isEmpty(login) && !isEmpty(password) && login.equals(adminLogin) && password.equals(decryptedAdminPassword)){
             return new Person().withLogin(adminLogin).withFirstName("admin");
         }
+System.out.println("DbAuthProvider::getAdminPerson - throw UnauthorizedException");
+System.out.flush();
         throw new UnauthorizedException();
     }
 
@@ -179,6 +189,8 @@ System.out.flush();
         if (!isEmpty(token) && token.equals(adminToken)){
             return new Person().withLogin(adminLogin).withFirstName("admin");
         }
+System.out.println("DbAuthProvider::findPersonByApiToken - throw UnauthorizedException");
+System.out.flush();
         throw new UnauthorizedException();
     }
 

@@ -36,11 +36,21 @@ System.out.flush();
         System.out.println("query - " + DBUtils.getQuery(getEntityClass(), filter));
         System.out.flush();
 
-        List<E> listEntity = mongoOperations.find(DBUtils.getQuery(getEntityClass(), filter),
-                getEntityClass(),
-                getCollectionName(organizationId, projectId));
+	try {
 
-        return listEntity;
+           List<E> listEntity = mongoOperations.find(DBUtils.getQuery(getEntityClass(), filter),
+                   getEntityClass(),
+                   getCollectionName(organizationId, projectId));
+
+	   return listEntity;
+
+	} catch (Exception e) {
+	   e.printStackTrace();
+	}
+System.out.println("End of CommonRepoImpol find");
+System.out.flush();
+
+        return null;
 
 /*
         return mongoOperations.find(DBUtils.getQuery(getEntityClass(), filter),
@@ -110,8 +120,13 @@ System.out.flush();
 
 System.out.println("CommonRepositoryImpl::findOne - getCollectionName: " + getCollectionName(organizationId, projectId));
 System.out.println("CommonRepositoryImpl::findOne - getEntityClass: " + getEntityClass());
+System.out.println("CommonRepositoryImpl::findOne - id: " + id);
 System.out.flush();
-        return mongoOperations.findOne(new Query(Criteria.where("id").is(id)), getEntityClass(), getCollectionName(organizationId, projectId));
+        E e = mongoOperations.findOne(new Query(Criteria.where("id").is(id)), getEntityClass(), getCollectionName(organizationId, projectId));
+System.out.println("CommonRepositoryImpl::findOne - after findOne, entity: " + e);
+System.out.flush();
+        return e;
+        //return mongoOperations.findOne(new Query(Criteria.where("id").is(id)), getEntityClass(), getCollectionName(organizationId, projectId));
     }
 
     @Override
