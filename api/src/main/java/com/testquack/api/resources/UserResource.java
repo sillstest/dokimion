@@ -387,8 +387,13 @@ System.out.flush();
     public Response logout() {
 
 	Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
+
+        if (sid == null) {
 System.out.println("UserResource::logout - sid: " + sid);
 System.out.flush();
+	   return null;
+	}
+
         Session session = sessionProvider.getSessionById(sid.getValue());
 
 System.out.println("UserResource::logout - session: " + session);
