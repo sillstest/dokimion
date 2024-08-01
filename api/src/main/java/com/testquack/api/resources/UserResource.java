@@ -183,7 +183,7 @@ System.out.flush();
             getService().getMongoUsername(),
             getService().getMongoPassword(),
             getService().getMongoDBName(),
-            user.getLogin()) == true) {
+            user.getLogin()) == false) {
 
             System.out.println("UserResource::createUser: checkLoginId returned FALSE - did NOT find login");
             System.out.flush();
