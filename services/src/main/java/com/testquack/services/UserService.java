@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.testquack.beans.Filter;
 import com.testquack.dal.OrganizationRepository;
+import com.hazelcast.cp.lock.FencedLock;
 import com.testquack.services.errors.EntityAccessDeniedException;
 import com.testquack.services.errors.EntityValidationException;
 import com.testquack.services.errors.EntityNotFoundException;
@@ -21,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -137,6 +139,45 @@ System.out.flush();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private User save(User entity) {
+
+System.out.println("UserService::save start - entity: " + entity);
+System.out.flush();
+
+        FencedLock lock = hazelcastInstance.getCPSubsystem().getLock(entity.getClass() + entity.getId());
+        try{
+            lock.tryLock(lockTtl, TimeUnit.MINUTES);
+            entity = getRepository().save("", "", entity);
+	} finally {
+	    lock.unlock();
+	}
+
+System.out.println("BaseService:: after save - entity: " + entity);
+System.out.flush();
+
+        return entity;
+    }
+
+
+    public void changePassword(String login, String oldPassword, String newPassword) {
+System.out.println("changePassword - login: " + login);
+System.out.flush();
+       User user = findOne("", new Filter().withField("login", login));
+       StringBuilder exceptionMessage = new StringBuilder("");
+       if (PasswordValidation.validatePassword(newPassword, exceptionMessage)) {
+          user.setPassword(encryptPassword(newPassword, user.getLogin()));
+          user.setPasswordChangeRequired(false);
+
+          User newUser = save(user);
+
+System.out.println("changePassword - after setPassword, newUser: " + newUser);
+System.out.println("changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, newUser.getLogin()));
+System.out.flush();
+       } else {
+          throw new EntityValidationException(format("User %s password %s validation error - %s", login, newPassword, exceptionMessage.toString()));
+       }
     }
 
     public void changePassword(Session session, String login, String oldPassword, String newPassword) {
