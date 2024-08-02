@@ -150,17 +150,9 @@ System.out.flush();
        System.out.println("getPerson() -  " + person);
        System.out.flush();
 
-       Session session = (Session) new Session().withId(UUID.randomUUID().toString()).withTimeout(5000).withName(login).withPerson(person);
-       sessionProvider.addSession(session);
+       service.changePassword(login, person.getPassword(), newPassword);
 
-       System.out.println("new session: " + session);
-       System.out.flush();
-
-       service.changePassword(session, login, person.getPassword(), newPassword);
-       System.out.println("Back from changePassword");
-       System.out.flush();
-
-       System.out.println("forgotPassword: saved login - " + login);
+       System.out.println("after service.changePassword call");
        System.out.flush();
 
        return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
