@@ -76,8 +76,8 @@ System.out.flush();
 
         settingsBuilder.applyToConnectionPoolSettings(builder ->
                        builder.minSize(10)
-                       .maxSize(100)
-                       .maxWaitTime(5, TimeUnit.SECONDS));
+                       .maxSize(10)
+                       .maxWaitTime(30, TimeUnit.SECONDS));
 
         return MongoClients.create(settingsBuilder.build());
     }
