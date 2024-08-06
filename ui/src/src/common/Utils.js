@@ -10,12 +10,10 @@ export function intDiv(val, by) {
 
 export function parseTree(obj, uncheckedList, tcSizes, configAttributePairs) {
   sortTestcaseTree(obj);
-  return getTreeNode(obj, [], uncheckedList, tcSizes, configAttributePairs).
-         children || [];
+  return getTreeNode(obj, [], uncheckedList, tcSizes, configAttributePairs).children || [];
 }
 
-export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, 
-                            configAttributePairs) {
+export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, configAttributePairs) {
 
   // double testCaseTree if 2 attributes
   var launchSuffixZero = "";
@@ -55,10 +53,10 @@ export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes,
 
   uncheckedList = uncheckedList || [];
   var resultNode = {
-    text: "<b>" + nodeObj.testCaseTree.title + "</b>",
+    text: "<b>" + nodeObj.title + "</b>",
     isLeaf: false,
-    id: nodeObj.testCaseTree.id,
-    uuid: nodeObj.testCaseTree.uuid
+    id: nodeObj.id,
+    uuid: nodeObj.uuid
   };
   resultNode.TOTAL = 0;
   resultNode.PASSED = 0;
@@ -67,7 +65,8 @@ export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes,
   resultNode.RUNNING = 0;
   resultNode.RUNNABLE = 0;
   parentsToUpdate.push(resultNode);
-  if (nodeObj.testCaseTree.testCases && nodeObj.testCaseTree.testCases.length > 0) {
+
+  if (nodeObj.testCaseTree !== undefined && nodeObj.testCaseTree.testCases !== undefined && nodeObj.testCaseTree.testCases.length > 0) {
     resultNode.children = [];
     let i = 0;
     nodeObj.testCaseTree.testCases.forEach(function (testCase) {
@@ -96,11 +95,18 @@ export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes,
       });
     });
   }
-  if (nodeObj.testCaseTree.children && nodeObj.testCaseTree.children.length > 0) {
+
+  // recursive call to getTreeNode()
+  if (nodeObj.children && nodeObj.children.length > 0) {
+    resultNode.children = nodeObj.children.map(function (child) {
+      return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList, tcSizes);
+    });
+  } else if (nodeObj.testCaseTree && nodeObj.testCaseTree.children && nodeObj.testCaseTree.children.length > 0) {
     resultNode.children = nodeObj.testCaseTree.children.map(function (child) {
       return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList, tcSizes);
     });
   }
+
   return resultNode;
 }
 
