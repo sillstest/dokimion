@@ -154,12 +154,11 @@ class Launch extends SubComponent {
       this.tree.destroy();
     }
 
-    var obj = {testCaseTree: this.state.launch.testCaseTree};
     this.tree = $("#tree").tree({
       primaryKey: "uuid",
       uiLibrary: "bootstrap4",
       imageHtmlField: "statusHtml",
-      dataSource: Utils.parseTree(obj, [], this.state.tcSizes,
+      dataSource: Utils.parseTree(this.state.launch.testCaseTree, [], this.state.tcSizes,
                                   this.state.configAttributePairs),
     });
 

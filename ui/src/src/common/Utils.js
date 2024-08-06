@@ -8,12 +8,14 @@ export function intDiv(val, by) {
   return (val - (val % by)) / by;
 }
 
-export function parseTree(obj, uncheckedList, tcSizes, configAttributePairs) {
-  sortTestcaseTree(obj);
-  return getTreeNode(obj, [], uncheckedList, tcSizes, configAttributePairs).children || [];
+export function parseTree(testcasesTree, uncheckedList, tcSizes, configAttributePairs) {
+  sortTestcaseTree(testcasesTree);
+  return getTreeNode(testcasesTree, [], uncheckedList, tcSizes, configAttributePairs).
+         children || [];
 }
 
-export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, configAttributePairs) {
+export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, 
+                            configAttributePairs) {
 
   // double testCaseTree if 2 attributes
   var launchSuffixZero = "";
@@ -22,19 +24,19 @@ export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, co
      if (configAttributePairs.length === 2) {
         // deep clone and concatenate - need to use specific fields
         let clonedTestCases = [];
-        if (nodeObj.testCaseTree.testCases && nodeObj.testCaseTree.testCases.length > 0) {
+        if (nodeObj.testCases && nodeObj.testCases.length > 0) {
            let i = 0;
-           nodeObj.testCaseTree.testCases.forEach(function (testCase) {
+           nodeObj.testCases.forEach(function (testCase) {
               clonedTestCases[i] = JSON.parse(JSON.stringify(testCase));
               clonedTestCases[i++].uuid = JSON.parse(JSON.stringify(testCase.uuid * 2));
            });
         }
         let j = 0;
-        let origLength = nodeObj.testCaseTree.testCases.length;
-        nodeObj.testCaseTree.testCases.length *= 2;
-        nodeObj.testCaseTree.count *= 2;
+        let origLength = nodeObj.testCases.length;
+        nodeObj.testCases.length *= 2;
+        nodeObj.count *= 2;
         clonedTestCases.forEach(function (clonedTestCase) {
-           nodeObj.testCaseTree.testCases[origLength + j++] = clonedTestCase;
+           nodeObj.testCases[origLength + j++] = clonedTestCase;
         });
      }
 
@@ -65,14 +67,13 @@ export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, co
   resultNode.RUNNING = 0;
   resultNode.RUNNABLE = 0;
   parentsToUpdate.push(resultNode);
-
-  if (nodeObj.testCaseTree !== undefined && nodeObj.testCaseTree.testCases !== undefined && nodeObj.testCaseTree.testCases.length > 0) {
+  if (nodeObj.testCases && nodeObj.testCases.length > 0) {
     resultNode.children = [];
     let i = 0;
-    nodeObj.testCaseTree.testCases.forEach(function (testCase) {
+    nodeObj.testCases.forEach(function (testCase) {
 
       var launchSuffix = launchSuffixZero;
-      if (i > (nodeObj.testCaseTree.testCases.length/2 - 1)) {
+      if (i > (nodeObj.testCases.length/2 - 1)) {
          launchSuffix = launchSuffixOne;
       }
       i += 1;
@@ -95,18 +96,11 @@ export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, co
       });
     });
   }
-
-  // recursive call to getTreeNode()
   if (nodeObj.children && nodeObj.children.length > 0) {
     resultNode.children = nodeObj.children.map(function (child) {
       return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList, tcSizes);
     });
-  } else if (nodeObj.testCaseTree && nodeObj.testCaseTree.children && nodeObj.testCaseTree.children.length > 0) {
-    resultNode.children = nodeObj.testCaseTree.children.map(function (child) {
-      return getTreeNode(child, parentsToUpdate.slice(0), uncheckedList, tcSizes);
-    });
   }
-
   return resultNode;
 }
 
@@ -492,13 +486,13 @@ export function getSizeOfTestcase(tcSizes, steps) {
 function sortTestcaseTree(objTestcasesTree){
 
    //Add generic logic to sort the testcasesTree on Id Issue 28
-   if (objTestcasesTree.testCaseTree.testCases && objTestcasesTree.testCaseTree.testCases.length>0){
+   if (objTestcasesTree.testCases && objTestcasesTree.testCases.length>0){
 
-    objTestcasesTree.testCaseTree.testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+    objTestcasesTree.testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
 
-  } else if (objTestcasesTree.testCaseTree.children && objTestcasesTree.testCaseTree.children.length >0){
+  } else if (objTestcasesTree.children && objTestcasesTree.children.length >0){
 
-    objTestcasesTree.testCaseTree.children[0].testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+    objTestcasesTree.children[0].testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
   }
 
 }
