@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.time.Instant;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
@@ -361,7 +362,7 @@ System.out.flush();
         if (!isEmpty(entity.getId()) && getRepository().exists(getCurrOrganizationId(session), projectId, entity.getId())){
             throw new EntityValidationException(format("Entity with id [%s] already exists", entity.getId()));
         }
-        entity.setCreatedTime(System.currentTimeMillis());
+        entity.setCreatedTime(Instant.now().toEpochMilli());
         entity.setCreatedBy(session.getPerson().getLogin());
         if (entity.getName() == "") {
             entity.setName(entity.getClass().getSimpleName());
@@ -378,7 +379,7 @@ System.out.flush();
     }
 
     protected void beforeSave(Session session, String projectId, E entity) {
-        entity.setLastModifiedTime(System.currentTimeMillis());
+        entity.setLastModifiedTime(Instant.now().toEpochMilli());
         entity.setLastModifiedBy(session.getLogin());
     }
 

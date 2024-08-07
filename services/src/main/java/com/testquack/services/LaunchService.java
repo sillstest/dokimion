@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.time.Instant;
 
 import static com.testquack.dal.impl.CommonRepositoryImpl.getCollectionName;
 import static java.lang.String.format;
@@ -107,7 +108,7 @@ public class LaunchService extends BaseService<Launch> {
                 System.out.println("Insert New Event : " + status);
                 eventService.create(session, projectId,
                         new Event().withEventType(status.toString()).
-                                withTime(System.currentTimeMillis()).
+                                withTime(Instant.now().toEpochMilli()).
                                 withUser(session.getLogin()).
                                 withEntityId(launchTestCase.getId()).
                                 withEntityType(TestCase.class.getSimpleName()).
@@ -199,7 +200,7 @@ public class LaunchService extends BaseService<Launch> {
         launch.setLaunchStats(new LaunchStats());
         updateLaunchStatus(launch.getLaunchStats(), launch.getTestCaseTree());
         if (isLaunchFinished(launch) && launch.getFinishTime() == 0){
-            launch.setFinishTime(System.currentTimeMillis());
+            launch.setFinishTime(Instant.now().toEpochMilli());
             //update the total duration here 
            long totalLaunchDuration =0;
             if(launch.getTestCaseTree().getTestCases().size() >0){
@@ -222,7 +223,7 @@ public class LaunchService extends BaseService<Launch> {
         if (!isLaunchFinished(launch) &&
                 launch.getLaunchStats().getStatusCounters().getOrDefault(RUNNABLE, 0) != launch.getLaunchStats().getTotal() &&
                 launch.getStartTime() == 0){
-            launch.setStartTime(System.currentTimeMillis());
+            launch.setStartTime(Instant.now().toEpochMilli());
         }
     }
 
@@ -317,9 +318,9 @@ public class LaunchService extends BaseService<Launch> {
         if (status.equals(RUNNING)){
             launchTestCase.setCurrentUser(userId);
             //Added to calculate exec time
-            launchTestCase.setStartTime(System.currentTimeMillis());
+            launchTestCase.setStartTime(Instant.now().toEpochMilli());
         }else{
-            launchTestCase.setFinishTime(System.currentTimeMillis());
+            launchTestCase.setFinishTime(Instant.now().toEpochMilli());
         }
         launchTestCase.setLaunchStatus(status);
         if (!launchTestCase.getUsers().contains(userId)){
@@ -432,7 +433,7 @@ public class LaunchService extends BaseService<Launch> {
     }
 
     private void cleanUpLaunchForRestart(Launch launch, boolean failedOnly) {
-        launch.withId(null).withCreatedBy(null).withCreatedTime(0).withFinishTime(0).withLastModifiedBy(null).withLastModifiedTime(0).withStatus(RUNNABLE);
+        launch.withId(null).withCreatedBy(null).withCreatedTime(Instant.now().toEpochMilli()).withFinishTime(0).withLastModifiedBy(null).withLastModifiedTime(0).withStatus(RUNNABLE);
         launch.setLaunchStats(null);
         cleanUpLaunchesTestCases(launch.getTestCaseTree(), failedOnly);
     }

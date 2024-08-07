@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
+import java.time.Instant;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
@@ -116,7 +117,7 @@ System.out.flush();
     private Session dbAuthAs(String login, HttpServletResponse response, Person person) {
 System.out.println("dbAuthAs - entry");
 System.out.flush();
-        if (person.getPasswordExpirationTime() > 0 && System.currentTimeMillis() > person.getPasswordExpirationTime()){
+        if (person.getPasswordExpirationTime() > 0 && Instant.now().toEpochMilli() > person.getPasswordExpirationTime()){
             throw new UnauthorizedException(format("Temporary password has expired for user %s. Please contact administrator to set a new one.", person.getLogin()));
         }
         Session session = (Session) new Session().withId(UUID.randomUUID().toString()).withTimeout(sessionTtl).withName(login).withPerson(person);
