@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.testquack.beans.Filter;
 import com.testquack.dal.OrganizationRepository;
+import com.hazelcast.cp.lock.FencedLock;
 import com.testquack.services.errors.EntityAccessDeniedException;
 import com.testquack.services.errors.EntityValidationException;
 import com.testquack.services.errors.EntityNotFoundException;
@@ -14,12 +15,14 @@ import com.testquack.dal.CommonRepository;
 import com.testquack.dal.UserRepository;
 import ru.greatbit.utils.string.StringUtils;
 import ru.greatbit.whoru.auth.Session;
+import ru.greatbit.whoru.auth.Person;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -117,6 +120,15 @@ System.out.flush();
     }
 
     @Override
+    protected void afterSave(Session session, String projectId, User user) {
+       // copy entity's password to session
+       String entityPassword = user.getPassword();
+       Person person = session.getPerson();
+       person.setPassword(entityPassword);
+       session.setPerson(person);
+    }
+
+    @Override
     protected boolean validateEntity(User ent) {
         return !isEmpty(ent.getLogin());
     }
@@ -129,6 +141,45 @@ System.out.flush();
         }
     }
 
+    private User save(User entity) {
+
+System.out.println("UserService::save start - entity: " + entity);
+System.out.flush();
+
+        FencedLock lock = hazelcastInstance.getCPSubsystem().getLock(entity.getClass() + entity.getId());
+        try{
+            lock.tryLock(lockTtl, TimeUnit.MINUTES);
+            entity = getRepository().save("", "", entity);
+	} finally {
+	    lock.unlock();
+	}
+
+System.out.println("BaseService:: after save - entity: " + entity);
+System.out.flush();
+
+        return entity;
+    }
+
+
+    public void changePassword(String login, String oldPassword, String newPassword) {
+System.out.println("changePassword - login: " + login);
+System.out.flush();
+       User user = findOne("", new Filter().withField("login", login));
+       StringBuilder exceptionMessage = new StringBuilder("");
+       if (PasswordValidation.validatePassword(newPassword, exceptionMessage)) {
+          user.setPassword(encryptPassword(newPassword, user.getLogin()));
+          user.setPasswordChangeRequired(false);
+
+          User newUser = save(user);
+
+System.out.println("changePassword - after setPassword, newUser: " + newUser);
+System.out.println("changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, newUser.getLogin()));
+System.out.flush();
+       } else {
+          throw new EntityValidationException(format("User %s password %s validation error - %s", login, newPassword, exceptionMessage.toString()));
+       }
+    }
+
     public void changePassword(Session session, String login, String oldPassword, String newPassword) {
 System.out.println("changePassword - session: " + session);
 System.out.flush();
@@ -139,6 +190,9 @@ System.out.flush();
                user.setPassword(encryptPassword(newPassword, user.getLogin()));
                user.setPasswordChangeRequired(false);
                save(session, null, user);
+System.out.println("changePassword - after setPassword, session: " + session);
+System.out.println("changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, user.getLogin()));
+System.out.flush();
             } else {
                throw new EntityValidationException(format("User %s password %s validation error - %s", login, newPassword, exceptionMessage.toString()));
 	    }
@@ -188,35 +242,48 @@ System.out.flush();
 System.out.println("UserService::setLocked - session: " + session);
 System.out.println("UserService::setLocked - lockedValue: " + lockedValue);
 System.out.flush();
+
+       if (session == null) {
+	  System.out.println("UserService::setLocked - session null");
+	  System.out.flush();
+          return false;
+       }
+
        String userLogin = session.getPerson().getLogin();
        String userPassword = session.getPerson().getPassword();
 System.out.println("UserService::setLocked - userLogin: " + userLogin);
 System.out.println("UserService::setLocked - userPassword: " + userPassword);
 System.out.flush();
 
-       if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
+       //if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
+       if (!session.isIsAdmin()) {
+		       
+          if (UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
 
 System.out.println("UserService::setLocked - NOT an admin");
 System.out.flush();
-          User user = findOne(session, null, userLogin);
-          user.setLocked(lockedValue);
-          user.setLogin(userLogin);
-	  if (!userPassword.equals("")) 
-             user.setPassword(userPassword);
+             User user = findOne(session, null, userLogin);
+             user.setLocked(lockedValue);
+             user.setLogin(userLogin);
+	     if (!userPassword.equals("")) 
+                user.setPassword(userPassword);
 
-          User updatedUser = save(session, null, user);
+             User updatedUser = save(session, null, user);
 System.out.println("setLocked - updatedUser: " + updatedUser);
 System.out.flush();
-          if (updatedUser == null) {
-             System.out.println("UserService::setLocked - updatedUser = null");
-             System.out.flush();
-             return false;
-          }
+             if (updatedUser == null) {
+                System.out.println("UserService::setLocked - updatedUser = null");
+                System.out.flush();
+                return false;
+             }
  System.out.println("setLocked - set lock end");
  System.out.flush();
-          return true;
+             return true;
 
-       }
+	  } else
+	    return true;
+
+       } 
 
        return false;
     }

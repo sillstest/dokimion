@@ -18,14 +18,32 @@ cp ~1/tools/aes.java .
 cp ~1/tools/RoleCapability.java .
 cp ~1/tools/AdminPassword.java .
 cp ~1/tools/TestcaseSizes.java .
-cp ~1/tools/Users.java .
+cp ~1/tools/User.java .
+cp ~1/tools/ConfigurationAttributes.java .
 cp ~1/tools/DefaultProjectAttributes.java .
 cp ~1/tools/mongodb_RoleCapability_init.js .
+cp ~1/tools/mongodb_User_init.js .
 cp ~1/tools/mongodb_TestcaseSizes_init.js .
+cp ~1/tools/mongodb_User_init.js .
 cp ~1/tools/mongodb_DefaultProjectAttributes_init.js .
+cp ~1/tools/mongodb_ConfigurationAttributes_init.js .
 tar xvzf ui.tgz
-cp ~1/config/common/startup_dokimion_server.sh ../bin/.
+if [ $1 == "1" ]
+then
+  cp ~1/config/production/dokimion1/startup_dokimion_server.sh ../bin/.
+fi
+if [ $1 == "2" ]
+then
+  cp ~1/config/production/dokimion2/startup_dokimion_server.sh ../bin/.
+fi
+if [ $1 == "3" ]
+then
+  cp ~1/config/production/dokimion3/startup_dokimion_server.sh ../bin/.
+fi
 cp ~1/config/common/startup_dokimion_ui.sh ../bin/.
+cp ~1/config/common/run_jstatd.sh ../bin/.
+chown dokimion:dokimion .
+chown dokimion:dokimion -R *
 chmod -R a+w *
 chmod -R a+w .
 cd src

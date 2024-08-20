@@ -1,27 +1,29 @@
 [Unit]
 Description=Dokimion UI #3
 Documentation=
-After=network-online.target
-Wants=network-online.target
+After=network.target
+Wants=network.target
 
 [Service]
 User=dokimion
 Group=dokimion
-Environment="UI_NO=3"
-ExecStart=/home/dokimion/bin/startup_dokimion_ui.sh $UI_NO
+#Environment="UI_NO=3"
+Environment="PATH=/usr/bin:$PATH"
+Environment="NODE_OPTIONS=--openssl-legacy-provider"
+WorkingDirectory=/home/dokimion/dokimion/src
+ExecStart=/home/dokimion/bin/startup_dokimion_ui.sh 3
+#ExecStart=npm start 
 PIDFile=/run/dokimion/dokimion_ui_3.pid
 # file size
 LimitFSIZE=infinity
 # cpu time
 LimitCPU=infinity
 # virtual memory size
-LimitAS=infinity
 # open files
 LimitNOFILE=64000
 # processes/threads
 LimitNPROC=64000
 # locked memory
-LimitMEMLOCK=infinity
 # total threads (user+kernel)
 TasksMax=infinity
 TasksAccounting=false

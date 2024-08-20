@@ -1,3 +1,5 @@
+su mongod mongod
+
 /var/log/mongodb/*.log {
         daily
         missingok
@@ -8,8 +10,8 @@
         create 640 mongod mongod
         sharedscripts
         postrotate
-                if [ -f /run/mongod/mongod2.pid ]; then
-                        kill -USR1 `cat /run/mongod/mongod2.pid`
+                if [ -f /run/mongod/mongod1.pid ]; then
+                        kill -USR1 `cat /run/mongod/mongod1.pid`
                 fi
         endscript
 }

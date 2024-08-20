@@ -5,8 +5,9 @@
    rotate 14
    compress
    notifempty
-   create 0640 www-data www-data
+   create 0640 mongod mongod
    sharedscripts
    postrotate
-      systemctl reload mongod4.service
+      systemctl restart mongod4.service
    endscript
+}

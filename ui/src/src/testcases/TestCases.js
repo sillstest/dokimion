@@ -287,6 +287,7 @@ class TestCases extends SubComponent {
     if (this.tree) {
       this.tree.destroy();
     }
+
     this.tree = $("#tree").tree({
       primaryKey: "id",
       uiLibrary: "bootstrap4",

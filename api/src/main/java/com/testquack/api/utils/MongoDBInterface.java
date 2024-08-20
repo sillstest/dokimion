@@ -10,11 +10,16 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import static com.mongodb.internal.connection.ServerAddressHelper.createServerAddress;
+import ru.greatbit.whoru.auth.Person;
+
+import org.bson.Document;
 
 import org.json.JSONObject;
 import org.json.JSONException;
@@ -56,7 +61,6 @@ public class MongoDBInterface  {
       mongoDBname = dbname;
 System.out.println("setMongoDBProperties - replicaSet: " + replicaSet);
 System.out.println("setMongoDBProperties - username: " + username);
-System.out.println("setMongoDBProperties - password: " + password);
 System.out.println("setMongoDBProperties - dbname: " + dbname);
 
    }
@@ -95,9 +99,6 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
          final String secretKey = "al;jf;lda1_+_!!()!!!!";
          String decryptedPasswd = aes.decrypt(mongoPassword, secretKey) ;
 
-         System.out.println("MongoDBInterface - decryptedPasswd: " + decryptedPasswd);
-         System.out.flush();
-
          MongoCredential credential = MongoCredential.createCredential(mongoUsername, "admin",
                                    decryptedPasswd.toCharArray());
 
@@ -108,12 +109,73 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
                  .credential(credential)
 		 .applyToConnectionPoolSettings(builder -> 
 				 builder.minSize(10)
-				 .maxSize(100)
-				 .maxWaitTime(8, TimeUnit.MINUTES)
+				 .maxSize(10)
+				 .maxWaitTime(30, TimeUnit.SECONDS)
 		);
          return MongoClients.create(settingsBuilder.build());
 
       }
+
+
+   }
+
+   public Person getPerson(String loginToFind) {
+
+      MongoClient mongoClient = getMongoClient();
+      MongoDatabase db = mongoClient.getDatabase(mongoDBname);
+
+      MongoCollection<Document> collection = db.getCollection("users");
+
+      JSONParser parser = new JSONParser();
+
+      if (collection == null) {
+         System.out.println("getUserCollectionAttribute - collection = null");
+         System.out.flush();
+      }
+
+      for (Document doc : collection.find())
+      {
+         String jsonStr = doc.toJson();
+
+         Object obj = null;
+         try {
+            obj = parser.parse(jsonStr);
+         } catch (ParseException e) {
+            System.out.println("ParseException - jsonStr: " + jsonStr);
+         }
+
+         org.json.simple.JSONObject jsonObj = (org.json.simple.JSONObject)obj;
+
+	 String login = (String)jsonObj.get("login");
+         String email = (String)jsonObj.get("email");
+         String role = (String)jsonObj.get("role");
+         String password = (String)jsonObj.get("password");
+         String firstName = (String)jsonObj.get("firstName");
+         String lastName = (String)jsonObj.get("lastName");
+
+	 if (login.equals(loginToFind)) {
+
+		        /*
+       Person person = new Person().withFirstName(user.getFirstName()).
+                withLastName(user.getLastName()).
+                withLogin(user.getLogin()).
+                withActive(true).
+                withDefaultPassword(user.isPasswordChangeRequired()).
+                withPassword(user.getPassword()).
+                withRoles(user.getRole());
+                */
+            Person person = new Person();
+	    person.setLogin(login);
+	    person.setFirstName(firstName);
+	    person.setLastName(lastName);
+	    person.setPassword(password);
+
+	    return person;
+	 }
+
+      }
+
+      return null;
 
 
    }
@@ -131,6 +193,14 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
 
       return getUserCollectionAttribute(loginToFind, "role");
    }
+
+   public String getPassword(String loginToFind)
+   {
+      System.out.println("MongoDBInterface getPassword");
+
+      return getUserCollectionAttribute(loginToFind, "password");
+   }
+
 
    public boolean get3LevelCollectionAttributeValue(String collectionName, String attributeName1ToSearch, String attributeName2ToSearch)
    {
@@ -368,6 +438,11 @@ System.out.flush();
 
       JSONParser parser = new JSONParser();
 
+      if (collection == null) {
+	 System.out.println("getUserCollectionAttribute - collection = null");
+	 System.out.flush();
+      }
+
       for (Document doc : collection.find())
       {
 	 String jsonStr = doc.toJson();
@@ -384,6 +459,7 @@ System.out.flush();
 	 String login = (String)jsonObj.get("login");
 	 String email = (String)jsonObj.get("email");
 	 String role = (String)jsonObj.get("role");
+	 String password = (String)jsonObj.get("password");
 
 	 System.out.println("login: " + login);
 	 System.out.println("email: " + email);
@@ -396,8 +472,10 @@ System.out.flush();
             if (userAttribute == "email")
             {
 	       return email;
-            } else {
+            } else if (userAttribute == "role") {
                return role;
+	    } else { // password
+	       return password;
             }
 	 }
 
@@ -415,11 +493,19 @@ System.out.flush();
       try {
 
          System.out.println("MongoDBInterface updatePassword");
+	 System.out.flush();
 
 	 MongoClient mongoClient = getMongoClient();
 	 MongoDatabase db = mongoClient.getDatabase(mongoDBname);
 
+         System.out.println("MongoDBInterface updatePassword - BEFORE call to updateOne");
+	 System.out.flush();
+
 	 updateOne(loginToFind, password, db);
+
+         System.out.println("MongoDBInterface updatePassword - AFTER call to updateOne");
+	 System.out.flush();
+
 
          mongoClient.close();
 
@@ -450,13 +536,11 @@ System.out.flush();
 	 System.out.println("after new doc updates");
 	 System.out.flush();
 
-	 UpdateResult result = collection.updateMany(query, updates);
+	 UpdateResult result = collection.updateOne(query, updates);
 	 System.out.println("after updateMany - modified count: " + result.getModifiedCount());
-
-
 	 System.out.flush();
 
-
+	System.out.flush();
    }
 
 

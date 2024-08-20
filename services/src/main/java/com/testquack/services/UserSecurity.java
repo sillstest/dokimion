@@ -159,8 +159,11 @@ System.out.flush();
 
 System.out.println("UserSecurity::isAdmin - role: " + userRole);
 System.out.flush();
-     if (userRole.equals("ADMIN") == true)
+     if (userRole == Role.ADMIN) {
+System.out.println("UserSecurity::isAdmin - returning true");
+System.out.flush();
         return true;
+     }
 
      return false;
 

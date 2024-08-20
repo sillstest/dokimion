@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.internal.connection.ServerAddressHelper.createServerAddress;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -69,12 +70,14 @@ System.out.flush();
            final String secretKey = "al;jf;lda1_+_!!()!!!!";
            String decryptedPasswd = aes.decrypt(password, secretKey) ;
 
-System.out.println("MongoDBInterface - decryptedPasswd: " + decryptedPasswd);
-System.out.flush();
-
-            settingsBuilder.credential(MongoCredential.createCredential(username, "admin", 
+           settingsBuilder.credential(MongoCredential.createCredential(username, "admin", 
                decryptedPasswd.toCharArray()));
         }
+
+        settingsBuilder.applyToConnectionPoolSettings(builder ->
+                       builder.minSize(10)
+                       .maxSize(10)
+                       .maxWaitTime(30, TimeUnit.SECONDS));
 
         return MongoClients.create(settingsBuilder.build());
     }

@@ -14,6 +14,7 @@ import ru.greatbit.whoru.auth.Person;
 import ru.greatbit.whoru.auth.RedirectResponse;
 import ru.greatbit.whoru.auth.error.UnauthorizedException;
 import ru.greatbit.whoru.auth.providers.BaseDbAuthProvider;
+import ru.greatbit.utils.string.StringUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
+import java.time.Instant;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
@@ -62,9 +64,13 @@ public class DbAuthProvider extends BaseDbAuthProvider {
             sendRedirect(request, response);
             return sessionProvider.getSessionById(sid.getValue());
         } catch (UnauthorizedException e){
+System.out.println("DbAuthProvider::authImpl - throw UnauthorizedException 1");
+System.out.flush();
             throw e;
         } catch (Exception e){
             logger.error("Can't authenticate user", e);
+System.out.println("DbAuthProvider::authImpl - throw UnauthorizedException 2");
+System.out.flush();
             throw new UnauthorizedException(e);
         }
     }
@@ -82,9 +88,6 @@ System.out.flush();
         final String secretKey = "al;jf;lda1_+_!!()!!!!";
         String decryptedAdminPassword = aes.decrypt(this.adminPassword, secretKey) ;
 
-System.out.println("dbAuthByLoginPassword - decrypted Admin password: " + decryptedAdminPassword);
-System.out.flush();
-
         if (login.equalsIgnoreCase(this.adminLogin) && getMd5(password, login).equals(getMd5(decryptedAdminPassword, this.adminLogin))) {
             person = getAdminPerson(login, password);
         } else {
@@ -93,19 +96,28 @@ System.out.flush();
 
 System.out.println("dbAuthByLoginPassword - person.login: " + person.getLogin());
 System.out.println("dbAuthByLoginPassword - person.isActive: " + person.isActive());
-System.out.println("dbAuthByLoginPassword - getMD5: " + getMd5(password, login));
+System.out.println("dbAuthByLoginPassword - getMD5: " + StringUtils.getMd5String(password + login));
 System.out.flush();
         if (person!= null
                 && login.equals(person.getLogin())
                 && person.isActive()
-                && getMd5(password, login).equals(person.getPassword())){
+		&& StringUtils.getMd5String(password + login).equals(person.getPassword())) {
+                //&& getMd5(password, login).equals(person.getPassword())){
+System.out.println("dbAuthByLoginPassword - person not null");
+System.out.flush();
 
             return dbAuthAs(login, response, person);
-        } else throw new UnauthorizedException("Incorrect login or password");
+        } else {
+System.out.println("DbAuthProvider::dbAuthByLoginPassword - throw UnauthorizedException");
+System.out.flush();
+		throw new UnauthorizedException("Incorrect login or password");
+	}
     }
 
     private Session dbAuthAs(String login, HttpServletResponse response, Person person) {
-        if (person.getPasswordExpirationTime() > 0 && System.currentTimeMillis() > person.getPasswordExpirationTime()){
+System.out.println("dbAuthAs - entry");
+System.out.flush();
+        if (person.getPasswordExpirationTime() > 0 && Instant.now().toEpochMilli() > person.getPasswordExpirationTime()){
             throw new UnauthorizedException(format("Temporary password has expired for user %s. Please contact administrator to set a new one.", person.getLogin()));
         }
         Session session = (Session) new Session().withId(UUID.randomUUID().toString()).withTimeout(sessionTtl).withName(login).withPerson(person);
@@ -113,10 +125,15 @@ System.out.flush();
         if (existedSession == null) {
             sessionProvider.addSession(session);
             response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, session.getId(), authDomain, sessionTtl));
+System.out.println("dbAuthAs - new session created");
+System.out.flush();
             return session;
         }
         else
             response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, existedSession.getId(), authDomain, sessionTtl));
+
+System.out.println("dbAuthAs - end");
+System.out.flush();
         return existedSession;
     }
 
@@ -163,6 +180,8 @@ System.out.flush();
         if (!isEmpty(login) && !isEmpty(password) && login.equals(adminLogin) && password.equals(decryptedAdminPassword)){
             return new Person().withLogin(adminLogin).withFirstName("admin");
         }
+System.out.println("DbAuthProvider::getAdminPerson - throw UnauthorizedException");
+System.out.flush();
         throw new UnauthorizedException();
     }
 
@@ -171,6 +190,8 @@ System.out.flush();
         if (!isEmpty(token) && token.equals(adminToken)){
             return new Person().withLogin(adminLogin).withFirstName("admin");
         }
+System.out.println("DbAuthProvider::findPersonByApiToken - throw UnauthorizedException");
+System.out.flush();
         throw new UnauthorizedException();
     }
 

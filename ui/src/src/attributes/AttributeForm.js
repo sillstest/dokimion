@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+import CreatableSelect from "react-select/lib/Creatable";
 import * as Utils from "../common/Utils";
 import equal from "fast-deep-equal";
 
@@ -15,6 +16,8 @@ class AttributeForm extends Component {
       projectAttributes: props.projectAttributes,
       errorMessage: "",
       edit : props.edit,
+      attributeTypes: ["TESTCASE", "LAUNCH"],
+      session: {person: {}},
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -24,6 +27,21 @@ class AttributeForm extends Component {
     this.removeValue = this.removeValue.bind(this);
     this.handleRemove = this.handleRemove.bind(this);
     this.handleClose = this.handleClose.bind(this);
+    this.onSessionChange = this.onSessionChange.bind(this);
+    this.handleAttributeTypeChange = this.handleAttributeTypeChange.bind(this);
+  }
+
+  onSessionChange(session) {
+    this.props.onSessionChange(session);
+  }
+
+  getSession() {
+    Backend.get("user/session")
+      .then(response => {
+        this.state.session = response;
+        this.setState(this.state);
+      })
+      .catch(() => {console.log("Unable to fetch session");});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -32,8 +50,16 @@ class AttributeForm extends Component {
       edit: nextProps.edit});
   }
 
+  handleAttributeTypeChange(event) {
+    console.log("User selected value: ", event.target.value);
+    this.state.attribute.type = event.target.value;
+    this.setState(this.state);
+  }
+
+
   handleChange(event) {
     this.state.attribute[event.target.name] = event.target.value;
+    this.state.attribute["type"] = "TESTCASE";
     this.setState(this.state);
   }
 
@@ -65,6 +91,7 @@ class AttributeForm extends Component {
             this.state.attribute = {
               id: null,
               name: "",
+              type: "",
               attrValues: [],
             };
             this.setState(this.state);
@@ -83,6 +110,7 @@ class AttributeForm extends Component {
         this.state.attribute = {
           id: null,
           name: "",
+          type: "",
           attrValues: [],
         };
         this.setState(this.state);
@@ -99,6 +127,7 @@ class AttributeForm extends Component {
         this.state.attribute = {
           id: null,
           name: "",
+          type: "",
           attrValues: [],
         };
         this.state.errorMessage='';
@@ -123,6 +152,7 @@ class AttributeForm extends Component {
         })
         .catch(error => console.log(error));
     }
+    this.getSession();
   }
 
   render() {
@@ -152,6 +182,27 @@ class AttributeForm extends Component {
                   />
                 </div>
               </div>
+              {Utils.isAdmin(this.state.session) &&
+              <div style={{
+                     display: 'flex',
+                     justifyContent: 'left',
+                     alignItems: 'center',
+                   }} className="form-group row">
+                <label className="col-sm-2 col-form-label">Type</label>
+                <div className="col-sm-8">
+                  <select
+                    name="Attribute Type"
+                    defaultValue={this.state.attributeTypes[0]}
+                    value={this.state.attribute.type}
+                    onChange={this.handleAttributeTypeChange}
+                  >
+                  {this.state.attributeTypes.map((attributeType, i) => {
+                    return (<option key={i}>{attributeType}</option>);
+                  })}
+                  </select>
+                </div>
+              </div>
+              }
 
               {this.state.attribute.attrValues.map((value, i) => {
                 return (
@@ -176,9 +227,11 @@ class AttributeForm extends Component {
                 );
               })}
 
-              <button type="button" className="btn" onClick={this.addValue}>
-                Add value
-              </button>
+              <div className="form-group row">
+                <button type="button" className="btn" onClick={this.addValue}>
+                  Add value
+                </button>
+              </div>
             </form>
           </div>
           <div className="modal-footer">

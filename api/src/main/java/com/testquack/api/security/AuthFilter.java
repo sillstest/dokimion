@@ -25,6 +25,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
+import java.time.Instant;
 
 import static java.lang.String.format;
 import static org.springframework.util.StringUtils.isEmpty;
@@ -73,11 +74,11 @@ public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilt
                 userRepository.save(
                         userService.getCurrOrganizationId(session),
                         null,
-                        new User().withCreatedTime(System.currentTimeMillis()).
+                        new User().withCreatedTime(Instant.now().toEpochMilli()).
                                 withId(session.getPerson().getLogin()).
                                 withLogin(session.getPerson().getLogin()).
                                 withToken(session.getPerson().getToken()).
-                                withLastModifiedTime(System.currentTimeMillis()).
+                                withLastModifiedTime(Instant.now().toEpochMilli()).
                                 withFirstName(session.getPerson().getFirstName()).
                                 withLastName(session.getPerson().getLastName())
                 );

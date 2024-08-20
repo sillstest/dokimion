@@ -2,6 +2,7 @@ package com.testquack.api.utils;
 
 import org.passay.CharacterCharacteristicsRule;
 import org.passay.CharacterRule;
+import org.passay.CharacterData;
 import org.passay.EnglishCharacterData;
 import org.passay.EnglishSequenceData;
 import org.passay.LengthRule;
@@ -18,9 +19,22 @@ import org.passay.UsernameRule;
 import java.util.List;
 import java.util.ArrayList;
 
+
 public class PasswordGeneration {
 
    public static String generatePassword() {
+
+      CharacterRule specialCharRule = new CharacterRule(new CharacterData() {
+         @Override 
+         public String getErrorCode() {
+	      return "Invalid special char";
+         }
+
+         @Override
+         public String getCharacters() {
+	   return "!_@#?";
+         }
+      });
 
       List<CharacterRule> rules = new ArrayList();
       //Rule 2: At least one Upper-case character
@@ -30,12 +44,15 @@ public class PasswordGeneration {
       //Rule 4: At least one digit
       rules.add(new CharacterRule(EnglishCharacterData.Digit, 1));
       //Rule 5: At least one special character
-      rules.add(new CharacterRule(EnglishCharacterData.Special, 1));
+      //rules.add(new CharacterRule(EnglishCharacterData.Special, 1));
+      rules.add(specialCharRule);
 
       PasswordGenerator passwordGenerator = new PasswordGenerator();        
       String password = passwordGenerator.generatePassword(16, rules);
 
       System.out.println("Password generated: " + password);
+      System.out.flush();
+
 
       return password;
    }

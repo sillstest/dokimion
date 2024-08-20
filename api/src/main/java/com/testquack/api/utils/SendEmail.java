@@ -22,20 +22,20 @@ public class SendEmail {
         String from = "siltester.bob@gmail.com";
 
         // Assuming you are sending email from through gmails smtp
-        String host = "smtp.gmail.com";
+        //String host = "smtp.gmail.com";
+        String host = "aspmx.l.google.com";
 
         // Get system properties
         Properties properties = new Properties(System.getProperties());
 
-        // Setup mail server
+	// Setup mail server
 	properties.put("mail.transport.protocol", "smtp");
         properties.put("mail.smtp.host", host);
         properties.put("mail.smtp.port", "25"); 
-        properties.put("mail.smtp.auth", "true");
-        properties.put("mail.smtp.debug", "true");
-        properties.put("mail.smtp.starttls.enable", "true");
-        properties.put("mail.smtp.ssl.protocols", "TLSv1.2");
 
+        properties.put("mail.smtp.starttls.enable", "true");
+
+        properties.put("mail.smtp.debug", "true");
 	Session session = Session.getInstance(properties, null);
 
 	System.out.println("After session instantiation"); 
@@ -58,10 +58,10 @@ public class SendEmail {
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
 
             // Set Subject: header field
-            message.setSubject("Quack Forgot Password code");
+            message.setSubject("Dokimion Forgot Password code");
 
             // Now set the actual message
-            message.setText("Quack Forgot Password code: " + passwordCode);
+            message.setText("Dokimion Forgot Password code: " + passwordCode);
 
             System.out.println("sending...");
             // Send message
@@ -69,7 +69,7 @@ public class SendEmail {
 	    Transport tr = session.getTransport("smtp");
             System.out.println("after getTransport");
 
-	    tr.connect(host, "siltester.bob@gmail.com", "tihkugzmcsohgxix");
+	    tr.connect(host, "siltester.bob@gmail.com", "tihkugzmcsohgxix01!");
             System.out.println("after transport connect");
 
 	    tr.sendMessage(message, message.getAllRecipients());

@@ -15,13 +15,13 @@ LimitFSIZE=infinity
 # cpu time
 LimitCPU=infinity
 # virtual memory size
-LimitAS=infinity
+LimitAS=4096M
 # open files
 LimitNOFILE=64000
 # processes/threads
 LimitNPROC=64000
 # locked memory
-LimitMEMLOCK=infinity
+LimitMEMLOCK=480M
 # total threads (user+kernel)
 TasksMax=infinity
 TasksAccounting=false

@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.time.Instant;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -179,7 +180,7 @@ System.out.flush();
         if (existingEntity != null) {
             eventService.create(session, projectId,
                     new Event().withEventType(EventType.UPDATED.toString()).
-                            withTime(System.currentTimeMillis()).
+                            withTime(Instant.now().toEpochMilli()).
                             withUser(session.getLogin()).
                             withEntityId(existingEntity.getId()).
                             withEntityType(TestCase.class.getSimpleName())
@@ -280,7 +281,7 @@ System.out.flush();
 
        uploadedAttachment.withId(UUID.randomUUID().toString()).
                        withCreatedBy(userSession.getLogin()).
-                       withCreatedTime(System.currentTimeMillis()).
+                       withCreatedTime(Instant.now().toEpochMilli()).
                        withDataSize(size);
        attachmentsList.add(uploadedAttachment);
 
@@ -535,7 +536,7 @@ System.out.flush();
 
     private TestCase cleanTestCaseForDuplication(TestCase originalTestCase){
         TestCase copyTestCase = (TestCase) originalTestCase.copyTo(new TestCase());
-        long now = System.currentTimeMillis();
+        long now = Instant.now().toEpochMilli();
         copyTestCase.setId(null);
         copyTestCase.getAttachments().clear();
         copyTestCase.setCreatedBy(null);
