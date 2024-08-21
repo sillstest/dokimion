@@ -269,7 +269,7 @@ class Launch extends SubComponent {
     var testCaseHtmlNode = $("li[data-id='" + testcase.uuid + "']").find("img");
     testCaseHtmlNode.attr("src", Utils.getStatusImg(testcase));
 
-    if (this.state.selectedTestCase.uuid == testcase.uuid) {
+    if (this.state.selectedTestCase !== undefined && this.state.selectedTestCase.uuid !== undefined && this.state.selectedTestCase.uuid == testcase.uuid) {
       this.state.selectedTestCase = testcase;
       //Need to rerender buttons and count when state changed
       this.state.refreshTree = true;
@@ -286,8 +286,10 @@ class Launch extends SubComponent {
             var nodeId = (node.dataset || {}).id || "";
             var dataNode = Utils.getNodeFromDataSource(nodeId, { children: that.tree.dataSource });
             var htmlImageNode = $(node).find("img")[0];
-            var nodeImage = Utils.getNodeStatusImg(dataNode);
-            $(htmlImageNode).attr("src", nodeImage);
+	    if (htmlImageNode !== undefined && dataNode != undefined) {
+               var nodeImage = Utils.getNodeStatusImg(dataNode);
+               $(htmlImageNode).attr("src", nodeImage);
+	    }
           });
       }
     }
