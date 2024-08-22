@@ -286,7 +286,7 @@ class Launch extends SubComponent {
             var nodeId = (node.dataset || {}).id || "";
             var dataNode = Utils.getNodeFromDataSource(nodeId, { children: that.tree.dataSource });
             var htmlImageNode = $(node).find("img")[0];
-	    if (htmlImageNode !== undefined && dataNode != undefined) {
+	    if (htmlImageNode !== undefined && dataNode !== undefined) {
                var nodeImage = Utils.getNodeStatusImg(dataNode);
                $(htmlImageNode).attr("src", nodeImage);
 	    }
