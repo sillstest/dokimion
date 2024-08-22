@@ -33,23 +33,17 @@ class ProjectSettings extends SubComponent {
         readWriteUsers: [],
         environments: [],
       },
-      groups: [],
       users: [],
-      groupsToDisplay: [],
       launcherDescriptors: [],
       launcherIndexToRemove: null,
       errorMessage: "",
       session: {person: {}},
     };
     this.state.projectId = this.props.match.params.project;
-    this.changeGroups = this.changeGroups.bind(this);
     this.changeUsers = this.changeUsers.bind(this);
     this.changeEnvironments = this.changeEnvironments.bind(this);
     this.submit = this.submit.bind(this);
-    this.refreshGroupsToDisplay = this.refreshGroupsToDisplay.bind(this);
     this.refreshUsersToDisplay = this.refreshUsersToDisplay.bind(this);
-    this.getGroups = this.getGroups.bind(this);
-    this.mapGroupsToView = this.mapGroupsToView.bind(this);
     this.getUsers = this.getUsers.bind(this);
     this.mapUsersToView = this.mapUsersToView.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
@@ -82,7 +76,6 @@ class ProjectSettings extends SubComponent {
       .then(response => {
         this.state.project = response;
         this.state.originalProject = this.state.project;
-        this.refreshGroupsToDisplay();
         this.refreshUsersToDisplay();
         this.setState(this.state);
        })
@@ -107,20 +100,6 @@ class ProjectSettings extends SubComponent {
 
   }
 
-  getGroups(literal, callback) {
-    var url = "user/groups/suggest?limit=20";
-    if (literal) {
-      url = url + "&literal=" + literal;
-    }
-    Backend.get(url)
-      .then(response => {
-        this.state.groups = response;
-        this.refreshGroupsToDisplay();
-        callback(this.mapGroupsToView(this.state.groups));
-      })
-      .catch(error => console.log(error));
-  }
-
   getUsers(literal, callback) {
     var url = "user/users/suggest?limit=20";
     if (literal) {
@@ -133,14 +112,6 @@ class ProjectSettings extends SubComponent {
         callback(this.mapUsersToView(this.state.users));
       })
       .catch(error => console.log(error));
-  }
-
-  changeGroups(values) {
-    this.state.project.readWriteGroups = values.map(function (value) {
-      return value.value;
-    });
-    this.refreshGroupsToDisplay();
-    this.setState(this.state);
   }
 
   changeUsers(values) {
@@ -166,7 +137,6 @@ class ProjectSettings extends SubComponent {
         if (name) {
           this.toggleEdit(name);
         }
-        this.refreshGroupsToDisplay();
         this.setState(this.state);
         this.setState({errorMessage: "Project Settings successfully saved"});
       })
@@ -194,18 +164,8 @@ class ProjectSettings extends SubComponent {
     this.submit(event);
   }
 
-  refreshGroupsToDisplay() {
-    this.state.groupsToDisplay = this.mapGroupsToView(this.state.project.readWriteGroups || []);
-  }
-
   refreshUsersToDisplay() {
     this.state.usersToDisplay = this.mapUsersToView(this.state.project.readWriteUsers || []);
-  }
-
-  mapGroupsToView(groups) {
-    return groups.map(function (val) {
-      return { value: val, label: val };
-    });
   }
 
   mapUsersToView(users) {
@@ -348,22 +308,6 @@ class ProjectSettings extends SubComponent {
         <div className="project-settings-section">
           <h3>Permissions</h3>
 
-          <form>
-            <div className="row form-group">
-              <label className="col-1 col-form-label">Groups</label>
-              <div className="col-6">
-                <AsyncSelect
-                  value={this.state.groupsToDisplay}
-                  isMulti
-                  defaultOptions={true}
-                  cacheOptions
-                  loadOptions={this.getGroups}
-                  onChange={this.changeGroups}
-                  options={this.mapGroupsToView(this.state.groups)}
-                />
-              </div>
-            </div>
-
             <div className="row form-group">
               <label className="col-1 col-form-label">Users</label>
               <div className="col-6">
@@ -378,7 +322,6 @@ class ProjectSettings extends SubComponent {
                 />
               </div>
             </div>
-          </form>
         </div>
         )}
 

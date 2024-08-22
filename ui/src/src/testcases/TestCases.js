@@ -128,7 +128,10 @@ class TestCases extends SubComponent {
 
     Backend.get(this.props.match.params.project + "/attribute")
       .then(response => {
-        this.state.projectAttributes = response.sort((a, b) => (a.name || "").localeCompare(b.name));
+        this.state.projectAttributes = response.
+           filter(function(p) { return p.type != 'undefined'}).
+           filter(function(p) { return p.type != 'LAUNCH'});
+        this.state.projectAttributes = this.state.projectAttributes.sort((a, b) => (a.name || "").localeCompare(b.name));
         this.state.projectAttributes.unshift({
           id: "broken",
           name: "Broken",

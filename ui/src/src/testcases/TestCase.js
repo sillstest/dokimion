@@ -3,7 +3,6 @@
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import Attachments from "../testcases/Attachments";
-import Issues from "../testcases/Issues";
 import Comments from "../comments/Comments";
 import EventsWidget from "../audit/EventsWidget";
 import { Link } from "react-router-dom";
@@ -272,7 +271,9 @@ console.log("TestCase::handleSubmit");
   getAttributes(reRender) {
     Backend.get(this.projectId + "/attribute")
       .then(response => {
-        this.state.projectAttributes = response;
+        this.state.projectAttributes = response.
+           filter(function(p) { return p.type != 'undefined'}).
+           filter(function(p) { return p.type != 'LAUNCH'});
         this.setState(this.state);
       })
       .catch(error => {
@@ -555,22 +556,6 @@ console.log("TestCase::removeTestCase");
                 <span className="badge badge-pill badge-secondary tab-badge">
                   {this.state.testcase.attachments.length}
                 </span>
-              )}
-            </a>
-          </li>
-          <li className="nav-item">
-            <a
-              className="nav-link"
-              id="issues-tab"
-              data-toggle="tab"
-              href="#issues"
-              role="tab"
-              aria-controls="issues"
-              aria-selected="false"
-            >
-              Issues
-              {this.state.testcase.issues && this.state.testcase.issues.length > 0 && (
-                <span className="badge badge-pill badge-secondary tab-badge">{this.state.testcase.issues.length}</span>
               )}
             </a>
           </li>
@@ -1225,15 +1210,6 @@ console.log("TestCase::removeTestCase");
             <Attachments
               testcase={this.state.testcase}
               projectId={this.projectId}
-              onTestcaseUpdated={this.onTestcaseUpdated}
-            />
-          </div>
-
-          <div className="tab-pane fade show" id="issues" role="tabpanel" aria-labelledby="issues-tab">
-            <Issues
-              testcase={this.state.testcase}
-              projectId={this.projectId}
-              entityType="testcase"
               onTestcaseUpdated={this.onTestcaseUpdated}
             />
           </div>
