@@ -20,8 +20,7 @@ class Auth extends Component {
               retpath.startsWith(window.location.origin + "/login")
             ) {
               retpath = "/";
-            } 
-            retpath = "/";
+            }
 
             url = url + "?" + retpathParamName + "=" + encodeURIComponent(retpath);
         }
