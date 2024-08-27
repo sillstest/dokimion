@@ -130,6 +130,10 @@ class ProjectSettings extends SubComponent {
   }
 
   submit(event, name) {
+    if (this.state.project === undefined || this.state.project == "") {
+       console.log("project undefined or null");
+       return;
+    }
     Backend.put("project", this.state.project)
       .then(response => {
         this.state.project = response;

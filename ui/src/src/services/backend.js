@@ -12,7 +12,7 @@ const fetchInternal = (url, method, options) =>
       if (response.status === 401 && window.location.pathname !== "/auth" && window.location.pathname !== "/idpauth" && window.location.pathname !== "/login" &&  window.location.pathname !== "orgselect") {
         window.location.href = "/auth?" + qs.stringify({ retpath: window.location.pathname });
       } else {
-        throw new Error(await response.text());
+	console.log(await response.text());
       }
     }
     return response;
