@@ -52,7 +52,7 @@ class Header extends Component {
       .catch(() => {
         console.log("Unable to fetch session");
       });
-    Backend.get("project?includedFields=name,description,id,readWriteGroups,readWriteUsers")
+    Backend.get("project?includedFields=name,description,id,readWriteUsers")
       .then(response => {
         this.state.projects = response;
         this.setState(this.state);

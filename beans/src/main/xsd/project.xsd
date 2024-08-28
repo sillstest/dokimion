@@ -33,7 +33,6 @@
                     <xs:element name="descriptionToDisplay" type="xs:string"/>
                     <xs:element name="projectGroupId" type="xs:string"/>
                     <xs:element name="organizationId" type="xs:string"/>
-                    <xs:element name="readWriteGroups" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="readWriteUsers" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="ListOfTesters" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="ListOfTestDevelopers" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>

@@ -42,13 +42,13 @@ public abstract class BaseTest {
     protected TestCaseRepository testCaseRepository;
 
     protected Project project1 = new Project().withName("Project 1").
-            withId("pr1").withReadWriteGroups("1", "2").withReadWriteUsers("u1", "u2");
+            withId("pr1").withReadWriteUsers("u1", "u2");
 
     protected Project project2 = new Project().withName("Project 2").
-            withId("pr2").withReadWriteGroups("2", "3").withReadWriteUsers("u2", "u3");
+            withId("pr2").withReadWriteUsers("u2", "u3");
 
     protected Project project3 = new Project().withName("Project 3").
-            withId("pr3").withReadWriteGroups("3", "4").withReadWriteUsers("u3", "u4");
+            withId("pr3").withReadWriteUsers("u3", "u4");
 
     protected Project project4 = new Project().withName("Project 4").
             withId("pr4").withReadWriteUsers("pers1", "pers2");

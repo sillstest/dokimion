@@ -61,7 +61,6 @@ System.out.flush();
     public List<Project> findFiltered(Session session, String projectId, Filter filter) {
         return getRepository().find(getCurrOrganizationId(session), projectId, filter).stream().filter(
                 project -> session.isIsAdmin() || isRoleAdmin(session) || isUserOrganizationAdmin(session) ||  
-                        project.getReadWriteGroups().stream().anyMatch(session.getPerson().getGroups()::contains) ||
                         project.getReadWriteUsers().stream().anyMatch(session.getPerson().getLogin()::equals)
         ).collect(toList());
     }
