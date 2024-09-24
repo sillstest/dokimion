@@ -40,6 +40,18 @@ if [ $1 == "3" ]
 then
   cp ~1/config/production/dokimion3/startup_dokimion_server.sh ../bin/.
 fi
+if [ $1 == "s1" ]
+then
+  cp ~1/config/production/s-dokimion1/startup_dokimion_server.sh ../bin/.
+fi
+if [ $1 == "s2" ]
+then
+  cp ~1/config/production/s-dokimion2/startup_dokimion_server.sh ../bin/.
+fi
+if [ $1 == "s3" ]
+then
+  cp ~1/config/production/s-dokimion3/startup_dokimion_server.sh ../bin/.
+fi
 cp ~1/config/common/startup_dokimion_ui.sh ../bin/.
 cp ~1/config/common/run_jstatd.sh ../bin/.
 chown dokimion:dokimion .
@@ -56,6 +68,24 @@ then
    systemctl restart dokimion_ui$1.service
    systemctl status dokimion_server$1.service
    systemctl status dokimion_ui$1.service
+elif [ $1 == "s1" ]
+then
+   systemctl restart dokimion1_server.service
+   systemctl restart dokimion1_ui.service
+   systemctl status dokimion1_server.service
+   systemctl status dokimion1_ui.service
+elif [ $1 == "s2" ]
+then
+   systemctl restart dokimion2_server.service
+   systemctl restart dokimion2_ui.service
+   systemctl status dokimion2_server.service
+   systemctl status dokimion2_ui.service
+elif [ $1 == "s3" ]
+then
+   systemctl restart dokimion3_server.service
+   systemctl restart dokimion3_ui.service
+   systemctl status dokimion3_server.service
+   systemctl status dokimion3_ui.service
 else
    systemctl restart dokimion$1_server.service
    systemctl restart dokimion$1_ui.service
