@@ -1,0 +1,18 @@
+su mongod mongod
+
+/var/log/mongodb/*.log {
+        daily
+        size 1G
+        missingok
+        rotate 4
+        compress
+        delaycompress
+        notifempty
+        create 640 mongod mongod
+        sharedscripts
+        postrotate
+                if [ -f /run/mongod/mongod5.pid ]; then
+                        kill -USR1 `cat /run/mongod/mongod5.pid`
+                fi
+        endscript
+}
