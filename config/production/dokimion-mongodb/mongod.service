@@ -18,9 +18,9 @@ LimitCPU=infinity
 #LimitAS=infinity
 LimitAS=6020M
 # open files
-LimitNOFILE=14000
+LimitNOFILE=64000
 # processes/threads
-LimitNPROC=120000
+LimitNPROC=64000
 # locked memory
 LimitMEMLOCK=480M
 # total threads (user+kernel)
