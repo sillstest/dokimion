@@ -12,7 +12,7 @@
 
 Include /etc/ssh/sshd_config.d/*.conf
 
-#Port 22
+Port 32
 #AddressFamily any
 #ListenAddress 0.0.0.0
 #ListenAddress ::
@@ -31,7 +31,7 @@ Include /etc/ssh/sshd_config.d/*.conf
 # Authentication:
 
 #LoginGraceTime 2m
-PermitRootLogin yes
+#PermitRootLogin no
 #StrictModes yes
 #MaxAuthTries 6
 #MaxSessions 10
@@ -55,7 +55,7 @@ PubkeyAuthentication yes
 #IgnoreRhosts yes
 
 # To disable tunneled clear text passwords, change to no here!
-PasswordAuthentication yes
+PasswordAuthentication no
 #PermitEmptyPasswords no
 
 # Change to yes to enable challenge-response passwords (beware issues with

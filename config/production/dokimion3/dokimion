@@ -1,10 +1,12 @@
-/var/log/dokimion/dokimon_ui_3.log {
+/var/log/dokimion/*.log {
         daily
+        size 1G
         missingok
-        rotate 52
+        rotate 4
         compress
         delaycompress
         notifempty
-        create 640 dokimion dokimion
+        create 640 syslog adm
         sharedscripts
 }
+
