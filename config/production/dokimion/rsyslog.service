@@ -2,6 +2,7 @@
 Description=System Logging Service
 Requires=syslog.socket
 Documentation=man:rsyslogd(8)
+Documentation=man:rsyslog.conf(5)
 Documentation=https://www.rsyslog.com/doc/
 
 [Service]
