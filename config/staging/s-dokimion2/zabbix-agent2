@@ -1,0 +1,15 @@
+/var/log/zabbix/zabbix_agent2.log {
+    daily
+    missingok
+    rotate 52
+    compress
+    delaycompress
+    notifempty
+    create 0640 zabbix zabbix
+    sharedscripts
+    postrotate
+	if [ -f /run/zabbix/zabbix_agent2.pid ]; then
+		kill -USR1 `cat /run/zabbix/zabbix_agent2.pid`
+	fi
+    endscript
+}

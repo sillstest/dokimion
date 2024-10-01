@@ -1,0 +1,32 @@
+[Unit]
+Description=Dokimion UI #2
+Documentation=
+After=network.target
+Wants=network.target
+
+[Service]
+User=dokimion
+Group=dokimion
+#Environment="UI_NO=2"
+Environment="PATH=/usr/bin:$PATH"
+Environment="NODE_OPTIONS=--openssl-legacy-provider"
+WorkingDirectory=/home/dokimion/dokimion/src
+ExecStart=/home/dokimion/bin/startup_dokimion_ui.sh 2
+#ExecStart=npm start 
+PIDFile=/run/dokimion/dokimion_ui_5.pid
+# file size
+LimitFSIZE=infinity
+# cpu time
+LimitCPU=infinity
+# virtual memory size
+# open files
+LimitNOFILE=64000
+# processes/threads
+LimitNPROC=64000
+# locked memory
+# total threads (user+kernel)
+TasksMax=infinity
+TasksAccounting=false
+
+[Install]
+WantedBy=multi-user.target
