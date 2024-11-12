@@ -27,6 +27,14 @@ class Header extends Component {
   }
 
   componentDidMount() {
+    Backend.postPlain("user/init")
+      .then(response => {
+	console.log("Initialized UserResource");
+      })
+      .catch(error => {
+        console.log("Unable to initialize UserResource: " + error);
+      });
+
     Backend.get("user/session")
       .then(response => {
         if (this.state.session.id !== response.id) {

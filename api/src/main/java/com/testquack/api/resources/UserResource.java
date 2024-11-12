@@ -23,6 +23,8 @@ import ru.greatbit.whoru.auth.RedirectResponse;
 import ru.greatbit.whoru.auth.Session;
 import ru.greatbit.whoru.auth.SessionProvider;
 
+import java.time.Duration;
+import java.time.Instant;
 import org.json.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
@@ -54,6 +56,31 @@ public class UserResource extends BaseResource<User> {
 
     @Value("${quack.ui.url}")
     private String baseUiUrl;
+
+    private static MongoDBInterface s_mongoDBInterface;
+
+    @POST
+    @Path("/init")
+    public Response init() {
+
+       Duration deltaTime = Duration.ZERO;
+       Instant beginTime = Instant.now();
+
+       s_mongoDBInterface = new MongoDBInterface();
+       s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+                                              getService().getMongoUsername(),
+                                              getService().getMongoPassword(),
+                                              getService().getMongoDBName());
+
+       deltaTime = Duration.between(beginTime, Instant.now());
+
+       System.out.println("UserResource::init - deltaTime to get mongoClient: " + deltaTime);
+       System.out.flush();
+
+       return Response.ok().build();
+
+    }
+
 
     @Override
     protected Filter initFilter(HttpServletRequest hsr) {
@@ -102,12 +129,11 @@ System.out.flush();
         return Response.ok().build();
     }
 
-
     @POST
     @Path("/forgot_password")
-    public Response getEmail(@QueryParam("login") String login) {
+    public Response sendEmail(@QueryParam("login") String login) {
 
-       System.out.println("getEmail - login: " + login);
+       System.out.println("sendEmail - login: " + login);
        System.out.flush();
 
        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
@@ -118,19 +144,26 @@ System.out.flush();
 
             System.out.println("UserResource::getEmail: checkLoginId returned FALSE - did NOT find login");
             System.out.flush();
+	    Response resp = null;
 
-            Response resp = null;
             return resp;
        }
 
+       Duration deltaTime = Duration.ZERO;
+       Instant beginTime = Instant.now();
 
-       MongoDBInterface mongoDBInterface = new MongoDBInterface();
-       mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
-                                              getService().getMongoUsername(),
-                                              getService().getMongoPassword(),
-                                              getService().getMongoDBName());
+       deltaTime = Duration.between(beginTime, Instant.now());
 
-       String email = mongoDBInterface.getEmail(login);
+       System.out.println("UserResource::sendEmail - deltaTime to get mongoClient: " + deltaTime);
+       System.out.flush();
+
+       beginTime = Instant.now();
+       String email = s_mongoDBInterface.getEmail(login);
+       deltaTime = Duration.between(beginTime, Instant.now());
+
+       System.out.println("UserResource::sendEmail - deltaTime to getEmail: " + deltaTime);
+       System.out.flush();
+
 
        System.out.println("Fetched mongodb emails");
        System.out.flush();
@@ -139,24 +172,33 @@ System.out.flush();
        jsonObj.put("email", email);
 
        String newPassword = PasswordGeneration.generatePassword();
-       SendEmail.send(email, newPassword);
-
-       System.out.println("Sent email to: " + email);
-       System.out.flush();
 
        // create new session
-       Person person = mongoDBInterface.getPerson(login);
+       beginTime = Instant.now();
+       Person person = s_mongoDBInterface.getPerson(login);
+       deltaTime = Duration.between(beginTime, Instant.now());
+
+       System.out.println("UserResource::sendEmail - deltaTime to getPerson: " + deltaTime);
+       System.out.flush();
 
        System.out.println("getPerson() -  " + person);
        System.out.flush();
 
+       beginTime = Instant.now();
        service.changePassword(login, person.getPassword(), newPassword);
-
-       System.out.println("after service.changePassword call");
+       deltaTime = Duration.between(beginTime, Instant.now());
+       System.out.println("UserResource::sendEmail - deltaTime to changePassword: " + deltaTime);
        System.out.flush();
 
-       return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
 
+       beginTime = Instant.now();
+       SendEmail.send(email, newPassword);
+       deltaTime = Duration.between(beginTime, Instant.now());
+       System.out.println("UserResource::sendEmail - deltaTime to sendEmailAsync: " + deltaTime);
+       System.out.flush();
+
+
+       return Response.ok().build();
 
     }
 
@@ -256,15 +298,14 @@ System.out.println("UserResource::login - session: " + session);
 System.out.flush();
 
         Person person = session.getPerson();
-        MongoDBInterface mongoDBInterface = new MongoDBInterface();
-        mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+        s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
                                               getService().getMongoUsername(),
                                               getService().getMongoPassword(),
                                               getService().getMongoDBName());
 
-        String thisRole = mongoDBInterface.getRole(login);
+        String thisRole = s_mongoDBInterface.getRole(login);
 
-        String mongopass = mongoDBInterface.getPassword(login);
+        String mongopass = s_mongoDBInterface.getPassword(login);
 
 System.out.println("UserResource::login - role: " + thisRole);
 System.out.println("UserResource::login - mongo password: " + mongopass);
@@ -373,7 +414,6 @@ System.out.flush();
         return authProvider.redirectChangePasswordTo(request);
     }
 
-
     @DELETE
     @Path("/logout")
     public Response logout() {
@@ -396,19 +436,18 @@ System.out.flush();
 	   System.out.flush();
 	}
 
-       MongoDBInterface mongoDBInterface = new MongoDBInterface();
-       mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+       s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
                                               getService().getMongoUsername(),
                                               getService().getMongoPassword(),
                                               getService().getMongoDBName());
 
-       String pass = mongoDBInterface.getPassword(session.getLogin());
+       String pass = s_mongoDBInterface.getPassword(session.getLogin());
 System.out.println("logout - before doLogout mongo pass: " + pass);
 System.out.flush();
 
         authProvider.doLogout(request, response);
 
-        pass = mongoDBInterface.getPassword(session.getLogin());
+        pass = s_mongoDBInterface.getPassword(session.getLogin());
 System.out.println("logout - after doLogout mongo pass: " + pass);
 System.out.flush();
 System.out.println("UserResource::logout - after authProvider.doLogout call");

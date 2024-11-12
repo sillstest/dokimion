@@ -50,6 +50,9 @@ public class MongoDBInterface  {
    String mongoPassword;
    String mongoDBname;
 
+
+   private static MongoDatabase s_db;
+
    public void setMongoDBProperties(String replicaSet,
                                     String username,
                                     String password,
@@ -63,6 +66,9 @@ System.out.println("setMongoDBProperties - replicaSet: " + replicaSet);
 System.out.println("setMongoDBProperties - username: " + username);
 System.out.println("setMongoDBProperties - dbname: " + dbname);
 
+
+      MongoClient s_mongoClient = getMongoClient();
+      s_db = s_mongoClient.getDatabase(dbname);
    }
 
    public MongoClient getMongoClient()
@@ -121,10 +127,8 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
 
    public Person getPerson(String loginToFind) {
 
-      MongoClient mongoClient = getMongoClient();
-      MongoDatabase db = mongoClient.getDatabase(mongoDBname);
 
-      MongoCollection<Document> collection = db.getCollection("users");
+      MongoCollection<Document> collection = s_db.getCollection("users");
 
       JSONParser parser = new JSONParser();
 
@@ -210,10 +214,7 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
       System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - attributeName2ToSearch: " + attributeName2ToSearch);
       System.out.flush();
 
-      MongoClient mongoClient = getMongoClient();
-      MongoDatabase db = mongoClient.getDatabase(mongoDBname);
-
-      MongoCollection<Document> collection = db.getCollection(collectionName);
+      MongoCollection<Document> collection = s_db.getCollection(collectionName);
       String attributeValue ="";
 
       System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue  - after parser call: collection: " + collection);
@@ -277,8 +278,6 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
 	break;
         }
       }
-      mongoClient.close();
-
 
       return false;
    }
@@ -291,10 +290,7 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
       System.out.println("MongoDBInterface::getCollectionAttributeValue - attributeValues ToSearch: " + attribute1ValueToSearch + ", " + attribute2ValueToSearch);
       System.out.flush();
 
-      MongoClient mongoClient = getMongoClient();
-      MongoDatabase db = mongoClient.getDatabase(mongoDBname);
-
-      MongoCollection<Document> collection = db.getCollection(collectionName);
+      MongoCollection<Document> collection = s_db.getCollection(collectionName);
       String attributeValue ="";
 
       JSONParser parser = new JSONParser();
@@ -371,7 +367,6 @@ System.out.flush();
 
       }
 
-      mongoClient.close();
       return false;
 
    }
@@ -383,10 +378,7 @@ System.out.flush();
       System.out.println("MongoDBInterface::getCollectionAttributeValue - collectionName, attributeNameToSearch: " + collectionName + ", " + attributeNameToSearch);
       System.out.flush();
 
-      MongoClient mongoClient = getMongoClient();
-      MongoDatabase db = mongoClient.getDatabase(mongoDBname);
-
-      MongoCollection<Document> collection = db.getCollection(collectionName);
+      MongoCollection<Document> collection = s_db.getCollection(collectionName);
       String attributeValue ="";
 
       JSONParser parser = new JSONParser();
@@ -425,16 +417,12 @@ System.out.flush();
 
       }
 
-      mongoClient.close();
       return false;
    }
 
    private String getUserCollectionAttribute(String loginToFind, String userAttribute)
    {
-      MongoClient mongoClient = getMongoClient();
-      MongoDatabase db = mongoClient.getDatabase(mongoDBname);
-
-      MongoCollection<Document> collection = db.getCollection("users");
+      MongoCollection<Document> collection = s_db.getCollection("users");
 
       JSONParser parser = new JSONParser();
 
@@ -481,8 +469,6 @@ System.out.flush();
 
       }
 
-      mongoClient.close();
-
       return "";
    }
 
@@ -495,19 +481,14 @@ System.out.flush();
          System.out.println("MongoDBInterface updatePassword");
 	 System.out.flush();
 
-	 MongoClient mongoClient = getMongoClient();
-	 MongoDatabase db = mongoClient.getDatabase(mongoDBname);
-
          System.out.println("MongoDBInterface updatePassword - BEFORE call to updateOne");
 	 System.out.flush();
 
-	 updateOne(loginToFind, password, db);
+	 updateOne(loginToFind, password, s_db);
 
          System.out.println("MongoDBInterface updatePassword - AFTER call to updateOne");
 	 System.out.flush();
 
-
-         mongoClient.close();
 
       } catch (Exception ex) {
          ex.printStackTrace();
