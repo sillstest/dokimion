@@ -25,13 +25,14 @@ class ForgotPassword extends Component {
 
 	handleSubmit(event) {
 	  const { login } = this.state;
-          Backend.post("user/forgot_password?login=" + login )
+          Backend.postPlain("user/forgot_password?login=" + login )
              .then(response => {
-	        this.setState({message: "Success: Retrieved email for login"});
+	        this.setState({message: "Success: Sent temporary password email for login"});
 	        window.location = decodeURI("/");
 	     }).catch(error => {
 		this.setState({message: "Error: Unable to retrieve email for login: " + error});
              });
+          event.preventDefault();
 	};
 
 	render() {

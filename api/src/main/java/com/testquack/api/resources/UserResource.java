@@ -197,6 +197,9 @@ System.out.flush();
        System.out.println("UserResource::sendEmail - deltaTime to sendEmailAsync: " + deltaTime);
        System.out.flush();
 
+       System.out.println("UserResource::sendEmail - forgot_password - DONE");
+       System.out.flush();
+
 
        return Response.ok().build();
 

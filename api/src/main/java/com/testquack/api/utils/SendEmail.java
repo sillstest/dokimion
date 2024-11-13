@@ -41,7 +41,7 @@ public class SendEmail {
 	System.out.println("After session instantiation"); 
 
         // Used to debug SMTP issues
-        session.setDebug(true);
+        //session.setDebug(true);
 
 	System.out.println("After session setDebug");
 
