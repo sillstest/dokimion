@@ -60,6 +60,7 @@ chmod -R a+w *
 chmod -R a+w .
 cd src
 cp -r node_modules/tinymce* public/.
+cat ~1/config/common/.env > .env
 
 # restart relevant system services
 if [ $1 == "_dev" ]

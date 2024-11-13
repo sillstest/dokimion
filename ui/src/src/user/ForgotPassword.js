@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import React, { Component } from 'react';
+import ReCAPTCHA from "react-google-recaptcha";
 import { withRouter } from "react-router";
 import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
@@ -13,9 +14,16 @@ class ForgotPassword extends Component {
              login: "",
 	     email: "",
              message: "",
+	     recaptchaValue: false,
 	   };
            this.handleChange = this.handleChange.bind(this);
 	   this.handleSubmit = this.handleSubmit.bind(this);
+	   this.handleRecaptcha = this.handleRecaptcha.bind(this);
+	}
+
+	handleRecaptcha(event) {
+	   this.state.recaptchaValue = !this.state.recaptchaValue;
+	   this.setState(this.state);
 	}
 
 	handleChange(event) {
@@ -24,14 +32,20 @@ class ForgotPassword extends Component {
 	};
 
 	handleSubmit(event) {
-	  const { login } = this.state;
-          Backend.post("user/forgot_password?login=" + login )
-             .then(response => {
-	        this.setState({message: "Success: Retrieved email for login"});
-	        window.location = decodeURI("/");
-	     }).catch(error => {
-		this.setState({message: "Error: Unable to retrieve email for login: " + error});
-             });
+	  if (this.state.recaptchaValue == false) {
+	     alert("Click to Verify you are not a Robot");
+	  } else {
+	     this.setState({recaptchaValue: false});
+
+	     const { login } = this.state;
+             Backend.post("user/forgot_password?login=" + login )
+                .then(response => {
+	           this.setState({message: "Success: Retrieved email for login"});
+	           window.location = decodeURI("/");
+	        }).catch(error => {
+		   this.setState({message: "Error: Unable to retrieve email for login: " + error});
+                });
+	   }
 	};
 
 	render() {
@@ -56,6 +70,10 @@ class ForgotPassword extends Component {
                 <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
 	          Send Email with Temporary Password
 		</button>
+		<ReCAPTCHA
+		 sitekey={process.env.REACT_APP_SITE_KEY}
+		 onChange={this.handleRecaptcha}
+		/>
 	      </form>
 	    </div>
           );
