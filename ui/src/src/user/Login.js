@@ -41,6 +41,8 @@ class Login extends Component {
   }
 
   handleSubmit(event) {
+    console.log(process.env);
+
     if (this.state.recaptchaValue == false) {
       alert("Click to Verify you are not a Robot");
     } else {
