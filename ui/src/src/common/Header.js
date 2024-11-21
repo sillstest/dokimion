@@ -37,8 +37,9 @@ class Header extends Component {
 
     Backend.get("user/session")
       .then(response => {
+	let responseClone = structuredClone(response);
         if (this.state.session.id !== response.id) {
-          this.state.session = response;
+          this.state.session = responseClone;
           this.setState(this.state);
           this.onSessionChange(this.state.session);
           if (
