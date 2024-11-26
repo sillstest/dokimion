@@ -23,6 +23,8 @@ import ru.greatbit.whoru.auth.RedirectResponse;
 import ru.greatbit.whoru.auth.Session;
 import ru.greatbit.whoru.auth.SessionProvider;
 
+import java.net.URL;
+import javax.net.ssl.HttpsURLConnection;
 import java.time.Duration;
 import java.time.Instant;
 import org.json.*;
@@ -32,6 +34,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import javax.servlet.http.Cookie;
 import java.io.IOException;
+import java.io.DataOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Set;
 import java.util.List;
@@ -42,8 +47,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 
+
 @Path("/user")
 public class UserResource extends BaseResource<User> {
+
+    public static final String url = "https://www.google.com/recaptcha/api/siteverify";
+    public static final String secret = "6Ld6SXUqAAAAAPTyAdKNofs1YK2hleZuQK5a1VyT";
+    private final static String USER_AGENT = "Mozilla/5.0";
 
     @Autowired
     AuthProvider authProvider;
@@ -132,6 +142,7 @@ System.out.flush();
     @POST
     @Path("/forgot_password")
     public Response sendEmail(@QueryParam("login") String login) {
+                             // @QueryParam("recaptcha") String recaptcha) {
 
        System.out.println("sendEmail - login: " + login);
        System.out.flush();
@@ -144,10 +155,15 @@ System.out.flush();
 
             System.out.println("UserResource::getEmail: checkLoginId returned FALSE - did NOT find login");
             System.out.flush();
-	    Response resp = null;
 
-            return resp;
+            return Response.serverError().entity("sendEmail - APIValidation error").build();
        }
+       
+       /*
+       if (sendVerifyRecaptchaMessage(recaptcha) == false) {
+            return Response.serverError().entity("sendEmail - Invalid ReCaptcha").build();
+       }
+    */
 
        Duration deltaTime = Duration.ZERO;
        Instant beginTime = Instant.now();
@@ -286,38 +302,44 @@ System.out.flush();
     @Path("/login")
     public Session login(@QueryParam("login") String login,
                          @QueryParam("password") String password) {
+                         //@QueryParam("recaptcha") String recaptcha) {
 System.out.println("UserResource::login - login: " + login);
 System.out.println("UserResource::login - password: " + password);
+//System.out.println("UserResource::login - recaptcha: " + recaptcha);
 System.out.flush();
-        Session session = authProvider.doAuth(request, response);
+    Session session = authProvider.doAuth(request, response);
 
 	if (session == null) {
 	   System.out.println("UserResource::login - failed");
 	   System.out.flush();
 	   return null;
 	}
-
+/*
+    if (sendVerifyRecaptchaMessage(recaptcha) == false) {
+        return null;
+    }
+*/
 System.out.println("UserResource::login - session: " + session);
 System.out.flush();
 
-        Person person = session.getPerson();
-        s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
-                                              getService().getMongoUsername(),
-                                              getService().getMongoPassword(),
-                                              getService().getMongoDBName());
+    Person person = session.getPerson();
+    s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+                                            getService().getMongoUsername(),
+                                            getService().getMongoPassword(),
+                                            getService().getMongoDBName());
 
-        String thisRole = s_mongoDBInterface.getRole(login);
+    String thisRole = s_mongoDBInterface.getRole(login);
 
-        String mongopass = s_mongoDBInterface.getPassword(login);
+    String mongopass = s_mongoDBInterface.getPassword(login);
 
 System.out.println("UserResource::login - role: " + thisRole);
 System.out.println("UserResource::login - mongo password: " + mongopass);
 System.out.flush();
 
-        List<String> roles = new ArrayList<String>();
-        roles.add(thisRole);
-        person.setRoles(roles);
-        session.setPerson(person);
+    List<String> roles = new ArrayList<String>();
+    roles.add(thisRole);
+    person.setRoles(roles);
+    session.setPerson(person);
 
 	if (service.setLocked(session, true) == false) {
 	   System.out.println("UserResource::login - setLocked failed");
@@ -374,8 +396,7 @@ System.out.flush();
             System.out.println("UserResource::changePassword: checkLoginId returned FALSE - did NOT find login");
             System.out.flush();
 
-            Response resp = null;
-            return resp;
+            return Response.serverError().entity("changePassword - APIValidation error").build();
         }
 
 System.out.println("changePassword - after api validation");
@@ -421,13 +442,13 @@ System.out.flush();
     @Path("/logout")
     public Response logout() {
 
-	Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
+	    Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
 
         if (sid == null) {
 System.out.println("UserResource::logout - sid: " + sid);
 System.out.flush();
-	   return null;
-	}
+	        return null;
+	    }
 
         Session session = sessionProvider.getSessionById(sid.getValue());
 
@@ -495,6 +516,46 @@ System.out.flush();
         Session session = service.changeOrganization(getSession(), organizationId);
         sessionProvider.replaceSession(session);
         return session;
+    }
+
+    private boolean sendVerifyRecaptchaMessage(String recaptcha)
+    {
+    
+        try {
+            URL obj = new URL(url);
+            HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+
+            // add reuqest header
+            con.setRequestMethod("POST");
+            con.setRequestProperty("User-Agent", USER_AGENT);
+            con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+
+            String postParams = "secret=" + secret + "&response=" + recaptcha;
+
+            // Send post request
+            con.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(postParams);
+            wr.flush();
+            wr.close();
+
+            int responseCode = con.getResponseCode();
+            System.out.println("\nSending 'POST' request to URL : " + url);
+            System.out.println("Post parameters : " + postParams);
+            System.out.println("Response Code : " + responseCode);
+
+            if (responseCode != 200) {
+                System.out.println("Recaptcha Verification Failed");
+                return false;
+            }
+
+
+            
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return true;
     }
 
 }
