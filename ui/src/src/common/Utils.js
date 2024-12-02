@@ -1,5 +1,5 @@
 /* eslint-disable eqeqeq */
-import Moment from "moment/min/moment.min.js";
+import moment from "moment";
 import * as UserSession from "../user/UserSession";
 import $ from "jquery";
 import qs from "qs";
@@ -252,7 +252,7 @@ export function timeToDateNoTime(time) {
 }
 
 export function longToDateTimeFormatted(uts, format) {
-  return Moment(uts).format(format);
+  return moment(uts).format(format);
 }
 
 export function getDatepickerTime(timeMillis) {

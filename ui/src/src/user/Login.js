@@ -4,7 +4,7 @@ import qs from "qs";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import TextField from '@material-ui/core/TextField';
-
+import ReCAPTCHA from "react-google-recaptcha";
 import { LinkButtons, forgotButton } from './components';
 import ControlledPopup from '../common/ControlledPopup';
 
@@ -15,10 +15,18 @@ class Login extends Component {
       login: "",
       password: "",
       errorMessage:"",
+      recaptcha: "",
     };
     this.handleChange = this.handleChange.bind(this);
+    this.handleRecaptcha = this.handleRecaptcha.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onSessionChange = this.onSessionChange.bind(this);
+  }
+
+  handleRecaptcha(value) {
+    if (value) {
+      this.state.recaptcha = value;
+    }
   }
 
   onSessionChange(session) {
@@ -32,10 +40,16 @@ class Login extends Component {
   }
 
   handleSubmit(event) {
-    Backend.post("user/login?login=" + this.state.login + "&password=" + this.state.password)
+    if (this.state.recaptcha === "") {
+      alert("Enter recaptcha");
+    } else {
+      let recaptcha = this.state.recaptcha;
+      this.state.recaptcha = "";
+      this.setState(this.state);
+
+      Backend.postPlain("user/login?login=" + this.state.login + "&password=" + this.state.password + "&recaptcha=" + recaptcha)
         .then(response => {
-	  let responseClone = JSON.parse(JSON.stringify(response));
-          this.onSessionChange(responseClone);
+          this.onSessionChange(response);
           var params = qs.parse(this.props.location.search.substring(1));
           var retpath = decodeURIComponent(params.retpath || "");
           var decodedReptath = decodeURI(retpath);
@@ -46,7 +60,8 @@ class Login extends Component {
         }).catch(error => {
 	    this.setState({errorMessage: "Unable to login: " + error.message});
         });
-    event.preventDefault();
+      event.preventDefault();
+    }
   }
 
   render() {
@@ -80,6 +95,10 @@ class Login extends Component {
             required=""
             onChange={this.handleChange}
           />
+	  <ReCAPTCHA
+	   sitekey={process.env.REACT_APP_SITE_KEY}
+	   onChange={this.handleRecaptcha}
+	  />
           <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
             Sign in
           </button>

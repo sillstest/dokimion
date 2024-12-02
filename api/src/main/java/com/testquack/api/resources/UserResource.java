@@ -141,10 +141,11 @@ System.out.flush();
 
     @POST
     @Path("/forgot_password")
-    public Response sendEmail(@QueryParam("login") String login) {
-                             // @QueryParam("recaptcha") String recaptcha) {
+    public Response sendEmail(@QueryParam("login") String login,
+                              @QueryParam("recaptcha") String recaptcha) {
 
        System.out.println("sendEmail - login: " + login);
+       System.out.println("sendEmail - recaptcha1: " + recaptcha);
        System.out.flush();
 
        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
@@ -159,11 +160,11 @@ System.out.flush();
             return Response.serverError().entity("sendEmail - APIValidation error").build();
        }
        
-       /*
+
        if (sendVerifyRecaptchaMessage(recaptcha) == false) {
             return Response.serverError().entity("sendEmail - Invalid ReCaptcha").build();
        }
-    */
+
 
        Duration deltaTime = Duration.ZERO;
        Instant beginTime = Instant.now();
@@ -301,11 +302,11 @@ System.out.flush();
     @POST
     @Path("/login")
     public Session login(@QueryParam("login") String login,
-                         @QueryParam("password") String password) {
-                         //@QueryParam("recaptcha") String recaptcha) {
+                         @QueryParam("password") String password,
+                         @QueryParam("recaptcha") String recaptcha) {
 System.out.println("UserResource::login - login: " + login);
 System.out.println("UserResource::login - password: " + password);
-//System.out.println("UserResource::login - recaptcha: " + recaptcha);
+System.out.println("UserResource::login - recaptcha: " + recaptcha);
 System.out.flush();
     Session session = authProvider.doAuth(request, response);
 
@@ -314,11 +315,14 @@ System.out.flush();
 	   System.out.flush();
 	   return null;
 	}
-/*
+System.out.println("session ok returned from doAuth");
+System.out.flush();
+
     if (sendVerifyRecaptchaMessage(recaptcha) == false) {
         return null;
     }
-*/
+
+
 System.out.println("UserResource::login - session: " + session);
 System.out.flush();
 

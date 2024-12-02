@@ -5,6 +5,7 @@ import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
 import qs from "qs";
 import TextField from '@material-ui/core/TextField';
+import ReCAPTCHA from "react-google-recaptcha";
 
 class ForgotPassword extends Component {
 	constructor(props) {
@@ -13,10 +14,18 @@ class ForgotPassword extends Component {
              login: "",
 	     email: "",
              message: "",
+             recaptcha: "",
 	   };
            this.handleChange = this.handleChange.bind(this);
+           this.handleRecaptcha = this.handleRecaptcha.bind(this);
 	   this.handleSubmit = this.handleSubmit.bind(this);
 	}
+
+	handleRecaptcha(value) {
+	  if (value) {
+	    this.state.recaptcha = value;
+          }
+        }
 
 	handleChange(event) {
            this.state[event.target.name] = event.target.value;
@@ -24,16 +33,25 @@ class ForgotPassword extends Component {
 	};
 
 	handleSubmit(event) {
-	  const { login } = this.state;
-          Backend.postPlain("user/forgot_password?login=" + login )
+	  if (this.state.recaptcha === "") {
+	    alert("Enter recaptcha");
+	  } else {
+	    const { login } = this.state;
+	    const recaptcha = this.state.recaptcha;
+	    this.state.recaptcha = "";
+	    this.setState(this.state);
+
+            Backend.postPlain("user/forgot_password?login=" + login + "&recaptcha=" + recaptcha)
              .then(response => {
 	        this.setState({message: "Success: Sent temporary password email for login"});
 	        window.location = decodeURI("/");
 	     }).catch(error => {
 		this.setState({message: "Error: Unable to retrieve email for login: " + error});
              });
-          event.preventDefault();
+            event.preventDefault();
+	  }
 	};
+
 
 	render() {
           return (
@@ -54,6 +72,10 @@ class ForgotPassword extends Component {
 		  autofocus=""
 		  onChange={this.handleChange}
 	        />
+		<ReCAPTCHA
+		 sitekey={process.env.REACT_APP_SITE_KEY}
+		 onChange={this.handleRecaptcha}
+		/>
                 <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
 	          Send Email with Temporary Password
 		</button>

@@ -54,6 +54,7 @@ then
 fi
 cp ~1/config/common/startup_dokimion_ui.sh ../bin/.
 cp ~1/config/common/run_jstatd.sh ../bin/.
+cp ~1/config/common/.env src/.
 chown dokimion:dokimion .
 chown dokimion:dokimion -R *
 chmod -R a+w *

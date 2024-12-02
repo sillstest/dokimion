@@ -225,7 +225,7 @@ class Header extends Component {
     }
     return (
       <>
-      {this.state.session.person.firstName != "Guest" ? (
+      {this.state.session.person !== undefined && this.state.session.person.firstName !== "Guest" ? (
       /* only display banner when user is logged in */
       <nav className="navbar navbar-expand-md navbar-dark bg-green">
 
