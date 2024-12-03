@@ -33,24 +33,37 @@ class ForgotPassword extends Component {
 	};
 
 	handleSubmit(event) {
-	  if (this.state.recaptcha === "") {
-	    alert("Enter recaptcha");
-	  } else {
-	    const { login } = this.state;
-	    const recaptcha = this.state.recaptcha;
-	    this.state.recaptcha = "";
-	    this.setState(this.state);
 
-            Backend.postPlain("user/forgot_password?login=" + login + "&recaptcha=" + recaptcha)
-             .then(response => {
-	        this.setState({message: "Success: Sent temporary password email for login"});
-	        window.location = decodeURI("/");
-	     }).catch(error => {
-		this.setState({message: "Error: Unable to retrieve email for login: " + error});
-             });
-            event.preventDefault();
-	  }
-	};
+          let recaptcha = "";
+          if (process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) {
+            // no automated test - send reacaptcha string to back end
+            recaptcha = this.state.recaptcha;
+
+            if (this.state.recaptcha === "") {
+              alert("Enter recaptcha");
+              return;
+            }
+
+          } else {
+            // automated test - send recaptcha string = "" to back end
+            recaptcha = "";
+          }
+
+          this.state.recaptcha = "";
+          this.setState(this.state);
+
+	  const { login } = this.state;
+
+          Backend.postPlain("user/forgot_password?login=" + login + "&recaptcha=" + recaptcha)
+           .then(response => {
+	      this.setState({message: "Success: Sent temporary password email for login"});
+	      window.location = decodeURI("/");
+	   }).catch(error => {
+             this.setState({message: "Error: Unable to retrieve email for login: " + error});
+           });
+          event.preventDefault();
+
+        };
 
 
 	render() {
@@ -72,10 +85,12 @@ class ForgotPassword extends Component {
 		  autofocus=""
 		  onChange={this.handleChange}
 	        />
+		{(process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) && (
 		<ReCAPTCHA
 		 sitekey={process.env.REACT_APP_SITE_KEY}
 		 onChange={this.handleRecaptcha}
 		/>
+		)}
                 <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
 	          Send Email with Temporary Password
 		</button>
