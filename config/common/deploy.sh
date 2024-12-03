@@ -1,6 +1,9 @@
 #!/bin/bash -x
 # assume in quack repo - root dir
-
+#
+#  $1 - server optional prefix ('s') and number (1, 2, or 3)
+#  $2 - prod or test
+#
 pushd ui
 tar cvzf ui.tgz src/
 popd
@@ -54,7 +57,11 @@ then
 fi
 cp ~1/config/common/startup_dokimion_ui.sh ../bin/.
 cp ~1/config/common/run_jstatd.sh ../bin/.
-cp ~1/config/common/.env src/.
+if [ $2 == "prod" ]
+  cp ~1/config/common/.env_prod src/.env
+else
+  cp ~1/config/common/.env_test src/.env
+fi
 chown dokimion:dokimion .
 chown dokimion:dokimion -R *
 chmod -R a+w *

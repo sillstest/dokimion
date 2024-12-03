@@ -17,6 +17,7 @@ class Login extends Component {
       errorMessage:"",
       recaptcha: "",
     };
+
     this.handleChange = this.handleChange.bind(this);
     this.handleRecaptcha = this.handleRecaptcha.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -40,10 +41,22 @@ class Login extends Component {
   }
 
   handleSubmit(event) {
-    if (this.state.recaptcha === "") {
-      alert("Enter recaptcha");
-    } else {
-      let recaptcha = this.state.recaptcha;
+
+      let recaptcha = "";
+      if (process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) {
+        // no automated test - send reacaptcha string to back end
+        recaptcha = this.state.recaptcha;
+
+        if (this.state.recaptcha === "") {
+          alert("Enter recaptcha");
+	  return;
+        }
+
+      } else {
+        // automated test - send recaptcha string = "" to back end
+        recaptcha = "";
+      }
+
       this.state.recaptcha = "";
       this.setState(this.state);
 
@@ -61,7 +74,6 @@ class Login extends Component {
 	    this.setState({errorMessage: "Unable to login: " + error.message});
         });
       event.preventDefault();
-    }
   }
 
   render() {
@@ -95,10 +107,12 @@ class Login extends Component {
             required=""
             onChange={this.handleChange}
           />
+	  {(process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) && (
 	  <ReCAPTCHA
 	   sitekey={process.env.REACT_APP_SITE_KEY}
 	   onChange={this.handleRecaptcha}
 	  />
+	  )}
           <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
             Sign in
           </button>
