@@ -58,6 +58,7 @@ fi
 cp ~1/config/common/startup_dokimion_ui.sh ../bin/.
 cp ~1/config/common/run_jstatd.sh ../bin/.
 if [ $2 == "prod" ]
+then
   cp ~1/config/common/.env_prod src/.env
 else
   cp ~1/config/common/.env_test src/.env
