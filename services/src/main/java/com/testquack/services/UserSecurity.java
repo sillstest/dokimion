@@ -1,5 +1,6 @@
 package com.testquack.services;
 
+import com.testquack.dal.RoleCapabilityUtils;
 import com.testquack.beans.RoleCapability;
 import com.testquack.beans.Role;
 import com.testquack.beans.Capability;
@@ -10,7 +11,7 @@ import com.testquack.beans.Launch;
 import ru.greatbit.whoru.auth.Session;
 
 import com.testquack.dal.UserRepository;
-import com.testquack.dal.RoleCapabilityRepository;
+
 
 import java.util.List;
 import java.util.Collection;
@@ -18,11 +19,15 @@ import java.util.Collection;
 public class UserSecurity {
 
   public static boolean allowUserReadRequest(
-                          String                   organizationId, 
+		          String                   organizationId,
                           UserRepository           userRepository, 
-                          RoleCapabilityRepository roleCapRepository,
                           String                   projectId,
-                          String                   loginId) {
+                          String                   loginId,
+			  String                   mongoReplicaSet,
+			  String                   mongoUserName,
+			  String                   mongoPassword,
+			  String                   mongoDBName) {
+
      User user = (User)userRepository.findOne(organizationId, projectId, loginId);
 
 System.out.println("allowUserReadRequest - user: " + user);
@@ -30,38 +35,19 @@ System.out.flush();
 
      Role userRole = translateRoleFormat(user.getRole());
 
-     List<RoleCapability> roleCapList = roleCapRepository.find(
-             organizationId, projectId, new Filter());
-
-System.out.println("allowUserReadRequest - roleCapList: " + roleCapList);
-System.out.flush();
-
-     for (RoleCapability roleCap : roleCapList) {
-        if (userRole == roleCap.getRole()) {
-System.out.println("allowUserReadRequest - roleCap matched role: " + roleCap.getRole());
-System.out.println("allowUserReadRequest - cap: " + roleCap.getCapability().value());
-System.out.flush();
-           if ((roleCap.getCapability() == Capability.READ) ||
-               (roleCap.getCapability() == Capability.READWRITE) ||
-               (roleCap.getCapability() == Capability.ADMIN)) {
-System.out.println("allowUserReadRequest - roleCap allowed READ: " + roleCap);
-System.out.flush();
-              return true;
-           } 
-        }
-
-     }
- 
-     return false;
+     return RoleCapabilityUtils.validateReadCapability(loginId);
 
   }
 
   public static boolean allowUserWriteRequest(
                           String                   organizationId, 
                           UserRepository           userRepository, 
-                          RoleCapabilityRepository roleCapRepository,
                           String                   projectId,
-                          String                   loginId) {
+                          String                   loginId,
+			  String                   mongoReplicaSet,
+			  String                   mongoUserName,
+			  String                   mongoPassword,
+			  String                   mongoDBName) {
 
 System.out.println("allowUserWriteRequest - org id: " + organizationId);
 System.out.println("allowUserWriteRequest - projectId: " + projectId);
@@ -72,31 +58,7 @@ System.out.flush();
 
      Role userRole = translateRoleFormat(user.getRole());
 
-     List<RoleCapability> roleCapList = roleCapRepository.find(
-             organizationId, projectId, new Filter());
-
-System.out.println("allowUserWriteequest - roleCapList: " + roleCapList);
-System.out.flush();
-
-     for (RoleCapability roleCap : roleCapList) {
-        if (userRole == roleCap.getRole()) {
-System.out.println("allowUserWriteRequest - matched role: " + roleCap.getRole().value());
-System.out.println("allowUserWriteRequest - cap: " + roleCap.getCapability().value());
-System.out.flush();
-
-           if ((roleCap.getCapability() == Capability.READWRITE) || 
-               (roleCap.getCapability() == Capability.ADMIN)) {
-System.out.println("allowUserWriteRequest - roleCap allowed READWRITE or ADMIN: " + roleCap);
-System.out.flush();
-
-              return true;
-           } 
-        }
-     }
- 
-System.out.println("allowUserWriteRequest - returning false");
-System.out.flush();
-     return false;
+     return RoleCapabilityUtils.validateWriteCapability(loginId);
   }
 
   public static boolean allowLaunchWriteRequest(List<String> roles, Entity entity) {
@@ -118,7 +80,6 @@ System.out.flush();
   public static boolean allowUserWriteRequest(
                           String                   organizationId, 
                           UserRepository           userRepository, 
-                          RoleCapabilityRepository roleCapRepository,
                           String                   projectId,
                           String                   loginId,
                           List<Entity>             entityList ) {
@@ -134,7 +95,6 @@ System.out.flush();
   public static boolean allowUserWriteRequest(
                           String                   organizationId, 
                           UserRepository           userRepository, 
-                          RoleCapabilityRepository roleCapRepository,
                           String                   projectId,
                           String                   loginId,
                           Collection<Entity>       entityCollection ) {
@@ -148,7 +108,6 @@ System.out.flush();
 
   public static boolean isAdmin(
                           UserRepository           userRepository, 
-                          RoleCapabilityRepository roleCapRepository,
                           String                   loginId ) {
 
      if (loginId.equals("admin") == true) 

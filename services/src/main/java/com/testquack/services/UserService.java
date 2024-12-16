@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.testquack.beans.User;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.UserRepository;
+import com.testquack.dal.RoleCapabilityRepository;
 import ru.greatbit.utils.string.StringUtils;
 import ru.greatbit.whoru.auth.Session;
 import ru.greatbit.whoru.auth.Person;
@@ -35,6 +36,9 @@ public class UserService extends BaseService<User> {
 
     @Autowired
     private OrganizationRepository organizationRepository;
+
+    @Autowired
+    private RoleCapabilityRepository roleCapRepository;
 
     @Override
     protected CommonRepository<User> getRepository() {
@@ -258,7 +262,7 @@ System.out.flush();
        //if (!session.isIsAdmin() && UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
        if (!session.isIsAdmin()) {
 		       
-          if (UserSecurity.isAdmin(userRepository, roleCapRepository, userLogin) == false) {
+          if (UserSecurity.isAdmin(userRepository, userLogin) == false) {
 
 System.out.println("UserService::setLocked - NOT an admin");
 System.out.flush();

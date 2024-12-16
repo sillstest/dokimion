@@ -1,7 +1,7 @@
 package com.testquack.api.security;
 
 import com.testquack.dal.aes;
-import com.testquack.api.utils.MongoDBInterface;
+import com.testquack.dal.MongoDBInterface;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
 import com.testquack.services.UserService;

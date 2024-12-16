@@ -2,7 +2,7 @@ package com.testquack.api.resources;
 
 import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.PasswordGeneration;
-import com.testquack.api.utils.MongoDBInterface;
+import com.testquack.dal.MongoDBInterface;
 import com.testquack.api.utils.SendEmail;
 import com.testquack.api.utils.FilterUtils;
 import com.testquack.beans.ChangePasswordRequest;
@@ -67,7 +67,7 @@ public class UserResource extends BaseResource<User> {
     @Value("${quack.ui.url}")
     private String baseUiUrl;
 
-    private static MongoDBInterface s_mongoDBInterface;
+    public static MongoDBInterface s_mongoDBInterface;
 
     @POST
     @Path("/init")

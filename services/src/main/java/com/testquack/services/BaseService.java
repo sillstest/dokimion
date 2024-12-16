@@ -20,7 +20,6 @@ import com.testquack.beans.TestCase;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.ProjectRepository;
 import com.testquack.dal.UserRepository;
-import com.testquack.dal.RoleCapabilityRepository;
 import ru.greatbit.whoru.auth.Session;
 
 import java.util.Collection;
@@ -83,9 +82,6 @@ public abstract class BaseService<E extends Entity> {
 
     @Autowired
     protected UserRepository userRepository;
-
-    @Autowired
-    protected RoleCapabilityRepository roleCapRepository;
 
     @Autowired
     protected ProjectRepository projectRepository;
@@ -220,8 +216,8 @@ System.out.flush();
        if (isAdmin(session) == false) {
           if (UserSecurity.allowUserReadRequest(
              getCurrOrganizationId(session),
-             userRepository, roleCapRepository, projectId, 
-             session.getPerson().getLogin())) {
+             userRepository, projectId, session.getPerson().getLogin(), 
+	     mongoReplicaSet, mongousername, mongopassword, mongodbname)) {
 
              return userCanAccessProjectCommon(session, projectId);
           } else {
@@ -298,8 +294,9 @@ System.out.println("userCanUpdateProject - before userWriteRequest call");
 System.out.flush();
         if (UserSecurity.allowUserWriteRequest(
                          getCurrOrganizationId(session),
-                         userRepository, roleCapRepository, projectId, 
-                         session.getPerson().getLogin())) {
+                         userRepository, projectId, 
+                         session.getPerson().getLogin(),
+	                 mongoReplicaSet, mongousername, mongopassword, mongodbname) == true) {
 System.out.println("BaseService:userCanUpdateProject - ready to call userCanAccessProjectCommon");
 System.out.flush();
            return userCanAccessProjectCommon(session, projectId);

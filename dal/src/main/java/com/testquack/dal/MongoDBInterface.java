@@ -1,6 +1,4 @@
-package com.testquack.api.utils;
-
-import com.testquack.dal.aes;
+package com.testquack.dal;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.MongoClientSettings;
@@ -427,45 +425,86 @@ System.out.flush();
       JSONParser parser = new JSONParser();
 
       if (collection == null) {
-	 System.out.println("getUserCollectionAttribute - collection = null");
-	 System.out.flush();
+	      System.out.println("getUserCollectionAttribute - collection = null");
+	      System.out.flush();
       }
 
       for (Document doc : collection.find())
       {
-	 String jsonStr = doc.toJson();
+	      String jsonStr = doc.toJson();
 
-	 Object obj = null;
-	 try {
-	    obj = parser.parse(jsonStr);
-	 } catch (ParseException e) {
+	      Object obj = null;
+	      try {
+	         obj = parser.parse(jsonStr);
+	      } catch (ParseException e) {
             System.out.println("ParseException - jsonStr: " + jsonStr);
-	 }
+	   }
 
-	 org.json.simple.JSONObject jsonObj = (org.json.simple.JSONObject)obj;
+	   org.json.simple.JSONObject jsonObj = (org.json.simple.JSONObject)obj;
 
-	 String login = (String)jsonObj.get("login");
-	 String email = (String)jsonObj.get("email");
-	 String role = (String)jsonObj.get("role");
-	 String password = (String)jsonObj.get("password");
+	   String login = (String)jsonObj.get("login");
+	   String email = (String)jsonObj.get("email");
+	   String role = (String)jsonObj.get("role");
+	   String password = (String)jsonObj.get("password");
 
-	 System.out.println("login: " + login);
-	 System.out.println("email: " + email);
-	 System.out.flush();
+	   System.out.println("login: " + login);
+	   System.out.println("email: " + email);
+	   System.out.flush();
 
-	 if (login.equals(loginToFind))
+	   if (login.equals(loginToFind))
+      {
+	      System.out.println("email found: " + email);
+	      System.out.flush();
+         if (userAttribute == "email")
          {
-	    System.out.println("email found: " + email);
-	    System.out.flush();
-            if (userAttribute == "email")
-            {
-	       return email;
-            } else if (userAttribute == "role") {
-               return role;
-	    } else { // password
-	       return password;
-            }
-	 }
+	         return email;
+         } else if (userAttribute == "role") {
+            return role;
+	      } else { // password
+	        return password;
+         }
+	   }
+
+   }
+
+      return "";
+   }
+
+   public String getCapabilityForRole(String roleToFind)
+   {
+      MongoCollection<Document> collection = s_db.getCollection("RoleCapability");
+
+      JSONParser parser = new JSONParser();
+
+      if (collection == null) {
+	      System.out.println("getCapabilityForRole - collection = null");
+	      System.out.flush();
+      }
+
+      for (Document doc : collection.find())
+      {
+	      String jsonStr = doc.toJson();
+
+	       Object obj = null;
+	      try {
+	         obj = parser.parse(jsonStr);
+	      } catch (ParseException e) {
+            System.out.println("getCapabilityForRole - Parse Exception - jsonStr: " + jsonStr);
+	      }
+
+	      org.json.simple.JSONObject jsonObj = (org.json.simple.JSONObject)obj;
+
+	      String role = (String)jsonObj.get("role");
+	      System.out.println("role: " + role);
+	      System.out.flush();
+	      String cap = (String)jsonObj.get("capability");
+	      System.out.println("cap: " + cap);
+	      System.out.flush();
+
+	      if (role.equals(roleToFind))
+         {
+	         return  cap;
+	      }
 
       }
 
@@ -524,5 +563,5 @@ System.out.flush();
 	System.out.flush();
    }
 
-
+  
 }
