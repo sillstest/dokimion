@@ -52,7 +52,9 @@ import java.security.NoSuchAlgorithmException;
 public class UserResource extends BaseResource<User> {
 
     public static final String url = "https://www.google.com/recaptcha/api/siteverify";
-    public static final String secret = "6Ld6SXUqAAAAAPTyAdKNofs1YK2hleZuQK5a1VyT";
+    //public static final String secret = "6Ld6SXUqAAAAAPTyAdKNofs1YK2hleZuQK5a1VyT"; // s-dok1
+    //public static final String secret = "6LfTLXYqAAAAACmB_1J_9Ul8EipAo0NKiiOXGO_c"; // testing
+    public static final String secret = "6Ldj5oIqAAAAADhZ_29nEuENDYwzD3O_7qbahaos"; // test_stag
     private final static String USER_AGENT = "Mozilla/5.0";
 
     @Autowired
