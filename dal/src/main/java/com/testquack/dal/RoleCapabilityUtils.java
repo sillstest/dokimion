@@ -10,11 +10,13 @@ public class RoleCapabilityUtils {
    public static void init(String mongoReplicaSet, String mongoUserName, 
 		           String mongoPassword, String mongoDBName) {
 
-       s_mongoDBInterface = new MongoDBInterface();
-       s_mongoDBInterface.setMongoDBProperties(mongoReplicaSet,
-                                               mongoUserName,
-					       mongoPassword,
-					       mongoDBName);
+       if (s_mongoDBInterface == null) {
+          s_mongoDBInterface = new MongoDBInterface();
+          s_mongoDBInterface.setMongoDBProperties(mongoReplicaSet,
+                                                  mongoUserName,
+					          mongoPassword,
+						  mongoDBName);
+       }
 
    }
 

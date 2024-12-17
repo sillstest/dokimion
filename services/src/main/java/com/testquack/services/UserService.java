@@ -37,9 +37,6 @@ public class UserService extends BaseService<User> {
     @Autowired
     private OrganizationRepository organizationRepository;
 
-    @Autowired
-    private RoleCapabilityRepository roleCapRepository;
-
     @Override
     protected CommonRepository<User> getRepository() {
         return repository;

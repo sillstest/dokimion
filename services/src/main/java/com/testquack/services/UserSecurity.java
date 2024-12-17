@@ -28,6 +28,8 @@ public class UserSecurity {
 			  String                   mongoPassword,
 			  String                   mongoDBName) {
 
+     RoleCapabilityUtils.init(mongoReplicaSet, mongoUserName, mongoPassword, mongoDBName);
+
      User user = (User)userRepository.findOne(organizationId, projectId, loginId);
 
 System.out.println("allowUserReadRequest - user: " + user);
@@ -53,6 +55,8 @@ System.out.println("allowUserWriteRequest - org id: " + organizationId);
 System.out.println("allowUserWriteRequest - projectId: " + projectId);
 System.out.println("allowUserWriteRequest - loginId: " + loginId);
 System.out.flush();
+
+     RoleCapabilityUtils.init(mongoReplicaSet, mongoUserName, mongoPassword, mongoDBName);
 
      User user = (User)userRepository.findOne(organizationId, projectId, loginId);
 
