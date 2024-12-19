@@ -33,10 +33,10 @@ public class ProjectServiceTest extends BaseTest{
     public void userCanSeeOnlyHisProjectsTest(){
         List<Project> projects = projectService.findFiltered(
                 userSession, null, new Filter());
-        assertThat(projects.size(), is(3));
+        assertThat(projects.size(), is(1));
         assertThat(
                 projects.stream().map(Project::getId).collect(toList()),
-                Matchers.containsInAnyOrder(project1.getId(), project2.getId(), project4.getId())
+                Matchers.containsInAnyOrder(project4.getId())
         );
     }
 

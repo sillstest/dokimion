@@ -13,10 +13,6 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>dal</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>services</artifactId>
         </dependency>
         <dependency>
@@ -164,16 +160,11 @@
 
         <dependency>
             <groupId>com.sun.mail</groupId>
-	    <artifactId>javax.mail</artifactId>
+            <artifactId>javax.mail</artifactId>
             <version>1.6.2</version>
         </dependency>
 
-	<!-- Utils -->
-        <dependency>
-	    <groupId>org.passay</groupId>
-            <artifactId>passay</artifactId>
-	    <version>1.6.3</version>
-        </dependency>
+        <!-- Utils -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -188,43 +179,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>
-
-	<!-- MongoDB -->
-        <dependency>
-           <groupId>org.springframework.data</groupId>
-           <artifactId>spring-data-mongodb</artifactId>
-        </dependency>
-
-	<dependency>
-           <groupId>org.mongodb</groupId>
-	   <artifactId>mongodb-driver-sync</artifactId>
-	   <version>5.1.2</version>
-        </dependency>
-
-	<dependency>
-           <groupId>org.mongodb</groupId>
-	   <artifactId>mongodb-driver-core</artifactId>
-	   <version>5.1.2</version>
-        </dependency>
-
-	<dependency>
-           <groupId>org.mongodb</groupId>
-	   <artifactId>bson</artifactId>
-	   <version>5.1.2</version>
-        </dependency>
-
-	<dependency>
-           <groupId>org.json</groupId>
-	   <artifactId>json</artifactId>
-	   <version>20240303</version>
-        </dependency>
-
-	<dependency>
-           <groupId>com.googlecode.json-simple</groupId>
-	   <artifactId>json-simple</artifactId>
-	   <version>1.1.1</version>
-        </dependency>
-
 
         <!-- Test -->
         <dependency>
