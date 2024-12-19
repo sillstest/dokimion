@@ -30,7 +30,8 @@ def main():
          print("##teamcity[testStarted name='" + "test" + str(i+1) + "']");
          print("##teamcity[testFinished name='" + "test" + str(i+1) + "']");
 
-      for i in range(0, int(noFailures)):
+      maxFailures = max((int(noFailures), int(noErrors));
+      for i in range(0, maxFailures):
          print("##teamcity[testStarted name='" + "test" + str(i+1) + "']");
          print("##teamcity[testFailed name='" + "test" + str(i+1) + "']");
 
