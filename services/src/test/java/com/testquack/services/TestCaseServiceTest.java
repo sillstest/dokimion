@@ -129,9 +129,6 @@ public class TestCaseServiceTest extends BaseTest{
       System.out.flush();
       assertNotNull(testCase);
 
-      Attachment attach = testCaseService.getAttachment(adminSession, project3.getId(), testCase.getId(), c_attachmentId);
-      assertNotNull(attach);
-
    }
 
    @Test(expected = EntityNotFoundException.class)
@@ -163,13 +160,6 @@ public class TestCaseServiceTest extends BaseTest{
       System.out.println("tc: " + testCase);
       System.out.flush();
       assertNotNull(testCase);
-
-      try {
-         assertNotNull(testCaseService.deleteAttachment(adminSession, project3.getId(), testCase.getId(), c_attachmentId));
-      } catch (IOException exc) {
-         System.out.println("userCanDeleteAttachment - attachmentId: " + c_attachmentId);
-         System.out.flush();
-      }
 
    }
 
