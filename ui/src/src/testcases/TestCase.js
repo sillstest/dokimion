@@ -189,9 +189,10 @@ console.log("TestCase::getTestCase");
         var roles = this.state.session.person.roles &&  this.state.session.person.roles.length>0 ? this.state.session.person.roles :[];
 
         var isTester =  roles && roles.filter(val => val.includes('TESTER')).length >0 ? true : false;
+        var isObserverOnly =  roles && roles.filter(val => val.includes('OBSERVERONLY')).length >0 ? true : false;
         var isTestDeveloper =  roles && roles.filter(val => val.includes('TESTDEVELOPER')).length >0 ? true : false;
         console.log("Role is a ?" + isTester + " " + isTestDeveloper + this.state.testcase.locked);
-        if(isTester){
+        if(isTester || isObserverOnly){
             this.state.readonly = true;
           }else if(isTestDeveloper && this.state.testcase.locked )
           {
