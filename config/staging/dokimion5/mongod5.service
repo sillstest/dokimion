@@ -8,7 +8,7 @@ Wants=network-online.target
 User=mongod
 Group=mongod
 EnvironmentFile=
-ExecStart=/usr/bin/mongod -vvvv --config /etc/mongod5.conf --logRotate rename
+ExecStart=/usr/bin/mongod -vvvv --config /etc/mongod5.conf --logRotate reopen
 #ExecStart=/usr/bin/cgexec -g memory:cgMongod /usr/bin/mongod -vvvv --config /etc/mongod5.conf
 PIDFile=/run/mongod/mongod5.pid
 # file size
@@ -17,7 +17,7 @@ LimitFSIZE=infinity
 LimitCPU=infinity
 # virtual memory size
 #LimitAS=infinity
-LimitAS=6020M
+LimitAS=infinity
 # open files
 LimitNOFILE=64000
 # processes/threads
