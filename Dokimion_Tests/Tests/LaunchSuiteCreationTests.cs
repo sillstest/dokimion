@@ -138,13 +138,13 @@ namespace Dokimion.Tests
 
             Actor.AttemptsTo(Hover.Over(TestCases.FilterLocator));
             Actor.AttemptsTo(Click.On(TestCases.FilterLocator));
-            Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(6)), timeout: 60);
+            Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(17)), timeout: 60);
             ReadOnlyCollection<IWebElement> Tc = TestCases.TestCaseTreeListMain.FindElements(driver);
 
-            userActions.LogConsoleMessage("Verify : There are 6 Testcases in the list");
+            userActions.LogConsoleMessage("Verify : There are 17 Testcases in the list");
 
             //Have to wait as the dom changed
-            Assert.That(Tc.Count, Is.EqualTo(6));
+            Assert.That(Tc.Count, Is.EqualTo(17));
             //
             ReadOnlyCollection<IWebElement> Group_Filters = TestCases.GroupingTreeDepthAuth.FindElements(driver);
             Assert.IsNotNull(Group_Filters);
