@@ -138,6 +138,9 @@ namespace Dokimion.Tests
 
             Actor.AttemptsTo(Hover.Over(TestCases.FilterLocator));
             Actor.AttemptsTo(Click.On(TestCases.FilterLocator));
+
+            userActions.LogConsoleMessage("TC: " + TestCases.TestCaseTreeListMain);
+
             Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(17)), timeout: 60);
             ReadOnlyCollection<IWebElement> Tc = TestCases.TestCaseTreeListMain.FindElements(driver);
 
