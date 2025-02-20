@@ -25,6 +25,7 @@ require("gijgo/css/gijgo.min.css");
 
 class Launch extends SubComponent {
   state = {
+    errorMessage: "",
     launch: {
       launchStats: {
         statusCounters: {},
@@ -255,6 +256,9 @@ class Launch extends SubComponent {
   }
 
   onTestcaseStateChanged(testcase) {
+
+    this.state.errorMessage = testcase.displayErrorMessage;
+    this.setState(this.state);
 
     var updatedTestCase = Utils.getTestCaseFromTree(
       testcase.uuid,
@@ -515,7 +519,6 @@ class Launch extends SubComponent {
   render() {
     return (
       <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="row filter-control-row">
             <div className="col-3">
               <h3>
@@ -527,6 +530,7 @@ class Launch extends SubComponent {
             <div className="col-1"></div>
            { this.renderLaunchFilter()}
         </div>
+        <ControlledPopup popupMessage={this.state.errorMessage}/>
           {/* Added for Issue 82 */}
         <div>
           Number of Testcases : <span style={{fontWeight : 'bold'}}>{this.state.count}</span>

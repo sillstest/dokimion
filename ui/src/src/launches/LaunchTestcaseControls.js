@@ -51,7 +51,9 @@ class LaunchTestcaseControls extends Component {
         }
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't save launch testcase status: " + error});
+	this.state.testcase.displayErrorMessage = "Couldn't save launch testcase status: " + error;
+	this.setState(this.state);
+        this.callback(this.state.testcase);
       });
     event.preventDefault();
   }
@@ -67,7 +69,6 @@ class LaunchTestcaseControls extends Component {
   renderRunning() {
     return (
       <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
         <button type="button" class="btn btn-success" onClick={e => this.handleStatusSubmit("PASSED", e)}>
           Pass
         </button>

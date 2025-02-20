@@ -54,6 +54,7 @@ class TestCase extends SubComponent {
         properties: [],
         broken: false,
         locked: false,
+	displayErrorMessage: "",
       },
       originalTestcase: {
         steps: [],
