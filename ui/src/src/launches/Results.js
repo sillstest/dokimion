@@ -64,10 +64,10 @@ class Results extends SubComponent {
   removeResult() {
 
     Backend.delete(
-      this.state.projectId + "/testcase/" + this.state.testcase.id + "/Result/" + this.ResultToRemove,
+      this.state.projectId + "/testcase/" + this.state.testcase.id + "/result/" + this.resultToRemove,
     )
       .then(response => {
-        this.ResultToRemove = null;
+        this.resultToRemove = null;
         $("#remove-result-confirmation").modal("hide");
         this.state.testcase.results = (this.state.testcase.results || []).filter(
           result => result.id !== this.resultToRemove,

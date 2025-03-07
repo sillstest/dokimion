@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import com.testquack.beans.Attachment;
+import com.testquack.beans.Results;
 
 import java.io.*;
 import java.util.UUID;
@@ -34,4 +35,24 @@ public class LocalStorage implements Storage {
         return new FileInputStream(attachment.getUrl());
     }
 
+    @Override
+    public Results uploadResult(String organizationId, String projectId, InputStream uploadedInputStream, String fileName, long size) throws IOException {
+        File file = new File(STORAGE_BASE_PATH + File.separator + UUID.randomUUID().toString(), fileName);
+        file.getParentFile().mkdirs();
+        OutputStream os = new FileOutputStream(file);
+        long len = IOUtils.copy(uploadedInputStream, os);
+        IOUtils.closeQuietly(os);
+        return new Results().withUrl(file.getAbsolutePath()).withDataSize(len);
+    }
+
+    @Override
+    public void removeResult(Results result) throws IOException {
+        File f = new File(result.getUrl());
+        FileUtils.deleteQuietly(f);
+    }
+
+    @Override
+    public InputStream getResult(Results result) throws IOException {
+        return new FileInputStream(result.getUrl());
+    }
 }

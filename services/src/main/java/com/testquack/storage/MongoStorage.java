@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import com.testquack.beans.Attachment;
+import com.testquack.beans.Results;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,17 +42,46 @@ public class MongoStorage implements Storage {
     }
 
     @Override
+    public Results uploadResult(String organizationId, String projectId, InputStream uploadedInputStream, String fileName, long size) throws IOException {
+        DBObject metaData = new BasicDBObject();
+        metaData.put("name", fileName);
+        try {
+            ObjectId result = gridOperations.store(uploadedInputStream, fileName, "application/text", metaData);
+            return new Results().withUrl(result.toString()).withDataSize(size).withTitle(fileName);
+        } finally {
+            if (uploadedInputStream != null) {
+                uploadedInputStream.close();
+            }
+        }
+    }
+
+    @Override
     public void remove(Attachment attachment) throws IOException {
         gridOperations.delete(new Query().addCriteria(Criteria.where("_id").is(new ObjectId(attachment.getUrl()))));
 
     }
 
     @Override
+    public void removeResult(Results result) throws IOException {
+        gridOperations.delete(new Query().addCriteria(Criteria.where("_id").is(new ObjectId(result.getUrl()))));
+
+    }
+    @Override
     public InputStream get(Attachment attachment) throws IOException {
         com.mongodb.client.gridfs.model.GridFSFile file = gridOperations.findOne(
                 new Query().addCriteria(Criteria.where("_id").is(new ObjectId(attachment.getUrl()))));
         if (file == null){
             throw new RuntimeException(String.format("File with id %s not found", attachment.getId()));
+        } else {
+            return new GridFsResource(file, getGridFs().openDownloadStream(file.getObjectId())).getInputStream();
+        }
+    }
+    @Override
+    public InputStream getResult(Results result) throws IOException {
+        com.mongodb.client.gridfs.model.GridFSFile file = gridOperations.findOne(
+                new Query().addCriteria(Criteria.where("_id").is(new ObjectId(result.getUrl()))));
+        if (file == null){
+            throw new RuntimeException(String.format("File with id %s not found", result.getId()));
         } else {
             return new GridFsResource(file, getGridFs().openDownloadStream(file.getObjectId())).getInputStream();
         }

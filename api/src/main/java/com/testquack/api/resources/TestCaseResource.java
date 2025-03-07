@@ -2,6 +2,7 @@ package com.testquack.api.resources;
 
 import com.testquack.api.utils.APIValidation;
 import com.testquack.beans.Attachment;
+import com.testquack.beans.Results;
 import com.testquack.beans.Filter;
 import com.testquack.beans.Issue;
 import com.testquack.beans.IssuePriority;
@@ -125,6 +126,23 @@ System.out.flush();
                 uploadedInputStream, fileDetail.getFileName(), fileDetail.getSize());
     }
 
+    @POST
+    @Path("/{testcaseId}/result")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public TestCase uploadResult(@FormDataParam("file") InputStream uploadedInputStream,
+                                 @FormDataParam("file") FormDataContentDisposition fileDetail,
+                                 @FormDataParam("size") long size,
+                                 @PathParam("projectId") String projectId,
+                                 @PathParam("testcaseId") String testcaseId) throws IOException {
+System.out.println("TestCaseResource::uploadResult - testcaseId: " + testcaseId + ", fileDetail: " + fileDetail);
+System.out.println("TestCaseResource::uploadResult - uploadedInputStream: " + uploadedInputStream);
+System.out.flush();
+
+        return service.uploadResult(getUserSession(), projectId, testcaseId,
+                uploadedInputStream, fileDetail.getFileName(), fileDetail.getSize());
+
+    }
+
     @GET
     @Path("/{testcaseId}/attachment/{attachmentId}")
     public Response downloadAttachment(
@@ -185,6 +203,26 @@ System.out.flush();
         }
     }
 
+  @GET
+    @Path("/{testcaseId}/result/{resultId}")
+    public Response downloadResult(
+            @PathParam("projectId") String projectId,
+            @PathParam("testcaseId") final String testcaseId,
+            @PathParam("resultId") final String resultId) {
+System.out.println("TestCaseResource::downloadResult - testcaseId: " + testcaseId + ", resultId: " + resultId);
+System.out.flush();
+        Results result = service.getResult(getUserSession(), projectId, testcaseId, resultId);
+        try {
+            return Response
+                    .ok(service.getResultStream(result), MediaType.APPLICATION_OCTET_STREAM)
+                    .header("content-disposition", format("result; filename = %s", result.getTitle()))
+                    .build();
+        } catch (IOException ioexp) {
+            return serverError().build();
+        }
+    }
+
+
     @DELETE
     @Path("/{testcaseId}/attachment/{attachmentId}")
     public TestCase deleteAttachment(
@@ -236,6 +274,18 @@ System.out.flush();
 
         return service.deleteAttachment(getUserSession(), projectId, testcaseId, attachmentId);
     }
+
+    @DELETE
+    @Path("/{testcaseId}/result/{resultId}")
+    public TestCase deleteResult(
+            @PathParam("projectId") String projectId,
+            @PathParam("testcaseId") final String testcaseId,
+            @PathParam("resultId") final String resultId) throws IOException {
+System.out.println("TestCaseResource::deleteResult - testcaseId: " + testcaseId + ", resultId: " + resultId);
+System.out.flush();
+        return service.deleteResult(getUserSession(), projectId, testcaseId, resultId);
+    }
+
 
     @POST
     @Path("/{testcaseId}/issue")
@@ -366,10 +416,7 @@ System.out.flush();
             return tc;
         }
 
-/*
-TestCase tc = new TestCase();
-return tc;
-*/
+
         return service.lockTestCase(getUserSession(), projectId, testcaseId);
     }
 
@@ -411,10 +458,6 @@ System.out.flush();
             return tc;
         }
 
-/*
-TestCase tc = new TestCase();
-return tc;
-*/
         return service.unlockTestCase(getUserSession(), projectId, testcaseId);
     }
 

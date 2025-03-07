@@ -1,6 +1,7 @@
 package com.testquack.storage;
 
 import com.testquack.beans.Attachment;
+import com.testquack.beans.Results;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +20,22 @@ public class StubStorage implements Storage {
 
     @Override
     public InputStream get(Attachment attachment) throws IOException {
+        return ClassLoader.getSystemResourceAsStream("/stubfile.txt");
+    }
+
+
+    @Override
+    public Results uploadResult(String organizationId, String projectId, InputStream uploadedInputStream, String fileName, long size) throws IOException {
+        return new Results().withId(UUID.randomUUID().toString()).withTitle(fileName);
+    }
+
+    @Override
+    public void removeResult(Results result) throws IOException {
+
+    }
+
+    @Override
+    public InputStream getResult(Results result) throws IOException {
         return ClassLoader.getSystemResourceAsStream("/stubfile.txt");
     }
 }

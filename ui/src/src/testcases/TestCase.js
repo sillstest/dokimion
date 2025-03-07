@@ -618,9 +618,9 @@ console.log("TestCase::removeTestCase");
               aria-selected="false"
             >
               Results
-              {this.state.testcase.attachments && this.state.testcase.attachments.length > 0 && (
+              {this.state.testcase.results && this.state.testcase.results.length > 0 && (
                 <span className="badge badge-pill badge-secondary tab-badge">
-                  {this.state.testcase.attachments.length}
+                  {this.state.testcase.results.length}
                 </span>
               )}
             </a>
