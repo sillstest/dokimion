@@ -52,7 +52,7 @@ class TestCase extends SubComponent {
         steps: [],
         attributes: {},
         attachments: [],
-        launchResults: [],
+        results: [],
         properties: [],
         broken: false,
         locked: false,

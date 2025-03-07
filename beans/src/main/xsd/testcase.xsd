@@ -30,6 +30,7 @@
                     <xs:element name="properties" type="Property" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="version" type="xs:string"/>
                     <xs:element name="attachments" type="Attachment" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="results" type="Results" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="automated" type="xs:boolean" default="false"/>
                     <xs:element name="locked" type="xs:boolean" default="false"/>
                     <xs:element name="broken" type="xs:boolean" default="false"/>
@@ -103,6 +104,19 @@
 
 
     <xs:complexType name="Attachment">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="storageType" type="xs:string"/>
+            <xs:element name="title" type="xs:string"/>
+            <xs:element name="type" type="xs:string"/>
+            <xs:element name="url" type="xs:string"/>
+            <xs:element name="createdBy" type="xs:string"/>
+            <xs:element name="createdTime" type="xs:long"/>
+            <xs:element name="dataSize" type="xs:long"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Results">
         <xs:sequence>
             <xs:element name="id" type="xs:string"/>
             <xs:element name="storageType" type="xs:string"/>

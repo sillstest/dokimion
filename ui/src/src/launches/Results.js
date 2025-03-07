@@ -15,21 +15,21 @@ class Results extends SubComponent {
   constructor(props) {
     super(props);
 
-    this.launchResultToRemove = null;
+    this.ResultToRemove = null;
 
     this.state = {
       testcase: {
-        launchResults: {},
+        results: [],
       },
       projectId: props.projectId,
       // eslint-disable-next-line no-dupe-keys
       testcase: props.testcase,
       errorMessage: "",
     };
-    this.getLaunchResultUrl = this.getLaunchResultUrl.bind(this);
-    this.removeLaunchResult = this.removeLaunchResult.bind(this);
-    this.removeLaunchResultConfirmation = this.removeLaunchResultConfirmation.bind(this);
-    this.cancelRemoveLaunchResultConfirmation = this.cancelRemoveLaunchResultConfirmation.bind(this);
+    this.getResultUrl = this.getResultUrl.bind(this);
+    this.removeResult = this.removeResult.bind(this);
+    this.removeResultConfirmation = this.removeResultConfirmation.bind(this);
+    this.cancelRemoveResultConfirmation = this.cancelRemoveResultConfirmation.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -44,7 +44,7 @@ class Results extends SubComponent {
       $("#file-data").fileinput('destroy');
       $("#file-data").fileinput({
         previewFileType: "any",
-        uploadUrl: getApiBaseUrl(this.state.projectId + "/testcase/" + this.state.testcase.id + "/launchResults"),
+        uploadUrl: getApiBaseUrl(this.state.projectId + "/testcase/" + this.state.testcase.id + "/results"),
         maxFileSize: 100000
       });
       $("#file-data").on(
@@ -61,16 +61,16 @@ class Results extends SubComponent {
     this.onTestcaseUpdated = this.props.onTestcaseUpdated;
   }
 
-  removeLaunchResult() {
+  removeResult() {
 
     Backend.delete(
-      this.state.projectId + "/testcase/" + this.state.testcase.id + "/launchResult/" + this.launchResultToRemove,
+      this.state.projectId + "/testcase/" + this.state.testcase.id + "/Result/" + this.ResultToRemove,
     )
       .then(response => {
-        this.launchResultToRemove = null;
-        $("#remove-launchResult-confirmation").modal("hide");
-        this.state.testcase.launchResults = (this.state.testcase.launchResults || []).filter(
-          launchResult => launchResult.id !== this.launchResultToRemove,
+        this.ResultToRemove = null;
+        $("#remove-result-confirmation").modal("hide");
+        this.state.testcase.results = (this.state.testcase.results || []).filter(
+          result => result.id !== this.resultToRemove,
         );
         this.onTestcaseUpdated();
       })
@@ -79,17 +79,17 @@ class Results extends SubComponent {
       });
   }
 
-  removeLaunchResultConfirmation(launchResultId) {
-    this.launchResultToRemove = launchResultId;
-    $("#remove-launchResult-confirmation").modal("show");
+  removeResultConfirmation(resultId) {
+    this.resultToRemove = resultId;
+    $("#remove-result-confirmation").modal("show");
   }
 
-  cancelRemoveLaunchResultConfirmation() {
+  cancelRemoveResultConfirmation() {
     this.issueToRemove = null;
-    $("#remove-launchResult-confirmation").modal("hide");
+    $("#remove-result-confirmation").modal("hide");
   }
 
-  getLaunchResultUrl(launchResult) {
+  getResultUrl(result) {
     return (
       <div className="row">
         <div className="col-sm-11">
@@ -99,19 +99,19 @@ class Results extends SubComponent {
               this.state.projectId +
               "/testcase/" +
               this.state.testcase.id +
-              "/launchResult/" +
-              launchResult.id
+              "/result/" +
+              result.id
             }
             target="_blank"
             rel="noreferrer"
           >
-            {launchResult.title}
+            {result.title}
           </a>
         </div>
         <div className="col-sm-1">
           <span
             className="clickable edit-icon-visible red"
-            onClick={e => this.removeLaunchResultConfirmation(launchResult.id, e)}
+            onClick={e => this.removeResultConfirmation(result.id, e)}
           >
             <FontAwesomeIcon icon={faMinusCircle} />
           </span>
@@ -124,8 +124,8 @@ class Results extends SubComponent {
     return (
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div id="files" className="launchResult-list">
-          {(this.state.testcase.launchResults || []).map(this.getLaunchResultUrl)}
+        <div id="files" className="result-list">
+          {(this.state.testcase.results || []).map(this.getResultUrl)}
         </div>
 
         <div>
@@ -145,7 +145,7 @@ class Results extends SubComponent {
           </form>
         </div>
 
-        <div className="modal fade" tabIndex="-1" role="dialog" id="remove-launchResult-confirmation">
+        <div className="modal fade" tabIndex="-1" role="dialog" id="remove-result-confirmation">
           <div className="modal-dialog" role="document">
             <div className="modal-content">
               <div className="modal-header">
@@ -153,7 +153,7 @@ class Results extends SubComponent {
                 <button
                   type="button"
                   className="close"
-                  onClick={this.cancelRemoveLaunchResultConfirmation}
+                  onClick={this.cancelRemoveResultConfirmation}
                   aria-label="Close"
                 >
                   <span aria-hidden="true">&times;</span>
@@ -161,10 +161,10 @@ class Results extends SubComponent {
               </div>
               <div className="modal-body">Are you sure you want to remove Result?</div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={this.cancelRemoveLaunchResultConfirmation}>
+                <button type="button" className="btn btn-secondary" onClick={this.cancelRemoveResultConfirmation}>
                   Close
                 </button>
-                <button type="button" className="btn btn-danger" onClick={this.removeLaunchResult}>
+                <button type="button" className="btn btn-danger" onClick={this.removeResult}>
                   Remove Result
                 </button>
               </div>
