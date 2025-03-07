@@ -3,6 +3,7 @@
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import Attachments from "../testcases/Attachments";
+import Results from "../launches/Results";
 import Comments from "../comments/Comments";
 import EventsWidget from "../audit/EventsWidget";
 import { Link } from "react-router-dom";
@@ -51,10 +52,11 @@ class TestCase extends SubComponent {
         steps: [],
         attributes: {},
         attachments: [],
+        launchResults: [],
         properties: [],
         broken: false,
         locked: false,
-	displayErrorMessage: "",
+	      displayErrorMessage: "",
       },
       originalTestcase: {
         steps: [],
@@ -603,6 +605,24 @@ console.log("TestCase::removeTestCase");
               aria-selected="false"
             >
               History
+            </a>
+          </li>
+          <li className="nav-item">
+            <a
+              className="nav-link"
+              id="results-tab"
+              data-toggle="tab"
+              href="#results"
+              role="tab"
+              aria-controls="results"
+              aria-selected="false"
+            >
+              Results
+              {this.state.testcase.attachments && this.state.testcase.attachments.length > 0 && (
+                <span className="badge badge-pill badge-secondary tab-badge">
+                  {this.state.testcase.attachments.length}
+                </span>
+              )}
             </a>
           </li>
         </ul>
@@ -1259,6 +1279,14 @@ console.log("TestCase::removeTestCase");
               }}
             />
           </div>
+          <div className="tab-pane fade show" id="results" role="tabpanel" aria-labelledby="results-tab">
+            <Results
+              testcase={this.state.testcase}
+              projectId={this.projectId}
+              onTestcaseUpdated={this.onTestcaseUpdated}
+            />
+          </div>
+
         </div>
 
         <div className="row">
