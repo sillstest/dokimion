@@ -3,6 +3,7 @@
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import Attachments from "../testcases/Attachments";
+import Results from "../testcases/Results";
 import Comments from "../comments/Comments";
 import EventsWidget from "../audit/EventsWidget";
 import { Link } from "react-router-dom";
@@ -51,6 +52,7 @@ class TestCase extends SubComponent {
         steps: [],
         attributes: {},
         attachments: [],
+        results: [],
         properties: [],
         broken: false,
         locked: false,
@@ -159,6 +161,9 @@ class TestCase extends SubComponent {
     }
     if (nextProps.launchId) {
       this.state.launchId = nextProps.launchId;
+      if (this.props.testcase.id) {
+        this.getTestCase(this.props.projectId, this.props.testcase.id);
+      }
     }
     if (nextProps.projectId) {
       this.projectId = nextProps.projectId;
@@ -543,24 +548,48 @@ console.log("TestCase::removeTestCase");
             </li>
           )}
 
-          <li className="nav-item">
-            <a
-              className="nav-link"
-              id="attachments-tab"
-              data-toggle="tab"
-              href="#attachments"
-              role="tab"
-              aria-controls="attachments"
-              aria-selected="false"
-            >
-              Attachments
-              {this.state.testcase.attachments && this.state.testcase.attachments.length > 0 && (
-                <span className="badge badge-pill badge-secondary tab-badge">
-                  {this.state.testcase.attachments.length}
-                </span>
-              )}
-            </a>
-          </li>
+          {! this.state.launchId && (
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                id="attachments-tab"
+                data-toggle="tab"
+                href="#attachments"
+                role="tab"
+                aria-controls="attachments"
+                aria-selected="false"
+              >
+                Attachments
+                {this.state.testcase.attachments && this.state.testcase.attachments.length > 0 && (
+                  <span className="badge badge-pill badge-secondary tab-badge">
+                    {this.state.testcase.attachments.length}
+                  </span>
+                )}
+              </a>
+            </li>
+          )}
+
+          {this.state.launchId && (
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                id="results-tab"
+                data-toggle="tab"
+                href="#results"
+                role="tab"
+                aria-controls="results"
+                aria-selected="false"
+              >
+                Results
+                {this.state.testcase.results && this.state.testcase.results.length > 0 && (
+                  <span className="badge badge-pill badge-secondary tab-badge">
+                    {this.state.testcase.results.length}
+                  </span>
+                )}
+              </a>
+            </li>
+          )}
+
           <li className="nav-item">
             <a
               className="nav-link"
@@ -1208,13 +1237,25 @@ console.log("TestCase::removeTestCase");
             )}
           </div>
 
-          <div className="tab-pane fade show" id="attachments" role="tabpanel" aria-labelledby="attachments-tab">
-            <Attachments
-              testcase={this.state.testcase}
-              projectId={this.projectId}
-              onTestcaseUpdated={this.onTestcaseUpdated}
-            />
-          </div>
+          {! this.state.launchId && (
+            <div className="tab-pane fade show" id="attachments" role="tabpanel" aria-labelledby="attachments-tab">
+              <Attachments
+                testcase={this.state.testcase}
+                projectId={this.projectId}
+                onTestcaseUpdated={this.onTestcaseUpdated}
+              />
+            </div>
+          )}
+
+          {this.state.launchId && (
+            <div className="tab-pane fade show" id="results" role="tabpanel" aria-labelledby="results-tab">
+              <Results
+                testcase={this.state.testcase}
+                projectId={this.projectId}
+                onTestcaseUpdated={this.onTestcaseUpdated}
+              />
+            </div>
+          )}
 
           <div
             className="tab-pane fade show"

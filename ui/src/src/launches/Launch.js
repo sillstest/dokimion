@@ -549,14 +549,14 @@ class Launch extends SubComponent {
                 testcase={this.state.selectedTestCase}
                 projectAttributes={this.state.projectAttributes}
                 readonly={true}
-                launchId={this.state.launch.id}
+                launchId={this.props.match.params.launchId}
                 projectId={this.state.projectId}
               />
             )}
             {this.state.selectedTestCase && this.state.selectedTestCase.uuid && (
               <LaunchTestcaseControls
                 testcase={this.state.selectedTestCase}
-                launchId={this.state.launch.id}
+                launchId={this.props.match.params.launchId}
                 projectId={this.state.projectId}
                 callback={this.onTestcaseStateChanged}
               />
