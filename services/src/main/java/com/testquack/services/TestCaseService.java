@@ -407,7 +407,11 @@ System.out.println("TestCaseService::deleteResult - testcase: " + testCase);
 System.out.flush();
 
         Attachment result = getResult(testCase, resultId);
+System.out.println("TestCaseService::deleteResult after getResult");
+System.out.flush();
         storage.remove(result);
+System.out.println("TestCaseService::deleteResult after storage.remove");
+System.out.flush();
         testCase.getResults().remove(result);
 
 System.out.println("TestCaseService::deleteResult after remove - testcase: " + testCase);

@@ -305,7 +305,7 @@ System.out.flush();
     public TestCase deleteResult(
             @PathParam("projectId") String projectId,
             @PathParam("testcaseId") final String testcaseId,
-            @PathParam("attachmentId") final String resultId) throws IOException {
+            @PathParam("resultId") final String resultId) throws IOException {
 System.out.println("TestCaseResource::deleteAttachment - testcaseId: " + testcaseId + ", resultId: " + resultId);
 System.out.flush();
 
