@@ -30,8 +30,10 @@ public class MongoStorage implements Storage {
     public Attachment upload(String organizationId, String projectId, InputStream uploadedInputStream, String fileName, long size) throws IOException {
         DBObject metaData = new BasicDBObject();
         metaData.put("name", fileName);
+System.out.println("MongoStorage::upload");
         try {
             ObjectId result = gridOperations.store(uploadedInputStream, fileName, "application/text", metaData);
+System.out.println("MongoStorage::upload - result: " + result);
             return new Attachment().withUrl(result.toString()).withDataSize(size).withTitle(fileName);
         } finally {
             if (uploadedInputStream != null) {
@@ -42,6 +44,8 @@ public class MongoStorage implements Storage {
 
     @Override
     public void remove(Attachment attachment) throws IOException {
+System.out.println("MongoStorage::remove - attach: " + attachment); 
+System.out.flush();
         gridOperations.delete(new Query().addCriteria(Criteria.where("_id").is(new ObjectId(attachment.getUrl()))));
 
     }

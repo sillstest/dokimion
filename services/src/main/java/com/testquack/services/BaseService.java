@@ -17,6 +17,7 @@ import com.testquack.beans.Project;
 import com.testquack.beans.Launch;
 import com.testquack.beans.Event;
 import com.testquack.beans.TestCase;
+import com.testquack.beans.Attachment;
 import com.testquack.dal.CommonRepository;
 import com.testquack.dal.ProjectRepository;
 import com.testquack.dal.UserRepository;
@@ -112,7 +113,7 @@ System.out.flush();
         if (entity == null){
             throw new EntityNotFoundException();
         }
-        System.out.println("BaseService:findOneUnfiltered -after getRepo");
+        System.out.println("BaseService:findOneUnfiltered -after getRepo, entity: " + entity);
         System.out.flush();
 
         if (userCanRead(session, projectId, entity) == false) {
@@ -120,16 +121,20 @@ System.out.flush();
                     format("User %s can't read entity %s", session.getPerson().getLogin(), id)
             );
         }
-System.out.println("BaseService:findOneUnfiltered - after userCanRead call");
+System.out.println("BaseService:findOneUnfiltered - after userCanRead call, entity: " + entity);
 System.out.flush();
         return entity;
     }
 
     public E findOne(Session session, String projectId, String id){
-System.out.println("BaseService::findOne");
+System.out.println("BaseService::findOne -id: " + id);
 System.out.flush();
         E entity = findOneUnfiltered(session, projectId, id);
-        return beforeReturn(session, projectId, entity);
+
+System.out.println("BaseService::findOne - entity: " + entity);
+System.out.flush();
+
+        return entity;
     }
 
     public E save(Session user, String projectId, E entity){
@@ -274,38 +279,30 @@ System.out.flush();
 System.out.println("BaseService:userCanUpdateProject - admin user");
 System.out.flush();
            return true;
-        } else if (entity instanceof TestCase) {
-System.out.println("userCanUpdateProject - entity is a TestCase"); 
+        } else {
+System.out.println("userCanUpdateProject - not admin user"); 
 System.out.flush();
-           TestCase testcaseEntity = (TestCase)entity;
-           if (testcaseEntity.isLocked() == true) {
-              System.out.println("userCanUpdateProject - entity is a locked TestCase"); 
-              System.out.flush();
-              return false;
-           }
-        } else if ((entity instanceof Launch) || (entity instanceof Event)) {
+            if (UserSecurity.allowUserWriteRequest(
+                getCurrOrganizationId(session),
+                userRepository, roleCapRepository, projectId, 
+                session.getPerson().getLogin()) == false) {
 
-	   if (UserSecurity.allowLaunchWriteRequest(session.getPerson().getRoles(), entity) == false) {
-              return false;
-	   }
+                return false;
 
-           System.out.println("userCanUpdateProject - entity is a Launch or Event");
-           System.out.flush();
-           return true;
+            }
+        }   
+        if ((entity instanceof Launch) || (entity instanceof Event)) {
+
+	        if (UserSecurity.allowLaunchWriteRequest(session.getPerson().getRoles(), entity) == false) {
+              return false;
+	        }
+
+            System.out.println("userCanUpdateProject - entity is a Launch or Event");
+            System.out.flush();
+            return true;
         }
 
-System.out.println("userCanUpdateProject - before userWriteRequest call"); 
-System.out.flush();
-        if (UserSecurity.allowUserWriteRequest(
-                         getCurrOrganizationId(session),
-                         userRepository, roleCapRepository, projectId, 
-                         session.getPerson().getLogin())) {
-System.out.println("BaseService:userCanUpdateProject - ready to call userCanAccessProjectCommon");
-System.out.flush();
-           return userCanAccessProjectCommon(session, projectId);
-        }
-
-        return false;
+        return userCanAccessProjectCommon(session, projectId);
 
     }
     protected boolean userCanAccessProjectCommon(Session session, String projectId){
@@ -461,11 +458,12 @@ System.out.println("BaseService::doSave start - projectId: " + projectId);
 System.out.println("BaseService::doSave start - entity: " + entity);
 System.out.flush();
         beforeSave(session, projectId, entity);
+System.out.println("BaseService::doSave - after beforeSave call");
         if (validateEntity(entity) || (entity instanceof Event)) {
 System.out.println("BaseService::doSave after validateEntity");
 System.out.flush();
-            entity = getRepository().save(getCurrOrganizationId(session), projectId, entity);
-System.out.println("BaseService::doSave after save - session: " + session);
+            E newTestCaseEntity = getRepository().save(getCurrOrganizationId(session), projectId, entity);
+System.out.println("BaseService::doSave after save - newTestCaseEntity: " + newTestCaseEntity);
 System.out.flush();
             afterSave(session, projectId, entity);
             return entity;

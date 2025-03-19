@@ -62,6 +62,7 @@ class TestCase extends SubComponent {
       },
       projectAttributes: [],
       readonly: false,
+      testDeveloper: false,
       attributesInEdit: new Set(),
       propertiesInEdit: new Set(),
       commentsCount: 0,
@@ -111,6 +112,9 @@ class TestCase extends SubComponent {
     if (this.props.readonly) {
       this.state.readonly = true;
     }
+    if (this.props.testDeveloper) {
+      this.state.testDeveloper = true;
+    }
     if (this.props.testcase) {
       this.state.testcase = this.props.testcase;
     } else if (this.props.testcaseId) {
@@ -146,6 +150,7 @@ class TestCase extends SubComponent {
     if (nextProps.testcase) {
       this.state.testcase = nextProps.testcase;
       this.state.loading = false;
+      this.state.testDeveloper = nextProps.testDeveloper;
     } else if (nextProps.testcaseId) {
       this.projectId = nextProps.projectId;
       //Need to reset the readonly flag for changes between TCS
@@ -192,6 +197,7 @@ console.log("TestCase::getTestCase");
         var isTester =  roles && roles.filter(val => val.includes('TESTER')).length >0 ? true : false;
         var isObserverOnly =  roles && roles.filter(val => val.includes('OBSERVERONLY')).length >0 ? true : false;
         var isTestDeveloper =  roles && roles.filter(val => val.includes('TESTDEVELOPER')).length >0 ? true : false;
+        this.state.testDeveloper = isTestDeveloper;
         console.log("Role is a ?" + isTester + " " + isTestDeveloper + this.state.testcase.locked);
         if(isTester || isObserverOnly){
             this.state.readonly = true;
@@ -1213,6 +1219,8 @@ console.log("TestCase::removeTestCase");
               testcase={this.state.testcase}
               projectId={this.projectId}
               onTestcaseUpdated={this.onTestcaseUpdated}
+              readonly={this.state.readonly}
+              testDeveloper={this.state.testDeveloper}
             />
           </div>
 

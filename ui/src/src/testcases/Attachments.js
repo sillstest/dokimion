@@ -24,6 +24,8 @@ class Attachments extends SubComponent {
       projectId: props.projectId,
       // eslint-disable-next-line no-dupe-keys
       testcase: props.testcase,
+      readonly: props.readonly,
+      testDeveloper: props.testDeveloper,
       errorMessage: "",
     };
     this.getAttachmentUrl = this.getAttachmentUrl.bind(this);
@@ -39,6 +41,8 @@ class Attachments extends SubComponent {
     if (nextProps.projectId) {
       this.state.projectId = nextProps.projectId;
     }
+    this.state.readonly = nextProps.readonly;
+
     this.setState(this.state);
     if (this.state.projectId && this.state.testcase.id && this.state.testcase.id != null) {
       $("#file-data").fileinput('destroy');
@@ -59,6 +63,8 @@ class Attachments extends SubComponent {
   componentDidMount() {
     super.componentDidMount();
     this.onTestcaseUpdated = this.props.onTestcaseUpdated;
+    this.state.readonly = this.props.readonly;
+    this.state.testDeveloper = this.props.testDeveloper;
   }
 
   removeAttachment() {
@@ -109,14 +115,16 @@ console.log("Attachments::removeAttachment");
             {attachment.title}
           </a>
         </div>
-        <div className="col-sm-1">
-          <span
-            className="clickable edit-icon-visible red"
-            onClick={e => this.removeAttachmentConfirmation(attachment.id, e)}
-          >
-            <FontAwesomeIcon icon={faMinusCircle} />
-          </span>
-        </div>
+        {!(this.state.readonly || this.state.testDeveloper) && (
+          <div className="col-sm-1">
+            <span
+              className="clickable edit-icon-visible red"
+              onClick={e => this.removeAttachmentConfirmation(attachment.id, e)}
+            >
+              <FontAwesomeIcon icon={faMinusCircle} />
+            </span>
+          </div>
+        )}
       </div>
     );
   }
@@ -129,22 +137,24 @@ console.log("Attachments::removeAttachment");
           {(this.state.testcase.attachments || []).map(this.getAttachmentUrl)}
         </div>
 
-        <div>
-          <form id="file-form" encType="multipart/form-data">
-            <div className="file-loading">
-              <input
-                id="file-data"
-                className="file"
-                type="file"
-                name="file"
-                multiple
-                data-min-file-count="0"
-                data-theme="fas"
-              />
-            </div>
-            <br />
-          </form>
-        </div>
+        {!this.state.readonly && (
+          <div>
+            <form id="file-form" encType="multipart/form-data">
+              <div className="file-loading">
+                <input
+                  id="file-data"
+                  className="file"
+                  type="file"
+                  name="file"
+                  multiple
+                  data-min-file-count="0"
+                  data-theme="fas"
+                />
+              </div>
+              <br />
+            </form>
+          </div>
+        )}
 
         <div className="modal fade" tabIndex="-1" role="dialog" id="remove-attachment-confirmation">
           <div className="modal-dialog" role="document">

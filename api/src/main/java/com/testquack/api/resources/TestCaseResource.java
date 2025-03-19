@@ -100,7 +100,6 @@ System.out.flush();
 
             System.out.println("TestCaseResource::upload: checkTestCase returned FALSE - did NOT find project id");
             System.out.flush();
-
             TestCase tc = null;
             return tc;
         }
@@ -336,7 +335,7 @@ System.out.flush();
     public TestCase LockTestCase(@PathParam("projectId") String projectId,
                                  @PathParam("testcaseId") final String testcaseId)
                                  throws Exception {
-System.out.println("TestCaseResource::LockTestCase - projectId: " + projectId);
+System.out.println("TestCaseResource::LockTestCase - projectId: " + projectId + ", testcaseId:  " + testcaseId);
 System.out.flush();
 
         if (APIValidation.checkProjectId(getService().getMongoReplicaSet(),

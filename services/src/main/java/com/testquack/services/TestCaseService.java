@@ -272,6 +272,7 @@ System.out.println("TestCaseService::uploadAttachment - uploadedInputStream: " +
 System.out.flush();
 
         Attachment uploadedAttachment = storage.upload(getCurrOrganizationId(userSession), projectId, uploadedInputStream, fileName, size);
+        String uploadedAttachmentUrl = uploadedAttachment.getUrl();
 
 System.out.println("TestCaseService::uploadAttachment - uploadedAttachment: " + uploadedAttachment);
 System.out.flush();
@@ -282,7 +283,8 @@ System.out.flush();
        uploadedAttachment.withId(UUID.randomUUID().toString()).
                        withCreatedBy(userSession.getLogin()).
                        withCreatedTime(Instant.now().toEpochMilli()).
-                       withDataSize(size);
+                       withDataSize(size).
+                       withUrl(uploadedAttachmentUrl);
        attachmentsList.add(uploadedAttachment);
 
 System.out.println("TestCaseService::uploadAttachment - attachmentsList: " + attachmentsList);
@@ -329,15 +331,10 @@ System.out.println("TestCaseService::deleteAttachment after remove - testcase: "
 System.out.flush();
 
         TestCase newTestCase;
-        if (testCase.isLocked() == false) {
-           newTestCase = update(userSession, projectId, testCase);
+
+        newTestCase = update(userSession, projectId, testCase);
 System.out.println("TestCaseService::deleteAttachment after update - newTestCase: " + newTestCase);
 System.out.flush();
-        } else {
-            throw new EntityAccessDeniedException(
-                    format("User %s can't update testcase %s", 
-                            userSession.getPerson().getLogin(), testCase.getId()));
-        }
 
         return newTestCase;
     }
@@ -452,8 +449,9 @@ System.out.flush();
         return mapTestcasesToCsv(session, projectId, testCases);
     }
 
+
     public TestCase lockTestCase(Session userSession, String projectId, String testCaseId) {
-System.out.println("TestCaseService::lockTestCase");
+System.out.println("TestCaseService::lockTestCase - testCaseId: " + testCaseId);
 System.out.flush();
         TestCase testCase = new TestCase();
         try {
@@ -461,15 +459,24 @@ System.out.flush();
         } catch (EntityNotFoundException e){
             logger.info(format("Unable to find testcase by id [%s]", testCaseId));
         }
-        TestCase updatedTestCase = testCase;
-        if (testCase.isLocked() == false) {
-System.out.println("TestCaseService::lockTestCase - need to lock");
+System.out.println("TestCaseService::lockTestCase - after findOne, testCase: " + testCase);
 System.out.flush();
+
+        if (userCanUpdateProject(userSession, projectId, testCase) == false) {
+            throw new EntityAccessDeniedException(getAccessDeniedMessage(userSession, testCase, "LOCK TESTCASE"));
+        }
+
+        TestCase updatedTestCase = testCase;
+System.out.println("TestCaseService::lockTestCase - after userCanUpdateProject, testCase: " + testCase);
+System.out.flush();
+
+        if (testCase.isLocked() == false) {
            testCase.setLocked(true);
            updatedTestCase = update(userSession, projectId, testCase);
-System.out.println("lockTestCase - updatedTestCase: " + updatedTestCase);
+System.out.println("TestCaseService::lockTestCase - updatedTestCase: " + updatedTestCase);
 System.out.flush();
         }
+
         return updatedTestCase;
     }
 
@@ -482,6 +489,11 @@ System.out.flush();
         } catch (EntityNotFoundException e){
             logger.info(format("Unable to find testcase by id [%s]", testCaseId));
         }
+
+        if (userCanUpdateProject(userSession, projectId, testCase) == false) {
+            throw new EntityAccessDeniedException(getAccessDeniedMessage(userSession, testCase, "UNLOCK TESTCASE"));
+        }
+
         TestCase updatedTestCase = new TestCase();
         if (testCase.isLocked() == true) {
 System.out.println("TestCaseService::unLockTestCase - need to unlock");
