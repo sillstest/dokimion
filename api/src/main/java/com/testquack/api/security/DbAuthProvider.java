@@ -5,6 +5,7 @@ import com.testquack.api.utils.MongoDBInterface;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
 import com.testquack.services.UserService;
+import com.hazelcast.core.HazelcastInstanceNotActiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -121,7 +122,15 @@ System.out.flush();
             throw new UnauthorizedException(format("Temporary password has expired for user %s. Please contact administrator to set a new one.", person.getLogin()));
         }
         Session session = (Session) new Session().withId(UUID.randomUUID().toString()).withTimeout(sessionTtl).withName(login).withPerson(person);
-        Session existedSession = sessionProvider.getSessionIfExists(session);
+        Session existedSession = null;
+	try {
+           existedSession = sessionProvider.getSessionIfExists(session);
+	}
+	catch (HazelcastInstanceNotActiveException he) {
+           System.out.println("DbAuthProvider::dbAuthAs - hazelcast error: " + he);
+	   System.out.flush();
+	}
+
         if (existedSession == null) {
             sessionProvider.addSession(session);
             response.addCookie(HttpUtils.createCookie(HttpUtils.SESSION_ID, session.getId(), authDomain, sessionTtl));
