@@ -30,6 +30,7 @@
                     <xs:element name="properties" type="Property" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="version" type="xs:string"/>
                     <xs:element name="attachments" type="Attachment" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="results" type="Attachment" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="automated" type="xs:boolean" default="false"/>
                     <xs:element name="locked" type="xs:boolean" default="false"/>
                     <xs:element name="broken" type="xs:boolean" default="false"/>

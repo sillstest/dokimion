@@ -28,6 +28,10 @@ public class MongoStorage implements Storage {
 
     @Override
     public Attachment upload(String organizationId, String projectId, InputStream uploadedInputStream, String fileName, long size) throws IOException {
+
+System.out.println("MongoStorage::upload");
+System.out.flush();
+
         DBObject metaData = new BasicDBObject();
         metaData.put("name", fileName);
 System.out.println("MongoStorage::upload");
@@ -52,6 +56,9 @@ System.out.flush();
 
     @Override
     public InputStream get(Attachment attachment) throws IOException {
+System.out.println("MongoStorage::get - url: " + attachment.getUrl());
+System.out.flush();
+
         com.mongodb.client.gridfs.model.GridFSFile file = gridOperations.findOne(
                 new Query().addCriteria(Criteria.where("_id").is(new ObjectId(attachment.getUrl()))));
         if (file == null){

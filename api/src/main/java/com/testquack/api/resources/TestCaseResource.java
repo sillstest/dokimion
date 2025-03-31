@@ -21,6 +21,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import ru.greatbit.whoru.jaxrs.Authenticable;
 import org.json.*;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -80,6 +85,23 @@ System.out.flush();
         return service.findFilteredTree(getUserSession(), projectId, (TestcaseFilter) initFilter(request));
     }
 
+    @GET
+    @Path("/{testcaseId}")
+    @ApiOperation(value = "Find entity by id", notes = "")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Entity not found"),
+            @ApiResponse(code = 403, message = "Access denied to the entity"),
+            @ApiResponse(code = 200, message = "Successful operation")
+    })
+    public TestCase findOne(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
+            @ApiParam(value = "TestCase Id", required = true) @PathParam("testcaseId") String testcaseId) {
+
+        return getService().findOne(getUserSession(), projectId, testcaseId);
+
+
+    }
+
+
     @POST
     @Path("/{testcaseId}/attachment")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -122,6 +144,26 @@ System.out.flush();
         }
         return service.uploadAttachment(getUserSession(), projectId, testcaseId,
                 uploadedInputStream, fileDetail.getFileName(), fileDetail.getSize());
+    }
+
+    @POST
+    @Path("/{testcaseId}/result")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public TestCase uploadResult(@FormDataParam("file") InputStream uploadedInputStream,
+                                 @FormDataParam("file") FormDataContentDisposition fileDetail,
+                                 @FormDataParam("size") long size,
+                                 @PathParam("projectId") String projectId,
+                                 @PathParam("testcaseId") String testcaseId) throws IOException {
+System.out.println("TestCaseResource::uploadResult - testcaseId: " + testcaseId + ", fileDetail: " + fileDetail);
+System.out.println("TestCaseResource::uploadResult - uploadedInputStream: " + uploadedInputStream);
+System.out.flush();
+
+        if (fileDetail == null) {
+            throw new EntityValidationException();
+        }
+        return service.uploadResult(getUserSession(), projectId, testcaseId,
+                uploadedInputStream, fileDetail.getFileName(), fileDetail.getSize());
+
     }
 
     @GET
@@ -184,6 +226,27 @@ System.out.flush();
         }
     }
 
+    @GET
+    @Path("/{testcaseId}/result/{resultId}")
+    public Response downloadResult(
+            @PathParam("projectId") String projectId,
+            @PathParam("testcaseId") final String testcaseId,
+            @PathParam("attachmentId") final String resultId) {
+System.out.println("TestCaseResource::downloadResult - testcaseId: " + testcaseId + ", resultId: " + resultId);
+System.out.flush();
+
+        Attachment result = service.getResult(getUserSession(), projectId, testcaseId, resultId);
+        try {
+            return Response
+                    .ok(service.getResultStream(result), MediaType.APPLICATION_OCTET_STREAM)
+                    .header("content-disposition", format("result; filename = %s", result.getTitle()))
+                    .build();
+        } catch (IOException ioexp) {
+            return serverError().build();
+        }
+    }
+
+
     @DELETE
     @Path("/{testcaseId}/attachment/{attachmentId}")
     public TestCase deleteAttachment(
@@ -235,6 +298,20 @@ System.out.flush();
 
         return service.deleteAttachment(getUserSession(), projectId, testcaseId, attachmentId);
     }
+
+    @DELETE
+    @Path("/{testcaseId}/result/{resultId}")
+    public TestCase deleteResult(
+            @PathParam("projectId") String projectId,
+            @PathParam("testcaseId") final String testcaseId,
+            @PathParam("resultId") final String resultId) throws IOException {
+System.out.println("TestCaseResource::deleteAttachment - testcaseId: " + testcaseId + ", resultId: " + resultId);
+System.out.flush();
+
+        return service.deleteResult(getUserSession(), projectId, testcaseId, resultId);
+
+    }
+
 
     @POST
     @Path("/{testcaseId}/issue")
@@ -505,13 +582,6 @@ return tc;
     }
 
     @POST
-    @Path("/import")
-    public List<TestCase> importTestCases(@PathParam("projectId") String projectId,
-                                          @RequestBody List<TestCase> testCases) {
-        return service.importTestCases(getUserSession(), projectId, testCases);
-    }
-
-    @POST
     @Path("/{testcaseId}/clone")
     public TestCase cloneTestCase(@PathParam("projectId") String projectId,
                                   @PathParam("testcaseId") final String testcaseId) {
@@ -548,12 +618,4 @@ return tc;
         return service.cloneTestCase(getUserSession(), projectId, testcaseId);
     }
 
-    @GET
-    @Path("/csv")
-    public Response exportToCSV(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId) {
-        return Response
-                .ok(service.exportToCSV(getUserSession(), projectId, (TestcaseFilter) initFilter(request)), MediaType.APPLICATION_OCTET_STREAM)
-                .header("content-disposition", format("attachment; filename = %s", "testcases.csv"))
-                .build();
-    }
 }

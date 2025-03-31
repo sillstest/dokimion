@@ -196,6 +196,11 @@ System.out.flush();
             attachment.setUrl(null);
             attachment.setStorageType(null);
         });
+        entity.getResults().forEach(result -> {
+            result.setUrl(null);
+            result.setStorageType(null);
+        });
+
         return entity;
     }
 
@@ -300,6 +305,41 @@ System.out.flush();
        return newTestCase;
     }
 
+
+    public TestCase uploadResult(Session userSession, String projectId, String testcaseId, InputStream uploadedInputStream, String fileName, long size) throws IOException {
+
+System.out.println("TestCaseService::uploadResult - filename, size" + fileName + size);
+System.out.println("TestCaseService::uploadResult - uploadedInputStream: " + uploadedInputStream);
+System.out.flush();
+
+        Attachment uploadedResult = storage.upload(getCurrOrganizationId(userSession), projectId, uploadedInputStream, fileName, size);
+
+System.out.println("TestCaseService::uploadResult - uploadedResult: " + uploadedResult);
+System.out.flush();
+
+       TestCase testCase = findOneUnfiltered(userSession, projectId, testcaseId);
+       List<Attachment> resultsList = testCase.getResults();
+
+       uploadedResult.withId(UUID.randomUUID().toString()).
+                       withCreatedBy(userSession.getLogin()).
+                       withCreatedTime(Instant.now().toEpochMilli()).
+                       withDataSize(size);
+       resultsList.add(uploadedResult);
+
+System.out.println("TestCaseService::uploadResult - resultsList: " + resultsList);
+System.out.flush();
+       testCase.setResults(resultsList);
+
+System.out.println("TestCaseService::uploadResult - testCase: " + testCase);
+System.out.flush();
+       TestCase newTestCase = update(userSession, projectId, testCase);
+
+System.out.println("TestCaseService::uploadResult - end of uploadAttachment - newTestCase: " + newTestCase);
+System.out.flush();
+       return newTestCase;
+    }
+
+
     public Attachment getAttachment(Session userSession, String projectId, String testcaseId, String attachmentId) {
 
 System.out.println("TestCaseService::getAttachment - projectId: " + projectId + ", testcaseId: " + testcaseId + ", attachmentid:" + attachmentId);
@@ -315,6 +355,24 @@ System.out.println("TestCaseService::getAttachment - attach: " + attach);
 System.out.flush();
 
         return attach;
+        //return getAttachment(testCase, attachmentId);
+    }
+
+ public Attachment getResult(Session userSession, String projectId, String testcaseId, String resultId) {
+
+System.out.println("TestCaseService::getResult - projectId: " + projectId + ", testcaseId: " + testcaseId + ", resultId:" + resultId);
+System.out.flush();
+
+        TestCase testCase = findOneUnfiltered(userSession, projectId, testcaseId);
+
+System.out.println("TestCaseService::getResult - testCase: " + testCase);
+System.out.flush();
+
+        Attachment result = getResult(testCase, resultId);
+System.out.println("TestCaseService::getResult - result: " + result);
+System.out.flush();
+
+        return result;
         //return getAttachment(testCase, attachmentId);
     }
 
@@ -339,14 +397,55 @@ System.out.flush();
         return newTestCase;
     }
 
+
+    public TestCase deleteResult(Session userSession, String projectId, String testcaseId, String resultId) throws IOException {
+        TestCase testCase = findOneUnfiltered(userSession, projectId, testcaseId);
+System.out.println("TestCaseService::deleteResult - testcase: " + testCase);
+System.out.flush();
+
+        Attachment result = getResult(testCase, resultId);
+System.out.println("TestCaseService::deleteResult after getResult");
+System.out.flush();
+        storage.remove(result);
+System.out.println("TestCaseService::deleteResult after storage.remove");
+System.out.flush();
+        testCase.getResults().remove(result);
+
+System.out.println("TestCaseService::deleteResult after remove - testcase: " + testCase);
+System.out.flush();
+
+        TestCase newTestCase;
+        if (testCase.isLocked() == false) {
+           newTestCase = update(userSession, projectId, testCase);
+System.out.println("TestCaseService::deleteResult after update - newTestCase: " + newTestCase);
+System.out.flush();
+        } else {
+            throw new EntityAccessDeniedException(
+                    format("User %s can't update testcase %s", 
+                            userSession.getPerson().getLogin(), testCase.getId()));
+        }
+
+        return newTestCase;
+    }
+
     private Attachment getAttachment(TestCase testCase, String attachmentId) {
         return testCase.getAttachments().stream().
                 filter(attachment -> attachment.getId().equals(attachmentId)).
                 findFirst().orElseThrow(EntityNotFoundException::new);
     }
 
+    private Attachment getResult(TestCase testCase, String resultId) {
+        return testCase.getResults().stream().
+                filter(result -> result.getId().equals(resultId)).
+                findFirst().orElseThrow(EntityNotFoundException::new);
+    }
+
     public InputStream getAttachmentStream(Attachment attachment) throws IOException {
         return storage.get(attachment);
+    }
+
+    public InputStream getResultStream(Attachment result) throws IOException {
+        return storage.get(result);
     }
 
     public TestCase createIssue(HttpServletRequest request, Session userSession, String projectId, String testcaseId, Issue issue) throws Exception {
