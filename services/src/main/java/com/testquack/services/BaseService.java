@@ -287,20 +287,18 @@ System.out.flush();
                 userRepository, roleCapRepository, projectId, 
                 session.getPerson().getLogin()) == false) {
 
-                return false;
+                if ((entity instanceof Launch) || (entity instanceof Event)) {
 
+	           if (UserSecurity.allowLaunchWriteRequest(session.getPerson().getRoles(), entity) == false) {
+                      return false;
+	           }
+
+                   System.out.println("userCanUpdateProject - entity is a Launch or Event");
+                   System.out.flush();
+                   return true;
+                }
             }
         }   
-        if ((entity instanceof Launch) || (entity instanceof Event)) {
-
-	        if (UserSecurity.allowLaunchWriteRequest(session.getPerson().getRoles(), entity) == false) {
-              return false;
-	        }
-
-            System.out.println("userCanUpdateProject - entity is a Launch or Event");
-            System.out.flush();
-            return true;
-        }
 
         return userCanAccessProjectCommon(session, projectId);
 
