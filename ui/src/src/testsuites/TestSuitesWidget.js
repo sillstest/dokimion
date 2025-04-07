@@ -77,10 +77,10 @@ class TestSuitesWidget extends SubComponent {
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
           {this.state.testSuitesToDisplay.map(
-            function (testSuite) {
+            function (testSuite, index) {
               return (
                 <div>
-                  <Link key={testSuite.id} to={"/" + this.state.projectId + "/testcases?testSuite=" + testSuite.id}>
+                  <Link key={index} to={"/" + this.state.projectId + "/testcases?testSuite=" + testSuite.id}>
                     {testSuite.name}
                   </Link>
                 </div>

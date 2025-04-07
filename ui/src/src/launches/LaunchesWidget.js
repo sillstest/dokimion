@@ -90,7 +90,7 @@ class LaunchesWidget extends SubComponent {
         <div className="sweet-loading">
           <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
-        <table class="table table-striped">
+        <table className="table table-striped">
           <thead>
             <tr>
               <th scope="col">Title</th>
@@ -99,11 +99,11 @@ class LaunchesWidget extends SubComponent {
           </thead>
           <tbody>
             {this.state.launches.map(
-              function (launch) {
+              function (launch, index) {
                 return (
                   <tr>
                     <td>
-                      <Link to={"/" + this.state.projectId + "/launch/" + launch.id}>{launch.name}</Link>
+                      <Link key={index} to={"/" + this.state.projectId + "/launch/" + launch.id}>{launch.name}</Link>
                     </td>
                     <td>{this.getProgressBar(launch)}</td>
                   </tr>
