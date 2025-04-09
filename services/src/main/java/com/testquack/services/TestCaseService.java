@@ -416,15 +416,9 @@ System.out.println("TestCaseService::deleteResult after remove - testcase: " + t
 System.out.flush();
 
         TestCase newTestCase;
-        if (testCase.isLocked() == false) {
-           newTestCase = update(userSession, projectId, testCase);
+        newTestCase = update(userSession, projectId, testCase);
 System.out.println("TestCaseService::deleteResult after update - newTestCase: " + newTestCase);
 System.out.flush();
-        } else {
-            throw new EntityAccessDeniedException(
-                    format("User %s can't update testcase %s", 
-                            userSession.getPerson().getLogin(), testCase.getId()));
-        }
 
         return newTestCase;
     }
