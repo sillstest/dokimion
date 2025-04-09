@@ -382,17 +382,21 @@ System.out.println("TestCaseService::deleteAttachment - testcase: " + testCase);
 System.out.flush();
 
         Attachment attachment = getAttachment(testCase, attachmentId);
-        storage.remove(attachment);
         testCase.getAttachments().remove(attachment);
 
 System.out.println("TestCaseService::deleteAttachment after remove - testcase: " + testCase);
 System.out.flush();
 
         TestCase newTestCase;
-
-        newTestCase = update(userSession, projectId, testCase);
+        if (testCase.isLocked() == false) {
+           newTestCase = update(userSession, projectId, testCase);
 System.out.println("TestCaseService::deleteAttachment after update - newTestCase: " + newTestCase);
 System.out.flush();
+        } else {
+            throw new EntityAccessDeniedException(
+                    format("User %s can't update testcase %s", 
+                            userSession.getPerson().getLogin(), testCase.getId()));
+	}
 
         return newTestCase;
     }
@@ -405,9 +409,6 @@ System.out.flush();
 
         Attachment result = getResult(testCase, resultId);
 System.out.println("TestCaseService::deleteResult after getResult");
-System.out.flush();
-        storage.remove(result);
-System.out.println("TestCaseService::deleteResult after storage.remove");
 System.out.flush();
         testCase.getResults().remove(result);
 
