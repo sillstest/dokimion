@@ -1,6 +1,7 @@
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import TestSuitesWidget from "../testsuites/TestSuitesWidget";
+import ProjectScratchpadWidget from "../projects/ProjectScratchpadWidget";
 import LaunchesWidget from "../launches/LaunchesWidget";
 import LaunchesTrendWidget from "../launches/LaunchesTrendWidget";
 import { Link } from "react-router-dom";
@@ -9,6 +10,7 @@ import { faCogs } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
+import { FadeLoader } from "react-spinners";
 
 class Project extends SubComponent {
   constructor(props) {
@@ -19,10 +21,14 @@ class Project extends SubComponent {
         name: "",
         description: "",
         allowedGroups: [],
+        scratchpad: "",
       },
+      loading: true,
       errorMessage: "",
     };
     this.getProject = this.getProject.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
     this.onProjectChange = props.onProjectChange;
   }
 
@@ -40,6 +46,14 @@ class Project extends SubComponent {
       this.onProjectChange(this.state.project.id);
       this.getProject();
     }
+  }
+
+  handleChange(event) {
+
+  }
+
+  handleSubmit(event) {
+
   }
 
   getProject() {
@@ -106,7 +120,19 @@ class Project extends SubComponent {
               </div>
             </div>
           </div>
-        </div>
+          <div className="col-sm-6">
+            <div className="card project-card">
+              <div className="card-header">
+                <span>
+                  <Link to={"/" + this.state.project.id + "/projectscratchpad"}>Project Scratchpad</Link>
+                </span>
+              </div>
+              <div className="card-body">
+                <ProjectScratchpadWidget limit={11} projectId={this.state.project.id} />
+              </div>
+            </div>
+          </div>
+	 </div>
       </div>
     );
   }

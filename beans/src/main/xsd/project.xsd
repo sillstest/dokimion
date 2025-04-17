@@ -38,6 +38,7 @@
                     <xs:element name="ListOfTestDevelopers" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="launcherConfigs" type="LauncherConfigBase" maxOccurs="unbounded"/>
                     <xs:element name="environments" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="scratchpad" type="xs:string"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
