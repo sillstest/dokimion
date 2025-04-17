@@ -59,11 +59,10 @@ class ProjectScratchpadWidget extends SubComponent {
 	<form>
           <div className="form-group row">
             <div className="col-sm-9">
-              <input
-                type="textarea"
+              <textarea
                 name="scratchpad"
                 className="form-control"
-	        style={{ width: '400px', height: '400px'}}
+	        style={{ width: '400px', height: '400px', whiteSpace: 'normal'}}
                 value={this.state.project.scratchpad}
                 onChange={this.handleChange}
               />
