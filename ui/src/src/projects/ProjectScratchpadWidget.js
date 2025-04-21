@@ -21,19 +21,29 @@ class ProjectScratchpadWidget extends SubComponent {
 
   constructor(props) {
     super(props);
-
+    this.state.projectId = props.projectId;
     this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.getProject = this.getProject.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
+    var nextProjectId = nextProps.projectId;
+    // eslint-disable-next-line eqeqeq
+    if (nextProjectId && this.state.projectId != nextProjectId) {
+      this.state.projectId = nextProjectId;
+      this.getProject();
+    }
   }
 
   componentDidMount() {
     super.componentDidMount();
+    if (this.state.projectId) {
+       this.getProject();
+    }
   }
 
   handleChange(event) {
-    console.log(event);
     var projectUpd = this.state.project;
     projectUpd[event.target.name] = event.target.value;
     const newState = Object.assign({}, this.state, {
@@ -43,7 +53,27 @@ class ProjectScratchpadWidget extends SubComponent {
   }
 
   handleSubmit(event) {
-    console.log(event);
+    Backend.put("project", this.state.project)
+      .then(response => {
+        this.state.project = response;
+	this.setState(this.state);
+        this.setState({errorMessage: "Project saved successfully"});
+      })
+      .catch(error => {
+        this.setState({errorMessage: "Couldn't save project: " + error});
+      });
+    event.preventDefault();
+  }
+
+  getProject() {
+    Backend.get("project/" + this.state.projectId)
+     .then(response => {
+        this.state.project = response;
+        this.setState(this.state);
+     })
+     .catch(error => {
+        this.setState({errorMessage: "Couldn't get project: " + error});
+     });
   }
 
   render() {
