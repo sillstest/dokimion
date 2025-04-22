@@ -5,6 +5,7 @@ import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
+import TextareaAutosize from 'react-textarea-autosize';
 
 class ProjectScratchpadWidget extends SubComponent {
   state = {
@@ -89,10 +90,10 @@ class ProjectScratchpadWidget extends SubComponent {
 	<form>
           <div className="form-group row">
             <div className="col-sm-9">
-              <textarea
+              <TextareaAutosize
                 name="scratchpad"
                 className="form-control"
-	        style={{ width: '400px', height: '400px', whiteSpace: 'normal'}}
+	        style={{ width: '100%', whiteSpace: 'normal'}}
                 value={this.state.project.scratchpad}
                 onChange={this.handleChange}
               />
