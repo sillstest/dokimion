@@ -6,6 +6,7 @@ import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 import TextareaAutosize from 'react-textarea-autosize';
+import URLForm from "../projects/URLForm";
 
 class ProjectScratchpadWidget extends SubComponent {
   state = {
@@ -16,8 +17,9 @@ class ProjectScratchpadWidget extends SubComponent {
       name: "",
       description: "",
       allowedGroups: [],
-      scratchpad: "",
+      scratchpadURLs: [],
     },
+    urlToAdd: "",
   };
 
   constructor(props) {
@@ -26,6 +28,8 @@ class ProjectScratchpadWidget extends SubComponent {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.getProject = this.getProject.bind(this);
+    this.onURLAdded = this.onURLAdded.bind(this);
+    this.onURLRemoved = this.onURLRemoved.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -42,6 +46,18 @@ class ProjectScratchpadWidget extends SubComponent {
     if (this.state.projectId) {
        this.getProject();
     }
+  }
+
+  onURLAdded(event) {
+
+    this.state.project.scratchpadURLs.push(event.target.name);
+    this.setState(this.state);
+  }
+
+  onURLRemoved(url) {
+
+    this.state.project.scratchpadURLs.filter( item => item !== url);
+    this.setState(this.state);
   }
 
   handleChange(event) {
@@ -87,24 +103,51 @@ class ProjectScratchpadWidget extends SubComponent {
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
         </div>
-	<form>
-          <div className="form-group row">
-            <div className="col-sm-9">
-              <TextareaAutosize
-                name="scratchpad"
-                className="form-control"
-	        style={{ width: '100%', whiteSpace: 'normal'}}
-                value={this.state.project.scratchpad}
-                onChange={this.handleChange}
-              />
-            </div>
-          </div>
-          <div className="project-form-block">
-              <button type="button" className="btn btn-primary" onClick={this.handleSubmit}>
-                Submit
-              </button>
-          </div>
-	</form>
+        <table cellpadding="1" cellspacing="1">
+	  <thead>
+	    <tr>
+	      <th scope="col">URL Link</th>
+	      <th scope="col">Remove</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    {this.state.project && this.state.project.scratchpadURLs.map(
+              function (url) {
+                return (
+		  <tr key={url}>
+		    <td>
+		      <a href={url}>{url}</a>
+		    </td>
+		    <td>
+		      <button onClick={() => this.onURLRemoved(url)}>
+		       <i className="bi-trash" aria-hidden="true"></i>
+		      </button>
+		    </td>
+	          </tr>
+		);
+	      }.bind(this),
+	    )}
+	  </tbody>
+	</table>
+        <div className="attributes-controls">
+          <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#editURL">
+            Add
+          </button>
+        </div>
+        <div
+          className="modal fade"
+          id="editURL"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="editURLLabel"
+          aria-hidden="true"
+	    >
+          <URLForm
+            project={this.state.project}
+            url={this.state.urlToAdd}
+	          onURLAdded={this.onURLAdded}
+          />
+        </div>
       </div>
     );
   }
