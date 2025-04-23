@@ -28,8 +28,8 @@ class ProjectScratchpadWidget extends SubComponent {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.getProject = this.getProject.bind(this);
-    this.onURLAdded = this.onURLAdded.bind(this);
     this.onURLRemoved = this.onURLRemoved.bind(this);
+    this.onURLAdded = this.onURLAdded.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -48,15 +48,16 @@ class ProjectScratchpadWidget extends SubComponent {
     }
   }
 
-  onURLAdded(event) {
-
-    this.state.project.scratchpadURLs.push(event.target.name);
+  onURLAdded() {
     this.setState(this.state);
   }
 
   onURLRemoved(url) {
 
-    this.state.project.scratchpadURLs.filter( item => item !== url);
+    let i = this.state.project.scratchpadURLs.indexOf(url);
+    if (i > -1) {
+      this.state.project.scratchpadURLs.splice(i, 1);
+    }
     this.setState(this.state);
   }
 
@@ -73,7 +74,7 @@ class ProjectScratchpadWidget extends SubComponent {
     Backend.put("project", this.state.project)
       .then(response => {
         this.state.project = response;
-	this.setState(this.state);
+	      this.setState(this.state);
         this.setState({errorMessage: "Project saved successfully"});
       })
       .catch(error => {
@@ -103,7 +104,7 @@ class ProjectScratchpadWidget extends SubComponent {
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
         </div>
-        <table cellpadding="1" cellspacing="1">
+        <table cellspacing="1">
 	  <thead>
 	    <tr>
 	      <th scope="col">URL Link</th>

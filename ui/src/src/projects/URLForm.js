@@ -37,9 +37,9 @@ class URLForm extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.setState({ attribute: nextProps.attribute, 
-      projectAttributes:nextProps.projectAttributes, 
-      edit: nextProps.edit});
+    this.setState({ project: nextProps.project, 
+      url:nextProps.urlToAdd, 
+    });
   }
 
   handleChange(event) {
@@ -49,9 +49,13 @@ class URLForm extends Component {
 
   handleSubmit(event) {
 
-    Backend.post(this.props.project + "/addScratchpadURL", this.state.url)
+    this.props.project.scratchpadURLs.push(this.state.url);
+
+    Backend.put("project", this.props.project)
       .then(response => {
-        this.props.onAttributeAdded(response);
+        this.state.project = response;
+        this.props.onURLAdded();
+        this.setState(this.state);
       })
       .catch(error => {
         this.setState({errorMessage: "Couldn't save url: " + error});
@@ -95,7 +99,6 @@ class URLForm extends Component {
           </div>
           <div className="modal-body">
               <div className="form-group row">
-                <label className="col-sm-2 col-form-label">URL</label>
                 <div className="col-sm-8">
                   <input
                     type="text"

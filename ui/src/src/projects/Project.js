@@ -124,7 +124,7 @@ class Project extends SubComponent {
             <div className="card project-card">
               <div className="card-header">
                 <span>
-                  <Link to={"/" + this.state.project.id + "/projectscratchpad"}>Project Scratchpad</Link>
+                  <Link to={"/" + this.state.project.id + "/projectscratchpad"}></Link>
                 </span>
               </div>
               <div className="card-body">
