@@ -38,7 +38,11 @@ class ChangePassword extends SubComponent {
   handleSubmit(event) {
     Backend.postPlain("user/change-password", { newPassword: this.state.password, login: this.state.profileId })
       .then(response => {
-	this.setState({message: "Success: Password updated"});
+	if (response.statusText === "Internal Server Error") {
+	   this.setState({message: "Error: Change Password Failed"});
+	} else {
+	   this.setState({message: "Success: Password updated"});
+        }
 	window.location = decodeURI("/");
       })
       .catch(error => {

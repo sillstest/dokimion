@@ -202,7 +202,12 @@ System.out.flush();
        System.out.flush();
 
        beginTime = Instant.now();
-       service.changePassword(login, person.getPassword(), newPassword);
+       if (service.changePassword(login, person.getPassword(), newPassword) == false) {
+System.out.println("UserResource::sendEmail - fail in service.changePassword");
+System.out.flush();
+          return Response.serverError().entity("ChangePassword Failed").build();
+       }
+
        deltaTime = Duration.between(beginTime, Instant.now());
        System.out.println("UserResource::sendEmail - deltaTime to changePassword: " + deltaTime);
        System.out.flush();
@@ -385,7 +390,7 @@ System.out.flush();
     @Path("/change-password")
     public Response changePassword(ChangePasswordRequest changePasswordRequest){
 
-System.out.println("changePassword");
+System.out.println("UserResource::changePassword");
 System.out.flush();
 
         Session session = getSession();
@@ -403,12 +408,20 @@ System.out.flush();
             return Response.serverError().entity("changePassword - APIValidation error").build();
         }
 
-System.out.println("changePassword - after api validation");
-System.out.println("changePassword - oldpass, newpass: " + changePasswordRequest.getOldPassword() + ", " + changePasswordRequest.getNewPassword());
+System.out.println("UserResource::changePassword - after api validation");
+System.out.println("UserResource::changePassword - oldpass, newpass: " + changePasswordRequest.getOldPassword() + ", " + changePasswordRequest.getNewPassword());
 
 System.out.flush();
 
-       service.changePassword(session, login, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword());
+       if (service.changePassword(session, login, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword()) == false) {
+System.out.println("UserResource::changePassword - fail in service.changePassword");
+System.out.flush();
+          return Response.serverError().entity("ChangePassword Failed").build();
+       }
+
+System.out.println("UserResource::changePassword - after service.changePassword");
+System.out.flush();
+
        session.getPerson().setDefaultPassword(false);
        sessionProvider.replaceSession(session);
 

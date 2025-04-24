@@ -161,8 +161,8 @@ System.out.flush();
     }
 
 
-    public void changePassword(String login, String oldPassword, String newPassword) {
-System.out.println("changePassword - login: " + login);
+    public boolean changePassword(String login, String oldPassword, String newPassword) {
+System.out.println("UserService::changePassword - login: " + login);
 System.out.flush();
        User user = findOne("", new Filter().withField("login", login));
        StringBuilder exceptionMessage = new StringBuilder("");
@@ -172,16 +172,21 @@ System.out.flush();
 
           User newUser = save(user);
 
-System.out.println("changePassword - after setPassword, newUser: " + newUser);
-System.out.println("changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, newUser.getLogin()));
+System.out.println("UserService::changePassword - after setPassword, newUser: " + newUser);
+System.out.println("UserService::changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, newUser.getLogin()));
 System.out.flush();
+
+          return true;
+
        } else {
-          throw new EntityValidationException(format("User %s password %s validation error - %s", login, newPassword, exceptionMessage.toString()));
+          System.out.println("UserService::User password validation error");
+	  System.out.flush();
+	  return false;
        }
     }
 
-    public void changePassword(Session session, String login, String oldPassword, String newPassword) {
-System.out.println("changePassword - session: " + session);
+    public boolean changePassword(Session session, String login, String oldPassword, String newPassword) {
+System.out.println("UserService::changePassword - session: " + session);
 System.out.flush();
         if (userCanSave(session, login)){
             User user = findOne(getCurrOrganizationId(session), new Filter().withField("login", login));
@@ -190,11 +195,14 @@ System.out.flush();
                user.setPassword(encryptPassword(newPassword, user.getLogin()));
                user.setPasswordChangeRequired(false);
                save(session, null, user);
-System.out.println("changePassword - after setPassword, session: " + session);
-System.out.println("changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, user.getLogin()));
+System.out.println("UserService::changePassword - after setPassword, session: " + session);
+System.out.println("UserService::changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, user.getLogin()));
 System.out.flush();
+               return true;
             } else {
-               throw new EntityValidationException(format("User %s password %s validation error - %s", login, newPassword, exceptionMessage.toString()));
+               System.out.println("UserService::changePassword - User password validation error");
+	       System.out.flush();
+	       return false;
 	    }
         } else {
             throw new EntityAccessDeniedException(format("User %s doesn't have permissions to modify %s account", session.getPerson().getLogin(), login));
