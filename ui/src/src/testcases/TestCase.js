@@ -166,9 +166,6 @@ class TestCase extends SubComponent {
     }
     if (nextProps.launchId) {
       this.state.launchId = nextProps.launchId;
-      if (this.props.testcase.id) {
-        this.getTestCase(this.props.projectId, this.props.testcase.id);
-      }
     }
     if (nextProps.projectId) {
       this.projectId = nextProps.projectId;
