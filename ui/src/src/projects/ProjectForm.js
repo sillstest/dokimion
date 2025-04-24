@@ -13,6 +13,7 @@ class ProjectForm extends Component {
         name: "",
         description: "",
         allowedGroups: [],
+	scratchpad: "text",
       },
       errorMessage: "",
     };

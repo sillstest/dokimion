@@ -36,6 +36,7 @@
     "react-scripts": "^4.0.3",
     "react-select": "^2.0.0",
     "react-spinners": "^0.5.4",
+    "react-textarea-autosize": "^8.5.9",
     "reactjs-popup": "^2.0.5",
     "save": "^2.9.0",
     "semantic-ui-css": "^2.4.1",
