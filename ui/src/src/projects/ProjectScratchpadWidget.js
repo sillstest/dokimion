@@ -112,7 +112,7 @@ class ProjectScratchpadWidget extends SubComponent {
 	    </tr>
 	  </thead>
 	  <tbody>
-	    {this.state.project && this.state.project.scratchpadURLs.map(
+	    {this.state.project && this.state.project.scratchpadURLs !== undefined && this.state.project.scratchpadURLs.map(
               function (url) {
                 return (
 		  <tr key={url}>
