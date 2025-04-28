@@ -99,10 +99,10 @@ class LaunchForm extends SubComponent {
            this.state.noAttributes += 1;
            this.setState(this.state);
         } else {
-           this.setState({errorMessage: "Invalid number of LAUNCH attributes"});
+           this.setState({errorMessage: "handleAddAttribute::Invalid number of LAUNCH attributes"});
         }
      } else {
-        this.setState({errorMessage: "Maximum number LAUNCH attributes = 2"});
+        this.setState({errorMessage: "handleAddAttribute::Maximum number LAUNCH attributes = 2"});
      }
 
   }
@@ -156,7 +156,7 @@ class LaunchForm extends SubComponent {
       .catch(error => {
         this.state.loading = false;
         this.setState(this.state);
-        this.setState({errorMessage: "Couldn't save launch: " + error});
+        this.setState({errorMessage: "handleSubmit::Couldn't save launch: " + error});
       });
     event.preventDefault();
   }
@@ -186,7 +186,7 @@ class LaunchForm extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get project: " + error});
+        this.setState({errorMessage: "componentDidMount::Couldn't get project"});
       });
 
     Backend.get("launcher/descriptors")
@@ -195,7 +195,7 @@ class LaunchForm extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get launcher descriptors: " + error});
+        this.setState({errorMessage: "componentDidMount::Couldn't get launcher descriptors"});
       });
   }
 

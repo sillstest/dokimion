@@ -55,7 +55,7 @@ class TestCaseForm extends SubComponent {
         this.onTestCaseAdded(response);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't create testcase: " + error});
+        this.setState({errorMessage: "handleSubmit::Couldn't create testcase"});
       });
     event.preventDefault();
   }

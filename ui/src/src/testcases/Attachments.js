@@ -82,7 +82,7 @@ console.log("Attachments::removeAttachment");
         this.onTestcaseUpdated();
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't remove attachment: " + error});
+        this.setState({errorMessage: "removeAttachment::Couldn't remove attachment"});
       });
   }
 

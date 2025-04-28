@@ -42,7 +42,7 @@ class ProjectForm extends Component {
         this.props.history.push("/projects/" + response.id);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't save project: " + error});
+        this.setState({errorMessage: "handleSubmit::Couldn't save project"});
       });
     event.preventDefault();
   }
@@ -57,7 +57,7 @@ class ProjectForm extends Component {
           this.setState(newState);
         })
         .catch(error => {
-          this.setState({errorMessage: "Couldn't get project: " + error});
+          this.setState({errorMessage: "componentDidMount::Couldn't get project"});
         });
     }
   }

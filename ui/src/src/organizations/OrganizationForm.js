@@ -127,7 +127,7 @@ class OrganizationForm extends Component {
         this.props.history.push("/organizations/" + response.id);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't create organization: " + error});
+        this.setState({errorMessage: "handleCreate::Couldn't create organization"});
       });
     event.preventDefault();
   }
@@ -138,7 +138,7 @@ class OrganizationForm extends Component {
           this.props.history.push("/organizations/" + response.id);
         })
         .catch(error => {
-          this.setState({errorMessage: "Couldn't update organization: " + error});
+          this.setState({errorMessage: "handleUpdate::Couldn't update organization"});
         });
       event.preventDefault();
     }

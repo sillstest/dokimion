@@ -39,7 +39,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get launch testcases heatmap: " + error});
+        this.setState({errorMessage: "getHeatMap::Couldn't get launch testcases heatmap"});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -74,7 +74,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
         }
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't update testcase status: " + error});
+        this.setState({errorMessage: "onBrokenToggle::Couldn't update testcase status"});
       });
   }
 
@@ -88,7 +88,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't update testcase status: " + error});
+        this.setState({errorMessage: "updateTestcase::Couldn't update testcase status"});
       });
   }
 

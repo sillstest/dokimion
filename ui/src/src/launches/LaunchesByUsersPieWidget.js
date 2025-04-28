@@ -55,7 +55,7 @@ class LaunchesByUsersPieWidget extends SubComponent {
         this.usersPieChartRender();
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get launch statistics: " + error});
+        this.setState({errorMessage: "getStats::Couldn't get launch statistics"});
         this.state.loading = false;
         this.setState(this.state);
       });

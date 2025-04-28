@@ -144,7 +144,7 @@ class Launch extends SubComponent {
       })
       .catch(error => {
         console.log(error);
-        this.setState({errorMessage: "Couldn't get launch: " + error});
+        this.setState({errorMessage: "Couldn't get launch"});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -421,7 +421,7 @@ class Launch extends SubComponent {
     })
     .catch(error => {
       console.log(error);
-      this.setState({errorMessage: "Couldn't get launch: " + error});
+      this.setState({errorMessage: "getUpdatedLaunch::Couldn't get launch"});
       this.state.loading = false;
       this.setState(this.state);
     });

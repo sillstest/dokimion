@@ -59,7 +59,7 @@ class LaunchesByUserExecutionTrend extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get launch statistics: " + error});
+        this.setState({errorMessage: "getStats::Couldn't get launch statistics"});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -80,7 +80,7 @@ class LaunchesByUserExecutionTrend extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get launches: " + error});
+        this.setState({errorMessage: "getLaunches::Couldn't get launches"});
         this.state.loading = false;
         this.setState(this.state);
       });

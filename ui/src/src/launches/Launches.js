@@ -72,7 +72,7 @@ class Launches extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get launches: " + error});
+        this.setState({errorMessage: "getLaunches::Couldn't get launches"});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -84,7 +84,7 @@ class Launches extends SubComponent {
         this.getLaunches();
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't delete launch: " + error});
+        this.setState({errorMessage: "deleteLaunch::Couldn't delete launch"});
       });
   }
 
@@ -112,7 +112,7 @@ class Launches extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get launcher descriptors: " + error});
+        this.setState({errorMessage: "getLauncherDescriptors::Couldn't get launcher descriptors"});
       });
   }
 

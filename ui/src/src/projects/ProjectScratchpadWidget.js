@@ -75,10 +75,10 @@ class ProjectScratchpadWidget extends SubComponent {
       .then(response => {
         this.state.project = response;
 	      this.setState(this.state);
-        this.setState({errorMessage: "Project saved successfully"});
+        this.setState({errorMessage: "handleSubmit::Project saved successfully"});
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't save project: " + error});
+        this.setState({errorMessage: "handleSubmit::Couldn't save project: " + error});
       });
     event.preventDefault();
   }
@@ -90,7 +90,7 @@ class ProjectScratchpadWidget extends SubComponent {
         this.setState(this.state);
      })
      .catch(error => {
-        this.setState({errorMessage: "Couldn't get project: " + error});
+        this.setState({errorMessage: "getProject::Couldn't get project: " + error});
      });
   }
 
