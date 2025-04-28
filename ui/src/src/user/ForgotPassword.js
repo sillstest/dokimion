@@ -59,7 +59,7 @@ class ForgotPassword extends Component {
 	      this.setState({message: "Success: Sent temporary password email for login"});
 	      window.location = decodeURI("/");
 	   }).catch(error => {
-             this.setState({message: "Error: Unable to retrieve email for login: " + error});
+             this.setState({message: "handleSubmit::Error: Unable to retrieve email for login"});
            });
           event.preventDefault();
 

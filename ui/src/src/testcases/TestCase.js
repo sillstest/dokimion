@@ -211,7 +211,7 @@ console.log("TestCase::getTestCase");
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't fetch testcase: " + error});
+        this.setState({errorMessage: "getTestCase::Couldn't fetch testcase"});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -224,7 +224,7 @@ console.log("TestCase::cloneTestCase");
               window.location.href = window.location.href.replace('testcase=' + this.state.testcase.id, 'testcase=' + response.id)
             })
             .catch(error => {
-              this.setState({errorMessage: "Couldn't clone testcase: " + error});
+              this.setState({errorMessage: "cloneTestCase::Couldn't clone testcase"});
               this.state.loading = false;
               this.setState(this.state);
             });
@@ -271,7 +271,7 @@ console.log("TestCase::handleSubmit");
         }
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't save testcase: " + error});
+        this.setState({errorMessage: "handleSubmit::Couldn't save testcase"});
       });
     if (event) {
       event.preventDefault();
@@ -287,7 +287,7 @@ console.log("TestCase::handleSubmit");
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't fetch attributes: " + error});
+        this.setState({errorMessage: "getAttributes::Couldn't fetch attributes"});
       });
   }
 
@@ -467,7 +467,7 @@ console.log("TestCase::removeTestCase");
         window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't remove testcase: " + error});
+        this.setState({errorMessage: "removeTestcase::Couldn't remove testcase"});
       });
   }
 
@@ -478,7 +478,7 @@ console.log("TestCase::removeTestCase");
         window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't lock testcase: " + error});
+        this.setState({errorMessage: "lockTestcase::Couldn't lock testcase"});
       });
   }
 
@@ -489,7 +489,7 @@ console.log("TestCase::removeTestCase");
         window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't unlock testcase: " + error});
+        this.setState({errorMessage: "unlockTestcase::Couldn't unlock testcase"});
       });
   }
 

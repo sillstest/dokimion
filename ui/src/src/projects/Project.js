@@ -63,7 +63,7 @@ class Project extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get project: " + error});
+        this.setState({errorMessage: "getProject::Couldn't get project"});
       });
   }
 

@@ -140,10 +140,10 @@ class ProjectSettings extends SubComponent {
           this.toggleEdit(name);
         }
         this.setState(this.state);
-        this.setState({errorMessage: "Project Settings successfully saved"});
+        this.setState({errorMessage: "submit::Project Settings successfully saved"});
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't save project: " + error});
+        this.setState({errorMessage: "submit::Couldn't save project"});
       });
     if (event) {
       event.preventDefault();
@@ -156,7 +156,7 @@ class ProjectSettings extends SubComponent {
         window.location.href = "/";
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't delete project: " + error});
+        this.setState({errorMessage: "removeProject::Couldn't delete project"});
       });
     event.preventDefault();
   }

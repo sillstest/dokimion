@@ -117,7 +117,7 @@ class TestCasesFilter extends Component {
           this.props.onFilter(this.state.testSuite.filter);
         })
         .catch(error => {
-          this.setState({errorMessage: "Couldn't fetch testsuite: " + error});
+          this.setState({errorMessage: "componentDidMount::Couldn't fetch testsuite"});
         });
     } else {
       if (params.groups) {
@@ -253,7 +253,7 @@ class TestCasesFilter extends Component {
     });
     //Added code for Issue 41
     if(suiteToSave && typeof suiteToSave.name === "string" && suiteToSave.name.length === 0){
-      this.setState({errorMessage:'Enter valid Suite Name'});
+      this.setState({errorMessage:'saveSuite::Enter valid Suite Name'});
     }else{
     //retrieve existing names
     Backend.get(this.props.match.params.project + "/testsuite")
@@ -261,7 +261,7 @@ class TestCasesFilter extends Component {
        var testSuites = response.map(ts=>ts.name);
        var duplicate = testSuites && testSuites.filter(val => val.toLowerCase() === suiteToSave.name.toLowerCase()).length > 0 ? true : false;
         if(duplicate){
-          this.setState({errorMessage:'Duplicate Suite Name', testSuiteNameToDisplay:''});
+          this.setState({errorMessage:'saveSuite::Duplicate Suite Name', testSuiteNameToDisplay:''});
         }else{
            Backend.post(this.props.match.params.project + "/testsuite/", suiteToSave)
             .then(response => {
@@ -274,12 +274,12 @@ class TestCasesFilter extends Component {
               );
             })
             .catch(error => {
-              this.setState({errorMessage: "Couldn't save testsuite: " + error});
+              this.setState({errorMessage: "saveSuite::Couldn't save testsuite: " + error});
             });
         }
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get testsuites: " + error});
+        this.setState({errorMessage: "saveSuite::Couldn't get testsuites: " + error});
       });
 
     }

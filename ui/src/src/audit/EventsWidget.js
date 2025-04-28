@@ -24,7 +24,7 @@ class EventsWidget extends Component {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get events: " + error});
+        this.setState({errorMessage: "Couldn't get events"});
         this.state.loading = false;
         this.setState(this.state);
       });

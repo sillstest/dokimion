@@ -90,7 +90,7 @@ class TestCases extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't fetch testcases number: " + error});
+        this.setState({errorMessage: "getTotalNumberOfTestCases::Couldn't fetch testcases number"});
       });
     this.handleLockAllTestCases = this.handleLockAllTestCases.bind(this);
   }
@@ -141,7 +141,7 @@ class TestCases extends SubComponent {
         this.refreshTree();
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't fetch attributes: " + error});
+        this.setState({errorMessage: "componentDidMount::Couldn't fetch attributes"});
       });
   }
 
@@ -203,7 +203,7 @@ class TestCases extends SubComponent {
         this.updateCount();
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't fetch testcases tree: " + error});
+        this.setState({errorMessage: "onFilter::Couldn't fetch testcases tree: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
@@ -221,7 +221,7 @@ class TestCases extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't fetch testcases number: " + error});
+        this.setState({errorMessage: "updateCount::Couldn't fetch testcases number: " + error});
       });
   }
 
@@ -241,7 +241,7 @@ class TestCases extends SubComponent {
         }
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't fetch testcases: " + error});
+        this.setState({errorMessage: "loadMoreTestCases::Couldn't fetch testcases: " + error});
       });
     event.preventDefault();
   }
@@ -413,7 +413,7 @@ class TestCases extends SubComponent {
         console.log("After DB update : " + JSON.stringify(testcase));
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't save testcase: " + error});
+        this.setState({errorMessage: "handleSubmit::Couldn't save testcase: " + error});
       });
     
   }
@@ -431,11 +431,11 @@ class TestCases extends SubComponent {
     console.log("Filter Attribs : " + JSON.stringify(newValidAttribs));
     if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
       {
-        this.setState({errorMessage: "Select an Attribute to Add" });
+        this.setState({errorMessage: "handleBulkAddAttributes::Select an Attribute to Add" });
         return;
       }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
         console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
-        this.setState({errorMessage: "Select an Attribute to Add" });
+        this.setState({errorMessage: "handleBulkAddAttributes::Select an Attribute to Add" });
         return;
       }
       else{
@@ -503,11 +503,11 @@ class TestCases extends SubComponent {
            }
          
           }).catch(error => {
-              this.setState({errorMessage: "Couldn't fetch testcase: " + error});
+              this.setState({errorMessage: "handleBulkAddAttributes::Couldn't fetch testcase"});
               
       })})
      
-    this.setState({errorMessage: "Added Attributes in selected Tescases"});
+    this.setState({errorMessage: "handleBulkAddAttributes::Added Attributes in selected Tescases"});
     this.props.history.push(
       "/" + this.props.match.params.project +"/testcases"
    );
@@ -527,11 +527,11 @@ class TestCases extends SubComponent {
   
     if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
     {
-      this.setState({errorMessage: "Select an Attribute to Remove" });
+      this.setState({errorMessage: "handleBulkRemoveAttributes::Select an Attribute to Remove" });
       return;
     }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
       console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
-      this.setState({errorMessage: "Select an Attribute to Remove" });
+      this.setState({errorMessage: "handleBulkRemoveAttributes::Select an Attribute to Remove" });
       return;
     }
     else{
@@ -580,11 +580,11 @@ class TestCases extends SubComponent {
             console.log("Testcase Not modified : " + testcase.id);
            }
           }).catch(error => {
-              this.setState({errorMessage: "Couldn't fetch testcase: " + error});
+              this.setState({errorMessage: "handleBulkRemoveAttributes::Couldn't fetch testcase"});
       })})
   
     
-    this.setState({errorMessage: "Removed Attributes in selected Tescases"});
+    this.setState({errorMessage: "handleBulkRemoveAttributes::Removed Attributes in selected Tescases"});
     this.props.history.push(
       "/" + this.props.match.params.project +"/testcases"
     );
@@ -598,11 +598,11 @@ handleLockAllTestCases(){
   .then(response => {
     console.log("Locked all testcases : " + JSON.stringify(response));
     // if(response.status === 200 ){
-      this.setState({errorMessage:"Locked All Testcases"});
+      this.setState({errorMessage:"handleLockAllTestCases::Locked All Testcases"});
     // }
   })
   .catch(error => {
-    this.setState({errorMessage: "Couldn't lock all testcases: " + error});
+    this.setState({errorMessage: "handleLockAllTestCases::Couldn't lock all testcases"});
   });
   this.props.history.push(
     "/" + this.props.match.params.project +"/testcases"
@@ -615,11 +615,11 @@ handleUnLockAllTestCases(){
   .then(response => {
     console.log("UnLocked all testcases : " + JSON.stringify(response));
     // if(response.status === 200 ){
-      this.setState({errorMessage:"Unlocked All Testcases"});
+      this.setState({errorMessage:"handleUnLockAllTestCases::Unlocked All Testcases"});
     // }
   })
   .catch(error => {
-    this.setState({errorMessage: "Couldn't unlock all testcases: " + error});
+    this.setState({errorMessage: "handleUnLockAllTestCases::Couldn't unlock all testcases"});
   });
   this.props.history.push(
     "/" + this.props.match.params.project +"/testcases"

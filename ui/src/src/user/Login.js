@@ -71,7 +71,7 @@ class Login extends Component {
           }
           window.location = decodeURI(decodedReptath);
         }).catch(error => {
-	    this.setState({errorMessage: "Unable to login: " + error.message});
+	    this.setState({errorMessage: "handleSubmit::Unable to login"});
         });
       event.preventDefault();
   }
