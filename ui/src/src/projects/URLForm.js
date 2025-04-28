@@ -61,10 +61,12 @@ class URLForm extends Component {
          })
          .catch(error => {
            this.setState({errorMessage: "Couldn't save url: " + error});
+           this.setState(this.state);
          });
 
     } else {
        this.setState({errorMessage: "URL must have prefix \"http\""});
+       this.setState(this.state);
     }
     event.preventDefault();
   }  
