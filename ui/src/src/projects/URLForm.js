@@ -49,7 +49,7 @@ class URLForm extends Component {
 
   handleSubmit(event) {
 
-    if (this.state.url.startswith("http")) {
+    if (this.state.url.startsWith("http")) {
 
        this.props.project.scratchpadURLs.push(this.state.url);
 
