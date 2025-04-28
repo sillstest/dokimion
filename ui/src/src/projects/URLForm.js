@@ -49,17 +49,23 @@ class URLForm extends Component {
 
   handleSubmit(event) {
 
-    this.props.project.scratchpadURLs.push(this.state.url);
+    if (this.state.url.startswith("http")) {
 
-    Backend.put("project", this.props.project)
-      .then(response => {
-        this.state.project = response;
-        this.props.onURLAdded();
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "Couldn't save url: " + error});
-      });
+       this.props.project.scratchpadURLs.push(this.state.url);
+
+       Backend.put("project", this.props.project)
+         .then(response => {
+           this.state.project = response;
+           this.props.onURLAdded();
+           this.setState(this.state);
+         })
+         .catch(error => {
+           this.setState({errorMessage: "Couldn't save url: " + error});
+         });
+
+    } else {
+       this.setState({errorMessage: "URL must have prefix \"http\""});
+    }
     event.preventDefault();
   }  
 
