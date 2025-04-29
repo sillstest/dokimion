@@ -48,7 +48,7 @@ class Organization extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "getOrganization::Couldn't get organization"});
+        this.setState({errorMessage: "getOrganization::Couldn't get organization, error: " + error});
       });
   }
 

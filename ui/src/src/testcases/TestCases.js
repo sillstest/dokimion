@@ -90,7 +90,7 @@ class TestCases extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "getTotalNumberOfTestCases::Couldn't fetch testcases number"});
+        this.setState({errorMessage: "getTotalNumberOfTestCases::Couldn't fetch testcases number, error: " + error});
       });
     this.handleLockAllTestCases = this.handleLockAllTestCases.bind(this);
   }
@@ -141,7 +141,7 @@ class TestCases extends SubComponent {
         this.refreshTree();
       })
       .catch(error => {
-        this.setState({errorMessage: "componentDidMount::Couldn't fetch attributes"});
+        this.setState({errorMessage: "componentDidMount::Couldn't fetch attributes, error: " + error});
       });
   }
 

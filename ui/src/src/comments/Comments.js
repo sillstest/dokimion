@@ -139,7 +139,7 @@ class Comments extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't delete comment"});
+        this.setState({errorMessage: "removeComment::Couldn't delete comment, error: " + error});
       });
   }
 
@@ -154,7 +154,7 @@ class Comments extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't create comment"});
+        this.setState({errorMessage: "handleSubmit::Couldn't create comment, error: " + error});
       });
     event.preventDefault();
   }
@@ -173,7 +173,7 @@ class Comments extends SubComponent {
         this.cancelEdit(index, event);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't update comment"});
+        this.setState({errorMessage: "handleUpdateSubmit::Couldn't update comment, error: " + error});
       });
   }
 

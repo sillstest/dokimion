@@ -57,7 +57,7 @@ class LauncherForm extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "getProject::Couldn't get project"});
+        this.setState({errorMessage: "getProject::Couldn't get project, error: " + error});
       });
   }
 

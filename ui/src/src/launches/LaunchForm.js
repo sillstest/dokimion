@@ -186,7 +186,7 @@ class LaunchForm extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "componentDidMount::Couldn't get project"});
+        this.setState({errorMessage: "componentDidMount::Couldn't get project, error: " + error});
       });
 
     Backend.get("launcher/descriptors")
@@ -195,7 +195,7 @@ class LaunchForm extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "componentDidMount::Couldn't get launcher descriptors"});
+        this.setState({errorMessage: "componentDidMount::Couldn't get launcher descriptors, error: " + error});
       });
   }
 

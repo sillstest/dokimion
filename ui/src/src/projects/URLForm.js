@@ -60,7 +60,7 @@ class URLForm extends Component {
            this.setState(this.state);
          })
          .catch(error => {
-           this.setState({errorMessage: "handleSubmit::Couldn't save url"});
+           this.setState({errorMessage: "handleSubmit::Couldn't save url, error: " + error});
            this.setState(this.state);
          });
 

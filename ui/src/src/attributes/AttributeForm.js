@@ -97,7 +97,7 @@ class AttributeForm extends Component {
             this.setState(this.state);
           })
           .catch(error => {
-            this.setState({errorMessage: "Couldn't save attributes"});
+            this.setState({errorMessage: "handleSubmit::Couldn't save attribute, error: " + error});
           });
     }
     event.preventDefault();
@@ -116,7 +116,7 @@ class AttributeForm extends Component {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't remove attribute"});
+        this.setState({errorMessage: "handleRemove::Couldn't remove attribute, error: " + error});
       });
     event.preventDefault();
   }

@@ -41,7 +41,7 @@ class LaunchesStatisticsOverview extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "getStats::Couldn't get launch statistics"});
+        this.setState({errorMessage: "getStats::Couldn't get launch statistics, error: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });
