@@ -78,7 +78,7 @@ class ProjectSettings extends SubComponent {
         this.setState(this.state);
        })
       .catch(error => {
-        this.setState({errorMessage: "Couldn't get project: " + error});
+        this.setState({errorMessage: "componentWillMount::Couldn't get project: " + error});
       });
   }
 
@@ -143,7 +143,7 @@ class ProjectSettings extends SubComponent {
         this.setState({errorMessage: "submit::Project Settings successfully saved"});
       })
       .catch(error => {
-        this.setState({errorMessage: "submit::Couldn't save project"});
+        this.setState({errorMessage: "submit::Couldn't save project, error: " + error});
       });
     if (event) {
       event.preventDefault();
@@ -156,7 +156,7 @@ class ProjectSettings extends SubComponent {
         window.location.href = "/";
       })
       .catch(error => {
-        this.setState({errorMessage: "removeProject::Couldn't delete project"});
+        this.setState({errorMessage: "removeProject::Couldn't delete project, error: " + error});
       });
     event.preventDefault();
   }

@@ -144,7 +144,7 @@ class Launch extends SubComponent {
       })
       .catch(error => {
         console.log(error);
-        this.setState({errorMessage: "Couldn't get launch"});
+        this.setState({errorMessage: "getLaunch::Couldn't get launch, error: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });

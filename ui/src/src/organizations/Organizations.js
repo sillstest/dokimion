@@ -26,7 +26,7 @@ class Organizations extends Component {
         this.setState(newState);
       })
       .catch(error => {
-        this.setState({errorMessage: "componentDidMount::Couldn't get organizations"});
+        this.setState({errorMessage: "componentDidMount::Couldn't get organizations, error: " + error});
         // eslint-disable-next-line react/no-direct-mutation-state
         this.state.loading = false;
         this.setState(this.state);

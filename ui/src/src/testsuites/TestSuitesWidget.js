@@ -47,7 +47,7 @@ class TestSuitesWidget extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "getTestSuites::Couldn't get testsuites"});
+        this.setState({errorMessage: "getTestSuites::Couldn't get testsuites, error: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });

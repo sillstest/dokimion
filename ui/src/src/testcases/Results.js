@@ -75,7 +75,7 @@ class Results extends SubComponent {
         this.onTestcaseUpdated();
       })
       .catch(error => {
-        this.setState({errorMessage: "removeResult::Couldn't remove result"});
+        this.setState({errorMessage: "removeResult::Couldn't remove result, error: " + error});
       });
   }
 

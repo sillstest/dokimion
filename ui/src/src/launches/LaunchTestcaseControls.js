@@ -51,7 +51,7 @@ class LaunchTestcaseControls extends Component {
         }
       })
       .catch(error => {
-	this.state.testcase.displayErrorMessage = "Couldn't save launch testcase status: " + error;
+	this.state.testcase.displayErrorMessage = "handleStatusSubmit::Couldn't save launch testcase status: " + error;
 	this.setState(this.state);
         this.callback(this.state.testcase);
       });

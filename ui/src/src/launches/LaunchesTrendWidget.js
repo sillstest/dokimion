@@ -54,7 +54,7 @@ class LaunchesTrendWidget extends SubComponent {
         this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "getLaunches::Couldn't get launches"});
+        this.setState({errorMessage: "getLaunches::Couldn't get launches, error: " + error});
         this.state.loading = false;
         this.setState(this.state);
       });

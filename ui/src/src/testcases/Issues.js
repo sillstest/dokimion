@@ -70,7 +70,7 @@ class Issues extends SubComponent {
           this.refreshIssues();
         })
         .catch(error => {
-          this.setState({errorMessage: "componentWillReceiveProps::Couldn't fetch projects from tracker"});
+          this.setState({errorMessage: "componentWillReceiveProps::Couldn't fetch projects from tracker, error: " + error});
         });
     }
     if (nextProps.testcase && (nextProps.testcase.issues || []).length != this.state.testcase.issues) {
@@ -130,7 +130,7 @@ class Issues extends SubComponent {
         this.onTestcaseUpdated();
       })
       .catch(error => {
-        this.setState({errorMessage: "linkIssue::Couldn't link issue"});
+        this.setState({errorMessage: "linkIssue::Couldn't link issue, error: " + error});
       });
     event.preventDefault();
   }
