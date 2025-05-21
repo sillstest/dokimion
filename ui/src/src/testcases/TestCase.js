@@ -1,4 +1,4 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
+/*unc eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable eqeqeq */
 import React from "react";
 import SubComponent from "../common/SubComponent";
@@ -22,6 +22,7 @@ import { Checkbox } from "semantic-ui-react";
 import { ConfirmButton } from "../common/uicomponents/ConfirmButton";
 import { Editor } from "@tinymce/tinymce-react";
 import Backend from "../services/backend";
+import LaunchTestcaseControls from "../launches/LaunchTestcaseControls";
 
 
 // Tinymce is registered to bob_beck@sil.org on tiny.cloud, the tinymce
@@ -836,6 +837,15 @@ console.log("TestCase::removeTestCase");
             </div>
 
             <div id="steps" className="mb-4">
+
+              <LaunchTestcaseControls
+                testcase={this.state.testcase}
+                launchId={this.state.launchId}
+                projectId={this.projectId}
+                callback={this.props.callback}
+	        indicator={"START"}
+              />
+
               <h5>Steps</h5>
               {(this.state.testcase.steps || []).map(
                 function (step, i) {
@@ -1024,6 +1034,14 @@ console.log("TestCase::removeTestCase");
                 </div>
               )}
             </div>
+
+            <LaunchTestcaseControls
+              testcase={this.state.testcase}
+              launchId={this.state.launchId}
+              projectId={this.projectId}
+              callback={this.props.callback}
+	      indicator={"FAILUREDETAILS"}
+            />
 
             <div id="attributes" className="mb-4">
               <h5>Attributes</h5>

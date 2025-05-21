@@ -3,7 +3,6 @@ import React from "react";
 import { withRouter } from "react-router";
 import SubComponent from "../common/SubComponent";
 import TestCase from "../testcases/TestCase";
-import LaunchTestcaseControls from "../launches/LaunchTestcaseControls";
 import LaunchAttributeStatsChart from "../launches/LaunchAttributeStatsChart";
 import LaunchForm from "../launches/LaunchForm";
 import { Link } from "react-router-dom";
@@ -549,13 +548,6 @@ class Launch extends SubComponent {
                 testcase={this.state.selectedTestCase}
                 projectAttributes={this.state.projectAttributes}
                 readonly={true}
-                launchId={this.props.match.params.launchId}
-                projectId={this.state.projectId}
-              />
-            )}
-            {this.state.selectedTestCase && this.state.selectedTestCase.uuid && (
-              <LaunchTestcaseControls
-                testcase={this.state.selectedTestCase}
                 launchId={this.props.match.params.launchId}
                 projectId={this.state.projectId}
                 callback={this.onTestcaseStateChanged}

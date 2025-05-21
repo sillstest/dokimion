@@ -11,6 +11,7 @@ class LaunchTestcaseControls extends Component {
 
   state = {
     failureDetails: Object.assign({}, this.defaultFailureDetails),
+    indicator: "",
     errorMessage: "",
   };
 
@@ -19,6 +20,7 @@ class LaunchTestcaseControls extends Component {
     this.state.testcase = this.props.testcase;
     this.state.launchId = this.props.launchId;
     this.state.projectId = this.props.projectId;
+    this.state.indicator = this.props.indicator;
     this.handleDetailsFailureChange = this.handleDetailsFailureChange.bind(this);
   }
 
@@ -38,7 +40,7 @@ class LaunchTestcaseControls extends Component {
 
   handleStatusSubmit(status, event, dialogToDismiss) {
     Backend.post(
-      this.state.projectId + "/launch/" + this.state.launchId + "/" + this.state.testcase.uuid + "/status/" + status,
+      this.props.projectId + "/launch/" + this.state.launchId + "/" + this.state.testcase.uuid + "/status/" + status,
       this.state.failureDetails,
     )
       .then(response => {
@@ -48,7 +50,7 @@ class LaunchTestcaseControls extends Component {
         this.callback(this.state.testcase);
         if (dialogToDismiss) {
           $("#" + dialogToDismiss).modal("hide");
-        }
+	}
       })
       .catch(error => {
 	this.state.testcase.displayErrorMessage = "handleStatusSubmit::Couldn't save launch testcase status: " + error;
@@ -58,44 +60,50 @@ class LaunchTestcaseControls extends Component {
     event.preventDefault();
   }
 
-  renderRunnable() {
-    return (
-      <button type="button" class="btn btn-success" onClick={e => this.handleStatusSubmit("RUNNING", e)}>
-        Start
-      </button>
-    );
+  renderRunnable(indicator) {
+    if (indicator == "START") {
+      return (
+        <button type="button" class="btn btn-success" onClick={e => this.handleStatusSubmit("RUNNING", e)}>
+          Start
+        </button>
+      );
+    }
   }
 
-  renderRunning() {
-    return (
-      <div>
-        <button type="button" class="btn btn-success" onClick={e => this.handleStatusSubmit("PASSED", e)}>
-          Pass
-        </button>
-        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#fail-dialog">
-          Fail
-        </button>
-        <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#broken-dialog">
-          Broken
-        </button>
-        <button type="button" class="btn btn-secondary" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
-          X
-        </button>
+  renderRunning(indicator) {
+    if (indicator == "FAILUREDETAILS") {
+      return (
+        <div>
+          <button type="button" class="btn btn-success" onClick={e => this.handleStatusSubmit("PASSED", e)}>
+            Pass
+          </button>
+          <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#fail-dialog">
+            Fail
+          </button>
+          <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#broken-dialog">
+            Broken
+          </button>
+          <button type="button" class="btn btn-secondary" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
+            X
+          </button>
       </div>
     );
+    }
   }
 
-  renderFinished() {
-    return (
-      <div>
-        <button class={this.getStatusAlertClass()} role="alert">
-          {this.state.testcase.launchStatus}
-        </button>
-        <button type="button" class="btn" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
-          X
-        </button>
-      </div>
-    );
+  renderFinished(indicator) {
+    if (indicator == "FAILUREDETAILS") {
+      return (
+        <div>
+          <button class={this.getStatusAlertClass()} role="alert">
+            {this.state.testcase.launchStatus}
+          </button>
+          <button type="button" class="btn" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
+	        X
+          </button>
+        </div>
+      );
+    }
   }
 
   handleDetailsFailureChange(event) {
@@ -118,11 +126,11 @@ class LaunchTestcaseControls extends Component {
 
   renderButtons() {
     if (this.state.testcase.launchStatus == "RUNNABLE") {
-      return this.renderRunnable();
+      return this.renderRunnable(this.state.indicator);
     } else if (this.state.testcase.launchStatus == "RUNNING") {
-      return this.renderRunning();
+      return this.renderRunning(this.state.indicator);
     } else {
-      return this.renderFinished();
+      return this.renderFinished(this.state.indicator);
     }
   }
 
