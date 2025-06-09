@@ -50,7 +50,8 @@ class LaunchTestcaseControls extends Component {
         this.callback(this.state.testcase);
         if (dialogToDismiss) {
           $("#" + dialogToDismiss).modal("hide");
-	}
+        }
+	window.reload();
       })
       .catch(error => {
 	this.state.testcase.displayErrorMessage = "handleStatusSubmit::Couldn't save launch testcase status: " + error;
