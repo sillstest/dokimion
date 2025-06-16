@@ -59,6 +59,10 @@ class ProjectScratchpadWidget extends SubComponent {
       this.state.project.scratchpadURLs.splice(i, 1);
     }
     this.setState(this.state);
+
+    // send to backend
+    this.handleSubmit();
+
   }
 
   handleChange(event) {
@@ -75,7 +79,6 @@ class ProjectScratchpadWidget extends SubComponent {
       .then(response => {
         this.state.project = response;
 	      this.setState(this.state);
-        this.setState({errorMessage: "handleSubmit::Project saved successfully"});
       })
       .catch(error => {
         this.setState({errorMessage: "handleSubmit::Couldn't save project: " + error});
