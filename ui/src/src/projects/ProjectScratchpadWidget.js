@@ -19,7 +19,7 @@ class ProjectScratchpadWidget extends SubComponent {
       allowedGroups: [],
       scratchpadURLs: [],
     },
-    urlToAdd: "",
+    url: "",
   };
 
   constructor(props) {
@@ -27,6 +27,7 @@ class ProjectScratchpadWidget extends SubComponent {
     this.state.projectId = props.projectId;
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.saveProject = this.saveProject.bind(this);
     this.getProject = this.getProject.bind(this);
     this.onURLRemoved = this.onURLRemoved.bind(this);
     this.onURLAdded = this.onURLAdded.bind(this);
@@ -48,7 +49,14 @@ class ProjectScratchpadWidget extends SubComponent {
     }
   }
 
-  onURLAdded() {
+  onURLAdded(url) {
+
+    this.state.project.scratchpadURLs.push(url);
+
+    this.saveProject();
+
+    this.state.url = "";
+
     this.setState(this.state);
   }
 
@@ -58,6 +66,11 @@ class ProjectScratchpadWidget extends SubComponent {
     if (i > -1) {
       this.state.project.scratchpadURLs.splice(i, 1);
     }
+
+    this.saveProject();
+
+    this.state.url = "";
+
     this.setState(this.state);
   }
 
@@ -68,18 +81,22 @@ class ProjectScratchpadWidget extends SubComponent {
       project: projectUpd,
     });
     this.setState(newState);
+    event.preventDefault();
   }
 
-  handleSubmit(event) {
+  saveProject() {
     Backend.put("project", this.state.project)
       .then(response => {
         this.state.project = response;
-	      this.setState(this.state);
-        this.setState({errorMessage: "handleSubmit::Project saved successfully"});
+	this.setState(this.state);
       })
       .catch(error => {
         this.setState({errorMessage: "handleSubmit::Couldn't save project: " + error});
       });
+  }
+
+  handleSubmit(event) {
+    this.saveProject();
     event.preventDefault();
   }
 
@@ -145,8 +162,8 @@ class ProjectScratchpadWidget extends SubComponent {
 	    >
           <URLForm
             project={this.state.project}
-            url={this.state.urlToAdd}
-	          onURLAdded={this.onURLAdded}
+	    url={this.state.url}
+	    onURLAdded={this.onURLAdded}
           />
         </div>
       </div>
