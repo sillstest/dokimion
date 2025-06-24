@@ -18,7 +18,7 @@ class URLForm extends Component {
     };
 
     this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleAddSave = this.handleAddSave.bind(this);
     this.handleClose = this.handleClose.bind(this);
     this.onSessionChange = this.onSessionChange.bind(this);
   }
@@ -47,33 +47,23 @@ class URLForm extends Component {
     this.setState(this.state);
   }
 
-  handleSubmit(event) {
+  handleAddSave(event) {
 
     if (this.state.url.startsWith("http")) {
-
-       this.props.project.scratchpadURLs.push(this.state.url);
-
-       Backend.put("project", this.props.project)
-         .then(response => {
-           this.state.project = response;
-           this.props.onURLAdded();
-           this.setState(this.state);
-         })
-         .catch(error => {
-           this.setState({errorMessage: "handleSubmit::Couldn't save url, error: " + error});
-           this.setState(this.state);
-         });
-
+	this.props.onURLAdded(this.state.url);
+	this.state.url="";
+        this.setState(this.state);
     } else {
-       this.setState({errorMessage: "handleSubmit::URL must have prefix \"http\""});
-       this.setState(this.state);
+	this.setState({errorMessage: "handleAddSave::Invalid url format"});
     }
     event.preventDefault();
+
   }  
 
 
   handleClose(event) {
     this.state.errorMessage='';
+    this.state.url = "";
     this.setState(this.state);
     event.preventDefault();
   }
@@ -119,7 +109,7 @@ class URLForm extends Component {
               </div>
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-primary" onClick={this.handleSubmit}>
+            <button type="button" className="btn btn-primary" onClick={this.handleAddSave}>
               Save
             </button>
             <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.handleClose}>

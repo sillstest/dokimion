@@ -432,16 +432,15 @@ System.out.flush();
         try{
             lock.tryLock(lockTtl, TimeUnit.MINUTES);
             E existingEntity = findOneUnfiltered(session, projectId, entity.getId());
+System.out.println("BaseService::update - entity: " + entity);
+System.out.println("BaseService::update - existingEntity: " + existingEntity);
+System.out.flush();
             if (existingEntity != null) {
                 if (existingEntity.getLastModifiedTime() > entity.getLastModifiedTime()) {
                     throw new EntityValidationException("Entity has been changed previously. Changes will cause lost updates.");
                 }
                 entity = (E) converter.transform(existingEntity, entity);
             }
-System.out.println("BaseService::update - entity: " + entity);
-System.out.println("BaseService::update - existingEntity: " + existingEntity);
-System.out.flush();
-
             beforeUpdate(session, projectId, existingEntity, entity);
             entity = doSave(session, projectId, entity);
             afterUpdate(session, projectId, existingEntity, entity);
