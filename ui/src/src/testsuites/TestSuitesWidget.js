@@ -67,8 +67,8 @@ class TestSuitesWidget extends SubComponent {
         <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="row">
           <form className="col-sm-5">
-            <div class="form-group">
-              <input type="text" class="form-control" id="filter" placeholder="Filter" onChange={this.onFilter} />
+            <div className="form-group">
+              <input type="text" className="form-control" id="filter" placeholder="Filter" onChange={this.onFilter} />
             </div>
           </form>
         </div>
