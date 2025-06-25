@@ -121,7 +121,7 @@ class ProjectScratchpadWidget extends SubComponent {
             <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
         </div>
-        <table cellspacing="1">
+        <table cellSpacing="1">
 	  <thead>
 	    <tr>
 	      <th scope="col">URL Link</th>
