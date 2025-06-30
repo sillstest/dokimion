@@ -52,11 +52,8 @@ class ProjectScratchpadWidget extends SubComponent {
   onURLAdded(url) {
 
     this.state.project.scratchpadURLs.push(url);
-
     this.saveProject();
-
     this.state.url = "";
-
     this.setState(this.state);
   }
 
@@ -68,13 +65,9 @@ class ProjectScratchpadWidget extends SubComponent {
     }
 
     this.saveProject();
-
     this.state.url = "";
-
     this.setState(this.state);
-
-    // send to backend
-    this.handleSubmit();
+    window.location.reload();
 
   }
 
@@ -95,7 +88,7 @@ class ProjectScratchpadWidget extends SubComponent {
 	this.setState(this.state);
       })
       .catch(error => {
-        this.setState({errorMessage: "handleSubmit::Couldn't save project: " + error});
+        this.setState({errorMessage: "saveProject::Couldn't save project: " + error});
       });
   }
 
