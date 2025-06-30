@@ -45,15 +45,15 @@ then
 fi
 if [ $1 == "s1" ]
 then
-  cp ~1/config/production/s-dokimion1/startup_dokimion_server.sh ../bin/.
+  cp ~1/config/production/dokimion1/startup_dokimion_server.sh ../bin/.
 fi
 if [ $1 == "s2" ]
 then
-  cp ~1/config/production/s-dokimion2/startup_dokimion_server.sh ../bin/.
+  cp ~1/config/production/dokimion2/startup_dokimion_server.sh ../bin/.
 fi
 if [ $1 == "s3" ]
 then
-  cp ~1/config/production/s-dokimion3/startup_dokimion_server.sh ../bin/.
+  cp ~1/config/production/dokimion3/startup_dokimion_server.sh ../bin/.
 fi
 cp ~1/config/common/startup_dokimion_ui.sh ../bin/.
 cp ~1/config/common/run_jstatd.sh ../bin/.
