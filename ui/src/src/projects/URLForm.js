@@ -15,6 +15,7 @@ class URLForm extends Component {
       project: this.props.project,
       url: this.props.url,
       session: {person: {}},
+      saveButtonClicked: false,
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -49,12 +50,16 @@ class URLForm extends Component {
 
   handleAddSave(event) {
 
-    if (this.state.url.startsWith("http")) {
-	this.props.onURLAdded(this.state.url);
-	this.state.url="";
-        this.setState(this.state);
-    } else {
-	this.setState({errorMessage: "handleAddSave::Invalid url format"});
+    if (this.state.saveButtonClicked == false) {
+
+       if (this.state.url.startsWith("http")) {
+          this.props.onURLAdded(this.state.url);
+	  this.state.url="";
+          this.state.saveButtonClicked = true;
+          this.setState(this.state);
+       } else {
+	  this.setState({errorMessage: "handleAddSave::Invalid url format"});
+       }
     }
     event.preventDefault();
 
@@ -62,6 +67,7 @@ class URLForm extends Component {
 
 
   handleClose(event) {
+    this.state.saveButtonClicked = false;
     this.state.errorMessage='';
     this.state.url = "";
     this.setState(this.state);

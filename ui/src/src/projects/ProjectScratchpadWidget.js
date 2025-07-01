@@ -20,6 +20,7 @@ class ProjectScratchpadWidget extends SubComponent {
       scratchpadURLs: [],
     },
     url: "",
+    reRenderAfterRemove: true,
   };
 
   constructor(props) {
@@ -66,8 +67,12 @@ class ProjectScratchpadWidget extends SubComponent {
 
     this.saveProject();
     this.state.url = "";
+
+    if (this.state.reRenderAfterRemove == true) {
+       this.state.reRenderAfterRemove = false;
+    }
+
     this.setState(this.state);
-    window.location.reload();
 
   }
 
