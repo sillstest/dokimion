@@ -129,6 +129,7 @@ System.out.flush();
 	catch (HazelcastInstanceNotActiveException he) {
            System.out.println("DbAuthProvider::dbAuthAs - hazelcast error: " + he);
 	   System.out.flush();
+	   existedSession = null; // let a new session be created
 	}
 
         if (existedSession == null) {
