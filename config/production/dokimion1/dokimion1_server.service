@@ -15,7 +15,7 @@ LimitFSIZE=infinity
 # cpu time
 LimitCPU=infinity
 # virtual memory size
-LimitAS=4096M
+LimitAS=infinity
 # open files
 LimitNOFILE=64000
 # processes/threads
