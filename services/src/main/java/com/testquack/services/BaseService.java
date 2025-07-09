@@ -182,16 +182,16 @@ System.out.flush();
     }
 
 
-    public void delete(Session session, String projectId, String id){
+    public boolean delete(Session session, String projectId, String id){
 System.out.println("BaseService:delete - projectId, id: " + projectId + ", " + id);
 System.out.flush();
         beforeDelete(session, projectId, id);
 System.out.println("BaseService:delete - after beforeDelete");
 System.out.flush();
         if (userCanDelete(session, projectId, id) == false) {
-               throw new EntityAccessDeniedException(
-                    format("User %s can't delete entity %s", session.getPerson().getLogin(), id)
-            );
+	    System.out.println(format("User %s can't delete entity %s", session.getPerson().getLogin(), id));
+	    System.out.flush();
+	    return false;
         }
 System.out.println("BaseService:delete - after  userCanDelete");
 System.out.flush();
@@ -202,6 +202,8 @@ System.out.flush();
         afterDelete(session, projectId, id);
 System.out.println("BaseService:delete - after afterDelete");
 System.out.flush();
+
+        return true;
     }
 
     public long count(Session session, String projectId, Filter filter){
@@ -296,11 +298,13 @@ System.out.flush();
                    System.out.println("userCanUpdateProject - entity is a Launch or Event");
                    System.out.flush();
                    return true;
-                }
+                } else {
+		   return false;
+		}
             }
         }   
 
-        return userCanAccessProjectCommon(session, projectId);
+	return false;
 
     }
     protected boolean userCanAccessProjectCommon(Session session, String projectId){
@@ -477,7 +481,7 @@ System.out.flush();
         return getRepository().exists(getCurrOrganizationId(session), projectId, entityId);
     }
 
-    public void delete(Session session, String projectId, Filter filter) {
+    public boolean delete(Session session, String projectId, Filter filter) {
 System.out.println("BaseService.delete - projectId: " + projectId);
 System.out.flush();
         List<E> entityList = findFiltered(session, projectId, filter);
@@ -492,9 +496,12 @@ System.out.flush();
                   getRepository().delete(getCurrOrganizationId(session), projectId, 
                   entity.getId());
            });
+	   return false;
         }
         System.out.println("BaseService.delete - end of method");
         System.out.flush();
+
+	return true;
     }
 
     public String getCurrOrganizationId(Session session){

@@ -104,14 +104,18 @@ class AttributeForm extends Component {
   handleRemove(event) {
     Backend.delete(this.props.project + "/attribute/" + this.state.attribute.id)
       .then(response => {
-        this.props.onAttributeRemoved(this.state.attribute);
-        this.state.attribute = {
-          id: null,
-          name: "",
-          type: "",
-          attrValues: [],
-        };
-        this.setState(this.state);
+	if (response.statusText != "Internal Server Error") {
+           this.props.onAttributeRemoved(this.state.attribute);
+           this.state.attribute = {
+             id: null,
+             name: "",
+             type: "",
+             attrValues: [],
+           };
+           this.setState(this.state);
+         } else {
+           this.setState({errorMessage: "handleRemove: Unable to remove attribute"});
+	 }
       })
       .catch(error => {
         this.setState({errorMessage: "handleRemove::Couldn't remove attribute, error: " + error});

@@ -111,7 +111,7 @@ public class AttributeService extends BaseService<Attribute> {
 
 
     @Override
-    public void delete(Session session, String projectId, String id) {
+    public boolean delete(Session session, String projectId, String id) {
         Attribute attributeToDelete = findOne(session, projectId, id);
         TestcaseFilter testcaseFilter = new TestcaseFilter().withFilters(
                 Collections.singletonList(
@@ -123,7 +123,8 @@ public class AttributeService extends BaseService<Attribute> {
         List<TestCase> affectedTestcases = testCaseService.findFiltered(session, projectId, testcaseFilter);
         affectedTestcases.forEach(testCase -> testCase.getAttributes().remove(id));
         testCaseService.save(session, projectId, affectedTestcases);
-        super.delete(session, projectId, id);
+        return super.delete(session, projectId, id);
+
     }
 
     /**

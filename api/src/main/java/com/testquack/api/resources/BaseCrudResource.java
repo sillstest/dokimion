@@ -97,12 +97,16 @@ System.out.flush();
 System.out.println("BaseCrudResource:delete - projectId, launchId: " + projectId + ", " + id);
 System.out.flush();
 
-        getService().delete(getUserSession(), projectId, id);
+        boolean rc = getService().delete(getUserSession(), projectId, id);
 
-System.out.println("BaseCrudResource:delete - after call to service.delete");
+System.out.println("BaseCrudResource:delete - after call 1 to getService.delete, rc: " + rc);
 System.out.flush();
 
-        return ok().build();
+        if (rc == true) {
+           return ok().build();
+	} else {
+	   return Response.serverError().entity("BaseCrudResource::delete 1 error").build();
+	}
     }
 
     @GET
@@ -123,8 +127,14 @@ System.out.flush();
             @ApiResponse(code = 200, message = "Successful operation")
     })
     public Response delete(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId) {
-        getService().delete(getUserSession(), projectId, initFilter(request));
-        return Response.ok().build();
+	    boolean rc = getService().delete(getUserSession(), projectId, initFilter(request));
+System.out.println("BaseCrudResource:delete - after call 2 to getService.delete, rc: " + rc);
+System.out.flush();
+	    if (rc == true) {
+	       return Response.ok().build();
+	    } else {
+	       return Response.serverError().entity("BaseCrudResource::delete 2 error").build();
+	    }
     }
 
 }
