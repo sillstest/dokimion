@@ -244,6 +244,11 @@ class TestCasesFilter extends Component {
   }
 
   saveSuite(event) {
+    if (this.state.session.person.roles[0] != "ADMIN" &&
+	this.state.session.person.roles[0] != "TESTDEVELOPER") {
+        this.setState({errorMessage: "saveSuite::Couldn't save testsuites"});
+    }
+
     var suiteToSave = JSON.parse(JSON.stringify(this.state.testSuite));
     suiteToSave.filter.filters = (suiteToSave.filter.filters || []).filter(function (filter) {
       return filter.id;

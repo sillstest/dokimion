@@ -301,10 +301,12 @@ System.out.flush();
                 } else {
 		   return false;
 		}
-            }
+            } else {
+		System.out.println("userCanUpdateProject - Unable to update project");
+		System.out.flush();
+		return true;
+	    }
         }   
-
-	return false;
 
     }
     protected boolean userCanAccessProjectCommon(Session session, String projectId){

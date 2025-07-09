@@ -202,12 +202,15 @@ console.log("TestCase::getTestCase");
         var isTestDeveloper =  roles && roles.filter(val => val.includes('TESTDEVELOPER')).length >0 ? true : false;
         this.state.testDeveloper = isTestDeveloper;
         console.log("Role is a ?" + isTester + " " + isTestDeveloper + this.state.testcase.locked);
-        if(isTester || isObserverOnly){
+
+	this.state.readonly = false;
+        if (isTester || isObserverOnly) {
             this.state.readonly = true;
-          }else if(isTestDeveloper && this.state.testcase.locked )
-          {
+        } else if (isTestDeveloper && this.state.testcase.locked ) {
             this.state.readonly = true;
-          }
+        } else if (isTestDeveloper) {
+	    this.state.readonly = false;
+        }
 
         this.setState(this.state);
       })
@@ -1349,7 +1352,8 @@ console.log("TestCase::removeTestCase");
 
           &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 
-          {!this.state.readonly &&  (Utils.isAdmin(this.state.session))  &&(
+
+          {!this.state.readonly && (
             <ConfirmButton
              onSubmit={this.removeTestcase}
              buttonClass={"btn btn-danger float-right"}

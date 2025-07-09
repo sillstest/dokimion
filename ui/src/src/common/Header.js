@@ -268,7 +268,7 @@ class Header extends Component {
                 </Link>
                   </li>
                } 
-               {(this.state.session.person.roles != null && this.state.session.person.roles[0] != "OBSERVERONLY" || Utils.isAdmin(this.state.session)) &&
+               {Utils.isAdmin(this.state.session) &&
                     <li className="nav-item">
                       <Link className="nav-link" to={"/" + this.props.project + "/attributes"}>
                         Attributes
