@@ -21,17 +21,28 @@ class ProjectScratchpadWidget extends SubComponent {
     },
     url: "",
     reRenderAfterRemove: true,
+    errorMessage: "",
+    session: {person: {}},
   };
 
   constructor(props) {
     super(props);
     this.state.projectId = props.projectId;
     this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
     this.saveProject = this.saveProject.bind(this);
     this.getProject = this.getProject.bind(this);
     this.onURLRemoved = this.onURLRemoved.bind(this);
     this.onURLAdded = this.onURLAdded.bind(this);
+    this.getSession = this.getSession.bind(this);
+  }
+
+  getSession() {
+    Backend.get("user/session")
+      .then(response => {
+        this.state.session = response;
+        this.setState(this.state);
+      })
+      .catch(() => {console.log("Unable to fetch session");});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -48,24 +59,42 @@ class ProjectScratchpadWidget extends SubComponent {
     if (this.state.projectId) {
        this.getProject();
     }
+    this.getSession();
   }
 
   onURLAdded(url) {
 
-    this.state.project.scratchpadURLs.push(url);
-    this.saveProject();
+    if (this.state.session.person.roles[0] != "ADMIN" &&
+        this.state.session.person.roles[0] != "TESTDEVELOPER") {
+        this.setState({errorMessage: "onURLAdded - Unable to add url"});
+	return;
+    }
+
+    /* add url to temp project var */
+    let project = this.state.project;
+    project.scratchpadURLs.push(url);
+    this.saveProject(project);
     this.state.url = "";
     this.setState(this.state);
+
   }
 
   onURLRemoved(url) {
 
-    let i = this.state.project.scratchpadURLs.indexOf(url);
-    if (i > -1) {
-      this.state.project.scratchpadURLs.splice(i, 1);
+    if (this.state.session.person.roles[0] != "ADMIN" &&
+        this.state.session.person.roles[0] != "TESTDEVELOPER") {
+        this.setState({errorMessage: "onURLRemoved - Unable to remove url"});
+	return;
     }
 
-    this.saveProject();
+    /* remove url from temp project var */
+    let project = this.state.project;
+    let i = project.scratchpadURLs.indexOf(url);
+    if (i > -1) {
+       project.scratchpadURLs.splice(i, 1);
+    }
+
+    this.saveProject(project, url, "remove");
     this.state.url = "";
 
     if (this.state.reRenderAfterRemove == true) {
@@ -86,8 +115,8 @@ class ProjectScratchpadWidget extends SubComponent {
     event.preventDefault();
   }
 
-  saveProject() {
-    Backend.put("project", this.state.project)
+  saveProject(project) {
+    Backend.put("project", project)
       .then(response => {
         this.state.project = response;
 	this.setState(this.state);
@@ -95,11 +124,6 @@ class ProjectScratchpadWidget extends SubComponent {
       .catch(error => {
         this.setState({errorMessage: "saveProject::Couldn't save project: " + error});
       });
-  }
-
-  handleSubmit(event) {
-    this.saveProject();
-    event.preventDefault();
   }
 
   getProject() {

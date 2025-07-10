@@ -98,6 +98,8 @@ class TestCasesFilter extends Component {
   }
 
   componentDidMount() {
+
+    this.getSession();
     var params = qs.parse(this.props.location.search.substring(1));
 
     if (params.testSuite) {
@@ -164,7 +166,6 @@ class TestCasesFilter extends Component {
       if (params.fulltext){
           this.state.testSuite.filter.fulltext = params.fulltext;
       }
-      this.getSession();
       this.setState(this.state);
       this.props.onFilter(this.state.testSuite.filter);
     }
