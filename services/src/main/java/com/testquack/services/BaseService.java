@@ -191,7 +191,8 @@ System.out.flush();
         if (userCanDelete(session, projectId, id) == false) {
 	    System.out.println(format("User %s can't delete entity %s", session.getPerson().getLogin(), id));
 	    System.out.flush();
-	    return false;
+            throw new EntityAccessDeniedException(format("User %s can't delete entity %s",
+                            session.getPerson().getLogin(), id));
         }
 System.out.println("BaseService:delete - after  userCanDelete");
 System.out.flush();

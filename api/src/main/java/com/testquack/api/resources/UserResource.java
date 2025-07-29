@@ -134,12 +134,16 @@ System.out.println("UserResource::delete - login: " + login);
 System.out.flush();
 
         User user = getUser(login);
-        boolean rc = service.delete(getSession(), null, user.getId());
+	try {
+           boolean rc = service.delete(getSession(), null, user.getId());
 System.out.println("UserResource::delete - rc: " + rc);
-	if (rc == true) {
-           return Response.ok().build();
-	} else {
-           return Response.serverError().entity("UserResource::delete error").build();
+	   if (rc == true) {
+              return Response.ok().build();
+	   } else {
+              return Response.serverError().entity("UserResource::delete error").build();
+	   }
+	} catch(Exception e) {
+           return Response.serverError().entity("UserResource::delete exception").build();
 	}
     }
 

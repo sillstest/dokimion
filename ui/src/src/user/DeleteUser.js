@@ -36,7 +36,11 @@ class DeleteUser extends Component {
   handleSubmit(event) {
     Backend.postPlain("user/delete?login=" + this.state.login)
         .then(response => {
-	  window.location = decodeURI("/");
+          if (response.statusText != "Internal Server Error") {
+	    window.location = decodeURI("/");
+	  } else {
+	    this.setState({message: "Couldn't delete user: " + this.state.login});
+	  }
         }).catch(error => {
           this.setState({message: "Couldn't delete a user: " + error});
         });
