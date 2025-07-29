@@ -56,7 +56,9 @@ class Users extends SubComponent {
   }
 
   getPager() {
-    var countFilter = Object.assign({ skip: 0, limit: 0 }, this.state.filter);
+    var countFilter = Object.assign({}, this.state.filter);
+    countFilter.skip = 0;
+    countFilter.limit = 0;
     Backend.get("user/count?" + Utils.filterToQuery(countFilter))
       .then(response => {
         this.state.pager.total = response;
