@@ -154,6 +154,20 @@ class CreateUser extends Component {
               Create
             </button>
           </form>
+	  <br></br>
+	  <table>
+	    <tr><th>Valid Password Rules</th></tr>
+	    <tr><td>Length beteween 8 and 15 characters</td></tr>
+	    <tr><td>No whitespace</td></tr>
+            <tr><td>At least one upper case character</td></tr>
+            <tr><td>At least one lower case character</td></tr>
+            <tr><td>At least one digit</td></tr>
+            <tr><td>At least one special character</td></tr>
+            <tr><td>Illegal characters: &amp;, &lt;, &gt;</td></tr>
+            <tr><td>Illegal character sequence: USQwerty</td></tr>
+            <tr><td>Illegal character sequence: Alphabetical</td></tr>
+            <tr><td>Illegal character sequence: Numerical</td></tr>
+	  </table>
         </div>
       </div>
     );

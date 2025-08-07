@@ -63,13 +63,17 @@ class Login extends Component {
       Backend.postPlain("user/login?login=" + this.state.login + "&password=" + this.state.password + "&recaptcha=" + recaptcha)
         .then(response => {
           this.onSessionChange(response);
-          var params = qs.parse(this.props.location.search.substring(1));
-          var retpath = decodeURIComponent(params.retpath || "");
-          var decodedReptath = decodeURI(retpath);
-          if (decodedReptath === "") {
-            decodedReptath = "/";
-          }
-          window.location = decodeURI(decodedReptath);
+	  if (response.ok == false) {
+	     this.setState({errorMessage: "Unauthorized user id / password combination"});
+	  } else {
+             var params = qs.parse(this.props.location.search.substring(1));
+             var retpath = decodeURIComponent(params.retpath || "");
+             var decodedReptath = decodeURI(retpath);
+             if (decodedReptath === "") {
+               decodedReptath = "/";
+             }
+             window.location = decodeURI(decodedReptath);
+	  }
         }).catch(error => {
 	    this.setState({errorMessage: "handleSubmit::Unable to login, error: " + error});
         });
