@@ -40,15 +40,14 @@ public class PasswordValidation {
       //Rule 3.d: One special character
       rule3.getRules().add(new CharacterRule(EnglishCharacterData.Special, 1));
 
-      IllegalCharacterRule rule4 = new IllegalCharacterRule(new char[] {'&', '<', '>'});
-      IllegalSequenceRule rule5 = new IllegalSequenceRule(EnglishSequenceData.USQwerty);
-      IllegalSequenceRule rule6 = new IllegalSequenceRule(EnglishSequenceData.Alphabetical);
-      IllegalSequenceRule rule7 = new IllegalSequenceRule(EnglishSequenceData.Numerical);
-      RepeatCharacterRegexRule rule8 = new RepeatCharacterRegexRule();
-      UsernameRule rule9 = new UsernameRule(true, true);
+      IllegalSequenceRule rule4 = new IllegalSequenceRule(EnglishSequenceData.USQwerty);
+      IllegalSequenceRule rule5 = new IllegalSequenceRule(EnglishSequenceData.Alphabetical);
+      IllegalSequenceRule rule6 = new IllegalSequenceRule(EnglishSequenceData.Numerical);
+      RepeatCharacterRegexRule rule7 = new RepeatCharacterRegexRule();
+      UsernameRule rule8 = new UsernameRule(true, true);
 
-      PasswordValidator validator = new PasswordValidator(rule1, rule2, rule3, rule4, rule5,
-		      rule6, rule7, rule8, rule9);
+      PasswordValidator validator = new PasswordValidator(rule1, rule2, rule3, rule5,
+		      rule6, rule7, rule8);
       PasswordData password = new PasswordData(passwordStr);
       RuleResult result = validator.validate(password);
 
