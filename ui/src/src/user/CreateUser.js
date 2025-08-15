@@ -163,7 +163,6 @@ class CreateUser extends Component {
             <tr><td>At least one lower case character</td></tr>
             <tr><td>At least one digit</td></tr>
             <tr><td>At least one special character</td></tr>
-            <tr><td>Illegal characters: &amp;, &lt;, &gt;</td></tr>
             <tr><td>Illegal character sequence: USQwerty</td></tr>
             <tr><td>Illegal character sequence: Alphabetical</td></tr>
             <tr><td>Illegal character sequence: Numerical</td></tr>
