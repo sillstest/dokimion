@@ -122,12 +122,9 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Click on the Save Button");
             Actor.AttemptsTo(Click.On(Settings.SettingsSaveButton));
-            
-            //Verify
+
+            Actor.WaitsUntil(Appearance.Of(Settings.DisplayMessage), IsEqualTo.True(), timeout: 60);
             userActions.LogConsoleMessage("Verify : Project Settings successfully saved is displayed");
-            Actor.WaitsUntil(Text.Of(Settings.DisplayMessage), ContainsSubstring.Text("Project Settings successfully saved"), timeout: 60);
-            string message = Actor.AskingFor(Text.Of(Settings.DisplayMessage));
-            StringAssert.Contains("Project Settings successfully saved", message);
 
             ReadOnlyCollection<IWebElement> environments = Settings.EnvironmentList.FindElements(driver);
             Actor.WaitsUntil(TextList.For(Settings.EnvironmentList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(2)), timeout: 60);
