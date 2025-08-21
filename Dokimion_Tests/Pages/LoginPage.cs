@@ -8,7 +8,7 @@ namespace Dokimion.Pages
     public class LoginPage
     {
 
-        public const string UnableToLoginError = "Unable to login";
+        public const string UnableToLoginError = "Unauthorized user id / password combination";
         
         public static IWebLocator NameInput => L(
           "Dokimion Login Page : Name",

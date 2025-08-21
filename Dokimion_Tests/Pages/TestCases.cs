@@ -150,7 +150,7 @@ namespace Dokimion.Pages
         public static IWebLocator LaunchStartButton => L("LaunchStartButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Start']"));
 
         public static IWebLocator LaunchPassButton => L("LaunchPassButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Pass']"));
-        public static IWebLocator LaunchFailButton => L("LaunchFailButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Fail']"));
+        public static IWebLocator LaunchFailButton => L("LaunchFailButton", By.XPath("//div[@class='launch-status-controls']/div[@class='btn-group']//button[text()='Fail']"));
         public static IWebLocator LaunchBrokenButton => L("LaunchBrokenButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Broken']"));
        // public static IWebLocator LaunchSkipButton => L("LaunchSkipButton", By.XPath("//div[@class='launch-status-controls']//button[text()='Skip']"));
         public static IWebLocator LaunchXButton => L("LaunchXButton", By.XPath("//div[@class='launch-status-controls']//button[text()='X']"));
