@@ -110,8 +110,13 @@ namespace Dokimion.Pages
 
         public static IWebLocator TestCaseTreeListMain => L("TestCaseTreeListMain", By.XPath("//ul[@class='gj-list gj-list-bootstrap']/*"));
 
+        public static IWebLocator NumberOfTestCases => L("NumberOfTestCases", By.XPath("//div/div/main/div[2]/div[4]/div"));
+
+
         //li[contains(@data-id,'Authentication')]//i[contains(@class,'gj-icon')] - 3 depth
-        public static IWebLocator GroupingTreeDepthAuth => L("GroupingTreeDepthAuth", By.XPath("//li[contains(@data-id,'Authentication')]//i[contains(@class,'gj-icon')]"));
+        public static IWebLocator GroupingTreeDepthAuth => L("GroupingTreeDepthAuth", By.XPath("//li[contains(@data-id,'Authentication')]//li[contains(@class,'gj-icon')]"));
+
+        public static IWebLocator GroupingBox => L("GroupingBox", By.XPath("//div[@class='row filter-control-row']//div[@class='css-1hwfws3']"));
 
 
         public static IWebLocator AuthenticationGroupTC => L("AuthenticationGroupTC", By.XPath("//li[contains(@data-id,'Authentication')]//span[@data-role='display']//b[contains(text(),'Authentication')]"));

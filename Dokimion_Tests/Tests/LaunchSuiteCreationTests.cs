@@ -141,15 +141,15 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("TC: " + TestCases.TestCaseTreeListMain);
 
-            Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(17)), timeout: 60);
+            Actor.WaitsUntil(Appearance.Of(TestCases.NumberOfTestCases), IsEqualTo.True(), timeout: 60);
             ReadOnlyCollection<IWebElement> Tc = TestCases.TestCaseTreeListMain.FindElements(driver);
-
-            userActions.LogConsoleMessage("Verify : There are 17 Testcases in the list");
+            userActions.LogConsoleMessage("Verify : There are 6 Testcase groups in the list");
 
             //Have to wait as the dom changed
             Assert.That(Tc.Count, Is.EqualTo(17));
+
             //
-            ReadOnlyCollection<IWebElement> Group_Filters = TestCases.GroupingTreeDepthAuth.FindElements(driver);
+            ReadOnlyCollection<IWebElement> Group_Filters = TestCases.GroupingBox.FindElements(driver);
             Assert.IsNotNull(Group_Filters);
             Assert.That(Group_Filters.Count, Is.EqualTo(3));
 
