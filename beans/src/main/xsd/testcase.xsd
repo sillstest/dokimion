@@ -10,6 +10,7 @@
 
     <xs:include schemaLocation="common.xsd"/>
     <xs:include schemaLocation="attributes.xsd"/>
+    <xs:include schemaLocation="comment.xsd"/>
 
     <xs:complexType name="TestCase"/>
     <xs:element name="testCaseBase" type="TestCaseBase"/>
@@ -31,6 +32,7 @@
                     <xs:element name="version" type="xs:string"/>
                     <xs:element name="attachments" type="Attachment" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="results" type="Attachment" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="comments" type="Comment" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element name="automated" type="xs:boolean" default="false"/>
                     <xs:element name="locked" type="xs:boolean" default="false"/>
                     <xs:element name="broken" type="xs:boolean" default="false"/>

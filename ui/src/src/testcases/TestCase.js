@@ -54,6 +54,7 @@ class TestCase extends SubComponent {
         attributes: {},
         attachments: [],
         results: [],
+        comments: [],
         properties: [],
         broken: false,
         locked: false,
@@ -597,6 +598,7 @@ console.log("TestCase::removeTestCase");
             </li>
           )}
 
+          {this.state.launchId && (
           <li className="nav-item">
             <a
               className="nav-link"
@@ -613,6 +615,9 @@ console.log("TestCase::removeTestCase");
               )}
             </a>
           </li>
+          )}
+
+
           {this.state.testcase.metaData && Object.keys(this.state.testcase.metaData).length > 0 && (
             <li className="nav-item">
               <a
@@ -1290,9 +1295,9 @@ console.log("TestCase::removeTestCase");
             aria-labelledby="comments-tab-body"
           >
             <Comments
-              entityId={this.state.testcase.id}
+              entityId={this.state.launchId + "_" + this.state.testcase.id}
               projectId={this.projectId}
-              entityType="testcase"
+              entityType="launch"
               onCommentsNumberChanged={this.onCommentsCountChanged}
             />
           </div>

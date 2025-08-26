@@ -128,6 +128,7 @@ class Comments extends SubComponent {
   }
 
   removeComment(event) {
+console.log("Comments::removeComment - " + this.commentToRemove);
     Backend.delete(this.projectId + "/comment/" + this.commentToRemove)
       .then(() => {
         this.state.comments = this.state.comments.filter(comment => comment.id != this.commentToRemove);
@@ -144,6 +145,7 @@ class Comments extends SubComponent {
   }
 
   handleSubmit(event) {
+console.log("Comments::handleSubmit - " + this.commentToEdit);
     Backend.put(this.projectId + "/comment/", this.state.commentToEdit)
       .then(response => {
         this.state.comments.unshift(response);
@@ -160,12 +162,14 @@ class Comments extends SubComponent {
   }
 
   handleUpdateChange(index, event) {
+console.log("Comments::handleUpdateChange - " + index);
     this.state.comments[index].text = event.target.value;
     this.setState(this.state);
     event.preventDefault();
   }
 
   handleUpdateSubmit(index, event) {
+console.log("Comments::handleUpdateSubmit - " + this.state.comments);
     Backend.post(this.projectId + "/comment/", this.state.comments[index])
       .then(response => {
         this.state.comments[index] = response;
