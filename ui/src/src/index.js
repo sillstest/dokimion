@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from "react-router-dom";
 import ErrorBoundary from "./common/ErrorBoundary";
 import "./index.css";
@@ -12,11 +13,12 @@ import "prismjs/themes/prism.css";
 
 import App from "./App";
 
-ReactDOM.render(
+const container = document.getElementById("root");
+const root = createRoot(container);
+root.render(
   <BrowserRouter>
     <ErrorBoundary>
       <App />
     </ErrorBoundary>
-  </BrowserRouter>,
-  document.getElementById("root"),
+  </BrowserRouter>
 );
