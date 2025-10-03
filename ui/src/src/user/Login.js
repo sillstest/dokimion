@@ -3,7 +3,7 @@ import { withRouter } from "react-router";
 import qs from "qs";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
-import TextField from '@material-ui/core/TextField';
+import TextField from '@mui/material';
 import ReCAPTCHA from "react-google-recaptcha";
 import { LinkButtons, forgotButton } from './components';
 import ControlledPopup from '../common/ControlledPopup';

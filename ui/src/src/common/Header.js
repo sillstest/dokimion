@@ -1,8 +1,3 @@
-/* eslint-disable jsx-a11y/alt-text */
-/* eslint-disable jsx-a11y/role-supports-aria-props */
-/* eslint-disable jsx-a11y/anchor-is-valid */
-/* eslint-disable eqeqeq */
-/* eslint-disable react/no-direct-mutation-state */
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import { withRouter } from "react-router";

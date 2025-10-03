@@ -1,6 +1,3 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-/* eslint-disable eqeqeq */
-/* eslint-disable react/no-direct-mutation-state */
 import React, { Component } from "react";
 import * as Utils from "../common/Utils";
 

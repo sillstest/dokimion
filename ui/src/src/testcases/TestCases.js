@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-/* eslint-disable eqeqeq */
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import TestCaseForm from "../testcases/TestCaseForm";

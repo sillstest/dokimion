@@ -5,7 +5,7 @@ import SubComponent from "../common/SubComponent";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import Select from "react-select";
-import AsyncSelect from "react-select/lib/Async";
+import AsyncSelect from "react-select/async";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";

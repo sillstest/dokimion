@@ -3,7 +3,7 @@ import React from "react";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import { withRouter } from "react-router";
-import CreatableSelect from "react-select/lib/Creatable";
+import CreatableSelect from "react-select/creatable";
 import LauncherForm from "../launches/LauncherForm";
 import $ from "jquery";
 import * as Utils from "../common/Utils";

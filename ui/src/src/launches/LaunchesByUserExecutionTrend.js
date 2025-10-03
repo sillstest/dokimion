@@ -4,6 +4,7 @@ import SubComponent from "../common/SubComponent";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 import Backend from "../services/backend";
 import { FadeLoader } from "react-spinners";
 

@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 import SubComponent from "../SubComponent";
 import React from "react";
 

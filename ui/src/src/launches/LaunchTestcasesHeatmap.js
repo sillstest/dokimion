@@ -5,7 +5,7 @@ import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import { FadeLoader } from "react-spinners";
 import * as Utils from "../common/Utils";
-import { Checkbox } from "semantic-ui-react";
+import { Checkbox } from "@mui/material";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 

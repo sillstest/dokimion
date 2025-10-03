@@ -1,8 +1,8 @@
 /* eslint-disable eqeqeq */
 import React from "react";
 import SubComponent from "../common/SubComponent";
-import AsyncSelect from "react-select/lib/Async";
-import CreatableSelect from "react-select/lib/Creatable";
+import AsyncSelect from "react-select/async";
+import CreatableSelect from "react-select/creatable";
 import LauncherForm from "../launches/LauncherForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";

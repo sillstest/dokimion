@@ -2,6 +2,7 @@ import React from "react";
 import { withRouter } from "react-router";
 import SubComponent from "../common/SubComponent";
 import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 import * as Utils from "../common/Utils";
 
 class LaunchAttributeStatsChart extends SubComponent {
@@ -82,7 +83,6 @@ class LaunchAttributeStatsChart extends SubComponent {
   render() {
     return (
       <div id={this.getChartContainerId()} className="launch-attr-stats-chart">
-        Chart here
       </div>
     );
   }
