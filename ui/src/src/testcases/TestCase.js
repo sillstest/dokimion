@@ -753,6 +753,7 @@ console.log("TestCase::removeTestCase");
                       initialValue={this.state.testcase.description}
                       // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
+			license_key: 'gpl',
                         height: 500,
                         menubar: false,
                         plugins: this.tinymcePlugins,
@@ -811,6 +812,7 @@ console.log("TestCase::removeTestCase");
                       initialValue={this.state.testcase.preconditions}
                       // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
+			license_key: 'gpl',
                         height: 500,
                         menubar: false,
                         plugins: this.tinymcePlugins,
@@ -869,6 +871,7 @@ console.log("TestCase::removeTestCase");
                                 initialValue={this.state.testcase.steps[i].action}
                                 // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
+			          license_key: 'gpl',
                                   height: 300,
                                   menubar: false,
                                   plugins: this.tinymcePlugins,
@@ -885,6 +888,7 @@ console.log("TestCase::removeTestCase");
                                 initialValue={this.state.testcase.steps[i].expectation}
                                 // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
+			          license_key: 'gpl',
                                   height: 300,
                                   menubar: false,
                                   plugins: this.tinymcePlugins,
@@ -987,6 +991,7 @@ console.log("TestCase::removeTestCase");
                                   initialValue={this.state.testcase.steps[i].action}
                                   // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
+			            license_key: 'gpl',
                                     height: 300,
                                     menubar: false,
                                     plugins: this.tinymcePlugins,
@@ -1003,6 +1008,7 @@ console.log("TestCase::removeTestCase");
                                   initialValue={this.state.testcase.steps[i].expectation}
                                   // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
+			            license_key: 'gpl',
                                     height: 300,
                                     menubar: false,
                                     plugins: this.tinymcePlugins,
