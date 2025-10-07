@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import Pager from "../pager/Pager";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
-import { Button } from "@mui/material";
+import Button from "@mui/material/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faPlug } from "@fortawesome/free-solid-svg-icons";
 import Backend from "../services/backend";

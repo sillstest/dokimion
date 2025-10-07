@@ -4,7 +4,7 @@ import { withRouter } from "react-router";
 import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
 import qs from "qs";
-import TextField from '@mui/material';
+import TextField from '@mui/material/TextField';
 import ReCAPTCHA from "react-google-recaptcha";
 
 class ForgotPassword extends Component {

@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import PropTypes from "prop-types";
-import { Button } from "@mui/material";
+import Button from "@mui/material/Button";
 
 const SubmitButtons = ({ buttonText, buttonStyle }) => (
   <Fragment>

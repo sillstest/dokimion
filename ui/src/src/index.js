@@ -10,14 +10,14 @@ import "prismjs/prism.js";
 import "prismjs/themes/prism.css";
 
 import App from "./App";
-import registerServiceWorker from "./registerServiceWorker";
 
 const container = document.getElementById('root');
 const root = createRoot(container);
 
 root.render(
-    <BrowserRouter>
+  <BrowserRouter>
+    <ErrorBoundary>
       <App />
-    </BrowserRouter>,
+    </ErrorBoundary>
+  </BrowserRouter>,
 );
-registerServiceWorker();
