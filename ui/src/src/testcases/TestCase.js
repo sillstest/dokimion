@@ -45,6 +45,7 @@ class TestCase extends SubComponent {
       "removeformat | table | codesample | help";
 
     this.tinymceContentStyle = "p {margin: 0}";
+
     this.state = {
       testcase: {
         id: null,
@@ -150,7 +151,7 @@ class TestCase extends SubComponent {
   }
 
 
-  componentWillReceiveProps(nextProps, nextState) {
+  UNSAFE_componentWillReceiveProps(nextProps, nextState) {
     if (nextProps.testcase) {
       this.state.testcase = nextProps.testcase;
       this.state.loading = false;
@@ -192,27 +193,29 @@ console.log("TestCase::getTestCase");
         this.state.propertiesInEdit.clear();
         this.state.loading = false;
 
-        //Adding code for 79
-        this.getSession();
         // Tester is to be readonly always.
         // Test Developer is read only when the test is locked.
         var roles = this.state.session.person.roles &&  this.state.session.person.roles.length>0 ? this.state.session.person.roles :[];
 
-        var isTester =  roles && roles.filter(val => val.includes('TESTER')).length >0 ? true : false;
-        var isObserverOnly =  roles && roles.filter(val => val.includes('OBSERVERONLY')).length >0 ? true : false;
-        var isTestDeveloper =  roles && roles.filter(val => val.includes('TESTDEVELOPER')).length >0 ? true : false;
-        this.state.testDeveloper = isTestDeveloper;
-        console.log("Role is a ?" + isTester + " " + isTestDeveloper + this.state.testcase.locked);
+	if (roles.length == 0) {
+	   this.state.readonly = true;
+	} else {
 
-	this.state.readonly = false;
-        if (isTester || isObserverOnly) {
-            this.state.readonly = true;
-        } else if (isTestDeveloper && this.state.testcase.locked ) {
-            this.state.readonly = true;
-        } else if (isTestDeveloper) {
-	    this.state.readonly = false;
-        }
+           var isTester =  roles && roles.filter(val => val.includes('TESTER')).length >0 ? true : false;
+           var isObserverOnly =  roles && roles.filter(val => val.includes('OBSERVERONLY')).length >0 ? true : false;
+           var isTestDeveloper =  roles && roles.filter(val => val.includes('TESTDEVELOPER')).length >0 ? true : false;
+           this.state.testDeveloper = isTestDeveloper;
+           console.log("Role is a ?" + isTester + " " + isTestDeveloper + this.state.testcase.locked);
 
+	   this.state.readonly = false;
+           if (isTester || isObserverOnly) {
+              this.state.readonly = true;
+           } else if (isTestDeveloper && this.state.testcase.locked ) {
+              this.state.readonly = true;
+           } else if (isTestDeveloper) {
+	      this.state.readonly = false;
+           }
+	}
         this.setState(this.state);
       })
       .catch(error => {
@@ -527,6 +530,7 @@ console.log("TestCase::removeTestCase");
         <ControlledPopup popupMessage={this.state.errorMessage}/>
         <ul className="nav nav-tabs" id="tcTabs" role="tablist">
           <li className="nav-item">
+	    /*
             <a
               className="nav-link active"
               id="main-tab"
@@ -538,10 +542,12 @@ console.log("TestCase::removeTestCase");
             >
               Main
             </a>
+	    */
           </li>
 
           {this.state.testcase.failureDetails && Object.keys(this.state.testcase.failureDetails).length > 0 && (
             <li className="nav-item">
+		  /*
               <a
                 className="nav-link"
                 id="failure-tab"
@@ -553,11 +559,13 @@ console.log("TestCase::removeTestCase");
               >
                 Failure
               </a>
+	      */
             </li>
           )}
 
           {! this.state.launchId && (
             <li className="nav-item">
+		  /*
               <a
                 className="nav-link"
                 id="attachments-tab"
@@ -574,11 +582,13 @@ console.log("TestCase::removeTestCase");
                   </span>
                 )}
               </a>
+		*/
             </li>
           )}
 
           {this.state.launchId && (
             <li className="nav-item">
+		  /*
               <a
                 className="nav-link"
                 id="results-tab"
@@ -595,11 +605,13 @@ console.log("TestCase::removeTestCase");
                   </span>
                 )}
               </a>
+		*/
             </li>
           )}
 
           {this.state.launchId && (
           <li className="nav-item">
+		  /*
             <a
               className="nav-link"
               id="comments-tab"
@@ -614,12 +626,14 @@ console.log("TestCase::removeTestCase");
                 <span className="badge badge-pill badge-secondary tab-badge">{this.state.commentsCount}</span>
               )}
             </a>
+	      */
           </li>
           )}
 
 
           {this.state.testcase.metaData && Object.keys(this.state.testcase.metaData).length > 0 && (
             <li className="nav-item">
+		  /*
               <a
                 className="nav-link"
                 id="history-tab"
@@ -631,9 +645,11 @@ console.log("TestCase::removeTestCase");
               >
                 Metadata
               </a>
+	      */
             </li>
           )}
           <li className="nav-item">
+	    /*
             <a
               className="nav-link"
               id="history-tab"
@@ -645,6 +661,7 @@ console.log("TestCase::removeTestCase");
             >
               History
             </a>
+	    */
           </li>
         </ul>
 
@@ -656,6 +673,7 @@ console.log("TestCase::removeTestCase");
             <div id="name" className="testcase-section">
               <div id="name-display" className="inplace-display row">
                 <div className="col-9">
+	    /*
                   <h1>
                     <em><span className="testcase-id-in-title text-muted">{this.state.testcase.id}</span></em>
                     <Link to={"/" + this.projectId + "/testcase/" + this.state.testcase.id}>
@@ -672,9 +690,11 @@ console.log("TestCase::removeTestCase");
                       )}
                     </span>
                   </h1>
+		  */
                 </div>
                 {!this.state.readonly && (
                    <div className="col-1">
+			/*
                      <div class="dropdown">
                        <span class="dropdown-toggle clickable" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                            <FontAwesomeIcon icon={faBars} />
@@ -683,16 +703,19 @@ console.log("TestCase::removeTestCase");
                            <a class="dropdown-item" href="#" onClick={e => this.cloneTestCase()}>Clone</a>
                          </div>
                      </div>
+		     */
                    </div>
                  )}
                 {!this.state.readonly && (
                   <div className="col-2">
+			/*
                     <Checkbox
                       toggle
                       onChange={this.onBrokenToggle}
                       checked={this.state.testcase.broken}
                       label={{ children: this.state.testcase.broken ? "On" : "Off" }}
                     />
+		    */
                   </div>
                 )}
 
@@ -701,6 +724,7 @@ console.log("TestCase::removeTestCase");
                 <div id="name-form" className="inplace-form" style={{ display: "none" }}>
                   <form>
                     <div className="form-group row">
+		      /*
                       <div className="col-8">
                         <input
                           type="text"
@@ -710,6 +734,8 @@ console.log("TestCase::removeTestCase");
                           value={this.state.testcase.name || this.state.testcase.importedName}
                         />
                       </div>
+		      */
+		      /*
                       <div className="col-4">
                         <button
                           type="button"
@@ -719,6 +745,7 @@ console.log("TestCase::removeTestCase");
                         >
                           Cancel
                         </button>
+			*/
                         <button type="button" className="btn btn-primary" onClick={e => this.handleSubmit("name", e)}>
                           Save
                         </button>
@@ -751,7 +778,7 @@ console.log("TestCase::removeTestCase");
                     <Editor
                       tinymceScriptSrc='/tinymce/tinymce.min.js'
                       initialValue={this.state.testcase.description}
-                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
 			license_key: 'gpl',
                         height: 500,
@@ -785,6 +812,7 @@ console.log("TestCase::removeTestCase");
                     </form>
                   </div>
                 )}
+		  */
               </div>
             </div>
 
@@ -810,7 +838,7 @@ console.log("TestCase::removeTestCase");
                     <Editor
                       tinymceScriptSrc='/tinymce/tinymce.min.js'
                       initialValue={this.state.testcase.preconditions}
-                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                      apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                       init={{
 			license_key: 'gpl',
                         height: 500,
@@ -843,11 +871,12 @@ console.log("TestCase::removeTestCase");
                     </form>
                   </div>
                 )}
+		*/
               </div>
             </div>
 
             <div id="steps" className="mb-4">
-
+	    /*
               <LaunchTestcaseControls
                 testcase={this.state.testcase}
                 launchId={this.state.launchId}
@@ -855,6 +884,7 @@ console.log("TestCase::removeTestCase");
                 callback={this.props.callback}
 	        indicator={"START"}
               />
+	      */
 
               <h5>Steps</h5>
               {(this.state.testcase.steps || []).map(
@@ -869,7 +899,7 @@ console.log("TestCase::removeTestCase");
                               <Editor
                                 tinymceScriptSrc='/tinymce/tinymce.min.js'
                                 initialValue={this.state.testcase.steps[i].action}
-                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
 			          license_key: 'gpl',
                                   height: 300,
@@ -886,7 +916,7 @@ console.log("TestCase::removeTestCase");
                               <Editor
                                 tinymceScriptSrc='/tinymce/tinymce.min.js'
                                 initialValue={this.state.testcase.steps[i].expectation}
-                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                 init={{
 			          license_key: 'gpl',
                                   height: 300,
@@ -989,7 +1019,7 @@ console.log("TestCase::removeTestCase");
                                 <Editor
                                   tinymceScriptSrc='/tinymce/tinymce.min.js'
                                   initialValue={this.state.testcase.steps[i].action}
-                                  // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
+                                  apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
 			            license_key: 'gpl',
                                     height: 300,
@@ -1049,6 +1079,7 @@ console.log("TestCase::removeTestCase");
               )}
             </div>
 
+	    /*
             <LaunchTestcaseControls
               testcase={this.state.testcase}
               launchId={this.state.launchId}
@@ -1056,6 +1087,7 @@ console.log("TestCase::removeTestCase");
               callback={this.props.callback}
 	      indicator={"FAILUREDETAILS"}
             />
+	    */
 
             <div id="attributes" className="mb-4">
               <h5>Attributes</h5>
@@ -1274,6 +1306,7 @@ console.log("TestCase::removeTestCase");
 
           {! this.state.launchId && (
           <div className="tab-pane fade show" id="attachments" role="tabpanel" aria-labelledby="attachments-tab">
+		  /*
             <Attachments
               testcase={this.state.testcase}
               projectId={this.projectId}
@@ -1281,16 +1314,19 @@ console.log("TestCase::removeTestCase");
               readonly={this.state.readonly}
               testDeveloper={this.state.testDeveloper}
             />
+	    */
           </div>
           )}
 
           {this.state.launchId && (
             <div className="tab-pane fade show" id="results" role="tabpanel" aria-labelledby="results-tab">
+		  /*
               <Results
                 testcase={this.state.testcase}
                 projectId={this.projectId}
                 onTestcaseUpdated={this.onTestcaseUpdated}
               />
+	      */
             </div>
           )}
 
@@ -1300,12 +1336,14 @@ console.log("TestCase::removeTestCase");
             role="tabpanel"
             aria-labelledby="comments-tab-body"
           >
+	    /*
             <Comments
               entityId={this.state.launchId + "_" + this.state.testcase.id}
               projectId={this.projectId}
               entityType="launch"
               onCommentsNumberChanged={this.onCommentsCountChanged}
             />
+	    */
           </div>
 
           <div className="tab-pane fade show" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
@@ -1324,6 +1362,7 @@ console.log("TestCase::removeTestCase");
           </div>
 
           <div className="tab-pane fade show" id="history" role="tabpanel" aria-labelledby="history-tab">
+	    /*
             <EventsWidget
               projectId={this.projectId}
               filter={{
@@ -1336,6 +1375,7 @@ console.log("TestCase::removeTestCase");
                 eventType: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
               }}
             />
+	    */
           </div>
         </div>
 
