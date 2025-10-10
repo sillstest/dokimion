@@ -28,7 +28,7 @@ class LaunchesByUsersPieWidget extends SubComponent {
     this.usersPieChartRender = this.usersPieChartRender.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.projectId) {
       this.state.projectId = nextProps.projectId;
     }

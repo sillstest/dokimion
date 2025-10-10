@@ -42,7 +42,7 @@ class AttributeForm extends Component {
       .catch(() => {console.log("Unable to fetch session");});
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.setState({ attribute: nextProps.attribute, 
       projectAttributes:nextProps.projectAttributes, 
       edit: nextProps.edit});

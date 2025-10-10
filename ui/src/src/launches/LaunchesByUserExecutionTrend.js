@@ -31,7 +31,7 @@ class LaunchesByUserExecutionTrend extends SubComponent {
     this.renderChart = this.renderChart.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.projectId) {
       this.state.projectId = nextProps.projectId;
     }

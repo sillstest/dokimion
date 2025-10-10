@@ -28,7 +28,7 @@ class LaunchesByStatusesPieWidget extends SubComponent {
     this.statusPieChartRender = this.statusPieChartRender.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.projectId) {
       this.state.projectId = nextProps.projectId;
     }

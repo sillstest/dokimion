@@ -32,7 +32,7 @@ class Organization extends SubComponent {
     this.getOrganization();
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     var nextOrganizationId = nextProps.match.params.organization;
     if (nextOrganizationId && this.state.organization.id != nextOrganizationId) {
       this.state.organization.id = nextOrganizationId;

@@ -161,7 +161,7 @@ class LaunchForm extends SubComponent {
     event.preventDefault();
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.state.restart = nextProps.restart || false;
     this.state.failedOnly = nextProps.failedOnly || false;
     if (nextProps.testSuite) {

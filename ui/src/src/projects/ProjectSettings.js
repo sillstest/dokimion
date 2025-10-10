@@ -69,7 +69,7 @@ class ProjectSettings extends SubComponent {
     this.props.onSessionChange(session);
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     Backend.get("project/" + this.state.projectId)
       .then(response => {
         this.state.project = response;

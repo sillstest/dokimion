@@ -45,7 +45,7 @@ class ProjectScratchpadWidget extends SubComponent {
       .catch(() => {console.log("Unable to fetch session");});
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     var nextProjectId = nextProps.projectId;
     // eslint-disable-next-line eqeqeq
     if (nextProjectId && this.state.projectId != nextProjectId) {

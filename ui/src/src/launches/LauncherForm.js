@@ -37,7 +37,7 @@ class LauncherForm extends SubComponent {
     super.componentDidMount();
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.launcherConfig) {
       this.state.launcherConfig = nextProps.launcherConfig;
     }

@@ -28,7 +28,7 @@ class LaunchTestcaseControls extends Component {
     this.callback = this.props.callback || function (testcase) {};
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.testcase) {
       this.state.testcase = nextProps.testcase;
     }

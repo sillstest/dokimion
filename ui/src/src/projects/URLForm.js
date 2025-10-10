@@ -37,7 +37,7 @@ class URLForm extends Component {
       .catch(() => {console.log("Unable to fetch session");});
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.setState({ project: nextProps.project, 
       url:nextProps.urlToAdd, 
     });

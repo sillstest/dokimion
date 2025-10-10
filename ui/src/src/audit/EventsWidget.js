@@ -31,7 +31,7 @@ class EventsWidget extends Component {
 
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.projectId) {
       this.state.projectId = nextProps.projectId;
     }

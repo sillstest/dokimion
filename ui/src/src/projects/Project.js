@@ -38,7 +38,7 @@ class Project extends SubComponent {
     this.getProject();
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     var nextProjectId = nextProps.match.params.project;
     // eslint-disable-next-line eqeqeq
     if (nextProjectId && this.state.project.id != nextProjectId) {

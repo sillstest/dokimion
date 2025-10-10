@@ -22,7 +22,7 @@ class TestSuitesWidget extends SubComponent {
     this.onFilter = this.onFilter.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     var nextProjectId = nextProps.projectId;
     // eslint-disable-next-line eqeqeq
     if (nextProjectId && this.state.projectId != nextProjectId) {

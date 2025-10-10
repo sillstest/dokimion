@@ -19,7 +19,7 @@ class Pager extends Component {
     this.setState(this.state);
   }
 
-  componentWillReceiveProps(props) {
+  UNSAFE_componentWillReceiveProps(props) {
     this.state.totalItems = props.totalItems;
     this.state.currentPage = props.currentPage;
     this.state.pageObjects = this.getPageObjects();

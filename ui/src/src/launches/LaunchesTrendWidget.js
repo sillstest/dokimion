@@ -28,7 +28,7 @@ class LaunchesTrendWidget extends SubComponent {
     this.getSeries = this.getSeries.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.projectId) {
       this.state.projectId = nextProps.projectId;
     }
