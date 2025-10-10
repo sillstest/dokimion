@@ -106,7 +106,7 @@ class TestCases extends SubComponent {
 
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.handleGetTCSizes();
   }
 

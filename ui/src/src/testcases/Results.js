@@ -32,7 +32,7 @@ class Results extends SubComponent {
     this.cancelRemoveResultConfirmation = this.cancelRemoveResultConfirmation.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.testcase) {
       this.state.testcase = nextProps.testcase;
     }

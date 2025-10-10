@@ -56,7 +56,7 @@ class Issues extends SubComponent {
     this.refreshIssues = this.refreshIssues.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.testcase) {
       this.state.testcase = nextProps.testcase;
       this.setState(this.state);

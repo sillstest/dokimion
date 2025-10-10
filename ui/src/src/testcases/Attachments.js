@@ -34,7 +34,7 @@ class Attachments extends SubComponent {
     this.cancelRemoveAttachmentConfirmation = this.cancelRemoveAttachmentConfirmation.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.testcase) {
       this.state.testcase = nextProps.testcase;
     }

@@ -79,7 +79,7 @@ class TestCasesFilter extends Component {
   }
 
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.projectAttributes) {
       this.state.projectAttributes = nextProps.projectAttributes;
       this.state.testSuite.filter.filters.forEach(

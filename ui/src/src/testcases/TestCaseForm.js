@@ -60,7 +60,7 @@ class TestCaseForm extends SubComponent {
     event.preventDefault();
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.testcase) {
       this.state.testcase = nextProps.testcase;
     }
