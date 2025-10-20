@@ -10,6 +10,7 @@ import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 import equal from "fast-deep-equal";
+import "./TestCases.css";
 
 var jQuery = require("jquery");
 window.jQuery = jQuery;

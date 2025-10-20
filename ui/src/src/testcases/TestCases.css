@@ -1,0 +1,7 @@
+#tree li[data-selected="true"] .text-muted {
+  color: #333 !important;
+}
+
+#tree li[data-selected="true"] span[data-role="display"] {
+  color: #000 !important;
+}
