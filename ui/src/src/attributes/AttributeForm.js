@@ -134,6 +134,10 @@ class AttributeForm extends Component {
         };
         this.state.errorMessage='';
         this.setState(this.state);
+        // ADDED: Call closeModal from props to close the modal
+        if (this.props.closeModal) {
+          this.props.closeModal();
+        }
     event.preventDefault();
   }
 
@@ -166,7 +170,8 @@ class AttributeForm extends Component {
             <h5 className="modal-title" id="editAttributeLabel">
               Attribute
             </h5>
-            <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.handleClose}>
+            {/* CHANGED: Removed data-dismiss="modal" and ensure onClick calls handleClose */}
+            <button type="button" className="close" aria-label="Close" onClick={this.handleClose}>
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
@@ -228,19 +233,22 @@ class AttributeForm extends Component {
                   </div>
                 );
               })}
-
-              <div className="form-group row">
-                <button type="button" className="btn" onClick={this.addValue}>
-                  Add value
-                </button>
-              </div>
+              {/* CHANGED: Only show "Add value" button when adding a new attribute (not editing) */}
+              {!this.state.edit && (
+                <div className="form-group row">
+                  <button type="button" className="btn" onClick={this.addValue}>
+                    Add value
+                  </button>
+                </div>
+	      )}
             </form>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-primary" onClick={this.handleSubmit}>
               Save changes
             </button>
-            <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.handleClose}>
+            {/* CHANGED: Removed data-dismiss="modal" and ensure onClick calls handleClose */}
+            <button type="button" className="btn btn-secondary" onClick={this.handleClose}>
               Close
             </button>
             {this.state.attribute.id && (
