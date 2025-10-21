@@ -53,7 +53,7 @@ class Projects extends Component {
                 <span>
                   <Link to={"/projects/" + project.id}>{project.name}</Link>
                 </span>
-                <span className="float-right">
+                <span className="card-header">
                   <Link to={"/projects/" + project.id + "/settings"}>
                     <FontAwesomeIcon icon={faCogs} />
                   </Link>

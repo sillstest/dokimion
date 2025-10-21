@@ -184,6 +184,12 @@ h5:hover .edit-icon {
     margin-left: -29px;
 }
 
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .card-step {
     width: 100%;
 }
