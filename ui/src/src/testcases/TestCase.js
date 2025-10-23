@@ -114,27 +114,84 @@ class TestCase extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
-    if (this.props.readonly) {
-      this.state.readonly = true;
-    }
-    if (this.props.testDeveloper) {
-      this.state.testDeveloper = true;
-    }
-    if (this.props.testcase) {
-      this.state.testcase = this.props.testcase;
-    } else if (this.props.testcaseId) {
-      this.projectId = this.props.projectId;
-      this.getTestCase(this.props.projectId, this.props.testcaseId);
-    } else if (this.props.match) {
-      this.projectId = this.props.match.params.project;
-      this.getTestCase(this.props.match.params.project, this.props.match.params.testcase);
-    }
-    if (this.props.launchId) {
-      this.state.launchId = this.props.launchId;
-    }
-    this.getSession();
 
+  if (this.props.readonly) {
+    this.state.readonly = true;
+  }
+  if (this.props.testDeveloper) {
+    this.state.testDeveloper = true;
+  }
+  if (this.props.launchId) {
+    this.state.launchId = this.props.launchId;
+  }
+  
+  // Handle case where testcase is passed directly as prop
+  if (this.props.testcase) {
+    this.state.testcase = this.props.testcase;
+    this.getSession();
+    this.state.loading = false;
     this.setState(this.state);
+    return;
+  }
+  
+  // Determine project and testcase IDs
+  let projectId, testcaseId;
+  if (this.props.testcaseId) {
+    projectId = this.props.projectId;
+    testcaseId = this.props.testcaseId;
+  } else if (this.props.match) {
+    projectId = this.props.match.params.project;
+    testcaseId = this.props.match.params.testcase;
+  }
+  
+  this.projectId = projectId;
+  
+  // Load both session and testcase in parallel
+  const sessionPromise = Backend.get("user/session");
+  const testcasePromise = Backend.get(projectId + "/testcase/" + testcaseId);
+  
+  Promise.all([sessionPromise, testcasePromise])
+    .then(([session, testcase]) => {
+      this.state.session = session;
+      this.state.testcase = testcase;
+      this.state.originalTestcase = JSON.parse(JSON.stringify(testcase));
+      this.state.attributesInEdit.clear();
+      this.state.propertiesInEdit.clear();
+      
+      // Determine readonly status based on roles
+      var roles = session.person.roles && session.person.roles.length > 0 
+        ? session.person.roles : [];
+
+      if (roles.length == 0) {
+        this.state.readonly = true;
+      } else {
+        var isTester = roles.filter(val => val.includes('TESTER')).length > 0;
+        var isObserverOnly = roles.filter(val => val.includes('OBSERVERONLY')).length > 0;
+        var isTestDeveloper = roles.filter(val => val.includes('TESTDEVELOPER')).length > 0;
+        this.state.testDeveloper = isTestDeveloper;
+        console.log("Role is a ?" + isTester + " " + isTestDeveloper + " " + testcase.locked);
+
+        this.state.readonly = false;
+        if (isTester || isObserverOnly) {
+          this.state.readonly = true;
+        } else if (isTestDeveloper && testcase.locked) {
+          this.state.readonly = true;
+        } else if (isTestDeveloper) {
+          this.state.readonly = false;
+        }
+      }
+      
+      this.state.loading = false;
+      this.setState(this.state);
+      this.getAttributes();
+    })
+    .catch(error => {
+      console.log("Error loading testcase or session:", error);
+      this.setState({
+        errorMessage: "componentDidMount::Couldn't fetch testcase or session",
+        loading: false
+      });
+    });
   }
 
   onSessionChange(session) {
