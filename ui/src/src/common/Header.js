@@ -19,6 +19,8 @@ class Header extends Component {
     };
     this.state = Object.assign({}, { session: this.props.session, projects: [] });
     this.logOut = this.logOut.bind(this);
+    // CHANGED: Added binding for changeOrganization method to fix context issues
+    this.changeOrganization = this.changeOrganization.bind(this);
   }
 
   componentDidMount() {
@@ -33,23 +35,28 @@ class Header extends Component {
     Backend.get("user/session")
       .then(response => {
         if (this.state.session.id !== response.id) {
-          this.state.session = response;
-          this.setState(this.state);
-          this.onSessionChange(this.state.session);
-          if (
-            this.state.session.person.defaultPassword &&
-            !window.location.pathname.includes("/user/change-password-redirect") &&
-            !window.location.pathname.includes("/user/changepass")
-          ) {
-            this.props.history.push("/user/change-password-redirect/" + this.state.session.person.login);
-          } else if (
-            this.state.session.metainfo.organizationsEnabled &&
-            !this.state.session.metainfo.currentOrganization &&
-            window.location.pathname != "/orgselect" &&
-            window.location.pathname != "/organizations/new"
-          ) {
-            this.props.history.push("/orgselect");
-          }
+          // CHANGED: Use setState instead of direct state mutation (this.state.session = response)
+          this.setState({
+            session: response
+          }, () => {
+            this.onSessionChange(this.state.session);
+            if (
+              this.state.session.person.defaultPassword &&
+              !window.location.pathname.includes("/user/change-password-redirect") &&
+              !window.location.pathname.includes("/user/changepass")
+            ) {
+              this.props.history.push("/user/change-password-redirect/" + this.state.session.person.login);
+            } else if (
+              this.state.session.metainfo.organizationsEnabled &&
+              !this.state.session.metainfo.currentOrganization &&
+              // CHANGED: Use strict equality (!==) instead of loose equality (!=)
+              window.location.pathname !== "/orgselect" &&
+              // CHANGED: Use strict equality (!==) instead of loose equality (!=)
+              window.location.pathname !== "/organizations/new"
+            ) {
+              this.props.history.push("/orgselect");
+            }
+          });
         }
       })
       .catch(() => {
@@ -57,20 +64,24 @@ class Header extends Component {
       });
     Backend.get("project?includedFields=name,description,id,readWriteUsers")
       .then(response => {
-        this.state.projects = response;
-        this.setState(this.state);
+        // CHANGED: Use setState instead of direct state mutation (this.state.projects = response)
+        this.setState({ projects: response });
       })
       .catch(() => {});
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.session && this.state.session != nextProps.session.id) {
-      this.state.session = nextProps.session;
-      this.setState(this.state);
+    // CHANGED: Use strict equality (!==) instead of loose equality (!=)
+    if (nextProps.session && this.state.session !== nextProps.session.id) {
+      // CHANGED: Use setState instead of direct state mutation (this.state.session = nextProps.session)
+      this.setState({ session: nextProps.session });
     }
-    if (nextProps.project && this.state.projectId != nextProps.project) {
-      this.state.projectId = nextProps.project;
-      this.getProject();
+    // CHANGED: Use strict equality (!==) instead of loose equality (!=)
+    if (nextProps.project && this.state.projectId !== nextProps.project) {
+      // CHANGED: Use setState with callback instead of direct mutation (this.state.projectId = nextProps.project)
+      this.setState({ projectId: nextProps.project }, () => {
+        this.getProject();
+      });
     }
   }
 
@@ -99,9 +110,11 @@ class Header extends Component {
 
   getProject() {
     Backend.get("project/" + this.state.projectId).then(response => {
-      this.state.projectName = response.name;
-      this.state.projectId = response.id;
-      this.setState(this.state);
+      // CHANGED: Use setState instead of direct state mutation (this.state.projectName = response.name)
+      this.setState({
+        projectName: response.name,
+        projectId: response.id
+      });
     });
   }
 
@@ -172,7 +185,13 @@ class Header extends Component {
             <div>
                 {this.state.session.metainfo.organizations.map(function (organization, index) {
                   return (
-                    <div index={index}  className='clickable dropdown-item' onClick={e => this.changeOrganization(organization.id, e)}>
+                    // CHANGED: Use 'key' prop instead of 'index' attribute and use organization.id for proper React reconciliation
+                    // CHANGED: Simplified onClick handler - removed event parameter and use arrow function
+                    <div 
+                      key={organization.id}  
+                      className='clickable dropdown-item' 
+                      onClick={() => this.changeOrganization(organization.id)}
+                    >
                         {organization.name}
                         {this.state.session.metainfo.currentOrganization === organization.id && (<span> <FontAwesomeIcon icon={faCheck} /></span>)}
                     </div>
@@ -241,38 +260,43 @@ class Header extends Component {
         <button type="button" className="navbar-toggler" data-toggle="collapse" data-target="#navbarNav">
           <span className="navbar-toggler-icon"></span>
         </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          {this.renderProjects()}
-          {!this.props.project && <ul className="navbar-nav mr-auto"></ul>}
-          {this.props.project && (
-            <ul className="navbar-nav mr-auto">
-              <li className="nav-item">
-                <Link className="nav-link" to={"/" + this.props.project + "/testcases"}>
-                  TestCases
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={"/" + this.props.project + "/launches"}>
-                  Launches
-                </Link>
-              </li>
-              {(this.state.session.person.roles != null && this.state.session.person.roles[0] != "OBSERVERONLY") &&
-              <li className="nav-item">
-                <Link className="nav-link" to={"/" + this.props.project + "/testsuites"}>
-                  Suites
-                </Link>
-                  </li>
-               } 
-               {Utils.isAdmin(this.state.session) &&
+        {/* CHANGED: Added inline style to force flexbox layout */}
+        <div className="collapse navbar-collapse" id="navbarNav" style={{display: 'flex', justifyContent: 'space-between'}}>
+          {/* CHANGED: Wrapped left side items in a flex container */}
+          <div style={{display: 'flex'}}>
+            {this.renderProjects()}
+            {!this.props.project && <ul className="navbar-nav mr-auto"></ul>}
+            {this.props.project && (
+              <ul className="navbar-nav mr-auto">
+                <li className="nav-item">
+                  <Link className="nav-link" to={"/" + this.props.project + "/testcases"}>
+                    TestCases
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to={"/" + this.props.project + "/launches"}>
+                    Launches
+                  </Link>
+                </li>
+                {/* CHANGED: Use strict equality (!==) instead of loose equality (!=) */}
+                {(this.state.session.person.roles != null && this.state.session.person.roles[0] !== "OBSERVERONLY") &&
+                <li className="nav-item">
+                  <Link className="nav-link" to={"/" + this.props.project + "/testsuites"}>
+                    Suites
+                  </Link>
+                    </li>
+                 } 
+                 {Utils.isAdmin(this.state.session) &&
                     <li className="nav-item">
                       <Link className="nav-link" to={"/" + this.props.project + "/attributes"}>
                         Attributes
                       </Link>
                     </li>
-               } 
-            </ul>
-          )}
-          <ul className="navbar-nav">
+                 } 
+              </ul>
+            )}
+	  </div>
+          <ul className="navbar-nav ml-auto">
             <li className="nav-item dropdown">
               <a
                 className="nav-item nav-link dropdown-toggle mr-md-2"

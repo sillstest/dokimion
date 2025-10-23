@@ -408,4 +408,7 @@ th.headerUserProfile {
 td.cellUserProfile {
    border: 1px solid black;
 }
-
+.navbar-nav .dropdown-menu-right {
+  right: 0;
+  left: auto;
+}

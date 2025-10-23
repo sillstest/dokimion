@@ -856,145 +856,26 @@ console.log("TestCase::removeTestCase");
                 launchId={this.state.launchId}
                 projectId={this.projectId}
                 callback={this.props.callback}
-	        indicator={"START"}
+                indicator={"START"}
               />
 
               <h5>Steps</h5>
-              {(this.state.testcase.steps || []).map(
-                function (step, i) {
-                  if (!step || (!step.action && !step.expectation)) {
-                    return (
-                      <div className="step" key={i}>
-                        <div id={"steps-" + i + "-form"} index={i} className="inplace-form card">
-                          <div className="card-header">{i + 1}. Step</div>
-                          <div className="card-body">
-                            <p className="card-text">
-                              <Editor
-                                tinymceScriptSrc='/tinymce/tinymce.min.js'
-                                initialValue={this.state.testcase.steps[i].action}
-                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
-                                init={{
-			          license_key: 'gpl',
-                                  height: 300,
-                                  menubar: false,
-                                  plugins: this.tinymcePlugins,
-                                  toolbar: this.tinymceToolbar,
-                                  content_style: this.tinymceContentStyle
-                                }}
-                                onEditorChange={val => this.handleStepActionChange(i, val, false)}
-                              />
-                            </p>
-                            <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
-                            <p className="card-text">
-                              <Editor
-                                tinymceScriptSrc='/tinymce/tinymce.min.js'
-                                initialValue={this.state.testcase.steps[i].expectation}
-                                // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
-                                init={{
-			          license_key: 'gpl',
-                                  height: 300,
-                                  menubar: false,
-                                  plugins: this.tinymcePlugins,
-                                  toolbar: this.tinymceToolbar,
-                                  content_style: this.tinymceContentStyle
-                                }}
-                                onEditorChange={val => this.handleStepExpectationChange(i, val, false)}
-                              />
-                            </p>
-                            <button type="button" className="btn btn-light" onClick={e => this.removeStep(e, i)}>
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-primary"
-                              onClick={e => this.handleSubmit("steps", e, i, true)}
-                            >
-                              Save
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <div className key={i}>
-                        <div id={"steps-" + i + "-display"} className="inplace-display col-sm-12">
-                          <div index={i} className="row">
-                            <div className="card col-md-12">
-                              <div className="card-body">
-                                 {((typeof this.state.testcase.launchStatus!=='undefined') &&  this.state.testcase.launchStatus.includes("RUNNING")) ? (
-                                
-                                   <div className="card-text">
-                                    
-                                    <div
-                                    onClick={this.handleOnClickToSelectText}
 
-                                    dangerouslySetInnerHTML={{
-                                      __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
-                                    }}
-                                  ></div>
-
-                                  </div>)
-                                :(
-                                  <div className="card-text">
-                                  <div
-                                    dangerouslySetInnerHTML={{
-                                      __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
-                                    }}
-                                  ></div>
-                                  </div>
-                                )}
-
-                                <h6 className="card-subtitle mb-2 expectations">
-                                  <b>
-                                    <i>Expectations</i>
-                                  </b>
-                                </h6>
-                                <div
-                                  className="card-text"
-                                  dangerouslySetInnerHTML={{ __html: this.state.testcase.steps[i].expectation }}
-                                ></div>
-
-                                {!this.state.readonly && (
-                                <div className="row">
-                                  <div className="col-md-10"></div>
-                                  <div className="col-md-1">
-                                    <a href="#" className="card-link" onClick={e => this.toggleEdit("steps", e, i)}>
-                                      Edit
-                                    </a>
-                                  </div>
-
-                                  <div className="col-md-1">
-                                    <ConfirmButton
-                                      onSubmit={this.removeStep}
-                                      buttonClass={"card-link red float-right"}
-                                      id={i}
-                                      modalText={"Are you sure you want to remove Test Step?"}
-                                      buttonText={"Remove"}
-                                    />
-                                  </div>
-                                </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        {!this.state.readonly && (
-                          <div
-                            id={"steps-" + i + "-form"}
-                            index={i}
-                            className="inplace-form card col-md-12"
-                            style={{ display: "none" }}
-                          >
+              {this.state.testcase.steps && this.state.testcase.steps.length > 0 ? (
+                (this.state.testcase.steps || []).map(
+                  function (step, i) {
+                    if (!step || (!step.action && !step.expectation)) {
+                      return (
+                        <div className="step" key={i}>
+                          <div id={"steps-" + i + "-form"} index={i} className="inplace-form card">
+                            <div className="card-header">{i + 1}. Step</div>
                             <div className="card-body">
-                              <h6 className="card-subtitle mb-2 text-muted">{i + 1}. Step</h6>
                               <p className="card-text">
                                 <Editor
                                   tinymceScriptSrc='/tinymce/tinymce.min.js'
                                   initialValue={this.state.testcase.steps[i].action}
-                                  // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
-			            license_key: 'gpl',
+                                    license_key: 'gpl',
                                     height: 300,
                                     menubar: false,
                                     plugins: this.tinymcePlugins,
@@ -1009,9 +890,8 @@ console.log("TestCase::removeTestCase");
                                 <Editor
                                   tinymceScriptSrc='/tinymce/tinymce.min.js'
                                   initialValue={this.state.testcase.steps[i].expectation}
-                                  // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
                                   init={{
-			            license_key: 'gpl',
+                                    license_key: 'gpl',
                                     height: 300,
                                     menubar: false,
                                     plugins: this.tinymcePlugins,
@@ -1021,46 +901,153 @@ console.log("TestCase::removeTestCase");
                                   onEditorChange={val => this.handleStepExpectationChange(i, val, false)}
                                 />
                               </p>
-                              <button
-                                type="button"
-                                className="btn btn-light"
-                                onClick={e => this.cancelEdit("steps", e, i)}
-                              >
+                              <button type="button" className="btn btn-light" onClick={e => this.removeStep(e, i)}>
                                 Cancel
                               </button>
                               <button
                                 type="button"
                                 className="btn btn-primary"
-                                onClick={e => this.handleSubmit("steps", e, i)}
+                                onClick={e => this.handleSubmit("steps", e, i, true)}
                               >
                                 Save
                               </button>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  }
-                }.bind(this),
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className key={i}>
+                          <div id={"steps-" + i + "-display"} className="inplace-display col-sm-12">
+                            <div index={i} className="row">
+                              <div className="card col-md-12">
+                                <div className="card-body">
+                                  {((typeof this.state.testcase.launchStatus !== 'undefined') && this.state.testcase.launchStatus.includes("RUNNING")) ? (
+                                    <div className="card-text">
+                                      <div
+                                        onClick={this.handleOnClickToSelectText}
+                                        dangerouslySetInnerHTML={{
+                                          __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
+                                        }}
+                                      ></div>
+                                    </div>
+                                  ) : (
+                                    <div className="card-text">
+                                      <div
+                                        dangerouslySetInnerHTML={{
+                                          __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
+                                        }}
+                                      ></div>
+                                    </div>
+                                  )}
+
+                                  <h6 className="card-subtitle mb-2 expectations">
+                                    <b><i>Expectations</i></b>
+                                  </h6>
+                                  <div
+                                    className="card-text"
+                                    dangerouslySetInnerHTML={{ __html: this.state.testcase.steps[i].expectation }}
+                                  ></div>
+
+                                  {!this.state.readonly && (
+                                    <div className="row">
+                                      <div className="col-md-10"></div>
+                                      <div className="col-md-1">
+                                        <a href="#" className="card-link" onClick={e => this.toggleEdit("steps", e, i)}>
+                                          Edit
+                                        </a>
+                                      </div>
+
+                                      <div className="col-md-1">
+                                        <ConfirmButton
+                                          onSubmit={this.removeStep}
+                                          buttonClass={"card-link red float-right"}
+                                          id={i}
+                                          modalText={"Are you sure you want to remove Test Step?"}
+                                          buttonText={"Remove"}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {!this.state.readonly && (
+                            <div
+                              id={"steps-" + i + "-form"}
+                              index={i}
+                              className="inplace-form card col-md-12"
+                              style={{ display: "none" }}
+                            >
+                              <div className="card-body">
+                                <h6 className="card-subtitle mb-2 text-muted">{i + 1}. Step</h6>
+                                <p className="card-text">
+                                  <Editor
+                                    tinymceScriptSrc='/tinymce/tinymce.min.js'
+                                    initialValue={this.state.testcase.steps[i].action}
+                                    init={{
+                                      license_key: 'gpl',
+                                      height: 300,
+                                      menubar: false,
+                                      plugins: this.tinymcePlugins,
+                                      toolbar: this.tinymceToolbar,
+                                      content_style: this.tinymceContentStyle
+                                    }}
+                                    onEditorChange={val => this.handleStepActionChange(i, val, false)}
+                                  />
+                                </p>
+                                <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
+                                <p className="card-text">
+                                  <Editor
+                                    tinymceScriptSrc='/tinymce/tinymce.min.js'
+                                    initialValue={this.state.testcase.steps[i].expectation}
+                                    init={{
+                                      license_key: 'gpl',
+                                      height: 300,
+                                      menubar: false,
+                                      plugins: this.tinymcePlugins,
+                                      toolbar: this.tinymceToolbar,
+                                      content_style: this.tinymceContentStyle
+                                    }}
+                                    onEditorChange={val => this.handleStepExpectationChange(i, val, false)}
+                                  />
+                                </p>
+                                <button
+                                  type="button"
+                                  className="btn btn-light"
+                                  onClick={e => this.cancelEdit("steps", e, i)}
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  onClick={e => this.handleSubmit("steps", e, i)}
+                                >
+                                  Save
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                  }.bind(this)
+                )
+              ) : (
+                <></>
               )}
+
               {!this.state.readonly && (
-                <div className="true">
+                <div>
                   <button type="button" className="btn btn-primary" onClick={this.addStep}>
                     Add Step
                   </button>
                 </div>
               )}
             </div>
-
-            <LaunchTestcaseControls
-              testcase={this.state.testcase}
-              launchId={this.state.launchId}
-              projectId={this.projectId}
-              callback={this.props.callback}
-	      indicator={"FAILUREDETAILS"}
-            />
-
-            <div id="attributes" className="mb-4">
+<div id="attributes" className="mb-4">
               <h5>Attributes</h5>
               {Object.keys(this.state.testcase.attributes || {}).map(
                 function (attributeId, i) {
