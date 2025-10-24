@@ -2,6 +2,7 @@
 /* eslint-disable react/no-direct-mutation-state */
 import React, { Component } from "react";
 import $ from "jquery";
+import * as bootstrap from 'bootstrap';
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
@@ -49,7 +50,12 @@ class LaunchTestcaseControls extends Component {
         this.setState(this.state);
         this.callback(this.state.testcase);
         if (dialogToDismiss) {
-          $("#" + dialogToDismiss).modal("hide");
+          //$("#" + dialogToDismiss).modal("hide");
+	  const modalElement = document.getElementById(dialogToDismiss);
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) {
+            modal.hide();
+          }
         }
       })
       .catch(error => {

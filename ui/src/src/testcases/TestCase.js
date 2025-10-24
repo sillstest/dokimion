@@ -1103,8 +1103,17 @@ console.log("TestCase::removeTestCase");
                   </button>
                 </div>
               )}
+
             </div>
-<div id="attributes" className="mb-4">
+	      <LaunchTestcaseControls
+              testcase={this.state.testcase}
+              launchId={this.state.launchId}
+              projectId={this.projectId}
+              callback={this.props.callback}
+              indicator={"FAILUREDETAILS"}
+            />
+
+            <div id="attributes" className="mb-4">
               <h5>Attributes</h5>
               {Object.keys(this.state.testcase.attributes || {}).map(
                 function (attributeId, i) {
