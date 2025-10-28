@@ -220,7 +220,13 @@ System.out.flush();
     /////// Non-authenticable for internal usage
 
     public User findOne(String organizationId, Filter filter) {
-        return repository.find(organizationId,null, filter).stream().findFirst().orElseThrow(EntityNotFoundException::new);
+	try {
+           return repository.find(organizationId,null, filter).stream().findFirst().orElseThrow(EntityNotFoundException::new);
+        } catch (Exception e) {
+	   System.out.println("UserService::findOne - exception: " + e);
+	   System.out.flush();
+	   return (User)null;
+	}
     }
 
     public List<User> findAll() {
