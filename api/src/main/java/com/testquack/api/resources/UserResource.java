@@ -123,7 +123,13 @@ System.out.flush();
             return user;
         }
 
-        return service.findOne(getSession(), null, login);
+	try {
+           return service.findOne(getSession(), null, login);
+	} catch (Exception e) {
+           System.out.println("UserResource::getUser - exception: " + e);
+           System.out.flush();
+	   return (User)null;
+	}
     }
 
 
@@ -259,7 +265,13 @@ System.out.flush();
             return user1;
         }
 
-        return service.save(getSession(), null, user);
+	try {
+           return service.save(getSession(), null, user);
+	} catch (Exception e) {
+	   System.out.println("UserResource::createUser - exception: " + e);
+	   System.out.flush();
+	   return (User)null;
+	}
     }
 
     @PUT
@@ -279,14 +291,28 @@ System.out.flush();
             return user1;
         }
 
-        return service.save(getSession(), null, user);
+	try {
+           return service.save(getSession(), null, user);
+	} catch (Exception e) {
+	   System.out.println("UserResource::updateUser - exception: " + e);
+	   System.out.flush();
+	   return (User)null;
+	}
     }
 
     @GET
     @Path("/")
     public Collection<User> findFiltered() {
         //return getService().findFiltered(getSession(), null, initFilter(request));
-        Collection<User> collUsers = getService().findFiltered(getSession(), null, initFilter(request));
+	//
+        Collection<User> collUsers;
+	try {
+           collUsers = getService().findFiltered(getSession(), null, initFilter(request));
+	} catch (Exception e) {
+	   System.out.println("UserResource::findFiltered - exception: " + e);
+	   System.out.flush();
+	   return (Collection<User>)null;
+	}
 
         for (User user : collUsers) {
            System.out.println("UserResource.findFiltered - user: " + user);
@@ -321,47 +347,55 @@ System.out.println("UserResource::login - login: " + login);
 System.out.println("UserResource::login - password: " + password);
 System.out.println("UserResource::login - recaptcha: " + recaptcha);
 System.out.flush();
-    Session session = authProvider.doAuth(request, response);
 
-	if (session == null) {
-	   System.out.println("UserResource::login - failed");
-	   System.out.flush();
-	   return null;
-	}
+       Session session;
+       try {
+          session = authProvider.doAuth(request, response);
+       } catch (Exception e) {
+	  System.out.println("UserResource::login - exception: " + e);
+	  System.out.flush();
+	  return (Session)null;
+       }
+
+       if (session == null) {
+	  System.out.println("UserResource::login - failed");
+	  System.out.flush();
+	  return null;
+       }
 System.out.println("session ok returned from doAuth");
 System.out.flush();
 
-    if (sendVerifyRecaptchaMessage(recaptcha) == false) {
-        return null;
-    }
+       if (sendVerifyRecaptchaMessage(recaptcha) == false) {
+          return null;
+       }
 
 
 System.out.println("UserResource::login - session: " + session);
 System.out.flush();
 
-    Person person = session.getPerson();
-    s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+       Person person = session.getPerson();
+       s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
                                             getService().getMongoUsername(),
                                             getService().getMongoPassword(),
                                             getService().getMongoDBName());
 
-    String thisRole = s_mongoDBInterface.getRole(login);
+       String thisRole = s_mongoDBInterface.getRole(login);
 
-    String mongopass = s_mongoDBInterface.getPassword(login);
+       String mongopass = s_mongoDBInterface.getPassword(login);
 
 System.out.println("UserResource::login - role: " + thisRole);
 System.out.println("UserResource::login - mongo password: " + mongopass);
 System.out.flush();
 
-    List<String> roles = new ArrayList<String>();
-    roles.add(thisRole);
-    person.setRoles(roles);
-    session.setPerson(person);
+       List<String> roles = new ArrayList<String>();
+       roles.add(thisRole);
+       person.setRoles(roles);
+       session.setPerson(person);
 
-	if (service.setLocked(session, true) == false) {
+       if (service.setLocked(session, true) == false) {
 	   System.out.println("UserResource::login - setLocked failed");
 	   System.out.flush();
-	}
+       }
 
 System.out.println("UserResource::login - end of setLocked call");
 System.out.flush();
@@ -373,25 +407,50 @@ System.out.flush();
     @GET
     @Path("/auth")
     public Session login() throws IOException {
-        return authProvider.doAuth(request, response);
+
+	try {
+           return authProvider.doAuth(request, response);
+	} catch (Exception e) {
+	   System.out.println("UserResource::login - exception: " + e);
+	   System.out.flush();
+	   return (Session)null;
+	}
     }
 
     @GET
     @Path("/login-redirect")
     public RedirectResponse getLoginRedirect(){
-        return authProvider.redirectNotAuthTo(request);
+	try {
+           return authProvider.redirectNotAuthTo(request);
+	} catch (Exception e) {
+	   System.out.println("UserResource::getLoginRedirect - exception: " + e);
+	   System.out.flush();
+	   return (RedirectResponse)null;
+	}
     }
 
     @GET
     @Path("/create-redirect")
     public RedirectResponse getCreateUserRedirect(){
-        return authProvider.redirectCreateUserTo(request);
+	try {
+           return authProvider.redirectCreateUserTo(request);
+	} catch (Exception e) {
+	   System.out.println("UserResource::getCreateUserRedirect - exception: " + e);
+	   System.out.flush();
+	   return (RedirectResponse)null;
+	}
     }
 
     @GET
     @Path("/all-redirect")
     public RedirectResponse getAllUsersRedirect(){
-        return authProvider.redirectViewAllUsersTo(request);
+	try {
+           return authProvider.redirectViewAllUsersTo(request);
+	} catch (Exception e) {
+	   System.out.println("UserResource::getAllUsersRedirect - exception: " + e);
+	   System.out.flush();
+	   return (RedirectResponse)null;
+	}
     }
 
     @POST
@@ -433,47 +492,32 @@ System.out.flush();
        session.getPerson().setDefaultPassword(false);
        sessionProvider.replaceSession(session);
 
-       /*
-       String encryptedPass = "";
-       try {
-	 encryptedPass = StringUtils.getMd5String(changePasswordRequest.getNewPassword() + login);
-       } catch (NoSuchAlgorithmException e) {
-         throw new RuntimeException(e);
-       }
-
-       MongoDBInterface mongoDBInterface = new MongoDBInterface();
-       mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
-                                              getService().getMongoUsername(),
-                                              getService().getMongoPassword(),
-                                              getService().getMongoDBName());
-       String oldpass = mongoDBInterface.getPassword(login);
-       mongoDBInterface.updatePassword(login, encryptedPass);
-System.out.println("changePassword - old passwd from mongo: " + oldpass);
-System.out.flush();
-System.out.println("changePassword - new password: " + changePasswordRequest.getNewPassword());
-System.out.println("changePassword - new encrypted password: " + encryptedPass);
-System.out.flush();
-*/
         return Response.ok().build();
     }
 
     @GET
     @Path("/change-password-redirect")
     public RedirectResponse changePasswordRedirect(){
-        return authProvider.redirectChangePasswordTo(request);
+	try {
+           return authProvider.redirectChangePasswordTo(request);
+	} catch (Exception e) {
+           System.out.println("UserResource::changerPasswordRedirect - exception: " + e);
+	   System.out.flush();
+	   return (RedirectResponse)null;
+	}
     }
 
     @DELETE
     @Path("/logout")
     public Response logout() {
 
-	    Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
+	Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
 
         if (sid == null) {
 System.out.println("UserResource::logout - sid: " + sid);
 System.out.flush();
-	        return null;
-	    }
+	   return null;
+	}
 
         Session session = sessionProvider.getSessionById(sid.getValue());
 
@@ -485,42 +529,69 @@ System.out.flush();
 	   System.out.flush();
 	}
 
-       s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
-                                              getService().getMongoUsername(),
-                                              getService().getMongoPassword(),
-                                              getService().getMongoDBName());
+        s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
+                                                getService().getMongoUsername(),
+                                                getService().getMongoPassword(),
+                                                getService().getMongoDBName());
 
-       String pass = s_mongoDBInterface.getPassword(session.getLogin());
+        String pass = s_mongoDBInterface.getPassword(session.getLogin());
 System.out.println("logout - before doLogout mongo pass: " + pass);
 System.out.flush();
 
-        authProvider.doLogout(request, response);
+         try {
+            authProvider.doLogout(request, response);
+	 } catch (Exception e) {
+            System.out.println("UserResource::logout - exception: " + e);
+	    System.out.flush();
+            return Response.serverError().entity("UserResource Logout Failed").build();
+	 }
 
-        pass = s_mongoDBInterface.getPassword(session.getLogin());
+         pass = s_mongoDBInterface.getPassword(session.getLogin());
 System.out.println("logout - after doLogout mongo pass: " + pass);
 System.out.flush();
 System.out.println("UserResource::logout - after authProvider.doLogout call");
 System.out.flush();
 
-        return Response.ok().build();
+         return Response.ok().build();
     }
 
     @GET
     @Path("/groups")
     public Set<String> getGroups(){
-        return authProvider.getAllGroups(request);
+	try {
+           return authProvider.getAllGroups(request);
+	} catch (Exception e) {
+           System.out.println("UserResource::getGroups - exception: " + e);
+	   System.out.flush();
+	   return (Set<String>)null;
+	}
     }
 
     @GET
     @Path("/groups/suggest")
     public Set<String> suggestGroups(@QueryParam("literal") String literal) {
-        return authProvider.suggestGroups(request, literal);
+	try {
+           return authProvider.suggestGroups(request, literal);
+	} catch (Exception e) {
+           System.out.println("UserResource::suggestGroups - exception: " + e);
+	   System.out.flush();
+	   return (Set<String>)null;
+	}
     }
 
     @GET
     @Path("/users")
     public Set<String> getUsers(){
-        Set<String> users = authProvider.getAllUsers(request);
+        Set<String> users = null;
+	try {
+           users = authProvider.getAllUsers(request);
+	} catch (Exception e) {
+           System.out.println("UserResource::getUsers - exception: " + e);
+	   System.out.flush();
+	   return (Set<String>)null;
+	}
+
+
 System.out.println("UserResource::getUsers");
 for (String user : users) {
 System.out.println("user: " + user);
@@ -532,15 +603,29 @@ System.out.flush();
     @GET
     @Path("/users/suggest")
     public Set<String> suggestUsers(@QueryParam("literal") String literal) {
-        return authProvider.suggestUser(request, literal);
+	try {
+           return authProvider.suggestUser(request, literal);
+	} catch (Exception e) {
+           System.out.println("UserResource::suggestUsers - exception: " + e);
+	   System.out.flush();
+	   return (Set<String>)null;
+	}
     }
 
     @POST
     @Path("/changeorg/{orgId}")
     public Session login(@PathParam("orgId") String organizationId) {
-        Session session = service.changeOrganization(getSession(), organizationId);
-        sessionProvider.replaceSession(session);
-        return session;
+
+        Session session;
+	try {
+           session = service.changeOrganization(getSession(), organizationId);
+           sessionProvider.replaceSession(session);
+           return session;
+	} catch (Exception e) {
+           System.out.println("UserResource::login - exception: " + e);
+	   System.out.flush();
+	   return (Session)null;
+	}
     }
 
     private boolean sendVerifyRecaptchaMessage(String recaptcha)
@@ -550,7 +635,7 @@ System.out.flush();
             URL obj = new URL(url);
             HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
 
-            // add reuqest header
+            // add request header
             con.setRequestMethod("POST");
             con.setRequestProperty("User-Agent", USER_AGENT);
             con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
@@ -576,8 +661,8 @@ System.out.flush();
 
 
             
-        }catch(Exception e){
-            e.printStackTrace();
+        } catch(Exception e){
+           e.printStackTrace();
         }
 
         return true;

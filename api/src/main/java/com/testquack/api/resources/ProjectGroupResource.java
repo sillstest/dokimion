@@ -37,7 +37,13 @@ public class ProjectGroupResource extends BaseResource<ProjectGroup> {
 
     @GET
     public Collection<ProjectGroup> findFiltered() {
-        return getService().findFiltered(getUserSession(), null, initFilter(request));
+	try {
+           return getService().findFiltered(getUserSession(), null, initFilter(request));
+	} catch (Exception e) {
+           System.out.println("ProjectGroupResource::findFiltered - exception: " + e);
+	   System.out.flush();
+	   return (Collection<ProjectGroup>)null;
+	}
     }
 
     @GET
@@ -49,7 +55,13 @@ public class ProjectGroupResource extends BaseResource<ProjectGroup> {
             @ApiResponse(code = 200, message = "Successful operation")
     })
     public ProjectGroup findOne(@ApiParam(value = "Entity Id", required = true) @PathParam("id") String id) {
-        return getService().findOne(getUserSession(), null, id);
+	try {
+           return getService().findOne(getUserSession(), null, id);
+	} catch (Exception e) {
+           System.out.println("ProjectGroupResource::findOne - exception: " + e);
+	   System.out.flush();
+	   return (ProjectGroup)null;
+	}
     }
 
     @POST
@@ -60,7 +72,15 @@ public class ProjectGroupResource extends BaseResource<ProjectGroup> {
     })
     public ProjectGroup create(@ApiParam(value = "Entity", required = true) ProjectGroup entity) {
         entity.setId(null);
-        return getService().save(getUserSession(), null, entity);
+
+	try {
+           return getService().save(getUserSession(), null, entity);
+	} catch (Exception e) {
+           System.out.println("ProjectGroupResource::create - exception: " + e);
+	   System.out.flush();
+	   return (ProjectGroup)null;
+	}
+	   
     }
 
     @PUT
@@ -70,7 +90,14 @@ public class ProjectGroupResource extends BaseResource<ProjectGroup> {
             @ApiResponse(code = 200, message = "Updated entity")
     })
     public ProjectGroup update(@ApiParam(value = "Entity", required = true) ProjectGroup entity) {
-        return getService().save(getUserSession(), null, entity);
+
+	try {
+           return getService().save(getUserSession(), null, entity);
+	} catch (Exception e) {
+           System.out.println("ProjectGroupResource::update - exception: " + e);
+	   System.out.flush();
+	   return (ProjectGroup)null;
+	}
     }
 
 
@@ -82,8 +109,15 @@ public class ProjectGroupResource extends BaseResource<ProjectGroup> {
             @ApiResponse(code = 200, message = "Successful operation")
     })
     public Response delete(@ApiParam(value = "Id", required = true) @PathParam("id") String id) {
-        getService().delete(getUserSession(), null, id);
-        return ok().build();
+
+	try {
+           getService().delete(getUserSession(), null, id);
+           return ok().build();
+	} catch (Exception e) {
+           System.out.println("ProjectGroupResource::delete: " + e);
+           System.out.flush();
+           return Response.serverError().entity("ProjectGroupResource Delete Failed").build();
+	}
     }
 
 }

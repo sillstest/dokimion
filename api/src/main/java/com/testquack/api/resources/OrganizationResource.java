@@ -63,7 +63,15 @@ public class OrganizationResource extends BaseResource<Organization> {
             @ApiResponse(code = 200, message = "Successful operation")
     })
     public Organization findOne(@ApiParam(value = "Entity Id", required = true) @PathParam("id") String id) {
-        return getService().findOne(getUserSession(), id, id);
+
+	Organization o;
+	try {
+           return getService().findOne(getUserSession(), id, id);
+	} catch (Exception e) {
+	   System.out.println("OrganizationResource::findOne - exception: " + e);
+	   System.out.flush();
+	   return (Organization)null;
+	}
     }
 
     @POST
@@ -81,7 +89,13 @@ public class OrganizationResource extends BaseResource<Organization> {
         ((Collection<Organization>)session.getMetainfo().get(ORGANIZATIONS_KEY)).add(
                 new Organization().withName(entity.getName()).withId(entity.getId())
         );
-        sessionProvider.replaceSession(session);
+
+	try {
+           sessionProvider.replaceSession(session);
+	} catch (Exception e) {
+	   System.out.println("OrganizationResource::create - exception: " + e);
+	   System.out.flush();
+	}
 
         return entity;
     }
@@ -93,7 +107,13 @@ public class OrganizationResource extends BaseResource<Organization> {
             @ApiResponse(code = 200, message = "Updated entity")
     })
     public Organization update(@ApiParam(value = "Entity", required = true) Organization entity) {
-        return getService().save(getUserSession(), null, entity);
+	try {
+           return getService().save(getUserSession(), null, entity);
+	} catch (Exception e) {
+	   System.out.println("OrganizationResource::update - exception: " + e);
+	   System.out.flush();
+	   return (Organization)null;
+	}
     }
 
 
@@ -105,8 +125,16 @@ public class OrganizationResource extends BaseResource<Organization> {
             @ApiResponse(code = 200, message = "Successful operation")
     })
     public Response delete(@ApiParam(value = "Id", required = true) @PathParam("id") String id) {
-        getService().delete(getUserSession(), null, id);
-        return ok().build();
+
+	try {
+           getService().delete(getUserSession(), null, id);
+           return ok().build();
+	} catch (Exception e) {
+	   System.out.println("OrganizationResource::update - delete: " + e);
+	   System.out.flush();
+	   return Response.serverError().entity("OrganizationResource Delete Failed").build();
+	}
+
     }
 
 }

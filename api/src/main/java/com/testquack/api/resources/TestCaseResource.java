@@ -82,7 +82,14 @@ System.out.flush();
             return tcTree;
         }
 
-        return service.findFilteredTree(getUserSession(), projectId, (TestcaseFilter) initFilter(request));
+	try {
+           return service.findFilteredTree(getUserSession(), projectId, (TestcaseFilter) initFilter(request));
+	} catch (Exception e) {
+           System.out.println("TestCaseResource::findFilteredTree - exception: " + e);
+           System.out.flush();
+	   return (TestCaseTree)null;
+	}
+
     }
 
     @GET
@@ -96,7 +103,13 @@ System.out.flush();
     public TestCase findOne(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
             @ApiParam(value = "TestCase Id", required = true) @PathParam("testcaseId") String testcaseId) {
 
-        return getService().findOne(getUserSession(), projectId, testcaseId);
+	try {
+           return getService().findOne(getUserSession(), projectId, testcaseId);
+	} catch (Exception e) {
+           System.out.println("TestCaseResource::findOne - exception: " + e);
+           System.out.flush();
+	   return (TestCase)null;
+	}
 
 
     }
@@ -142,8 +155,16 @@ System.out.flush();
         if (fileDetail == null) {
             throw new EntityValidationException();
         }
-        return service.uploadAttachment(getUserSession(), projectId, testcaseId,
-                uploadedInputStream, fileDetail.getFileName(), fileDetail.getSize());
+
+	try {
+           return service.uploadAttachment(getUserSession(), projectId, testcaseId,
+                   uploadedInputStream, fileDetail.getFileName(), fileDetail.getSize());
+	} catch (Exception e) {
+           System.out.println("TestCaseResource::upload - exception: " + e);
+           System.out.flush();
+	   return (TestCase)null;
+
+	}
     }
 
     @POST
@@ -161,8 +182,15 @@ System.out.flush();
         if (fileDetail == null) {
             throw new EntityValidationException();
         }
-        return service.uploadResult(getUserSession(), projectId, testcaseId,
-                uploadedInputStream, fileDetail.getFileName(), fileDetail.getSize());
+
+	try {
+           return service.uploadResult(getUserSession(), projectId, testcaseId,
+                   uploadedInputStream, fileDetail.getFileName(), fileDetail.getSize());
+	} catch (Exception e) {
+           System.out.println("TestCaseResource::uploadResult - exception: " + e);
+           System.out.flush();
+	   return (TestCase)null;
+	}
 
     }
 
@@ -221,7 +249,9 @@ System.out.flush();
                     .ok(service.getAttachmentStream(attachment), MediaType.APPLICATION_OCTET_STREAM)
                     .header("content-disposition", format("attachment; filename = %s", attachment.getTitle()))
                     .build();
-        } catch (IOException ioexp) {
+        } catch (Exception e) {
+            System.out.println("TestCaseResource::downloadAttachment - exception: " + e);
+            System.out.flush();
             return serverError().build();
         }
     }
@@ -241,7 +271,9 @@ System.out.flush();
                     .ok(service.getResultStream(result), MediaType.APPLICATION_OCTET_STREAM)
                     .header("content-disposition", format("result; filename = %s", result.getTitle()))
                     .build();
-        } catch (IOException ioexp) {
+        } catch (Exception e) {
+            System.out.println("TestCaseResource::downloadResult - exception: " + e);
+            System.out.flush();
             return serverError().build();
         }
     }
@@ -296,7 +328,13 @@ System.out.flush();
             return tc;
         }
 
-        return service.deleteAttachment(getUserSession(), projectId, testcaseId, attachmentId);
+	try {
+           return service.deleteAttachment(getUserSession(), projectId, testcaseId, attachmentId);
+	} catch (Exception e) {
+            System.out.println("TestCaseResource::deleteAttachment - exception: " + e);
+            System.out.flush();
+	    return (TestCase)null;
+	}
     }
 
     @DELETE
@@ -308,7 +346,15 @@ System.out.flush();
 System.out.println("TestCaseResource::deleteAttachment - testcaseId: " + testcaseId + ", resultId: " + resultId);
 System.out.flush();
 
-        return service.deleteResult(getUserSession(), projectId, testcaseId, resultId);
+        try {
+           return service.deleteResult(getUserSession(), projectId, testcaseId, resultId);
+	} catch (Exception e) {
+            System.out.println("TestCaseResource::deleteResult - exception: " + e);
+            System.out.flush();
+	    return (TestCase)null;
+	}
+
+
 
     }
 

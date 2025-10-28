@@ -44,9 +44,15 @@ System.out.println("BaseCrudResource::findOne() - projectId: " + projectId);
 System.out.println("BaseCrudResource::findOne() - entity id: " + id);
         //return getService().findOne(getUserSession(), projectId, id);
 
-        E entity = getService().findOne(getUserSession(), projectId, id);
+        E entity = null;
+        try {
+           entity = getService().findOne(getUserSession(), projectId, id);
 System.out.println("BaseCrudResource::findOne - entity: " + entity);
 System.out.flush();
+        } catch (Exception e) {
+System.out.println("BaseCrudResource::findOne - exception: " + e);
+System.out.flush();
+	}
 
         return entity;
     }
@@ -65,9 +71,15 @@ System.out.flush();
         //return getService().save(getUserSession(), projectId, entity);
 System.out.println("BaseCrudResource::create - user session: " + getUserSession());
 System.out.flush();
-        E new_entity = getService().save(getUserSession(), projectId, entity);
+        E new_entity = null;
+	try {
+           new_entity = getService().save(getUserSession(), projectId, entity);
 System.out.println("BaseCrudResource::create - new entity: " + new_entity);
 System.out.flush();
+        } catch (Exception e) {
+System.out.println("BaseCrudResource::create - exception: " + e);
+System.out.flush();
+	}
         return new_entity;
     }
 
@@ -80,7 +92,13 @@ System.out.flush();
     })
     public E update(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId,
             @ApiParam(value = "Entity", required = true) E entity) {
-        return getService().save(getUserSession(), projectId, entity);
+	try {
+           return getService().save(getUserSession(), projectId, entity);
+	} catch (Exception e) {
+System.out.println("BaseCrudResource::update - exception: " + e);
+System.out.flush();
+           return (E)null;
+	}
     }
 
 
@@ -97,7 +115,13 @@ System.out.flush();
 System.out.println("BaseCrudResource:delete - projectId, launchId: " + projectId + ", " + id);
 System.out.flush();
 
-        boolean rc = getService().delete(getUserSession(), projectId, id);
+        boolean rc = false;
+	try {
+           rc = getService().delete(getUserSession(), projectId, id);
+	} catch (Exception e) {
+System.out.println("BaseCrudResource::delete - exception: " + e);
+System.out.flush();
+	}
 
 System.out.println("BaseCrudResource:delete - after call 1 to getService.delete, rc: " + rc);
 System.out.flush();
@@ -127,7 +151,15 @@ System.out.flush();
             @ApiResponse(code = 200, message = "Successful operation")
     })
     public Response delete(@ApiParam(value = "Project Id", required = true) @PathParam("projectId") String projectId) {
-	    boolean rc = getService().delete(getUserSession(), projectId, initFilter(request));
+
+	    boolean rc = false;
+	    try {
+	       rc = getService().delete(getUserSession(), projectId, initFilter(request));
+	    } catch (Exception e) {
+System.out.println("BaseCrudResource::delete - exception: " + e);
+System.out.flush();
+	    }
+
 System.out.println("BaseCrudResource:delete - after call 2 to getService.delete, rc: " + rc);
 System.out.flush();
 	    if (rc == true) {

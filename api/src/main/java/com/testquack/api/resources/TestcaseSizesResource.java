@@ -67,26 +67,19 @@ public class TestcaseSizesResource extends BaseResource<TestcaseSizes> {
 System.out.println("getAllTestcaseSizes::filter - " + initFilter(request));
 System.out.flush();
 
-    Collection<TestcaseSizes> collTCSizes = getService().findFiltered(getUserSession(), null, new Filter());
+    Collection<TestcaseSizes> collTCSizes;
+    try {
+       collTCSizes = getService().findFiltered(getUserSession(), null, new Filter());
+    } catch (Exception e) {
+       System.out.println("TestcaseSizesResource::getAllTestcaseSizes - exception: " + e);
+       System.out.flush();
+       return (Collection<TestcaseSizes>)null;
+    }
 
     for (TestcaseSizes tcSize : collTCSizes) {
         System.out.println("TestcaseSizesResource.findFiltered - tcSize: " + tcSize);
         System.out.flush();
      }
-/*
-   TestcaseSizesService tcSizesService = (TestcaseSizesService)getService();
-   Set<String> tcSizesSet = tcSizesService.findAll().stream().map(
-                            TestcaseSizes::getTcsName).collect(Collectors.toSet());
-
-   Collection<TestcaseSizes> collTCSizes = new LinkedList<TestcaseSizes>();
-   for (String tcSizeName : tcSizesSet) {
-      System.out.println("TestcaseSizes::getallTestcaseSizes::tcSize: " + tcSizeName);
-      System.out.flush();
-      TestcaseSizes tcSize = new TestcaseSizes();
-      tcSize.setName(tcSizeName);
-      collTCSizes.add(tcSize);
-   }
-*/
 
     return collTCSizes;
 

@@ -73,15 +73,22 @@ System.out.flush();
 
     RoleCapabilityService roleCapService = (RoleCapabilityService)getService();
 
-    RoleCapability rolecap = roleCapService.save(session, "RoleCapability", roleCap);
+    RoleCapability rolecap = null;
+    try {
+       rolecap = roleCapService.save(session, "RoleCapability", roleCap);
+    } catch (Exception e) {
+       System.out.println("RoleCapabilityResource::create - exception: " + e);
+       System.out.flush();
+       return Response.serverError().entity("RoleCapabilityService Save Failed").build();
+    }
 
      System.out.println("RoleCapabilityResource::addRoleCap - after service.save");
      System.out.flush();
 
-    JSONObject jsonObj = new JSONObject();
-    jsonObj.put("id", rolecap.getId());
+     JSONObject jsonObj = new JSONObject();
+     jsonObj.put("id", rolecap.getId());
 
-    return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
+     return Response.ok(jsonObj.toString(), MediaType.APPLICATION_JSON).build();
 
   }
 
@@ -99,7 +106,14 @@ System.out.flush();
      System.out.flush();
 
      RoleCapabilityService roleCapService = (RoleCapabilityService)getService();
-     roleCapService.delete(getUserSession(), "RoleCapability", id);
+
+     try {
+        roleCapService.delete(getUserSession(), "RoleCapability", id);
+     } catch (Exception e) {
+       System.out.println("RoleCapabilityResource::delete - exception: " + e);
+       System.out.flush();
+       return Response.serverError().entity("RoleCapabilityService Delete Failed").build();
+     }
 
      System.out.println("RoleCapabilityResource::delRoleCap - after service.delete");
      System.out.flush();
@@ -121,7 +135,15 @@ System.out.flush();
     System.out.flush();
 
     RoleCapabilityService roleCapService = (RoleCapabilityService)getService();
-    List<RoleCapability> listRCs = roleCapService.findFiltered(getUserSession(), "RoleCapability", new Filter());
+
+    List<RoleCapability> listRCs;
+    try {
+       listRCs = roleCapService.findFiltered(getUserSession(), "RoleCapability", new Filter());
+    } catch (Exception e) {
+       System.out.println("RoleCapabilityResource::getAllRoles - exception: " + e);
+       System.out.flush();
+       return (List<Role>)null;
+    }
 
     List<Role> listRoles = new ArrayList<Role>();
     for (RoleCapability rolecap : listRCs) {
@@ -146,7 +168,15 @@ System.out.flush();
     System.out.flush();
 
     RoleCapabilityService roleCapService = (RoleCapabilityService)getService();
-    List<RoleCapability> listRCs = roleCapService.findFiltered(getUserSession(), "RoleCapability", new Filter().withField("role", Role.fromValue(role)));
+
+    List<RoleCapability> listRCs;
+    try {
+       listRCs = roleCapService.findFiltered(getUserSession(), "RoleCapability", new Filter().withField("role", Role.fromValue(role)));
+    } catch (Exception e) {
+       System.out.println("RoleCapabilityResource::getCapsForRole - exception: " + e);
+       System.out.flush();
+       return (List<Capability>)null;
+    }
 
     List<Capability> listCaps = new ArrayList<Capability>();
     for (RoleCapability rolecap : listRCs) {

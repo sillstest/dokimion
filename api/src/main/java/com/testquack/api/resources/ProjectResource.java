@@ -39,7 +39,13 @@ public class ProjectResource extends BaseResource<Project> {
 
     @GET
     public Collection<Project> findFiltered() {
-        return getService().findFiltered(getUserSession(), null, initFilter(request));
+	try {
+           return getService().findFiltered(getUserSession(), null, initFilter(request));
+	} catch (Exception e) {
+	   System.out.println("ProjectResource::findFiltered - exception: " + e);
+	   System.out.flush();
+	   return (Collection<Project>)null;
+	}
     }
 
     @GET
@@ -66,7 +72,13 @@ System.out.flush();
 
            return null;
         }
-        return getService().findOne(getUserSession(), null, id);
+	try {
+           return getService().findOne(getUserSession(), null, id);
+	} catch (Exception e) {
+	   System.out.println("ProjectResource::findOne - exception: " + e);
+	   System.out.flush();
+	   return (Project)null;
+	}
     }
 
     @POST
@@ -80,7 +92,14 @@ System.out.flush();
 System.out.println("ProjectResource:create - project entity: " + entity);
 System.out.println("ProjectResource.create - getUserSession: " + getUserSession());
 System.out.flush();
-        return service.createProject(getUserSession(), entity);
+
+        try {
+           return service.createProject(getUserSession(), entity);
+	} catch (Exception e) {
+	   System.out.println("ProjectResource::create - exception: " + e);
+	   System.out.flush();
+	   return (Project)null;
+	}
     }
 
     @PUT
@@ -104,7 +123,14 @@ System.out.flush();
 
             return null;
         }
-        return getService().save(getUserSession(), null, entity);
+
+	try {
+           return getService().save(getUserSession(), null, entity);
+	} catch (Exception e) {
+	   System.out.println("ProjectResource::save - exception: " + e);
+	   System.out.flush();
+	   return (Project)null;
+	}
     }
 
 
@@ -128,8 +154,17 @@ System.out.flush();
 
             return null;
         }
-        getService().delete(getUserSession(), null, id);
-        return ok().build();
+
+	try {
+           getService().delete(getUserSession(), null, id);
+           return ok().build();
+	} catch (Exception e) {
+	   System.out.println("ProjectResource::delete - exception: " + e);
+	   System.out.flush();
+           return Response.serverError().entity("ProjectResource Delete Failed").build();
+	}
+
+
     }
 
 }

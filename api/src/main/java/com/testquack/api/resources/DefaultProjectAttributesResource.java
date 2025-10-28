@@ -66,7 +66,13 @@ public class DefaultProjectAttributesResource extends BaseResource<DefaultProjec
     System.out.flush();
 
     DefaultProjectAttributesService defaultProjAttribService = (DefaultProjectAttributesService)getService();
-    List<DefaultProjectAttributes> dpaList = defaultProjAttribService.findFiltered(getUserSession(), "DefaultProjectAttributes", new Filter().withField("project", project));
+    List<DefaultProjectAttributes> dpaList = null;
+    try {
+       dpaList = defaultProjAttribService.findFiltered(getUserSession(), "DefaultProjectAttributes", new Filter().withField("project", project));
+    } catch (Exception e) {
+       System.out.println("DefaultProjectAttributesResource::getAllDefaultProjectAttributes - exception: " + e);
+       System.out.flush();
+    }
 
     System.out.println("DefaultResource::getall - dpaList: " + dpaList);
     System.out.flush();
