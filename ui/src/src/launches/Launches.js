@@ -203,85 +203,38 @@ class Launches extends SubComponent {
       <div className="row">
         <div className="col-sm-3 launch-filter">
           <form>
-            <div class="form-group">
-              <span className="float-right">
-                <Link
-                  to={
-                    "/" +
-                    this.props.match.params.project +
-                    "/launches/statistics?" +
-                    Utils.filterToQuery(this.state.filter)
-                  }
-                >
-                  Statistics
-                </Link>
-              </span>
-              <label for="title">
-                <h5>Launch Name</h5>
-              </label>
-              <input
-                type="text"
-                class="form-control"
-                id="name"
-                name="name"
-                aria-describedby="Launch title"
-                placeholder="Launch title"
-                value={this.state.filter.like_name || ""}
-                onChange={e => this.handleFilterChange("like_name", e)}
-              />
-              <small id="titleHelp" class="form-text text-muted">
-                Find by partly matching Launch title
-              </small>
+            <div className="form-group">
+              <div className="header-container">
+                <label htmlFor="name">
+                  <h5>Launch Name</h5>
+                </label>
+                <span className="float-right">
+                  <Link
+                    to={
+                      "/" +
+                      this.props.match.params.project +
+                      "/launches/statistics?" +
+                      Utils.filterToQuery(this.state.filter)
+                    }
+                  >
+                    Statistics
+                  </Link>
+                 </span>
+               </div>
+                 <input
+                   type="text"
+                   className="form-control"
+                   id="name"
+                   name="name"
+                   aria-describedby="Launch title"
+                   placeholder="Launch title"
+                   value={this.state.filter.like_name || ""}
+                   onChange={e => this.handleFilterChange("like_name", e)}
+                 />
+                 <small id="titleHelp" className="form-text text-muted">
+                   Find by partly matching Launch title
+                 </small>
             </div>
-            <div class="form-group">
-              <label for="created">
-                <h5>Created Time</h5>
-              </label>
-              <div class="input-group mb-2">
-                <DatePicker
-                  id="from_createdTime"
-                  value={Utils.getDatepickerTime(this.state.filter.from_createdTime)}
-                  onChange={this.handleFromDateFilterChange}
-                  placeholder="Created after"
-                />
-                <DatePicker
-                  id="to_createdTime"
-                  value={Utils.getDatepickerTime(this.state.filter.to_createdTime)}
-                  onChange={this.handleToDateFilterChange}
-                  placeholder="Created before"
-                />
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="created">
-                <h5>Launcher</h5>
-              </label>
-              <div class="input-group mb-2">
-                <select
-                  id="launcher-select"
-                  className="form-control"
-                  onChange={e => this.handleFilterChange("launcherConfig.launcherId", e)}
-                >
-                  <option> </option>
-                  {this.state.launcherDescriptors.map(
-                    function (descriptor) {
-                      var selected = this.state.filter["launcherConfig.launcherId"] == descriptor.launcherId;
-                      if (selected) {
-                        return (
-                          <option value={descriptor.launcherId} selected>
-                            {descriptor.name}
-                          </option>
-                        );
-                      }
-                      return <option value={descriptor.launcherId}>{descriptor.name}</option>;
-                    }.bind(this),
-                  )}
-                </select>
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary" onClick={this.onFilter}>
-              Filter
-            </button>
           </form>
         </div>
         <div className="col-sm-9">
