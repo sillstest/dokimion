@@ -328,7 +328,6 @@ class ProjectSettings extends SubComponent {
         )}
 
         <div className="project-settings-section">
-          <h3>Launchers</h3>
           <form>
             <div className="row form-group">
               <label className="col-1 col-form-label">Environments</label>
@@ -377,11 +376,6 @@ class ProjectSettings extends SubComponent {
                 );
               }.bind(this),
             )}
-          </div>
-          <div className="row project-settings-launchers">
-            <button type="button" className="btn btn-primary" onClick={this.addLauncher}>
-              Add Launcher
-            </button>
           </div>
         </div>
 
