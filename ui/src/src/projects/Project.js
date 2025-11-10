@@ -72,14 +72,12 @@ class Project extends SubComponent {
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="project-header">
-          <h1>
+          <h1 className = "project-name">
             {this.state.project.name}
-            <span className="float-right">
-              <Link to={"/projects/" + this.state.project.id + "/settings"} className="project-title-settings-link">
-                <FontAwesomeIcon icon={faCogs} />
-              </Link>
-            </span>
-          </h1>
+	  </h1>
+          <Link to={"/projects/" + this.state.project.id + "/settings"} className="project-settings-link">
+            <FontAwesomeIcon icon={faCogs} />
+          </Link>
         </div>
         <div className="row">
           <div className="col-sm-6">

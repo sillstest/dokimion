@@ -298,9 +298,22 @@ h5:hover .edit-icon {
 }
 
 .project-header {
-    margin-top: 10px;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between; /* This positions items on opposite sides */
+  align-items: center;
+  width: 100%; /* Full width container */
 }
+
+.project-name {
+  margin: 0;
+}
+
+.project-settings-link {
+  font-size: 1.5rem;  /* Adjust the icon size as needed */
+  text-decoration: none;
+  color: inherit; /* Makes sure the link matches the text color */
+}
+
 
 .organization-header {
     margin-top: 10px;
