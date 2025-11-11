@@ -6,7 +6,7 @@ import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 import React, { Component } from "react";
 import LaunchForm from "../launches/LaunchForm";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import Select from "react-select";
 import qs from "qs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

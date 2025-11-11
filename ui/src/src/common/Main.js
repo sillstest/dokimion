@@ -1,5 +1,6 @@
 import React, { Component } from "react";
-import { Switch, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+
 import TestCases from "../testcases/TestCases";
 import TestSuites from "../testsuites/TestSuites";
 import Projects from "../projects/Projects";
@@ -28,13 +29,13 @@ import Redirect from "../common/Redirect";
 import ForgotPassword from "../user/ForgotPassword";
 
 class Main extends Component {
-  onProjectChange(project) {
+  onProjectChange = (project) => {
     this.props.onProjectChange(project);
-  }
+  };
 
-  onSessionChange(session) {
+  onSessionChange = (session) => {
     this.props.onSessionChange(session);
-  }
+  };
 
   render() {
     return (
@@ -48,158 +49,136 @@ class Main extends Component {
           </div>
         </div>
 
-        <Switch>
-          <Route exact path="/" component={Projects} />
-          <Route exact path="/projects" component={Projects} />
-          <Route exact path="/projects/new" component={ProjectForm} />
+        <Routes>
+          <Route path="/" element={<Projects />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/new" element={<ProjectForm />} />
 
-          <Route exact
+          <Route
             path="/orgselect"
-            render={props =>(
-                <OrgSelect {...props} onSessionChange={this.onSessionChange.bind(this)} />
-                )}
+            element={<OrgSelect onSessionChange={this.onSessionChange} />}
           />
-          <Route exact path="/organizations/new" component={OrganizationForm} />
-          <Route
-              exact
-              path="/organizations/edit"
-              render={props => <OrganizationForm {...props} editCurrent="true" />}
-            />
 
-          <Route exact path="/auth" component={Auth} />
+          <Route path="/organizations/new" element={<OrganizationForm />} />
           <Route
-              path="/idpauth"
-              render={props => (
-                <IdpAuth {...props} onSessionChange={this.onSessionChange.bind(this)}/>
-              )}
-            />
+            path="/organizations/edit"
+            element={<OrganizationForm editCurrent="true" />}
+          />
+
+          <Route path="/auth" element={<Auth />} />
+          <Route
+            path="/idpauth"
+            element={<IdpAuth onSessionChange={this.onSessionChange} />}
+          />
 
           <Route
-            exact
             path="/user/create-redirect"
-            render={props => <Redirect {...props} requestUrl={"user/create-redirect"} /
->}
+            element={<Redirect requestUrl="user/create-redirect" />}
           />
-
           <Route
-            exact
             path="/user/all-users-redirect"
-            render={props => <Redirect {...props} requestUrl={"user/all-redirect"} />}
+            element={<Redirect requestUrl="user/all-redirect" />}
           />
           <Route
-            exact
             path="/user/change-password-redirect/:login"
-            render={props => <Redirect {...props} requestUrl={"user/change-password-redirect?login=" + props.match.params["login"] || ""} />}
+            element={<Redirect />}
           />
 
-          <Route exact path="/user/create" component={CreateUser} />
+          <Route path="/user/create" element={<CreateUser />} />
           <Route
-            exact
-            path="/user/"
-            render={props => <Users {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            path="/user"
+            element={<Users onProjectChange={this.onProjectChange} />}
           />
-
-          <Route exact path="/user/delete" component={DeleteUser} />
+          <Route path="/user/delete" element={<DeleteUser />} />
           <Route
-            exact
-            path="/user/"
-            render={props => <Users {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            path="/user/profile/:profileId"
+            element={<Profile />}
           />
-
-
-
-          <Route exact path="/user/profile/:profileId" component={Profile} />
-          <Route exact path="/user/changepass/:profileId" component={ChangePassword} />
+          <Route
+            path="/user/changepass/:profileId"
+            element={<ChangePassword />}
+          />
 
           <Route
             path="/login"
-            render={props => (
+            element={
               <Login
-                {...props}
-                onProjectChange={this.onProjectChange.bind(this)}
-                onSessionChange={this.onSessionChange.bind(this)}
+                onProjectChange={this.onProjectChange}
+                onSessionChange={this.onSessionChange}
               />
-            )}
+            }
           />
-          <Route
-            path="/forgot_password"
-            render={props => (
-              <ForgotPassword
-              />
-            )}
-          />
+          <Route path="/forgot_password" element={<ForgotPassword />} />
+
           <Route
             path="/:project/testcases/new"
-            render={props => <TestCaseForm {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            element={
+              <TestCaseForm onProjectChange={this.onProjectChange} />
+            }
           />
           <Route
-            exact
             path="/projects/:project"
-            render={props => <Project {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Project onProjectChange={this.onProjectChange} />}
           />
           <Route
-            exact
             path="/projects/:project/settings"
-            render={props => 
-		    <ProjectSettings 
-		      {...props} 
-		      onProjectChange={this.onProjectChange.bind(this)}
-                      onSessionChange={this.onSessionChange.bind(this)}
-		    />}
+            element={
+              <ProjectSettings
+                onProjectChange={this.onProjectChange}
+                onSessionChange={this.onSessionChange}
+              />
+            }
           />
           <Route
             path="/:project/testcase/:testcase"
-            render={
-              props => 
-                <TestCase {...props} onProjectChange={this.onProjectChange.bind(this)} onSessionChange={this.onSessionChange.bind(this)} />}
+            element={
+              <TestCase
+                onProjectChange={this.onProjectChange}
+                onSessionChange={this.onSessionChange}
+              />
+            }
           />
           <Route
-            exact
             path="/:project/testcases"
-            render={props => <TestCases {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<TestCases onProjectChange={this.onProjectChange} />}
           />
           <Route
             path="/:project/testsuites"
-            render={props => <TestSuites {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<TestSuites onProjectChange={this.onProjectChange} />}
           />
           <Route
-            exact
-            path="/:project/launches/"
-            render={props => <Launches {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            path="/:project/launches"
+            element={<Launches onProjectChange={this.onProjectChange} />}
           />
           <Route
-            exact
-            path="/:project/launches/statistics/"
-            render={props => <LaunchesStatistics {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            path="/:project/launches/statistics"
+            element={<LaunchesStatistics onProjectChange={this.onProjectChange} />}
           />
           <Route
-            exact
-            path="/:project/launches/heatmap/"
-            render={props => <LaunchTestcasesHeatmap {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            path="/:project/launches/heatmap"
+            element={<LaunchTestcasesHeatmap onProjectChange={this.onProjectChange} />}
           />
           <Route
-            exact
             path="/:project/launch/:launchId"
-            render={props => <Launch {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Launch onProjectChange={this.onProjectChange} />}
           />
           <Route
-            exact
             path="/:project/launch/:launchId/:testcaseUuid"
-            render={props => <Launch {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Launch onProjectChange={this.onProjectChange} />}
           />
           <Route
             path="/:project/attributes"
-            render={props => <Attributes {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Attributes onProjectChange={this.onProjectChange} />}
           />
           <Route
-            exact
             path="/:project/audit"
-            render={props => <Events {...props} onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Events onProjectChange={this.onProjectChange} />}
           />
-        </Switch>
+        </Routes>
       </main>
     );
   }
 }
 
 export default Main;
+

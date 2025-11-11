@@ -7,7 +7,7 @@ import Results from "../testcases/Results";
 import Comments from "../comments/Comments";
 import EventsWidget from "../audit/EventsWidget";
 import { Link } from "react-router-dom";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import $ from "jquery";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";

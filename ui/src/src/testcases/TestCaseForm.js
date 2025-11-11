@@ -1,6 +1,6 @@
 import React from "react";
 import SubComponent from "../common/SubComponent";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import CreatableSelect from "react-select/creatable";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";

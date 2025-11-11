@@ -1,14 +1,16 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
+import { useLocation } from "react-router-dom";
 import qs from "qs";
 import Backend from "../services/backend";
+
 class Auth extends Component {
   render() {
     return <div></div>;
   }
 
   componentDidMount() {
-    var params = qs.parse(this.props.location.search.substring(1));
+    var params = qs.parse(this.props.router.location.search.substring(1));
     Backend.get("user/login-redirect")
       .then(response => {
         var url = response.url || "/login";

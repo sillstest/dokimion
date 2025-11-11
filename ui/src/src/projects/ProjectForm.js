@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
@@ -39,7 +39,8 @@ class ProjectForm extends Component {
   handleSubmit(event) {
     Backend.post("project", this.state.project)
       .then(response => {
-        this.props.history.push("/projects/" + response.id);
+	const { navigate } = this.props.router;
+	navigate("/projects/" + response.id);
       })
       .catch(error => {
         this.setState({errorMessage: "handleSubmit::Couldn't save project, error: " + error});

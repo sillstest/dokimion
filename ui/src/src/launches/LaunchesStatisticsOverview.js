@@ -1,5 +1,5 @@
 import React from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import SubComponent from "../common/SubComponent";
 import LaunchesTrendWidget from "../launches/LaunchesTrendWidget";
 import LaunchesByStatusesPieWidget from "../launches/LaunchesByStatusesPieWidget";

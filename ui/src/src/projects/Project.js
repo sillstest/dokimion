@@ -5,6 +5,7 @@ import ProjectScratchpadWidget from "../projects/ProjectScratchpadWidget";
 import LaunchesWidget from "../launches/LaunchesWidget";
 import LaunchesTrendWidget from "../launches/LaunchesTrendWidget";
 import { Link } from "react-router-dom";
+import { withRouter } from "../common/withRouter";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCogs } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
@@ -34,12 +35,12 @@ class Project extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
-    this.state.project.id = this.props.match.params.project;
+    this.state.project.id = this.props.router.params.project;
     this.getProject();
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-    var nextProjectId = nextProps.match.params.project;
+    var nextProjectId = nextProps.router.params.project;
     // eslint-disable-next-line eqeqeq
     if (nextProjectId && this.state.project.id != nextProjectId) {
       this.state.project.id = nextProjectId;
@@ -136,4 +137,4 @@ class Project extends SubComponent {
   }
 }
 
-export default Project;
+export default withRouter(Project);

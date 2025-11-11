@@ -1,5 +1,5 @@
 import React from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import SubComponent from "../common/SubComponent";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";

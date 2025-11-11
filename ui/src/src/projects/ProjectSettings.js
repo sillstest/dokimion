@@ -37,7 +37,7 @@ class ProjectSettings extends SubComponent {
       errorMessage: "",
       session: {person: {}},
     };
-    this.state.projectId = this.props.match.params.project;
+    this.state.projectId = this.props.router.params.project;
     this.changeUsers = this.changeUsers.bind(this);
     this.changeEnvironments = this.changeEnvironments.bind(this);
     this.submit = this.submit.bind(this);

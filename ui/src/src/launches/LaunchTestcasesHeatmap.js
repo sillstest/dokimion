@@ -1,6 +1,6 @@
 /* eslint-disable eqeqeq */
 import React from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import { FadeLoader } from "react-spinners";

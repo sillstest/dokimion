@@ -1,5 +1,6 @@
 import React from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
+import { useParams } from "react-router-dom";
 import SubComponent from "../common/SubComponent";
 import * as Utils from '../common/Utils';
 import Backend from "../services/backend";
@@ -10,7 +11,8 @@ class ChangePassword extends SubComponent {
 
   constructor(props) {
     super(props);
-    this.state.profileId = this.props.match.params.profileId;
+
+    this.state.profileId = this.props.router.params.profileId;
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.getSession = this.getSession.bind(this);

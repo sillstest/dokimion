@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
-import { withRouter } from "react-router";
 import * as UserSession from "../user/UserSession";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import {Helmet} from "react-helmet";
+import { withRouter } from "./withRouter";
 
 class Header extends Component {
   constructor(props) {

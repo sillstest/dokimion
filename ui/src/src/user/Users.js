@@ -1,5 +1,5 @@
 import React from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import SubComponent from "../common/SubComponent";
 import Pager from "../pager/Pager";
 import { Link } from "react-router-dom";
@@ -36,7 +36,7 @@ class Users extends SubComponent {
   componentDidMount() {
     super.componentDidMount();
 
-    this.state.filter = Object.assign(this.state.filter, Utils.queryToFilter(this.props.location.search.substring(1)));
+    this.state.filter = Object.assign(this.state.filter, Utils.queryToFilter(this.props.router.location.search.substring(1)));
     this.getUsers();
     this.getPager();
   }

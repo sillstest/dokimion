@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import qs from "qs";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
@@ -66,7 +66,7 @@ class Login extends Component {
 	  if (response.ok == false) {
 	     this.setState({errorMessage: "Unauthorized user id / password combination"});
 	  } else {
-             var params = qs.parse(this.props.location.search.substring(1));
+             var params = qs.parse(this.props.router.location.search.substring(1));
              var retpath = decodeURIComponent(params.retpath || "");
              var decodedReptath = decodeURI(retpath);
              if (decodedReptath === "") {

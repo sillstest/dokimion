@@ -1,5 +1,6 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
+import { useLocation } from "react-router-dom";
 import qs from "qs";
 import Backend from "../services/backend";
 class IdpAuth extends Component {
@@ -12,7 +13,7 @@ class IdpAuth extends Component {
     }
 
   componentDidMount() {
-    Backend.get("user/auth?" + this.props.location.search.substring(1))
+    Backend.get("user/auth?" + this.props.router.location.search.substring(1))
       .then(response => {
         this.onSessionChange(response);
         if (response.metainfo && response.metainfo.organizationsEnabled){
