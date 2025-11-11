@@ -1,5 +1,9 @@
 /* eslint-disable eqeqeq */
 /* eslint-disable react/no-direct-mutation-state */
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import * as Utils from "../common/Utils";
+import ControlledPopup from "../common/ControlledPopup";
+import Backend from "../services/backend";
 import React, { Component } from "react";
 import LaunchForm from "../launches/LaunchForm";
 import { withRouter } from "react-router";
@@ -8,9 +12,7 @@ import qs from "qs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle, faFilter, faSave, faPlay, faPlus, faBars, faFileCsv } from "@fortawesome/free-solid-svg-icons";
 import $ from "jquery";
-import * as Utils from "../common/Utils";
-import ControlledPopup from "../common/ControlledPopup";
-import Backend from "../services/backend";
+window.$ = window.jQuery = $;
 
 class TestCasesFilter extends Component {
   constructor(props) {
