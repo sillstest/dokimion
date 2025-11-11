@@ -233,21 +233,18 @@ class AttributeForm extends Component {
                   </div>
                 );
               })}
-              {/* CHANGED: Only show "Add value" button when adding a new attribute (not editing) */}
-              {!this.state.edit && (
-                <div className="form-group row">
-                  <div className="col-sm-8 d-flex align-items-start">
-                    <button
-                      type="button"
-                      className="btn btn-outline-primary"
-                      style={{ marginLeft: '-0.5rem' }}  // fine-tunes alignment
-                      onClick={this.addValue}
-                     >
-                       Add value
-                    </button>
-                  </div>
+              <div className="form-group row">
+                <div className="col-sm-8 d-flex align-items-start">
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary"
+                    style={{ marginLeft: '-0.5rem' }}  // fine-tunes alignment
+                    onClick={this.addValue}
+                   >
+                     Add value
+                  </button>
                 </div>
-	      )}
+              </div>
             </form>
           </div>
           <div className="modal-footer">
