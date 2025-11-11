@@ -1,15 +1,17 @@
 /* eslint-disable eqeqeq */
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import { withRouter } from "react-router";
 import CreatableSelect from "react-select/creatable";
 import LauncherForm from "../launches/LauncherForm";
-import $ from "jquery";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+import $ from 'jquery';
+window.$ = window.jQuery = $;
 
 class LaunchForm extends SubComponent {
   constructor(props) {
@@ -229,7 +231,7 @@ class LaunchForm extends SubComponent {
      this.setState(this.state);
   }
 
-  launchModalDismiss() {
+  launchModalDismiss = () => {
      //Updated Issue 92
      if(typeof this.state.modalName === 'string' && this.state.modalName.length > 0 && this.state.modalName ==='launch-modal'){
        $("#launch-modal").modal("hide");
