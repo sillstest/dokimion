@@ -1,6 +1,7 @@
 /* eslint-disable eqeqeq */
 import React from "react";
 import { withRouter } from "../common/withRouter";
+import { useParams } from "react-router-dom";
 import SubComponent from "../common/SubComponent";
 import TestCase from "../testcases/TestCase";
 import LaunchAttributeStatsChart from "../launches/LaunchAttributeStatsChart";
@@ -70,10 +71,10 @@ class Launch extends SubComponent {
     this.getLaunch = this.getLaunch.bind(this);
     this.buildTree = this.buildTree.bind(this);
     this.onTestcaseStateChanged = this.onTestcaseStateChanged.bind(this);
-    if (this.props.match.params.testcaseUuid) {
-      this.state.selectedTestCase = { uuid: this.props.match.params.testcaseUuid };
+    if (this.props.router.params.testcaseUuid) {
+      this.state.selectedTestCase = { uuid: this.props.router.params.testcaseUuid };
     }
-    this.state.projectId = this.props.match.params.project;
+    this.state.projectId = this.props.router.params.project;
     this.showLaunchStats = this.showLaunchStats.bind(this);
     this.buildAttributesStatusMap = this.buildAttributesStatusMap.bind(this);
     this.addUnknownAttributesToAttributesStatusMap = this.addUnknownAttributesToAttributesStatusMap.bind(this);
@@ -110,7 +111,7 @@ class Launch extends SubComponent {
 
   getLaunch(buildTree) {
     // console.log("In getLaunch: " + buildTree + " refresh: "  + this.state.refreshTree);
-    Backend.get(this.state.projectId + "/launch/" + this.props.match.params.launchId)
+    Backend.get(this.state.projectId + "/launch/" + this.props.router.params.launchId)
       .then(response => {
         this.state.launch = response;
         this.state.configAttributePairs = response.configAttributePairs;
@@ -172,7 +173,7 @@ class Launch extends SubComponent {
             return testCase.uuid === id;
           },
         );
-        this.props.history.push("/" + this.state.projectId + "/launch/" + this.state.launch.id + "/" + id);
+        this.props.router.navigate("/" + this.state.projectId + "/launch/" + this.state.launch.id + "/" + id);
         this.setState(this.state);
       }.bind(this),
     );
@@ -411,7 +412,7 @@ class Launch extends SubComponent {
 
   getUpdatedLaunch(){
     //console.log("In updated launchh : " + this.state.projectId + "/launch/" + this.props.match.params.launchId);
-    Backend.get(this.state.projectId + "/launch/" + this.props.match.params.launchId)
+    Backend.get(this.state.projectId + "/launch/" + this.props.router.params.launchId)
     .then(response => {
       this.state.launch = response;
       this.state.refreshTree=false;
@@ -548,7 +549,7 @@ class Launch extends SubComponent {
                 testcase={this.state.selectedTestCase}
                 projectAttributes={this.state.projectAttributes}
                 readonly={true}
-                launchId={this.props.match.params.launchId}
+                launchId={this.props.router.params.launchId}
                 projectId={this.state.projectId}
                 callback={this.onTestcaseStateChanged}
               />

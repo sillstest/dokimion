@@ -4,6 +4,7 @@ import React from "react";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import { withRouter } from "../common/withRouter";
+import { useParams } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
 import LauncherForm from "../launches/LauncherForm";
 import * as Utils from "../common/Utils";
@@ -70,7 +71,7 @@ class LaunchForm extends SubComponent {
   }
 
   getAttributes() {
-    Backend.get(this.props.match.params.project + "/attribute")
+    Backend.get(this.props.router.params.project + "/attribute")
       .then(response => {
 
         this.state.projectAttributes = []
@@ -125,9 +126,9 @@ class LaunchForm extends SubComponent {
     this.state.launch.testSuite.filter.filters.forEach(function (filter) {
       delete filter.title;
     });
-    var url = this.props.match.params.project + "/launch/";
+    var url = this.props.router.params.project + "/launch/";
     if (this.state.restart) {
-      url = this.props.match.params.project + "/launch/" + this.state.launch.id + "/restart";
+      url = this.props.router.params.project + "/launch/" + this.state.launch.id + "/restart";
       if (this.state.failedOnly) {
         url += "?failedOnly=true";
       }
@@ -182,7 +183,7 @@ class LaunchForm extends SubComponent {
     super.componentDidMount();
     this.getAttributes();
 
-    Backend.get("project/" + this.props.match.params.project)
+    Backend.get("project/" + this.props.router.params.project)
       .then(response => {
         this.state.project = response;
         this.setState(this.state);
@@ -247,7 +248,7 @@ class LaunchForm extends SubComponent {
         <div className="modal-body" id="launch-created">
           <Link
             onClick={this.launchModalDismiss}
-            to={"/" + this.props.match.params.project + "/launch/" + this.state.launch.id}
+            to={"/" + this.props.router.params.project + "/launch/" + this.state.launch.id}
             className="dropdown-item"
           >
             Go To Launch
@@ -259,7 +260,7 @@ class LaunchForm extends SubComponent {
         <div className="modal-body" id="launch-created">
           <Link
             onClick={this.launchModalDismiss}
-            to={"/" + this.props.match.params.project + "/launches?launchGroup=" + this.state.launch.launchGroup}
+            to={"/" + this.props.router.params.project + "/launches?launchGroup=" + this.state.launch.launchGroup}
             className="dropdown-item"
           >
             Go To Launch Group
