@@ -1,6 +1,7 @@
 /* eslint-disable eqeqeq */
 /* eslint-disable react/no-direct-mutation-state */
 import React, { Component } from "react";
+import { withRouter } from "../common/withRouter";
 import $ from "jquery";
 import * as bootstrap from 'bootstrap';
 import * as Utils from "../common/Utils";
@@ -40,6 +41,11 @@ class LaunchTestcaseControls extends Component {
   }
 
   handleStatusSubmit(status, event, dialogToDismiss) {
+
+if (this.props.projectId) {
+   var i = 0;
+}
+
     Backend.post(
       this.props.projectId + "/launch/" + this.state.launchId + "/" + this.state.testcase.uuid + "/status/" + status,
       this.state.failureDetails,
@@ -104,9 +110,15 @@ class LaunchTestcaseControls extends Component {
           <button class={this.getStatusAlertClass()} role="alert">
             {this.state.testcase.launchStatus}
           </button>
-          <button type="button" class="btn" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
-	        X
-          </button>
+          {this.state.testcase.launchStatus && (
+            <button
+              type="button"
+              className="btn"
+              onClick={e => this.handleStatusSubmit("RUNNABLE", e)}
+            >
+              X
+            </button>
+          )}
         </div>
       );
     }
@@ -223,4 +235,4 @@ class LaunchTestcaseControls extends Component {
   }
 }
 
-export default LaunchTestcaseControls;
+export default withRouter(LaunchTestcaseControls);

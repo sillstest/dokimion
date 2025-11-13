@@ -8,6 +8,7 @@ import Comments from "../comments/Comments";
 import EventsWidget from "../audit/EventsWidget";
 import { Link } from "react-router-dom";
 import { withRouter } from "../common/withRouter";
+import { useParams } from "react-router-dom";
 import $ from "jquery";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
@@ -139,9 +140,9 @@ class TestCase extends SubComponent {
   if (this.props.testcaseId) {
     projectId = this.props.projectId;
     testcaseId = this.props.testcaseId;
-  } else if (this.props.match) {
-    projectId = this.props.match.params.project;
-    testcaseId = this.props.match.params.testcase;
+  } else if (this.props.router) {
+    projectId = this.props.router.params.project;
+    testcaseId = this.props.router.params.testcase;
   }
   
   this.projectId = projectId;

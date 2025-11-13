@@ -1,4 +1,6 @@
 import React from "react";
+import { useParams } from "react-router-dom";
+import { withRouter } from "../common/withRouter";
 import SubComponent from "../common/SubComponent";
 import TestCaseForm from "../testcases/TestCaseForm";
 import TestCasesFilter from "../testcases/TestCasesFilter";
@@ -82,7 +84,7 @@ class TestCases extends SubComponent {
     delete this.state.filter.skip
     delete this.state.filter.limit
     Backend.get(
-      this.props.match.params.project + "/testcase/count?" + this.getFilterApiRequestParams(this.state.filter),
+      this.props.router.params.project + "/testcase/count?" + this.getFilterApiRequestParams(this.state.filter),
       ).then(response => {
         //Added for Issue 28
         this.state.totalNoofTestCase = response;
@@ -113,7 +115,7 @@ class TestCases extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
-    var params = qs.parse(this.props.location.search.substring(1));
+    var params = qs.parse(this.props.router.location.search.substring(1));
     if (params.testcase) {
       this.state.selectedTestCase = { id: params.testcase };
       this.setState(this.state);
@@ -125,7 +127,7 @@ class TestCases extends SubComponent {
       this.setState(this.state);
     }
 
-    Backend.get(this.props.match.params.project + "/attribute")
+    Backend.get(this.props.router.params.project + "/attribute")
       .then(response => {
         this.state.projectAttributes = response.
            filter(function(p) { return p.type != 'undefined'}).
@@ -166,7 +168,7 @@ class TestCases extends SubComponent {
   }
 
   onFilter(filter, onResponse) {
-    var params = qs.parse(this.props.location.search.substring(1));
+    var params = qs.parse(this.props.router.location.search.substring(1));
     if (params.testcase) {
       this.state.selectedTestCase = { id: params.testcase };
     }
@@ -187,7 +189,7 @@ class TestCases extends SubComponent {
     this.state.loading = true;
     this.setState(this.state);
     
-    Backend.get(this.props.match.params.project + "/testcase/tree?" + this.getFilterApiRequestParams(filter))
+    Backend.get(this.props.router.params.project + "/testcase/tree?" + this.getFilterApiRequestParams(filter))
       .then(response => {
         this.state.totolNoofTestCase = response.count;
         this.state.testcasesTree = response;
@@ -207,13 +209,13 @@ class TestCases extends SubComponent {
         this.setState(this.state);
       });
     if (!params.testSuite) {
-      this.props.history.push("/" + this.props.match.params.project + "/testcases?" + this.getQueryParams(filter));
+      this.props.router.navigate("/" + this.props.router.params.project + "/testcases?" + this.getQueryParams(filter));
     }
   }
 
   updateCount() {
     Backend.get(
-      this.props.match.params.project + "/testcase/count?" + this.getFilterApiRequestParams(this.state.filter),
+      this.props.router.params.project + "/testcase/count?" + this.getFilterApiRequestParams(this.state.filter),
     )
       .then(response => {
         this.state.count = response;
@@ -228,7 +230,7 @@ class TestCases extends SubComponent {
     this.state.filter.skip = (this.state.filter.skip || 0) + this.testCasesFetchLimit;
     //Added for Issue 28
     this.state.filter.limit = this.testCasesFetchLimit;
-    Backend.get(this.props.match.params.project + "/testcase?" + this.getFilterApiRequestParams(this.state.filter))
+    Backend.get(this.props.router.params.project + "/testcase?" + this.getFilterApiRequestParams(this.state.filter))
       .then(response => {
         if (response) {
           this.state.testcasesTree.testCases = this.state.testcasesTree.testCases.concat(response);
@@ -279,8 +281,8 @@ class TestCases extends SubComponent {
     this.state.selectedTestCase = Utils.getTestCaseFromTree(id, this.state.testcasesTree, function (testCase, id) {
       return testCase.id === id;
     });
-    this.props.history.push(
-      "/" + this.props.match.params.project + "/testcases?" + this.getQueryParams(this.state.filter),
+    this.props.router.navigate(
+      "/" + this.props.router.params.project + "/testcases?" + this.getQueryParams(this.state.filter),
     );
     this.setState(this.state);
   }
@@ -406,7 +408,7 @@ class TestCases extends SubComponent {
 
   handleSubmit(testcase) {
 
-    Backend.put(this.props.match.params.project + "/testcase/", testcase)
+    Backend.put(this.props.router.params.project + "/testcase/", testcase)
       .then(response => {
         testcase = response;
         console.log("After DB update : " + JSON.stringify(testcase));
@@ -418,7 +420,7 @@ class TestCases extends SubComponent {
   }
   
   handleBulkAddAttributes(filterAttribs){
-    let projectId = this.props.match.params.project;
+    let projectId = this.props.router.params.project;
     let Tcs = this.state.testcasesTree.testCases.map(tc => tc.id);
     let NotSelected = this.state.filter.notFields.id;
   
@@ -507,8 +509,8 @@ class TestCases extends SubComponent {
       })})
      
     this.setState({errorMessage: "handleBulkAddAttributes::Added Attributes in selected Tescases"});
-    this.props.history.push(
-      "/" + this.props.match.params.project +"/testcases"
+    this.props.router.navigate(
+      "/" + this.props.router.params.project +"/testcases"
    );
   
    return "OK";
@@ -518,7 +520,7 @@ class TestCases extends SubComponent {
   handleBulkRemoveAttributes(filterAttribs){
     //console.log("Entered here in handleBulkRemoveAttributes" + JSON.stringify(filterAttribs));
   
-    let projectId = this.props.match.params.project;
+    let projectId = this.props.router.params.project;
     let Tcs = this.state.testcasesTree.testCases.map(tc => tc.id);
     let NotSelected = this.state.filter.notFields.id;
     let selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId===id));
@@ -584,8 +586,8 @@ class TestCases extends SubComponent {
   
     
     this.setState({errorMessage: "handleBulkRemoveAttributes::Removed Attributes in selected Tescases"});
-    this.props.history.push(
-      "/" + this.props.match.params.project +"/testcases"
+    this.props.router.navigate(
+      "/" + this.props.router.params.project +"/testcases"
     );
     return "OK";
   }
@@ -593,7 +595,7 @@ class TestCases extends SubComponent {
 //Added for Issue 84
 handleLockAllTestCases(){
   console.log("Entered here in the handleLockAllTestcases in Testcases.js");
-  Backend.post( this.props.match.params.project +"/testcase/lockall")
+  Backend.post( this.props.router.params.project +"/testcase/lockall")
   .then(response => {
     console.log("Locked all testcases : " + JSON.stringify(response));
     // if(response.status === 200 ){
@@ -603,14 +605,14 @@ handleLockAllTestCases(){
   .catch(error => {
     this.setState({errorMessage: "handleLockAllTestCases::Couldn't lock all testcases"});
   });
-  this.props.history.push(
-    "/" + this.props.match.params.project +"/testcases"
+  this.props.router.navigate(
+    "/" + this.props.router.params.project +"/testcases"
   );
 }
 
 handleUnLockAllTestCases(){
   console.log("Entered here in the handleUnLockAllTestcases in Testcases.js");
-  Backend.post( this.props.match.params.project +"/testcase/unlockall")
+  Backend.post( this.props.router.params.project +"/testcase/unlockall")
   .then(response => {
     console.log("UnLocked all testcases : " + JSON.stringify(response));
     // if(response.status === 200 ){
@@ -620,8 +622,8 @@ handleUnLockAllTestCases(){
   .catch(error => {
     this.setState({errorMessage: "handleUnLockAllTestCases::Couldn't unlock all testcases"});
   });
-  this.props.history.push(
-    "/" + this.props.match.params.project +"/testcases"
+  this.props.router.navigate(
+    "/" + this.props.router.params.project +"/testcases"
   );
   
 }
@@ -635,7 +637,7 @@ handleUnLockAllTestCases(){
           <TestCasesFilter
             projectAttributes={this.state.projectAttributes}
             onFilter={this.onFilter}
-            project={this.props.match.params.project}
+            project={this.props.router.params.project}
             handleBulkAddAttributes={this.handleBulkAddAttributes}
             handleBulkRemoveAttributes={this.handleBulkRemoveAttributes}
             handleLockAllTestCases={this.handleLockAllTestCases}
@@ -653,7 +655,7 @@ handleUnLockAllTestCases(){
             aria-hidden="true"
           >
             <TestCaseForm
-              project={this.props.match.params.project}
+              project={this.props.router.params.project}
               testcase={this.state.testcaseToEdit}
               projectAttributes={this.state.projectAttributes}
               onTestCaseAdded={this.onTestCaseAdded}
@@ -682,7 +684,7 @@ handleUnLockAllTestCases(){
           <div id="testCase" className="testcase-side">
             {this.state.selectedTestCase && this.state.selectedTestCase.id && (
               <TestCase
-                projectId={this.props.match.params.project}
+                projectId={this.props.router.params.project}
                 projectAttributes={this.state.projectAttributes}
                 testcaseId={this.state.selectedTestCase.id}
               />
@@ -694,4 +696,4 @@ handleUnLockAllTestCases(){
   }
 }
 
-export default TestCases;
+export default withRouter(TestCases);

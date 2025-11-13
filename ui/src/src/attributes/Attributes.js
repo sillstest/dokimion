@@ -6,6 +6,7 @@ import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 // REMOVED: import $ from "jquery"; - No longer needed for modal control
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
+import { withRouter } from "../common/withRouter";
 
 class Attributes extends SubComponent {
   constructor(props) {
@@ -83,7 +84,7 @@ class Attributes extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
-    Backend.get(this.props.match.params.project + "/attribute")
+    Backend.get(this.props.router.params.project + "/attribute")
       .then(response => {
         this.state.loading = false;
         const newState = Object.assign({}, this.state, {
@@ -142,7 +143,7 @@ class Attributes extends SubComponent {
             >
               <div onClick={(e) => e.stopPropagation()}> {/* ADDED: Prevent clicks inside dialog from closing modal */}
                 <AttributeForm
-                  project={this.props.match.params.project}
+                  project={this.props.router.params.project}
                   projectAttributes={this.state.attributes}
                   attribute={this.state.attributeToEdit}
                   onAttributeRemoved={this.onAttributeRemoved}
@@ -159,4 +160,4 @@ class Attributes extends SubComponent {
   }
 }
 
-export default Attributes;
+export default withRouter(Attributes);

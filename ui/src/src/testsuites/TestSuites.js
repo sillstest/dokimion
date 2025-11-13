@@ -8,6 +8,7 @@ import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import $ from "jquery";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
+import { withRouter } from "../common/withRouter";
 
 class TestSuites extends SubComponent {
   testSuiteToRemove = null;
@@ -34,7 +35,7 @@ class TestSuites extends SubComponent {
   }
 
   getTestSuites() {
-    Backend.get(this.props.match.params.project + "/testsuite")
+    Backend.get(this.props.router.params.project + "/testsuite")
       .then(response => {
         this.state.testSuites = response;
         this.state.testSuitesToDisplay = this.state.testSuites.slice();
@@ -67,7 +68,7 @@ class TestSuites extends SubComponent {
   }
 
   removeTestSuite(event) {
-    Backend.delete(this.props.match.params.project + "/testsuite/" + this.testSuiteToRemove)
+    Backend.delete(this.props.router.params.project + "/testsuite/" + this.testSuiteToRemove)
       .then(response => {
         // eslint-disable-next-line eqeqeq
         this.state.testSuites = this.state.testSuites.filter(testSuite => testSuite.id != this.testSuiteToRemove);
@@ -116,7 +117,7 @@ class TestSuites extends SubComponent {
                         </div>
                       </div>
                       <p className="card-text">
-                        <Link to={"/" + this.props.match.params.project + "/testcases?testSuite=" + testSuite.id}>
+                        <Link to={"/" + this.props.router.params.project + "/testcases?testSuite=" + testSuite.id}>
                           View
                         </Link>
                       </p>
@@ -160,4 +161,4 @@ class TestSuites extends SubComponent {
   }
 }
 
-export default TestSuites;
+export default withRouter(TestSuites);

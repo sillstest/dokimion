@@ -1,6 +1,7 @@
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import { withRouter } from "../common/withRouter";
+import { useParams } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
@@ -50,7 +51,7 @@ class TestCaseForm extends SubComponent {
   }
 
   handleSubmit(event) {
-    Backend.post(this.props.match.params.project + "/testcase/", this.state.testcase)
+    Backend.post(this.props.router.params.project + "/testcase/", this.state.testcase)
       .then(response => {
         this.onTestCaseAdded(response);
       })
@@ -82,7 +83,7 @@ class TestCaseForm extends SubComponent {
   loadDefaultProjectAttributes() {
 
     Backend.get("/defaultprojectattributes/getalldefaultprojattribs/" + 
-                 this.props.match.params.project + "?" + 
+                 this.props.router.params.project + "?" + 
                  Utils.filterToQuery(this.state.defaultProjectAttributesFilter))
       .then(response => {
          this.state.defaultProjectAttributes = response;
@@ -133,7 +134,7 @@ class TestCaseForm extends SubComponent {
     super.componentDidMount();
     this.state.projectAttributes = this.props.projectAttributes || [];
     if (this.props.id) {
-      Backend.get(this.props.match.params.project + "/testcase/" + this.props.id)
+      Backend.get(this.props.router.params.project + "/testcase/" + this.props.id)
         .then(response => {
           this.state.testcase = response;
         })
@@ -162,7 +163,7 @@ class TestCaseForm extends SubComponent {
     var allDefaultAttribs = [];
     for (var i = 0; i < this.state.defaultProjectAttributes.length; i++) {
 
-       var projectId = this.props.match.params.project;
+       var projectId = this.props.router.params.project;
        if (projectId.includes(this.state.defaultProjectAttributes[i].project)) {
 
           var defaultAttribs = [];

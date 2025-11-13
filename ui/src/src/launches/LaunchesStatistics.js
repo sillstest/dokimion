@@ -1,5 +1,6 @@
 import React from "react";
 import { withRouter } from "../common/withRouter";
+import { useParams } from "react-router-dom";
 import SubComponent from "../common/SubComponent";
 import LaunchesStatisticsOverview from "../launches/LaunchesStatisticsOverview";
 import LaunchTestcasesHeatmap from "../launches/LaunchTestcasesHeatmap";
@@ -9,7 +10,7 @@ class LaunchesStatistics extends SubComponent {
 
   constructor(props) {
     super(props);
-    this.state.projectId = this.props.match.params.project;
+    this.state.projectId = this.props.router.params.project;
   }
 
   render() {

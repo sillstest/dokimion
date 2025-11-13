@@ -1,5 +1,6 @@
 import React from "react";
 import { withRouter } from "../common/withRouter";
+import { useParams } from "react-router-dom";
 import SubComponent from "../common/SubComponent";
 import LaunchesTrendWidget from "../launches/LaunchesTrendWidget";
 import LaunchesByStatusesPieWidget from "../launches/LaunchesByStatusesPieWidget";
@@ -23,18 +24,18 @@ class LaunchesStatisticsOverview extends SubComponent {
 
   constructor(props) {
     super(props);
-    this.state.projectId = this.props.match.params.project;
+    this.state.projectId = this.props.router.params.project;
     this.getStats = this.getStats.bind(this);
   }
 
   componentDidMount() {
     super.componentDidMount();
-    this.state.projectId = this.props.match.params.project;
+    this.state.projectId = this.props.router.params.project;
     this.getStats();
   }
 
   getStats() {
-    Backend.get(this.state.projectId + "/launch/statistics" + this.props.location.search)
+    Backend.get(this.state.projectId + "/launch/statistics" + this.props.router.location.search)
       .then(response => {
         this.state.stats = response;
         this.state.loading = false;
@@ -78,13 +79,13 @@ class LaunchesStatisticsOverview extends SubComponent {
           <div className="col-6">
             <LaunchesByStatusesPieWidget
               projectId={this.state.projectId}
-              filter={Utils.queryToFilter(this.props.location.search.substring(1))}
+              filter={Utils.queryToFilter(this.props.router.location.search.substring(1))}
             />
           </div>
           <div className="col-6">
             <LaunchesByUsersPieWidget
               projectId={this.state.projectId}
-              filter={Utils.queryToFilter(this.props.location.search.substring(1))}
+              filter={Utils.queryToFilter(this.props.router.location.search.substring(1))}
             />
           </div>
         </div> 
@@ -92,12 +93,12 @@ class LaunchesStatisticsOverview extends SubComponent {
           <div className="col-6">
             <LaunchesTrendWidget
               projectId={this.state.projectId}
-              filter={Utils.queryToFilter(this.props.location.search.substring(1))}
+              filter={Utils.queryToFilter(this.props.router.location.search.substring(1))}
             />
           </div>
           <div className="col-6">
           <LaunchesByUserExecutionTrend projectId={this.state.projectId}
-          filter={Utils.queryToFilter(this.props.location.search.substring(1))}
+          filter={Utils.queryToFilter(this.props.router.location.search.substring(1))}
           />
           </div>
         </div>

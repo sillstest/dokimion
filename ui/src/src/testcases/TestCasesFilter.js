@@ -7,6 +7,7 @@ import Backend from "../services/backend";
 import React, { Component } from "react";
 import LaunchForm from "../launches/LaunchForm";
 import { withRouter } from "../common/withRouter";
+import { useParams } from "react-router-dom";
 import Select from "react-select";
 import qs from "qs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -102,10 +103,10 @@ class TestCasesFilter extends Component {
   componentDidMount() {
 
     this.getSession();
-    var params = qs.parse(this.props.location.search.substring(1));
+    var params = qs.parse(this.props.router.location.search.substring(1));
 
     if (params.testSuite) {
-      Backend.get(this.props.match.params.project + "/testsuite/" + params.testSuite)
+      Backend.get(this.props.router.params.project + "/testsuite/" + params.testSuite)
         .then(response => {
           this.state.testSuite = response;
           if (this.state.testSuite.filter.filters.length == 0){
@@ -264,21 +265,21 @@ class TestCasesFilter extends Component {
       this.setState({errorMessage:'saveSuite::Enter valid Suite Name'});
     }else{
     //retrieve existing names
-    Backend.get(this.props.match.params.project + "/testsuite")
+    Backend.get(this.props.router.params.project + "/testsuite")
       .then(response => {
        var testSuites = response.map(ts=>ts.name);
        var duplicate = testSuites && testSuites.filter(val => val.toLowerCase() === suiteToSave.name.toLowerCase()).length > 0 ? true : false;
         if(duplicate){
           this.setState({errorMessage:'saveSuite::Duplicate Suite Name', testSuiteNameToDisplay:''});
         }else{
-           Backend.post(this.props.match.params.project + "/testsuite/", suiteToSave)
+           Backend.post(this.props.router.params.project + "/testsuite/", suiteToSave)
             .then(response => {
               this.state.testSuite = response;
               this.state.testSuiteNameToDisplay = this.state.testSuite.name;
               this.setState(this.state);
               $("#suite-modal").modal("toggle");
-              this.props.history.push(
-                "/" + this.props.match.params.project + "/testcases?testSuite=" + this.state.testSuite.id,
+              this.props.router.navigate(
+                "/" + this.props.router.params.project + "/testcases?testSuite=" + this.state.testSuite.id,
               );
             })
             .catch(error => {

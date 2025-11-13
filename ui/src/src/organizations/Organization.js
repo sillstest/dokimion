@@ -7,6 +7,7 @@ import { faCogs } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
+import { withRouter } from "../common/withRouter";
 
 class Organization extends SubComponent {
   constructor(props) {
@@ -28,12 +29,12 @@ class Organization extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
-    this.state.organization.id = this.props.match.params.organization;
+    this.state.organization.id = this.props.router.params.organization;
     this.getOrganization();
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-    var nextOrganizationId = nextProps.match.params.organization;
+    var nextOrganizationId = nextProps.router.params.organization;
     if (nextOrganizationId && this.state.organization.id != nextOrganizationId) {
       this.state.organization.id = nextOrganizationId;
       this.onOrganizationChange(this.state.organization.id);
@@ -74,4 +75,4 @@ class Organization extends SubComponent {
   }
 }
 
-export default Organization;
+export default withRouter(Organization);

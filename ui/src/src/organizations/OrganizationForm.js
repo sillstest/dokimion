@@ -124,7 +124,7 @@ class OrganizationForm extends Component {
   handleCreate(event) {
     Backend.post("organization", this.state.organization)
       .then(response => {
-        this.props.history.push("/organizations/" + response.id);
+        this.props.router.navigate("/organizations/" + response.id);
       })
       .catch(error => {
         this.setState({errorMessage: "handleCreate::Couldn't create organization, error: " + error});
@@ -135,7 +135,7 @@ class OrganizationForm extends Component {
   handleUpdate(event) {
       Backend.put("organization", this.state.organization)
         .then(response => {
-          this.props.history.push("/organizations/" + response.id);
+          this.props.router.navigate("/organizations/" + response.id);
         })
         .catch(error => {
           this.setState({errorMessage: "handleUpdate::Couldn't update organization, error: " + error});

@@ -1,6 +1,7 @@
 /* eslint-disable eqeqeq */
 import React from "react";
 import { withRouter } from "../common/withRouter";
+import { useParams } from "react-router-dom";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import { FadeLoader } from "react-spinners";
@@ -18,7 +19,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
 
   constructor(props) {
     super(props);
-    this.state.projectId = this.props.match.params.project;
+    this.state.projectId = this.props.router.params.project;
     this.getHeatMap = this.getHeatMap.bind(this);
     this.updateTestcase = this.updateTestcase.bind(this);
     this.onBrokenToggle = this.onBrokenToggle.bind(this);
@@ -26,13 +27,13 @@ class LaunchTestcasesHeatmap extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
-    this.state.projectId = this.props.match.params.project;
+    this.state.projectId = this.props.router.params.project;
     this.getHeatMap();
   }
 
   getHeatMap() {
     console.info(this.props);
-    Backend.get(this.state.projectId + "/launch/heatmap" + this.props.location.search)
+    Backend.get(this.state.projectId + "/launch/heatmap" + this.props.router.location.search)
       .then(response => {
         this.state.heatmap = response;
         this.state.loading = false;
@@ -112,7 +113,7 @@ class LaunchTestcasesHeatmap extends SubComponent {
                 return (
                   <tr>
                     <td>
-                      <Link to={"/" + this.props.match.params.project + "/testcase/" + testcase.id}>
+                      <Link to={"/" + this.props.router.params.project + "/testcase/" + testcase.id}>
                         {testcase.name}
                       </Link>
                     </td>

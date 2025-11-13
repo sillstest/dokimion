@@ -1,7 +1,9 @@
 /* eslint-disable eqeqeq */
 import React from "react";
 import SubComponent from "../common/SubComponent";
+import { withRouter } from "../common/withRouter";
 import { Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Pager from "../pager/Pager";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
@@ -49,7 +51,7 @@ class Launches extends SubComponent {
 
   componentDidMount() {
     super.componentDidMount();
-    this.state.filter = Object.assign(this.state.filter, Utils.queryToFilter(this.props.location.search.substring(1)));
+    this.state.filter = Object.assign(this.state.filter, Utils.queryToFilter(this.props.router.location.search.substring(1)));
     this.getLaunches();
     this.getPager();
     this.getLauncherDescriptors();
@@ -65,7 +67,7 @@ class Launches extends SubComponent {
   }
 
   getLaunches() {
-    Backend.get(this.props.match.params.project + "/launch?" + Utils.filterToQuery(this.state.filter))
+    Backend.get(this.props.router.params.project + "/launch?" + Utils.filterToQuery(this.state.filter))
       .then(response => {
         this.state.launches = response;
         this.state.loading = false;
@@ -79,7 +81,7 @@ class Launches extends SubComponent {
   }
 
   deleteLaunch(launchId) {
-    Backend.delete("launcher/" + this.props.match.params.project + "/" + launchId)
+    Backend.delete("launcher/" + this.props.router.params.project + "/" + launchId)
       .then(response => {
         this.getLaunches();
       })
@@ -92,7 +94,7 @@ class Launches extends SubComponent {
     var countFilter = Object.assign({}, this.state.filter);
     countFilter.skip = 0;
     countFilter.limit = 0;
-    Backend.get(this.props.match.params.project + "/launch/count?" + Utils.filterToQuery(countFilter))
+    Backend.get(this.props.router.params.project + "/launch/count?" + Utils.filterToQuery(countFilter))
       .then(response => {
         this.state.pager.total = response;
         this.state.pager.current = this.state.filter.skip / this.state.filter.limit;
@@ -159,8 +161,8 @@ class Launches extends SubComponent {
   }
 
   updateUrl() {
-    this.props.history.push(
-      "/" + this.props.match.params.project + "/launches?" + Utils.filterToQuery(this.state.filter),
+    this.props.router.navigate(
+      "/" + this.props.router.params.project + "/launches?" + Utils.filterToQuery(this.state.filter),
     );
   }
 
@@ -212,7 +214,7 @@ class Launches extends SubComponent {
                   <Link
                     to={
                       "/" +
-                      this.props.match.params.project +
+                      this.props.router.params.project +
                       "/launches/statistics?" +
                       Utils.filterToQuery(this.state.filter)
                     }
@@ -260,7 +262,7 @@ class Launches extends SubComponent {
                   return (
                     <tr>
                       <td>
-                        <Link to={"/" + this.props.match.params.project + "/launch/" + launch.id}>{launch.name}</Link>
+                        <Link to={"/" + this.props.router.params.project + "/launch/" + launch.id}>{launch.name}</Link>
                       </td>
                       <td>{this.getProgressBar(launch)}</td>
                       <td>{Utils.timeToDate(launch.createdTime)}</td>
@@ -296,4 +298,4 @@ class Launches extends SubComponent {
   }
 }
 
-export default Launches;
+export default withRouter(Launches);
