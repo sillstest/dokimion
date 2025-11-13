@@ -11,6 +11,7 @@ import $ from "jquery";
 import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
 import * as Utils from "../common/Utils";
+import { withRouter } from "../common/withRouter";
 
 class ProjectSettings extends SubComponent {
   constructor(props) {
@@ -451,4 +452,4 @@ class ProjectSettings extends SubComponent {
   }
 }
 
-export default ProjectSettings;
+export default withRouter(ProjectSettings);

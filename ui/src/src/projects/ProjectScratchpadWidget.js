@@ -72,6 +72,9 @@ class ProjectScratchpadWidget extends SubComponent {
 
     /* add url to temp project var */
     let project = this.state.project;
+    if (project.scratchpadURLs === undefined) {
+       project.scratchpadURLs = [];
+    }
     project.scratchpadURLs.push(url);
     this.saveProject(project);
     this.state.url = "";
