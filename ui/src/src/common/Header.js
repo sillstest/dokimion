@@ -43,10 +43,10 @@ class Header extends Component {
           this.onSessionChange(this.state.session);
           if (
             this.state.session.person.defaultPassword &&
-            !window.location.pathname.includes("/user/change-password-redirect") &&
-            !window.location.pathname.includes("/user/changepass")
+            !window.location.pathname.includes("/user/change-profile-redirect") &&
+            !window.location.pathname.includes("/user/changeprofile")
           ) {
-            this.props.history.push("/user/change-password-redirect/" + this.state.session.person.login);
+            this.props.history.push("/user/change-profile-redirect/" + this.state.session.person.login);
           } else if (
             this.state.session.metainfo.organizationsEnabled &&
             !this.state.session.metainfo.currentOrganization &&

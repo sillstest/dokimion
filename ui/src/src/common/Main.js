@@ -18,7 +18,7 @@ import Auth from "../user/Auth";
 import IdpAuth from "../user/IdpAuth";
 import Login from "../user/Login";
 import Profile from "../user/Profile";
-import ChangePassword from "../user/ChangePassword";
+import ChangeProfile from "../user/ChangeProfile";
 import Users from "../user/Users";
 import CreateUser from "../user/CreateUser";
 import DeleteUser from "../user/DeleteUser";
@@ -81,6 +81,9 @@ class Main extends Component {
 >}
           />
 
+          <Route exact path="/user/profile/:profileId" component={Profile} />
+          <Route exact path="/user/changepass/:profileId" component={ChangeProfile} />
+
           <Route
             exact
             path="/user/all-users-redirect"
@@ -88,8 +91,8 @@ class Main extends Component {
           />
           <Route
             exact
-            path="/user/change-password-redirect/:login"
-            render={props => <Redirect {...props} requestUrl={"user/change-password-redirect?login=" + props.match.params["login"] || ""} />}
+            path="/user/change-profile-redirect/:login"
+            render={props => <Redirect {...props} requestUrl={"user/change-profile-redirect?login=" + props.match.params["login"] || ""} />}
           />
 
           <Route exact path="/user/create" component={CreateUser} />
@@ -107,9 +110,6 @@ class Main extends Component {
           />
 
 
-
-          <Route exact path="/user/profile/:profileId" component={Profile} />
-          <Route exact path="/user/changepass/:profileId" component={ChangePassword} />
 
           <Route
             path="/login"

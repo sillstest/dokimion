@@ -403,3 +403,10 @@ td.cellUserProfile {
    border: 1px solid black;
 }
 
+.dropdown_menu {
+   display: flex;
+   flex-direction: column;
+   width: 250px;
+   text-align: left;
+}
+

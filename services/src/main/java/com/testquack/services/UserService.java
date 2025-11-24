@@ -161,19 +161,33 @@ System.out.flush();
     }
 
 
-    public boolean changePassword(String login, String oldPassword, String newPassword) {
-System.out.println("UserService::changePassword - login: " + login);
+    public boolean changeProfile(String login, String newPassword,
+		                 String firstName, String lastName,
+				 String email,  String role) {
+System.out.println("UserService::changeProfile - login: " + login);
 System.out.flush();
        User user = findOne("", new Filter().withField("login", login));
        StringBuilder exceptionMessage = new StringBuilder("");
        if (PasswordValidation.validatePassword(newPassword, exceptionMessage)) {
           user.setPassword(encryptPassword(newPassword, user.getLogin()));
           user.setPasswordChangeRequired(false);
+	  if (firstName != "") {
+	      user.setFirstName(firstName);
+	  }
+	  if (lastName != "") {
+	      user.setLastName(lastName);
+	  }
+	  if (email != "") {
+	      user.setEmail(email);
+	  }
+	  if (role != "") {
+	      user.setRole(role);
+	  }
 
           User newUser = save(user);
 
-System.out.println("UserService::changePassword - after setPassword, newUser: " + newUser);
-System.out.println("UserService::changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, newUser.getLogin()));
+System.out.println("UserService::changeProfile - after setPassword, newUser: " + newUser);
+System.out.println("UserService::changeProfile - after setPassword, encryptedpassword: " + encryptPassword(newPassword, newUser.getLogin()));
 System.out.flush();
 
           return true;
@@ -185,8 +199,10 @@ System.out.flush();
        }
     }
 
-    public boolean changePassword(Session session, String login, String oldPassword, String newPassword) {
-System.out.println("UserService::changePassword - session: " + session);
+    public boolean changeProfile(Session session, String login, String newPassword,
+		                 String firstName, String lastName,
+				 String email, String role) {
+System.out.println("UserService::changeProfile - session: " + session);
 System.out.flush();
         if (userCanSave(session, login)){
             User user = findOne(getCurrOrganizationId(session), new Filter().withField("login", login));
@@ -194,13 +210,26 @@ System.out.flush();
 	    if (PasswordValidation.validatePassword(newPassword, exceptionMessage)) {
                user.setPassword(encryptPassword(newPassword, user.getLogin()));
                user.setPasswordChangeRequired(false);
-               save(session, null, user);
-System.out.println("UserService::changePassword - after setPassword, session: " + session);
-System.out.println("UserService::changePassword - after setPassword, encryptedpassword: " + encryptPassword(newPassword, user.getLogin()));
+	       if (firstName != "") {
+	          user.setFirstName(firstName);
+	       }
+	       if (lastName != "") {
+	          user.setLastName(lastName);
+	      }
+	      if (email != "") {
+	          user.setEmail(email);
+	      }
+	      if (role != "") {
+	          user.setRole(role);
+	      }
+              save(session, null, user);
+
+System.out.println("UserService::changeProfile - after setPassword, session: " + session);
+System.out.println("UserService::changeProfile - after setPassword, encryptedpassword: " + encryptPassword(newPassword, user.getLogin()));
 System.out.flush();
-               return true;
+              return true;
             } else {
-               System.out.println("UserService::changePassword - User password validation error");
+               System.out.println("UserService::changeProfile - User password validation error");
 	       System.out.flush();
 	       return false;
 	    }

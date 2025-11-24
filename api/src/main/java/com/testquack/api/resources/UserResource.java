@@ -5,7 +5,7 @@ import com.testquack.api.utils.PasswordGeneration;
 import com.testquack.api.utils.MongoDBInterface;
 import com.testquack.api.utils.SendEmail;
 import com.testquack.api.utils.FilterUtils;
-import com.testquack.beans.ChangePasswordRequest;
+import com.testquack.beans.ChangeProfileRequest;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
 import com.testquack.services.BaseService;
@@ -210,14 +210,15 @@ System.out.println("UserResource::delete - rc: " + rc);
        System.out.flush();
 
        beginTime = Instant.now();
-       if (service.changePassword(login, person.getPassword(), newPassword) == false) {
-System.out.println("UserResource::sendEmail - fail in service.changePassword");
+       if (service.changeProfile(login, newPassword,
+			         "", "", "", "") == false) {
+System.out.println("UserResource::sendEmail - fail in service.changeProfile");
 System.out.flush();
-          return Response.serverError().entity("ChangePassword Failed").build();
+          return Response.serverError().entity("ChangeProfile Failed").build();
        }
 
        deltaTime = Duration.between(beginTime, Instant.now());
-       System.out.println("UserResource::sendEmail - deltaTime to changePassword: " + deltaTime);
+       System.out.println("UserResource::sendEmail - deltaTime to changeProfile: " + deltaTime);
        System.out.flush();
 
 
@@ -395,71 +396,48 @@ System.out.flush();
     }
 
     @POST
-    @Path("/change-password")
-    public Response changePassword(ChangePasswordRequest changePasswordRequest){
+    @Path("/change-profile")
+    public Response changeProfile(ChangeProfileRequest changeProfileRequest){
 
-System.out.println("UserResource::changePassword");
+System.out.println("UserResource::changeProfile - newPassword: " + changeProfileRequest.getNewPassword());
+System.out.println("UserResource::changeProfile - login: " + changeProfileRequest.getLogin());
+System.out.println("UserResource::changeProfile - firstName: " + changeProfileRequest.getFirstName());
+System.out.println("UserResource::changeProfile - lastName: " + changeProfileRequest.getLastName());
+System.out.println("UserResource::changeProfile - email: " + changeProfileRequest.getEmail());
+System.out.println("UserResource::changeProfile - role: " + changeProfileRequest.getRole());
 System.out.flush();
 
-        Session session = getSession();
-        String login = changePasswordRequest.getLogin() == null ? getSession().getPerson().getLogin() : changePasswordRequest.getLogin();
-
-        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
-            getService().getMongoUsername(),
-            getService().getMongoPassword(),
-            getService().getMongoDBName(),
-            login) == false) {
-
-            System.out.println("UserResource::changePassword: checkLoginId returned FALSE - did NOT find login");
-            System.out.flush();
-
-            return Response.serverError().entity("changePassword - APIValidation error").build();
-        }
-
-System.out.println("UserResource::changePassword - after api validation");
-System.out.println("UserResource::changePassword - oldpass, newpass: " + changePasswordRequest.getOldPassword() + ", " + changePasswordRequest.getNewPassword());
+System.out.println("UserResource::changeProfile - oldpass, newpass: " + changeProfileRequest.getOldPassword() + ", " + changeProfileRequest.getNewPassword());
 
 System.out.flush();
 
-       if (service.changePassword(session, login, changePasswordRequest.getOldPassword(), changePasswordRequest.getNewPassword()) == false) {
-System.out.println("UserResource::changePassword - fail in service.changePassword");
+       Session session = getSession();
+       String login = changeProfileRequest.getLogin() == null ? getSession().getPerson().getLogin() : changeProfileRequest.getLogin();
+
+       if (service.changeProfile(session, login, 
+			         changeProfileRequest.getNewPassword(), 
+				 changeProfileRequest.getFirstName(), 
+				 changeProfileRequest.getLastName(),
+				 changeProfileRequest.getEmail(),
+				 changeProfileRequest.getRole()
+			       ) == false) {
+System.out.println("UserResource::changeProfile - fail in service.changeProfile");
 System.out.flush();
-          return Response.serverError().entity("ChangePassword Failed").build();
+          return Response.serverError().entity("ChangeProfile Failed").build();
        }
 
-System.out.println("UserResource::changePassword - after service.changePassword");
+System.out.println("UserResource::changeProfile - after service.changeProfile");
 System.out.flush();
 
        session.getPerson().setDefaultPassword(false);
        sessionProvider.replaceSession(session);
 
-       /*
-       String encryptedPass = "";
-       try {
-	 encryptedPass = StringUtils.getMd5String(changePasswordRequest.getNewPassword() + login);
-       } catch (NoSuchAlgorithmException e) {
-         throw new RuntimeException(e);
-       }
-
-       MongoDBInterface mongoDBInterface = new MongoDBInterface();
-       mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
-                                              getService().getMongoUsername(),
-                                              getService().getMongoPassword(),
-                                              getService().getMongoDBName());
-       String oldpass = mongoDBInterface.getPassword(login);
-       mongoDBInterface.updatePassword(login, encryptedPass);
-System.out.println("changePassword - old passwd from mongo: " + oldpass);
-System.out.flush();
-System.out.println("changePassword - new password: " + changePasswordRequest.getNewPassword());
-System.out.println("changePassword - new encrypted password: " + encryptedPass);
-System.out.flush();
-*/
-        return Response.ok().build();
+       return Response.ok().build();
     }
 
     @GET
-    @Path("/change-password-redirect")
-    public RedirectResponse changePasswordRedirect(){
+    @Path("/change-profile-redirect")
+    public RedirectResponse changeProfileRedirect(){
         return authProvider.redirectChangePasswordTo(request);
     }
 
@@ -467,7 +445,7 @@ System.out.flush();
     @Path("/logout")
     public Response logout() {
 
-	    Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
+	Cookie sid = HttpUtils.findCookie(request, HttpUtils.SESSION_ID);
 
         if (sid == null) {
 System.out.println("UserResource::logout - sid: " + sid);

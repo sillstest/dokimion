@@ -82,7 +82,7 @@ class Profile extends SubComponent {
         <div>
           <div className="row">
             <div className="col-12">
-              <Link to={"/user/change-password-redirect/" + this.state.profile.id}>Change Password</Link>
+              <Link to={"/user/change-profile-redirect/" + this.state.profile.id}>Change Profile</Link>
             </div>
           </div>
         </div>

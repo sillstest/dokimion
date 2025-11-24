@@ -33,12 +33,16 @@
         </xs:complexContent>
     </xs:complexType>
 
-    <xs:element name="changePasswordRequest" type="ChangePasswordRequest"/>
-    <xs:complexType name="ChangePasswordRequest">
+    <xs:element name="changeProfileRequest" type="ChangeProfileRequest"/>
+    <xs:complexType name="ChangeProfileRequest">
         <xs:sequence>
             <xs:element name="login" type="xs:string"/>
             <xs:element name="newPassword" type="xs:string"/>
             <xs:element name="oldPassword" type="xs:string"/>
+            <xs:element name="firstName" type="xs:string"/>
+            <xs:element name="lastName" type="xs:string"/>
+            <xs:element name="email" type="xs:string"/>
+            <xs:element name="role" type="xs:string"/>
         </xs:sequence>
     </xs:complexType>
 
