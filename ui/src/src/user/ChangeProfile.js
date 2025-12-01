@@ -38,13 +38,13 @@ class ChangeProfile extends SubComponent {
   }
 
   handleChange(event) {
-    this.state[event.target.name] = event.target.value;
+    this.state.profile[event.target.name] = event.target.value;
     this.setState(this.state);
   }
 
   handleSubmit(event) {
     Backend.postPlain("user/change-profile", 
-	    { newPassword: this.state.password, 
+	    { newPassword: this.state.profile.password, 
 	      login:       this.state.profile.id ,
 	      firstName:   this.state.profile.firstName,
 	      lastName:    this.state.profile.lastName,
@@ -85,9 +85,9 @@ class ChangeProfile extends SubComponent {
               <h1 className="h3 mb-3 font-weight-normal">Change User Profile</h1>
               <label>First Name</label>
               <input
-                type="firstname"
-                id="firstname"
-                name="firstname"
+                type="firstName"
+                id="firstName"
+                name="firstName"
                 className="form-control"
                 placeholder={this.state.profile.firstName}
                 required=""
@@ -95,9 +95,9 @@ class ChangeProfile extends SubComponent {
               />
               <label>Last Name</label>
               <input
-                type="lastname"
-                id="lastname"
-                name="lastname"
+                type="lastName"
+                id="lastName"
+                name="lastName"
                 className="form-control"
                 placeholder={this.state.profile.lastName}
                 required=""
