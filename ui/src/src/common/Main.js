@@ -82,7 +82,7 @@ class Main extends Component {
           />
 
           <Route exact path="/user/profile/:profileId" component={Profile} />
-          <Route exact path="/user/changepass/:profileId" component={ChangeProfile} />
+          <Route exact path="/user/changeprofile/:profileId" component={ChangeProfile} />
 
           <Route
             exact
