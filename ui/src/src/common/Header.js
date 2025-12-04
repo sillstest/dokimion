@@ -44,7 +44,7 @@ class Header extends Component {
           if (
             this.state.session.person.defaultPassword &&
             !window.location.pathname.includes("/user/change-profile-redirect") &&
-            !window.location.pathname.includes("/user/changeprofile")
+            !window.location.pathname.includes("/user/changepass") // legacy dependence in base package
           ) {
             this.props.history.push("/user/change-profile-redirect/" + this.state.session.person.login);
           } else if (
