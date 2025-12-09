@@ -9,7 +9,13 @@ class ChangeProfile extends SubComponent {
   state = {
     session: {person:{}}, 
     message: "",
-    profile: {},
+    profile: {
+      id:        "",
+      firstName: "",
+      lastName:  "",
+      email:     "",
+      role:      "",
+    },
     profileId: "",
   };
 
