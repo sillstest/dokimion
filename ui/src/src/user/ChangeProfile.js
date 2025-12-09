@@ -95,7 +95,7 @@ class ChangeProfile extends SubComponent {
                 id="firstName"
                 name="firstName"
                 className="form-control"
-                placeholder={this.state.profile.firstName}
+                value={this.state.profile.firstName}
                 required=""
                 onChange={this.handleChange}
               />
@@ -105,7 +105,7 @@ class ChangeProfile extends SubComponent {
                 id="lastName"
                 name="lastName"
                 className="form-control"
-                placeholder={this.state.profile.lastName}
+                value={this.state.profile.lastName}
                 required=""
                 onChange={this.handleChange}
               />
@@ -125,7 +125,7 @@ class ChangeProfile extends SubComponent {
                 id="email"
                 name="email"
                 className="form-control"
-                placeholder={this.state.profile.email}
+                value={this.state.profile.email}
                 required=""
                 onChange={this.handleChange}
               />
