@@ -1,60 +1,31 @@
 /* eslint-disable eqeqeq */
-import React from "react";
-import { withRouter } from "../common/withRouter";
-import { useParams } from "react-router-dom";
-import SubComponent from "../common/SubComponent";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useLocation, Link } from "react-router-dom";
 import { FadeLoader } from "react-spinners";
 import * as Utils from "../common/Utils";
 import { Checkbox } from "@mui/material";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
-class LaunchTestcasesHeatmap extends SubComponent {
-  state = {
-    heatmap: [],
-    loading: true,
-    errorMessage: "",
-  };
+const LaunchTestcasesHeatmap = () => {
+  const { project: projectId } = useParams();
+  const location = useLocation();
 
-  constructor(props) {
-    super(props);
-    this.state.projectId = this.props.router.params.project;
-    this.getHeatMap = this.getHeatMap.bind(this);
-    this.updateTestcase = this.updateTestcase.bind(this);
-    this.onBrokenToggle = this.onBrokenToggle.bind(this);
-  }
+  const [heatmap, setHeatmap] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.state.projectId = this.props.router.params.project;
-    this.getHeatMap();
-  }
-
-  getHeatMap() {
-    console.info(this.props);
-    Backend.get(this.state.projectId + "/launch/heatmap" + this.props.router.location.search)
-      .then(response => {
-        this.state.heatmap = response;
-        this.state.loading = false;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getHeatMap::Couldn't get launch testcases heatmap"});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
-
-  getPercentile(testcase) {
+  // Get percentile
+  const getPercentile = (testcase) => {
     if (testcase.total == 0) {
       return 0;
     }
     return Utils.intDiv((testcase.statusCounters.FAILED + testcase.statusCounters.BROKEN) * 100, testcase.total);
-  }
+  };
 
-  getCellColorClass(testcase) {
-    var failedPercent = this.getPercentile(testcase);
+  // Get cell color class
+  const getCellColorClass = (testcase) => {
+    const failedPercent = getPercentile(testcase);
     if (failedPercent > 33) {
       return Utils.getStatusColorClass("FAILED");
     }
@@ -62,84 +33,100 @@ class LaunchTestcasesHeatmap extends SubComponent {
       return Utils.getStatusColorClass("BROKEN");
     }
     return Utils.getStatusColorClass("PASSED");
-  }
+  };
 
-  onBrokenToggle(id, value, event) {
-    var testcaseToUpdate;
-    Backend.get(this.state.projectId + "/testcase/" + id)
+  // Update testcase
+  const updateTestcase = (testcaseToUpdate) => {
+    Backend.put(projectId + "/testcase/", testcaseToUpdate)
       .then(response => {
-        testcaseToUpdate = response;
+        setHeatmap(prevHeatmap => {
+          const updatedHeatmap = [...prevHeatmap];
+          const foundTestcaseStats = updatedHeatmap.find(testcaseStats => testcaseStats.id == testcaseToUpdate.id);
+          if (foundTestcaseStats) {
+            foundTestcaseStats.launchBroken = response.launchBroken;
+          }
+          return updatedHeatmap;
+        });
+      })
+      .catch(error => {
+        setErrorMessage("updateTestcase::Couldn't update testcase status");
+      });
+  };
+
+  // On broken toggle
+  const onBrokenToggle = (id, value, event) => {
+    Backend.get(projectId + "/testcase/" + id)
+      .then(response => {
+        const testcaseToUpdate = response;
         if (testcaseToUpdate) {
           testcaseToUpdate.launchBroken = value;
-          this.updateTestcase(testcaseToUpdate);
+          updateTestcase(testcaseToUpdate);
         }
       })
       .catch(error => {
-        this.setState({errorMessage: "onBrokenToggle::Couldn't update testcase status"});
+        setErrorMessage("onBrokenToggle::Couldn't update testcase status");
       });
-  }
+  };
 
-  updateTestcase(testcaseToUpdate) {
-    Backend.put(this.state.projectId + "/testcase/", testcaseToUpdate)
+  // Get heatmap
+  const getHeatMap = () => {
+    Backend.get(projectId + "/launch/heatmap" + location.search)
       .then(response => {
-        var foundTestcaseStats = this.state.heatmap.find(testcaseStats => testcaseStats.id == testcaseToUpdate.id);
-        if (foundTestcaseStats) {
-          foundTestcaseStats.launchBroken = response.launchBroken;
-        }
-        this.setState(this.state);
+        setHeatmap(response);
+        setLoading(false);
       })
       .catch(error => {
-        this.setState({errorMessage: "updateTestcase::Couldn't update testcase status"});
+        setErrorMessage("getHeatMap::Couldn't get launch testcases heatmap");
+        setLoading(false);
       });
-  }
+  };
 
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">Title</th>
-              <th scope="col" className="center-text">
-                Failures
-              </th>
-              <th scope="col">Active</th>
+  // Component mount
+  useEffect(() => {
+    getHeatMap();
+  }, [projectId, location.search]);
+
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <table className="table">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col" className="center-text">
+              Failures
+            </th>
+            <th scope="col">Active</th>
+          </tr>
+        </thead>
+        <tbody>
+          {heatmap.map((testcase) => (
+            <tr key={testcase.id}>
+              <td>
+                <Link to={"/" + projectId + "/testcase/" + testcase.id}>
+                  {testcase.name}
+                </Link>
+              </td>
+              <td className={getCellColorClass(testcase) + " center-text"}>
+                {getPercentile(testcase)}%
+              </td>
+              <td>
+                <Checkbox
+                  toggle
+                  onClick={e => onBrokenToggle(testcase.id, !testcase.launchBroken, e)}
+                  checked={testcase.launchBroken}
+                  label={{ children: testcase.launchBroken ? "On" : "Off" }}
+                />
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {this.state.heatmap.map(
-              function (testcase) {
-                return (
-                  <tr>
-                    <td>
-                      <Link to={"/" + this.props.router.params.project + "/testcase/" + testcase.id}>
-                        {testcase.name}
-                      </Link>
-                    </td>
-                    <td className={this.getCellColorClass(testcase) + " center-text"}>
-                      {this.getPercentile(testcase)}%
-                    </td>
-                    <td>
-                      <Checkbox
-                        toggle
-                        onClick={e => this.onBrokenToggle(testcase.id, !testcase.launchBroken, e)}
-                        checked={testcase.launchBroken}
-                        label={{ children: testcase.launchBroken ? "On" : "Off" }}
-                      />
-                    </td>
-                  </tr>
-                );
-              }.bind(this),
-            )}
-          </tbody>
-        </table>
-        <div className="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
+          ))}
+        </tbody>
+      </table>
+      <div className="sweet-loading">
+        <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={loading} />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
-export default withRouter(LaunchTestcasesHeatmap);
+export default LaunchTestcasesHeatmap;

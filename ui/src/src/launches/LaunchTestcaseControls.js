@@ -1,63 +1,53 @@
 /* eslint-disable eqeqeq */
-/* eslint-disable react/no-direct-mutation-state */
-import React, { Component } from "react";
-import { withRouter } from "../common/withRouter";
+import React, { useState, useEffect } from "react";
 import $ from "jquery";
 import * as bootstrap from 'bootstrap';
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
-class LaunchTestcaseControls extends Component {
-  defaultFailureDetails = { text: "" };
+const LaunchTestcaseControls = (props) => {
+  const defaultFailureDetails = { text: "" };
 
-  state = {
-    failureDetails: Object.assign({}, this.defaultFailureDetails),
-    indicator: "",
-    errorMessage: "",
-  };
+  const [failureDetails, setFailureDetails] = useState({ ...defaultFailureDetails });
+  const [testcase, setTestcase] = useState(props.testcase);
+  const [launchId, setLaunchId] = useState(props.launchId);
+  const [projectId, setProjectId] = useState(props.projectId);
+  const [indicator, setIndicator] = useState(props.indicator);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  constructor(props) {
-    super(props);
-    this.state.testcase = this.props.testcase;
-    this.state.launchId = this.props.launchId;
-    this.state.projectId = this.props.projectId;
-    this.state.indicator = this.props.indicator;
-    this.handleDetailsFailureChange = this.handleDetailsFailureChange.bind(this);
-  }
+  // Callback reference
+  const callback = props.callback || function (testcase) {};
 
-  componentDidMount() {
-    this.callback = this.props.callback || function (testcase) {};
-  }
-
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.testcase) {
-      this.state.testcase = nextProps.testcase;
+  // Update from props
+  useEffect(() => {
+    if (props.testcase) {
+      setTestcase(props.testcase);
     }
-    if (nextProps.launchId) {
-      this.state.launchId = nextProps.launchId;
+    if (props.launchId) {
+      setLaunchId(props.launchId);
     }
-    this.setState(this.state);
-  }
+    if (props.projectId) {
+      setProjectId(props.projectId);
+    }
+    if (props.indicator) {
+      setIndicator(props.indicator);
+    }
+  }, [props.testcase, props.launchId, props.projectId, props.indicator]);
 
-  handleStatusSubmit(status, event, dialogToDismiss) {
-
-if (this.props.projectId) {
-   var i = 0;
-}
-
+  // Handle status submit
+  const handleStatusSubmit = (status, event, dialogToDismiss) => {
     Backend.post(
-      this.props.projectId + "/launch/" + this.state.launchId + "/" + this.state.testcase.uuid + "/status/" + status,
-      this.state.failureDetails,
+      projectId + "/launch/" + launchId + "/" + testcase.uuid + "/status/" + status,
+      failureDetails,
     )
       .then(response => {
-        this.state.testcase = response;
-        this.state.failureDetails = Object.assign({}, this.defaultFailureDetails);
-        this.setState(this.state);
-        this.callback(this.state.testcase);
+        setTestcase(response);
+        setFailureDetails({ ...defaultFailureDetails });
+        callback(response);
+        
         if (dialogToDismiss) {
-          //$("#" + dialogToDismiss).modal("hide");
-	  const modalElement = document.getElementById(dialogToDismiss);
+          const modalElement = document.getElementById(dialogToDismiss);
           const modal = bootstrap.Modal.getInstance(modalElement);
           if (modal) {
             modal.hide();
@@ -65,56 +55,86 @@ if (this.props.projectId) {
         }
       })
       .catch(error => {
-	this.state.testcase.displayErrorMessage = "handleStatusSubmit::Couldn't save launch testcase status: " + error;
-	this.setState(this.state);
-        this.callback(this.state.testcase);
+        const updatedTestcase = {
+          ...testcase,
+          displayErrorMessage: "handleStatusSubmit::Couldn't save launch testcase status: " + error
+        };
+        setTestcase(updatedTestcase);
+        callback(updatedTestcase);
       });
     event.preventDefault();
-  }
+  };
 
-  renderRunnable(indicator) {
-    if (indicator == "START") {
+  // Handle failure details change
+  const handleDetailsFailureChange = (event) => {
+    setFailureDetails(prev => ({
+      ...prev,
+      [event.target.name]: event.target.value
+    }));
+  };
+
+  // Get status alert class
+  const getStatusAlertClass = () => {
+    switch (testcase.launchStatus) {
+      case "FAILED":
+        return "alert alert-danger";
+      case "BROKEN":
+        return "alert alert-warning";
+      case "PASSED":
+        return "alert alert-success";
+      default:
+        return "alert";
+    }
+  };
+
+  // Render runnable buttons
+  const renderRunnable = (ind) => {
+    if (ind == "START") {
       return (
-        <button type="button" class="btn btn-success" onClick={e => this.handleStatusSubmit("RUNNING", e)}>
+        <button type="button" className="btn btn-success" onClick={e => handleStatusSubmit("RUNNING", e)}>
           Start
         </button>
       );
     }
-  }
+    return null;
+  };
 
-  renderRunning(indicator) {
-    if (indicator == "FAILUREDETAILS") {
+  // Render running buttons
+  const renderRunning = (ind) => {
+    if (ind == "FAILUREDETAILS") {
       return (
         <div>
-          <button type="button" class="btn btn-success" onClick={e => this.handleStatusSubmit("PASSED", e)}>
+          <button type="button" className="btn btn-success" onClick={e => handleStatusSubmit("PASSED", e)}>
             Pass
           </button>
-          <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#fail-dialog">
+          <button type="button" className="btn btn-danger" data-toggle="modal" data-target="#fail-dialog">
             Fail
           </button>
-          <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#broken-dialog">
+          <button type="button" className="btn btn-warning" data-toggle="modal" data-target="#broken-dialog">
             Broken
           </button>
-          <button type="button" class="btn btn-secondary" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
+          <button type="button" className="btn btn-secondary" onClick={e => handleStatusSubmit("RUNNABLE", e)}>
             X
           </button>
-      </div>
-    );
+        </div>
+      );
     }
-  }
+    return null;
+  };
 
-  renderFinished(indicator) {
-    if (indicator == "FAILUREDETAILS") {
+  // Render finished buttons
+  const renderFinished = (ind) => {
+    if (ind == "FAILUREDETAILS") {
       return (
         <div>
-          <button class={this.getStatusAlertClass()} role="alert">
-            {this.state.testcase.launchStatus}
+          <button className={getStatusAlertClass()} role="alert">
+            {testcase.launchStatus}
           </button>
-          {this.state.testcase.launchStatus && (
+          {testcase.launchStatus && (
             <button
               type="button"
               className="btn"
-              onClick={e => this.handleStatusSubmit("RUNNABLE", e)}
+              onClick={e => handleStatusSubmit("RUNNABLE", e)}
             >
               X
             </button>
@@ -122,117 +142,99 @@ if (this.props.projectId) {
         </div>
       );
     }
-  }
+    return null;
+  };
 
-  handleDetailsFailureChange(event) {
-    this.state.failureDetails[event.target.name] = event.target.value;
-    this.setState(this.state);
-  }
-
-  getStatusAlertClass() {
-    // eslint-disable-next-line default-case
-    switch (this.state.testcase.launchStatus) {
-      case "FAILED":
-        return "alert alert-danger";
-      case "BROKEN":
-        return "alert alert-warning";
-      case "PASSED":
-        return "alert alert-success";
-    }
-    return "alert";
-  }
-
-  renderButtons() {
-    if (this.state.testcase.launchStatus == "RUNNABLE") {
-      return this.renderRunnable(this.state.indicator);
-    } else if (this.state.testcase.launchStatus == "RUNNING") {
-      return this.renderRunning(this.state.indicator);
+  // Render buttons based on status
+  const renderButtons = () => {
+    if (testcase.launchStatus == "RUNNABLE") {
+      return renderRunnable(indicator);
+    } else if (testcase.launchStatus == "RUNNING") {
+      return renderRunning(indicator);
     } else {
-      return this.renderFinished(this.state.indicator);
+      return renderFinished(indicator);
     }
-  }
+  };
 
-  render() {
-    return (
-      <div className="launch-status-controls">
-        <div className="btn-group" role="group">
-          {this.renderButtons()}
-        </div>
+  return (
+    <div className="launch-status-controls">
+      <div className="btn-group" role="group">
+        {renderButtons()}
+      </div>
 
-        <div className="modal fade" tabIndex="-1" role="dialog" id="fail-dialog">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Fail Test Case</h5>
-                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <textarea
-                  rows="7"
-                  id="failure-text"
-                  name="text"
-                  className="form-control"
-                  value={this.state.failureDetails.text}
-                  placeholder="Reason of Failure"
-                  onChange={this.handleDetailsFailureChange}
-                />
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-dismiss="modal" aria-label="Cancel">
-                  Close
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-danger"
-                  onClick={e => this.handleStatusSubmit("FAILED", e, "fail-dialog")}
-                >
-                  Fail
-                </button>
-              </div>
+      <div className="modal fade" tabIndex="-1" role="dialog" id="fail-dialog">
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Fail Test Case</h5>
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
             </div>
-          </div>
-        </div>
-
-        <div className="modal fade" tabIndex="-1" role="dialog" id="broken-dialog">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Mark Test Case as Broken</h5>
-                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <textarea
-                  rows="7"
-                  id="failure-text"
-                  name="text"
-                  className="form-control"
-                  value={this.state.failureDetails.text}
-                  placeholder="Reason"
-                  onChange={this.handleDetailsFailureChange}
-                />
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-dismiss="modal" aria-label="Cancel">
-                  Close
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-warning"
-                  onClick={e => this.handleStatusSubmit("BROKEN", e, "broken-dialog")}
-                >
-                  Mark as Broken
-                </button>
-              </div>
+            <div className="modal-body">
+              <textarea
+                rows="7"
+                id="failure-text"
+                name="text"
+                className="form-control"
+                value={failureDetails.text}
+                placeholder="Reason of Failure"
+                onChange={handleDetailsFailureChange}
+              />
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-dismiss="modal" aria-label="Cancel">
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={e => handleStatusSubmit("FAILED", e, "fail-dialog")}
+              >
+                Fail
+              </button>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
-}
 
-export default withRouter(LaunchTestcaseControls);
+      <div className="modal fade" tabIndex="-1" role="dialog" id="broken-dialog">
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Mark Test Case as Broken</h5>
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <textarea
+                rows="7"
+                id="failure-text"
+                name="text"
+                className="form-control"
+                value={failureDetails.text}
+                placeholder="Reason"
+                onChange={handleDetailsFailureChange}
+              />
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-dismiss="modal" aria-label="Cancel">
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-warning"
+                onClick={e => handleStatusSubmit("BROKEN", e, "broken-dialog")}
+              >
+                Mark as Broken
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LaunchTestcaseControls;

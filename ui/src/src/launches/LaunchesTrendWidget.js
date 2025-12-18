@@ -1,5 +1,4 @@
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect } from "react";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Highcharts from "highcharts";
@@ -7,142 +6,143 @@ import HighchartsReact from "highcharts-react-official";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
-class LaunchesTrendWidget extends SubComponent {
-  state = {
-    launches: [],
-    filter: {
-      skip: 0,
-      limit: 20,
-      orderby: "id",
-      orderdir: "DESC",
-      includedFields: "launchStats,createdTime",
-    },
-    loading: true,
-    errorMessage: "",
-  };
+const LaunchesTrendWidget = (props) => {
+  const [launches, setLaunches] = useState([]);
+  const [filter, setFilter] = useState({
+    skip: 0,
+    limit: 20,
+    orderby: "id",
+    orderdir: "DESC",
+    includedFields: "launchStats,createdTime",
+  });
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [projectId, setProjectId] = useState(props.projectId);
 
-  constructor(props) {
-    super(props);
-    this.getLaunches = this.getLaunches.bind(this);
-    this.renderChart = this.renderChart.bind(this);
-    this.getSeries = this.getSeries.bind(this);
-  }
-
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.projectId) {
-      this.state.projectId = nextProps.projectId;
-    }
-    if (nextProps.filter) {
-      this.state.filter = nextProps.filter;
-    }
-    this.getLaunches();
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.getLaunches();
-  }
-
-  getLaunches() {
-    if (!this.state.projectId) {
-      return [];
-    }
-    Backend.get(this.state.projectId + "/launch?" + Utils.filterToQuery(this.state.filter))
-      .then(response => {
-        this.state.launches = response.reverse();
-        this.state.loading = false;
-        this.renderChart();
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getLaunches::Couldn't get launches, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
-
-  renderChart() {
-    if (typeof(this.state.launches) != 'undefined') {
-    Highcharts.chart("trend", {
-      title: {
-        text: "Launches Statuses Trend",
-      },
-
-      yAxis: {
-        title: {
-          text: "TestCases",
-        },
-      },
-
-      xAxis: {
-        categories: this.state.launches.map(launch => Utils.timeToDateNoTime(launch.createdTime)),
-      },
-
-      legend: {
-        layout: "vertical",
-        align: "right",
-        verticalAlign: "middle",
-      },
-
-      plotOptions: {
-        series: {
-          label: {
-            connectorAllowed: false,
-          },
-        },
-      },
-      series: this.getSeries(),
-      responsive: {
-        rules: [
-          {
-            condition: {
-              maxWidth: 500,
-            },
-            chartOptions: {
-              legend: {
-                layout: "horizontal",
-                align: "center",
-                verticalAlign: "bottom",
-              },
-            },
-          },
-        ],
-      },
-    });
-    }
-  }
-
-  getSeries() {
-    var totalStats = {
+  // Get series data for chart
+  const getSeries = () => {
+    const totalStats = {
       PASSED: { name: "Passed", color: "#28a745", data: [] },
       FAILED: { name: "Failed", color: "#dc3545", data: [] },
       BROKEN: { name: "Broken", color: "#ffc107", data: [] },
       TOTAL: { name: "Total", color: "#007bff", data: [] },
     };
 
-    typeof(this.state.launches) != 'undefined' && this.state.launches.forEach(launch => {
-      Object.keys(launch.launchStats.statusCounters).forEach(key => {
-        if (totalStats[key]) {
-          totalStats[key].data.push(launch.launchStats.statusCounters[key]);
-        }
+    if (typeof launches !== 'undefined') {
+      launches.forEach(launch => {
+        Object.keys(launch.launchStats.statusCounters).forEach(key => {
+          if (totalStats[key]) {
+            totalStats[key].data.push(launch.launchStats.statusCounters[key]);
+          }
+        });
+        totalStats["TOTAL"].data.push(launch.launchStats.total);
       });
-      totalStats["TOTAL"].data.push(launch.launchStats.total);
-    });
+    }
 
     return Object.keys(totalStats).map(key => totalStats[key]);
-  }
+  };
 
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div id="trend"></div>
-        <div id="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
+  // Render chart
+  const renderChart = (launchData) => {
+    if (typeof launchData !== 'undefined' && launchData.length > 0) {
+      Highcharts.chart("trend", {
+        title: {
+          text: "Launches Statuses Trend",
+        },
+
+        yAxis: {
+          title: {
+            text: "TestCases",
+          },
+        },
+
+        xAxis: {
+          categories: launchData.map(launch => Utils.timeToDateNoTime(launch.createdTime)),
+        },
+
+        legend: {
+          layout: "vertical",
+          align: "right",
+          verticalAlign: "middle",
+        },
+
+        plotOptions: {
+          series: {
+            label: {
+              connectorAllowed: false,
+            },
+          },
+        },
+        series: getSeries(),
+        responsive: {
+          rules: [
+            {
+              condition: {
+                maxWidth: 500,
+              },
+              chartOptions: {
+                legend: {
+                  layout: "horizontal",
+                  align: "center",
+                  verticalAlign: "bottom",
+                },
+              },
+            },
+          ],
+        },
+      });
+    }
+  };
+
+  // Get launches
+  const getLaunches = (currentProjectId, currentFilter) => {
+    if (!currentProjectId) {
+      return;
+    }
+    Backend.get(currentProjectId + "/launch?" + Utils.filterToQuery(currentFilter))
+      .then(response => {
+        const reversedLaunches = response.reverse();
+        setLaunches(reversedLaunches);
+        setLoading(false);
+        renderChart(reversedLaunches);
+      })
+      .catch(error => {
+        setErrorMessage("getLaunches::Couldn't get launches, error: " + error);
+        setLoading(false);
+      });
+  };
+
+  // Update from props
+  useEffect(() => {
+    if (props.projectId) {
+      setProjectId(props.projectId);
+    }
+    if (props.filter) {
+      setFilter(props.filter);
+    }
+  }, [props.projectId, props.filter]);
+
+  // Initial mount and when projectId/filter changes
+  useEffect(() => {
+    getLaunches(projectId, filter);
+  }, [projectId, filter]);
+
+  // Re-render chart when launches change
+  useEffect(() => {
+    if (launches.length > 0) {
+      renderChart(launches);
+    }
+  }, [launches]);
+
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div id="trend"></div>
+      <div id="sweet-loading">
+        <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={loading} />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default LaunchesTrendWidget;

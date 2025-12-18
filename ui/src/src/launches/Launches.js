@@ -1,9 +1,6 @@
 /* eslint-disable eqeqeq */
-import React from "react";
-import SubComponent from "../common/SubComponent";
-import { withRouter } from "../common/withRouter";
-import { Link } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import Pager from "../pager/Pager";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
@@ -14,288 +11,325 @@ import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 import DatePicker from "react-date-picker";
 
-class Launches extends SubComponent {
-  state = {
-    launches: [],
-    filter: {
-      skip: 0,
-      limit: 20,
-      orderby: "id",
-      orderdir: "DESC",
-      includedFields: "name,launchStats,id,createdTime,startTime,finishTime,launcherConfig,duration,testCaseTree",
-    },
-    pager: {
-      total: 0,
-      current: 0,
-      maxVisiblePage: 7,
-      itemsOnPage: 20,
-    },
-    launcherDescriptors: [],
-    loading: true,
-    errorMessage: "",
+const Launches = () => {
+  const { project: projectId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [launches, setLaunches] = useState([]);
+  const [filter, setFilter] = useState({
+    skip: 0,
+    limit: 20,
+    orderby: "id",
+    orderdir: "DESC",
+    includedFields: "name,launchStats,id,createdTime,startTime,finishTime,launcherConfig,duration,testCaseTree",
+  });
+  const [pager, setPager] = useState({
+    total: 0,
+    current: 0,
+    maxVisiblePage: 7,
+    itemsOnPage: 20,
+  });
+  const [launcherDescriptors, setLauncherDescriptors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const intervalRef = useRef(null);
+
+  // Get launches
+  const getLaunches = () => {
+    Backend.get(projectId + "/launch?" + Utils.filterToQuery(filter))
+      .then(response => {
+        setLaunches(response);
+        setLoading(false);
+      })
+      .catch(error => {
+        setErrorMessage("getLaunches::Couldn't get launches, error: " + error);
+        setLoading(false);
+      });
   };
 
-  constructor(props) {
-    super(props);
-    this.getLaunches = this.getLaunches.bind(this);
-    this.getPager = this.getPager.bind(this);
-    this.handlePageChanged = this.handlePageChanged.bind(this);
-    this.updateUrl = this.updateUrl.bind(this);
-    this.onFilter = this.onFilter.bind(this);
-    this.handleFilterChange = this.handleFilterChange.bind(this);
-    this.handleFromDateFilterChange = this.handleFromDateFilterChange.bind(this);
-    this.handleToDateFilterChange = this.handleToDateFilterChange.bind(this);
-    this.getLauncherDescriptors = this.getLauncherDescriptors.bind(this);
-    this.deleteLaunch = this.deleteLaunch.bind(this);
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.state.filter = Object.assign(this.state.filter, Utils.queryToFilter(this.props.router.location.search.substring(1)));
-    this.getLaunches();
-    this.getPager();
-    this.getLauncherDescriptors();
-    this.intervalId = setInterval(this.getLaunches, 30000);
-  }
-
-  handlePageChanged(newPage) {
-    this.state.pager.current = newPage;
-    this.state.filter.skip = newPage * this.state.pager.itemsOnPage;
-    this.getLaunches();
-    this.setState(this.state);
-    this.updateUrl();
-  }
-
-  getLaunches() {
-    Backend.get(this.props.router.params.project + "/launch?" + Utils.filterToQuery(this.state.filter))
+  // Delete launch
+  const deleteLaunch = (launchId) => {
+    Backend.delete("launcher/" + projectId + "/" + launchId)
       .then(response => {
-        this.state.launches = response;
-        this.state.loading = false;
-        this.setState(this.state);
+        getLaunches();
       })
       .catch(error => {
-        this.setState({errorMessage: "getLaunches::Couldn't get launches, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
+        setErrorMessage("deleteLaunch::Couldn't delete launch, error: " + error);
       });
-  }
+  };
 
-  deleteLaunch(launchId) {
-    Backend.delete("launcher/" + this.props.router.params.project + "/" + launchId)
-      .then(response => {
-        this.getLaunches();
-      })
-      .catch(error => {
-        this.setState({errorMessage: "deleteLaunch::Couldn't delete launch, error: " + error});
-      });
-  }
-
-  getPager() {
-    var countFilter = Object.assign({}, this.state.filter);
+  // Get pager
+  const getPager = () => {
+    const countFilter = Object.assign({}, filter);
     countFilter.skip = 0;
     countFilter.limit = 0;
-    Backend.get(this.props.router.params.project + "/launch/count?" + Utils.filterToQuery(countFilter))
+    Backend.get(projectId + "/launch/count?" + Utils.filterToQuery(countFilter))
       .then(response => {
-        this.state.pager.total = response;
-        this.state.pager.current = this.state.filter.skip / this.state.filter.limit;
-        this.state.pager.visiblePage = Math.min(
-          response / this.state.pager.itemsOnPage + 1,
-          this.state.pager.maxVisiblePage,
-        );
-        this.setState(this.state);
+        setPager(prev => ({
+          ...prev,
+          total: response,
+          current: filter.skip / filter.limit,
+          visiblePage: Math.min(
+            response / prev.itemsOnPage + 1,
+            prev.maxVisiblePage
+          )
+        }));
       })
       .catch(error => console.log(error));
-  }
+  };
 
-  getLauncherDescriptors() {
+  // Get launcher descriptors
+  const getLauncherDescriptors = () => {
     Backend.get("launcher/descriptors")
       .then(response => {
-        this.state.launcherDescriptors = response;
-        this.setState(this.state);
+        setLauncherDescriptors(response);
       })
       .catch(error => {
-        this.setState({errorMessage: "getLauncherDescriptors::Couldn't get launcher descriptors, error: " + error});
+        setErrorMessage("getLauncherDescriptors::Couldn't get launcher descriptors, error: " + error);
       });
-  }
+  };
 
-  handleFilterChange(fieldName, event, index) {
-    if (index) {
-      if (event.target.value == "") {
-        delete this.state.filter[fieldName][index];
+  // Handle page changed
+  const handlePageChanged = (newPage) => {
+    const newSkip = newPage * pager.itemsOnPage;
+    setFilter(prev => ({
+      ...prev,
+      skip: newSkip
+    }));
+    setPager(prev => ({
+      ...prev,
+      current: newPage
+    }));
+  };
+
+  // Handle filter change
+  const handleFilterChange = (fieldName, event, index) => {
+    setFilter(prev => {
+      const newFilter = { ...prev };
+      if (index) {
+        if (event.target.value == "") {
+          if (newFilter[fieldName]) {
+            delete newFilter[fieldName][index];
+          }
+        } else {
+          if (!newFilter[fieldName]) {
+            newFilter[fieldName] = {};
+          }
+          newFilter[fieldName][index] = event.target.value;
+        }
       } else {
-        this.state.filter[fieldName][index] = event.target.value;
+        if (event.target.value == "") {
+          delete newFilter[fieldName];
+        } else {
+          newFilter[fieldName] = event.target.value;
+        }
       }
-    } else {
-      if (event.target.value == "") {
-        delete this.state.filter[fieldName];
+      return newFilter;
+    });
+  };
+
+  // Handle from date filter change
+  const handleFromDateFilterChange = (value, formattedValue) => {
+    setFilter(prev => {
+      const newFilter = { ...prev };
+      if (value == null) {
+        delete newFilter.from_createdTime;
       } else {
-        this.state.filter[fieldName] = event.target.value;
+        newFilter.from_createdTime = value.getTime();
       }
-    }
-    this.setState(this.state);
-  }
+      return newFilter;
+    });
+  };
 
-  handleFromDateFilterChange(value, formattedValue) {
-    if (value == null) {
-      delete this.state.filter.from_createdTime;
-    } else {
-      this.state.filter.from_createdTime = value.getTime();
-    }
-    this.setState(this.state);
-  }
+  // Handle to date filter change
+  const handleToDateFilterChange = (value, formattedValue) => {
+    setFilter(prev => {
+      const newFilter = { ...prev };
+      if (value == null) {
+        delete newFilter.to_createdTime;
+      } else {
+        newFilter.to_createdTime = value.getTime();
+      }
+      return newFilter;
+    });
+  };
 
-  handleToDateFilterChange(value, formattedValue) {
-    if (value == null) {
-      delete this.state.filter.to_createdTime;
-    } else {
-      this.state.filter.to_createdTime = value.getTime();
-    }
-    this.setState(this.state);
-  }
-
-  onFilter(event) {
-    this.updateUrl();
-    this.getLaunches();
-    this.getPager();
+  // On filter
+  const onFilter = (event) => {
+    updateUrl();
+    getLaunches();
+    getPager();
     event.preventDefault();
-  }
+  };
 
-  updateUrl() {
-    this.props.router.navigate(
-      "/" + this.props.router.params.project + "/launches?" + Utils.filterToQuery(this.state.filter),
-    );
-  }
+  // Update URL
+  const updateUrl = () => {
+    navigate("/" + projectId + "/launches?" + Utils.filterToQuery(filter));
+  };
 
-  getProgressBar(launch) {
+  // Get progress bar
+  const getProgressBar = (launch) => {
     return (
-      <div class="progress">
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        {typeof(launch) != 'undefined' &&
-        <>
-        <div
-          class="progress-bar progress-bar-striped"
-          role="progressbar"
-          style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.RUNNING, launch.launchStats.total)}
-        ></div>
-        <div
-          class="progress-bar bg-success"
-          role="progressbar"
-          style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.PASSED, launch.launchStats.total)}
-        ></div>
-        <div
-          class="progress-bar bg-danger"
-          role="progressbar"
-          style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.FAILED, launch.launchStats.total)}
-        ></div>
-        <div
-          class="progress-bar bg-warning"
-          role="progressbar"
-          style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.BROKEN, launch.launchStats.total)}
-        ></div>
-         </>
-         }
+      <div className="progress">
+        <ControlledPopup popupMessage={errorMessage} />
+        {typeof (launch) != 'undefined' && (
+          <>
+            <div
+              className="progress-bar progress-bar-striped"
+              role="progressbar"
+              style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.RUNNING, launch.launchStats.total)}
+            ></div>
+            <div
+              className="progress-bar bg-success"
+              role="progressbar"
+              style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.PASSED, launch.launchStats.total)}
+            ></div>
+            <div
+              className="progress-bar bg-danger"
+              role="progressbar"
+              style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.FAILED, launch.launchStats.total)}
+            ></div>
+            <div
+              className="progress-bar bg-warning"
+              role="progressbar"
+              style={Utils.getProgressBarStyle(launch.launchStats.statusCounters.BROKEN, launch.launchStats.total)}
+            ></div>
+          </>
+        )}
       </div>
     );
-  }
+  };
 
+  // Component mount and filter initialization
+  useEffect(() => {
+    const initialFilter = Object.assign(
+      {
+        skip: 0,
+        limit: 20,
+        orderby: "id",
+        orderdir: "DESC",
+        includedFields: "name,launchStats,id,createdTime,startTime,finishTime,launcherConfig,duration,testCaseTree",
+      },
+      Utils.queryToFilter(location.search.substring(1))
+    );
+    setFilter(initialFilter);
+    getLauncherDescriptors();
 
-  render() {
-    
-    return (
-      <div className="row">
-        <div className="col-sm-3 launch-filter">
-          <form>
-            <div className="form-group">
-              <div className="header-container">
-                <label htmlFor="name">
-                  <h5>Launch Name</h5>
-                </label>
-                <span className="float-right">
-                  <Link
-                    to={
-                      "/" +
-                      this.props.router.params.project +
-                      "/launches/statistics?" +
-                      Utils.filterToQuery(this.state.filter)
-                    }
-                  >
-                    Statistics
-                  </Link>
-                 </span>
-               </div>
-                 <input
-                   type="text"
-                   className="form-control"
-                   id="name"
-                   name="name"
-                   aria-describedby="Launch title"
-                   placeholder="Launch title"
-                   value={this.state.filter.like_name || ""}
-                   onChange={e => this.handleFilterChange("like_name", e)}
-                 />
-                 <small id="titleHelp" className="form-text text-muted">
-                   Find by partly matching Launch title
-                 </small>
+    // Set up interval for periodic refresh
+    intervalRef.current = setInterval(() => {
+      getLaunches();
+    }, 30000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
+  // Fetch launches when filter changes
+  useEffect(() => {
+    getLaunches();
+    getPager();
+  }, [filter.skip, filter.limit]);
+
+  // Update URL when page changes
+  useEffect(() => {
+    updateUrl();
+  }, [pager.current]);
+
+  return (
+    <div className="row">
+      <div className="col-sm-3 launch-filter">
+        <form>
+          <div className="form-group">
+            <div className="header-container">
+              <label htmlFor="name">
+                <h5>Launch Name</h5>
+              </label>
+              <span className="float-right">
+                <Link
+                  to={
+                    "/" +
+                    projectId +
+                    "/launches/statistics?" +
+                    Utils.filterToQuery(filter)
+                  }
+                >
+                  Statistics
+                </Link>
+              </span>
             </div>
-          </form>
-        </div>
-        <div className="col-sm-9">
-          <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-          </div>
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th scope="col">Title</th>
-                <th scope="col">Progress</th>
-                <th scope="col">Created</th>
-                <th scope="col">Started</th>
-                <th scope="col">Finished</th>
-                <th scope="col">Duration</th>
-                <th scope="col">Remove</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {this.state.launches.map(
-                function (launch) {
-                  return (
-                    <tr>
-                      <td>
-                        <Link to={"/" + this.props.router.params.project + "/launch/" + launch.id}>{launch.name}</Link>
-                      </td>
-                      <td>{this.getProgressBar(launch)}</td>
-                      <td>{Utils.timeToDate(launch.createdTime)}</td>
-                      <td>{Utils.timeToDate(launch.startTime)}</td>
-                      <td>{Utils.timeToDate(launch.finishTime)}</td> 
-                      <td>{Utils.timePassed(launch.duration)  }</td>
-                      <td>
-                        <button onClick={() => this.deleteLaunch(launch.id)}>
-                          <i class="bi-trash" aria-hidden="true"></i>
-                        </button>
-                      </td>
-                      <td>
-                        {launch.launcherConfig && launch.launcherConfig.launcherId && <FontAwesomeIcon icon={faPlug} />}
-                      </td>
-                    </tr>
-                  );
-                }.bind(this),
-              )}
-            </tbody>
-          </table>
-          <div>
-            <Pager
-              totalItems={this.state.pager.total}
-              currentPage={this.state.pager.current}
-              visiblePages={this.state.pager.maxVisiblePage}
-              itemsOnPage={this.state.pager.itemsOnPage}
-              onPageChanged={this.handlePageChanged}
+            <input
+              type="text"
+              className="form-control"
+              id="name"
+              name="name"
+              aria-describedby="Launch title"
+              placeholder="Launch title"
+              value={filter.like_name || ""}
+              onChange={e => handleFilterChange("like_name", e)}
             />
+            <small id="titleHelp" className="form-text text-muted">
+              Find by partly matching Launch title
+            </small>
           </div>
+        </form>
+      </div>
+      <div className="col-sm-9">
+        <div className="sweet-loading">
+          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={loading} />
+        </div>
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Title</th>
+              <th scope="col">Progress</th>
+              <th scope="col">Created</th>
+              <th scope="col">Started</th>
+              <th scope="col">Finished</th>
+              <th scope="col">Duration</th>
+              <th scope="col">Remove</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {launches.map((launch) => (
+              <tr key={launch.id}>
+                <td>
+                  <Link to={"/" + projectId + "/launch/" + launch.id}>{launch.name}</Link>
+                </td>
+                <td>{getProgressBar(launch)}</td>
+                <td>{Utils.timeToDate(launch.createdTime)}</td>
+                <td>{Utils.timeToDate(launch.startTime)}</td>
+                <td>{Utils.timeToDate(launch.finishTime)}</td>
+                <td>{Utils.timePassed(launch.duration)}</td>
+                <td>
+                  <button onClick={() => deleteLaunch(launch.id)}>
+                    <i className="bi-trash" aria-hidden="true"></i>
+                  </button>
+                </td>
+                <td>
+                  {launch.launcherConfig && launch.launcherConfig.launcherId && <FontAwesomeIcon icon={faPlug} />}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div>
+          <Pager
+            totalItems={pager.total}
+            currentPage={pager.current}
+            visiblePages={pager.maxVisiblePage}
+            itemsOnPage={pager.itemsOnPage}
+            onPageChanged={handlePageChanged}
+          />
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
-export default withRouter(Launches);
+export default Launches;
