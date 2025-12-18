@@ -1,270 +1,249 @@
-/* eslint-disable react/no-direct-mutation-state */
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 import * as Utils from "../common/Utils";
 
-class AttributeForm extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      attribute: props.attribute,
-      projectAttributes: props.projectAttributes,
-      errorMessage: "",
-      edit : props.edit,
-      attributeTypes: ["TESTCASE", "LAUNCH"],
-      session: {person: {}},
-    };
+const AttributeForm = ({
+  project,
+  attribute: propAttribute,
+  projectAttributes = [],
+  onAttributeAdded,
+  onAttributeRemoved,
+  edit = false,
+  closeModal,
+}) => {
+  const [attribute, setAttribute] = useState({
+    id: null,
+    name: "",
+    type: "TESTCASE",
+    attrValues: [],
+  });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [session, setSession] = useState({ person: {} });
+  const attributeTypes = ["TESTCASE", "LAUNCH"];
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleValueChange = this.handleValueChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.addValue = this.addValue.bind(this);
-    this.removeValue = this.removeValue.bind(this);
-    this.handleRemove = this.handleRemove.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.onSessionChange = this.onSessionChange.bind(this);
-    this.handleAttributeTypeChange = this.handleAttributeTypeChange.bind(this);
-  }
+  // Sync prop changes (e.g., when editing a different attribute)
+  useEffect(() => {
+    setAttribute(propAttribute || { id: null, name: "", type: "TESTCASE", attrValues: [] });
+  }, [propAttribute]);
 
-  onSessionChange(session) {
-    this.props.onSessionChange(session);
-  }
-
-  getSession() {
+  // Fetch session on mount
+  useEffect(() => {
     Backend.get("user/session")
-      .then(response => {
-        this.state.session = response;
-        this.setState(this.state);
+      .then((response) => {
+        setSession(response);
       })
-      .catch(() => {console.log("Unable to fetch session");});
-  }
-
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    this.setState({ attribute: nextProps.attribute, 
-      projectAttributes:nextProps.projectAttributes, 
-      edit: nextProps.edit});
-  }
-
-  handleAttributeTypeChange(event) {
-    console.log("User selected value: ", event.target.value);
-    this.state.attribute.type = event.target.value;
-    this.setState(this.state);
-  }
-
-
-  handleChange(event) {
-    this.state.attribute[event.target.name] = event.target.value;
-    this.state.attribute["type"] = "TESTCASE";
-    this.setState(this.state);
-  }
-
-  handleValueChange(i, event) {
-    this.state.attribute.attrValues[i].value = event.target.value;
-    this.setState(this.state);
-  }
-
-  removeValue(i, event) {
-    this.state.attribute.attrValues.splice(i, 1);
-    this.setState(this.state);
-  }
-
-  handleSubmit(event) {
-    //Added code for Issue 40
-    var duplicate = this.state.projectAttributes.filter(attr => (attr.name.toLowerCase()) ===
-                                          (this.state.attribute.name).toLowerCase()).length>0 ? true: false;
-    console.log("Duplicate : " + duplicate + " : EDIT : " + this.state.edit);
-    if(duplicate && !this.state.edit ){
-        this.setState({errorMessage:'Duplicate Attribute '}) 
-  
-    }else if(typeof this.state.attribute.name ==='string' && this.state.attribute.name.length ===0 ){
-      this.setState({errorMessage:'Enter valid attribute '})
-      }else if(this.state.attribute.name){
-      //Add
-        Backend.post(this.props.project + "/attribute", this.state.attribute)
-          .then(response => {
-            this.props.onAttributeAdded(response);
-            this.state.attribute = {
-              id: null,
-              name: "",
-              type: "",
-              attrValues: [],
-            };
-            this.setState(this.state);
-          })
-          .catch(error => {
-            this.setState({errorMessage: "handleSubmit::Couldn't save attribute, error: " + error});
-          });
-    }
-    event.preventDefault();
-  }  
-
-  handleRemove(event) {
-    Backend.delete(this.props.project + "/attribute/" + this.state.attribute.id)
-      .then(response => {
-	if (response.statusText != "Internal Server Error") {
-           this.props.onAttributeRemoved(this.state.attribute);
-           this.state.attribute = {
-             id: null,
-             name: "",
-             type: "",
-             attrValues: [],
-           };
-           this.setState(this.state);
-         } else {
-           this.setState({errorMessage: "handleRemove: Unable to remove attribute"});
-	 }
-      })
-      .catch(error => {
-        this.setState({errorMessage: "handleRemove::Couldn't remove attribute, error: " + error});
+      .catch(() => {
+        console.log("Unable to fetch session");
       });
-    event.preventDefault();
-  }
+  }, []);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setAttribute((prev) => ({
+      ...prev,
+      [name]: value,
+      type: name === "name" ? "TESTCASE" : prev.type, // Force TESTCASE when typing name (as in original)
+    }));
+  };
 
+  const handleAttributeTypeChange = (e) => {
+    setAttribute((prev) => ({ ...prev, type: e.target.value }));
+  };
 
-  handleClose(event) {
-        this.state.attribute = {
-          id: null,
-          name: "",
-          type: "",
-          attrValues: [],
-        };
-        this.state.errorMessage='';
-        this.setState(this.state);
-        // ADDED: Call closeModal from props to close the modal
-        if (this.props.closeModal) {
-          this.props.closeModal();
-        }
-    event.preventDefault();
-  }
+  const handleValueChange = (index, e) => {
+    setAttribute((prev) => {
+      const newValues = [...prev.attrValues];
+      newValues[index] = { ...newValues[index], value: e.target.value };
+      return { ...prev, attrValues: newValues };
+    });
+  };
 
+  const addValue = () => {
+    setAttribute((prev) => ({
+      ...prev,
+      attrValues: [...prev.attrValues, { value: "" }],
+    }));
+  };
 
-  addValue(event) {
-    this.state.attribute.attrValues.push({ value: "" });
-    this.setState(this.state);
-  }
+  const removeValue = (index) => {
+    setAttribute((prev) => ({
+      ...prev,
+      attrValues: prev.attrValues.filter((_, i) => i !== index),
+    }));
+  };
 
-  componentDidMount() {
-    if (this.props.id) {
-      Backend.get(this.props.project + "/project")
-        .then(response => {
-          const newState = Object.assign({}, this.state, {
-            project: response,
-          });
-          this.setState(newState);
-        })
-        .catch(error => console.log(error));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const trimmedName = attribute.name?.trim();
+
+    // Duplicate check (only when adding new, not editing)
+    const isDuplicate =
+      projectAttributes.some(
+        (attr) =>
+          attr.id !== attribute.id && // Allow same name if it's the same attribute (edit mode)
+          attr.name.toLowerCase() === trimmedName?.toLowerCase()
+      );
+
+    if (isDuplicate && !edit) {
+      setErrorMessage("Duplicate Attribute");
+      return;
     }
-    this.getSession();
-  }
 
-  render() {
-    return (
-      <div className="modal-dialog" role="document">
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title" id="editAttributeLabel">
-              Attribute
-            </h5>
-            {/* CHANGED: Removed data-dismiss="modal" and ensure onClick calls handleClose */}
-            <button type="button" className="close" aria-label="Close" onClick={this.handleClose}>
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div className="modal-body">
-            <form>
-              <div className="form-group row">
-                <label className="col-sm-2 col-form-label">Name</label>
-                <div className="col-sm-8">
-                  <input
-                    type="text"
-                    name="name"
-                    className="col-sm-12"
-                    value={this.state.attribute.name}
-                    onChange={this.handleChange}
-                  />
-                </div>
+    if (!trimmedName) {
+      setErrorMessage("Enter valid attribute");
+      return;
+    }
+
+    try {
+      const response = await Backend.post(`${project}/attribute`, attribute);
+      onAttributeAdded(response);
+      // Reset form
+      setAttribute({ id: null, name: "", type: "TESTCASE", attrValues: [] });
+      setErrorMessage("");
+      closeModal?.();
+    } catch (error) {
+      setErrorMessage(`Couldn't save attribute: ${error}`);
+    }
+  };
+
+  const handleRemove = async (e) => {
+    e.preventDefault();
+
+    if (!attribute.id) return;
+
+    try {
+      const response = await Backend.delete(`${project}/attribute/${attribute.id}`);
+      if (response.statusText !== "Internal Server Error") {
+        onAttributeRemoved(attribute);
+        setAttribute({ id: null, name: "", type: "TESTCASE", attrValues: [] });
+        setErrorMessage("");
+        closeModal?.();
+      } else {
+        setErrorMessage("Unable to remove attribute");
+      }
+    } catch (error) {
+      setErrorMessage(`Couldn't remove attribute: ${error}`);
+    }
+  };
+
+  const handleClose = (e) => {
+    e.preventDefault();
+    setAttribute({ id: null, name: "", type: "TESTCASE", attrValues: [] });
+    setErrorMessage("");
+    closeModal?.();
+  };
+
+  return (
+    <div className="modal-dialog" role="document">
+      <ControlledPopup popupMessage={errorMessage} />
+
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title" id="editAttributeLabel">
+            Attribute
+          </h5>
+          <button
+            type="button"
+            className="close"
+            aria-label="Close"
+            onClick={handleClose}
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <form onSubmit={handleSubmit}>
+            <div className="form-group row">
+              <label className="col-sm-2 col-form-label">Name</label>
+              <div className="col-sm-8">
+                <input
+                  type="text"
+                  name="name"
+                  className="form-control"
+                  value={attribute.name || ""}
+                  onChange={handleChange}
+                  placeholder="Attribute name"
+                />
               </div>
-              {Utils.isAdmin(this.state.session) &&
-              <div style={{
-                     display: 'flex',
-                     justifyContent: 'left',
-                     alignItems: 'center',
-                   }} className="form-group row">
+            </div>
+
+            {Utils.isAdmin(session) && (
+              <div className="form-group row">
                 <label className="col-sm-2 col-form-label">Type</label>
                 <div className="col-sm-8">
                   <select
-                    name="Attribute Type"
-                    defaultValue={this.state.attributeTypes[0]}
-                    value={this.state.attribute.type}
-                    onChange={this.handleAttributeTypeChange}
+                    className="form-control"
+                    value={attribute.type || "TESTCASE"}
+                    onChange={handleAttributeTypeChange}
                   >
-                  {this.state.attributeTypes.map((attributeType, i) => {
-                    return (<option key={i}>{attributeType}</option>);
-                  })}
+                    {attributeTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
-              }
+            )}
 
-              {this.state.attribute.attrValues.map((value, i) => {
-                return (
-                  <div key={i} className="form-group row">
-                    <label className="col-sm-2 col-form-label">Value</label>
-                    <div className="col-sm-8">
-                      <input
-                        type="text"
-                        name="value"
-                        index={i}
-                        value={value.value}
-                        className="col-sm-12"
-                        onChange={e => this.handleValueChange(i, e)}
-                      />
-                    </div>
-                    <div className="col-sm-1">
-                      <span className="clickable red" index={i} onClick={e => this.removeValue(i, e)}>
-                        <FontAwesomeIcon icon={faMinusCircle} />
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-              <div className="form-group row">
-                <div className="col-sm-8 d-flex align-items-start">
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary"
-                    style={{ marginLeft: '-0.5rem' }}  // fine-tunes alignment
-                    onClick={this.addValue}
-                   >
-                     Add value
-                  </button>
+            {attribute.attrValues.map((val, i) => (
+              <div key={i} className="form-group row align-items-center">
+                <label className="col-sm-2 col-form-label">Value</label>
+                <div className="col-sm-8">
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={val.value || ""}
+                    onChange={(e) => handleValueChange(i, e)}
+                  />
+                </div>
+                <div className="col-sm-1">
+                  <span
+                    className="clickable red"
+                    onClick={() => removeValue(i)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <FontAwesomeIcon icon={faMinusCircle} />
+                  </span>
                 </div>
               </div>
-            </form>
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-primary" onClick={this.handleSubmit}>
-              Save changes
+            ))}
+
+            <div className="form-group row">
+              <div className="col-sm-10 offset-sm-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-primary"
+                  onClick={addValue}
+                >
+                  Add value
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div className="modal-footer">
+          <button type="button" className="btn btn-primary" onClick={handleSubmit}>
+            Save changes
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={handleClose}>
+            Close
+          </button>
+          {attribute.id && (
+            <button type="button" className="btn btn-danger" onClick={handleRemove}>
+              Remove
             </button>
-            {/* CHANGED: Removed data-dismiss="modal" and ensure onClick calls handleClose */}
-            <button type="button" className="btn btn-secondary" onClick={this.handleClose}>
-              Close
-            </button>
-            {this.state.attribute.id && (
-              <button type="button" className="btn btn-danger float-right" onClick={this.handleRemove}>
-                Remove
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default AttributeForm;
