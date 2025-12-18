@@ -1,134 +1,124 @@
-import React, { Component } from "react";
-import { withRouter } from "../common/withRouter";
+import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import qs from "qs";
-import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
-import TextField from '@mui/material/TextField';
 import ReCAPTCHA from "react-google-recaptcha";
 import { LinkButtons, forgotButton } from './components';
 import ControlledPopup from '../common/ControlledPopup';
 
-class Login extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      login: "",
-      password: "",
-      errorMessage:"",
-      recaptcha: "",
-    };
+const Login = ({ onSessionChange }) => {
+  const location = useLocation();
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleRecaptcha = this.handleRecaptcha.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.onSessionChange = this.onSessionChange.bind(this);
-  }
+  const [login, setLogin] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [recaptcha, setRecaptcha] = useState("");
 
-  handleRecaptcha(value) {
+  const handleRecaptcha = (value) => {
     if (value) {
-      this.state.recaptcha = value;
+      setRecaptcha(value);
     }
-  }
+  };
 
-  onSessionChange(session) {
-    this.props.onSessionChange(session);
-  }
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    if (name === "login") {
+      setLogin(value);
+    } else if (name === "password") {
+      setPassword(value);
+    }
+  };
 
-  handleChange(event) {
-    // eslint-disable-next-line react/no-direct-mutation-state
-    this.state[event.target.name] = event.target.value;
-    this.setState(this.state);
-  }
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
-  handleSubmit(event) {
+    let recaptchaValue = "";
+    if (process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) {
+      // no automated test - send recaptcha string to back end
+      recaptchaValue = recaptcha;
 
-      let recaptcha = "";
-      if (process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) {
-        // no automated test - send reacaptcha string to back end
-        recaptcha = this.state.recaptcha;
-
-        if (this.state.recaptcha === "") {
-          alert("Enter recaptcha");
-	  return;
-        }
-
-      } else {
-        // automated test - send recaptcha string = "" to back end
-        recaptcha = "";
+      if (recaptcha === "") {
+        alert("Enter recaptcha");
+        return;
       }
+    } else {
+      // automated test - send recaptcha string = "" to back end
+      recaptchaValue = "";
+    }
 
-      this.state.recaptcha = "";
-      this.setState(this.state);
+    setRecaptcha("");
 
-      Backend.postPlain("user/login?login=" + this.state.login + "&password=" + this.state.password + "&recaptcha=" + recaptcha)
-        .then(response => {
-          this.onSessionChange(response);
-	  if (response.ok == false) {
-	     this.setState({errorMessage: "Unauthorized user id / password combination"});
-	  } else {
-             var params = qs.parse(this.props.router.location.search.substring(1));
-             var retpath = decodeURIComponent(params.retpath || "");
-             var decodedReptath = decodeURI(retpath);
-             if (decodedReptath === "") {
-               decodedReptath = "/";
-             }
-             window.location = decodeURI(decodedReptath);
-	  }
-        }).catch(error => {
-	    this.setState({errorMessage: "handleSubmit::Unable to login, error: " + error});
-        });
-      event.preventDefault();
-  }
+    Backend.postPlain("user/login?login=" + login + "&password=" + password + "&recaptcha=" + recaptchaValue)
+      .then(response => {
+        if (onSessionChange) {
+          onSessionChange(response);
+        }
+        if (response.ok === false) {
+          setErrorMessage("Unauthorized user id / password combination");
+        } else {
+          const params = qs.parse(location.search.substring(1));
+          const retpath = decodeURIComponent(params.retpath || "");
+          let decodedRetpath = decodeURI(retpath);
+          if (decodedRetpath === "") {
+            decodedRetpath = "/";
+          }
+          window.location = decodeURI(decodedRetpath);
+        }
+      })
+      .catch(error => {
+        setErrorMessage("handleSubmit::Unable to login, error: " + error);
+      });
+  };
 
-  render() {
-    return (
-      <div className="text-center">
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <form className="form-signin">
-          <h1 className="h3 mb-3 font-weight-normal">Please sign in</h1>
-          <label for="login" className="sr-only">
-            Login
-          </label>
-          <input
-            type="text"
-            id="login"
-            name="login"
-            className="form-control"
-            placeholder="Login"
-            required=""
-            autofocus=""
-            onChange={this.handleChange}
+  return (
+    <div className="text-center">
+      <ControlledPopup popupMessage={errorMessage} />
+      <form className="form-signin" onSubmit={handleSubmit}>
+        <h1 className="h3 mb-3 font-weight-normal">Please sign in</h1>
+        <label htmlFor="login" className="sr-only">
+          Login
+        </label>
+        <input
+          type="text"
+          id="login"
+          name="login"
+          className="form-control"
+          placeholder="Login"
+          required
+          autoFocus
+          value={login}
+          onChange={handleChange}
+        />
+        <label htmlFor="password" className="sr-only">
+          Password
+        </label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          className="form-control"
+          placeholder="Password"
+          required
+          value={password}
+          onChange={handleChange}
+        />
+        {(process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) && (
+          <ReCAPTCHA
+            sitekey={process.env.REACT_APP_SITE_KEY}
+            onChange={handleRecaptcha}
           />
-          <label for="password" className="sr-only">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            className="form-control"
-            placeholder="Password"
-            required=""
-            onChange={this.handleChange}
-          />
-	  {(process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) && (
-	  <ReCAPTCHA
-	   sitekey={process.env.REACT_APP_SITE_KEY}
-	   onChange={this.handleRecaptcha}
-	  />
-	  )}
-          <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
-            Sign in
-          </button>
-        </form>
-	<LinkButtons
-	    buttonStyle={forgotButton}
-	    buttonText="Forgot Password"
-	    link="/forgot_password"
-	/>
-      </div>
-    );
-  }
-}
+        )}
+        <button className="btn btn-lg btn-primary btn-block" type="submit">
+          Sign in
+        </button>
+      </form>
+      <LinkButtons
+        buttonStyle={forgotButton}
+        buttonText="Forgot Password"
+        link="/forgot_password"
+      />
+    </div>
+  );
+};
 
-export default withRouter(Login);
+export default Login;

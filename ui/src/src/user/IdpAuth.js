@@ -1,31 +1,28 @@
-import React, { Component } from "react";
-import { withRouter } from "../common/withRouter";
+import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import qs from "qs";
 import Backend from "../services/backend";
-class IdpAuth extends Component {
-  render() {
-    return <div></div>;
-  }
 
-    onSessionChange(session) {
-      this.props.onSessionChange(session);
-    }
+const IdpAuth = ({ onSessionChange }) => {
+  const location = useLocation();
 
-  componentDidMount() {
-    Backend.get("user/auth?" + this.props.router.location.search.substring(1))
+  useEffect(() => {
+    Backend.get("user/auth?" + location.search.substring(1))
       .then(response => {
-        this.onSessionChange(response);
-        if (response.metainfo && response.metainfo.organizationsEnabled){
-            window.location = "/orgselect";
+        if (onSessionChange) {
+          onSessionChange(response);
+        }
+        if (response.metainfo && response.metainfo.organizationsEnabled) {
+          window.location = "/orgselect";
         } else {
-            window.location = "/";
+          window.location = "/";
         }
       })
       .catch(error => {
         window.location = "/auth";
       });
-  }
-}
+  }, [location.search, onSessionChange]);
 
-export default withRouter(IdpAuth);
+  return <div></div>;
+};
+
+export default IdpAuth;

@@ -1,140 +1,130 @@
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect, useCallback } from "react";
 import TestSuitesWidget from "../testsuites/TestSuitesWidget";
 import ProjectScratchpadWidget from "../projects/ProjectScratchpadWidget";
 import LaunchesWidget from "../launches/LaunchesWidget";
 import LaunchesTrendWidget from "../launches/LaunchesTrendWidget";
-import { Link } from "react-router-dom";
-import { withRouter } from "../common/withRouter";
+import { Link, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCogs } from "@fortawesome/free-solid-svg-icons";
-import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
-import ControlledPopup from '../common/ControlledPopup';
+import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 
-class Project extends SubComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      project: {
-        id: null,
-        name: "",
-        description: "",
-        allowedGroups: [],
-        scratchpad: "",
-      },
-      loading: true,
-      errorMessage: "",
-    };
-    this.getProject = this.getProject.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.onProjectChange = props.onProjectChange;
-  }
+const Project = ({ onProjectChange }) => {
+  const { project: projectId } = useParams();
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.state.project.id = this.props.router.params.project;
-    this.getProject();
-  }
+  const [project, setProject] = useState({
+    id: null,
+    name: "",
+    description: "",
+    allowedGroups: [],
+    scratchpad: "",
+  });
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    var nextProjectId = nextProps.router.params.project;
-    // eslint-disable-next-line eqeqeq
-    if (nextProjectId && this.state.project.id != nextProjectId) {
-      this.state.project.id = nextProjectId;
-      this.onProjectChange(this.state.project.id);
-      this.getProject();
-    }
-  }
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  handleChange(event) {
+  const getProject = useCallback(() => {
+    if (!projectId) return;
 
-  }
-
-  handleSubmit(event) {
-
-  }
-
-  getProject() {
-    Backend.get("project/" + this.state.project.id)
-      .then(response => {
-        this.state.project = response;
-        this.setState(this.state);
+    Backend.get("project/" + projectId)
+      .then((response) => {
+        setProject(response);
+        setLoading(false);
       })
-      .catch(error => {
-        this.setState({errorMessage: "getProject::Couldn't get project, error: " + error});
+      .catch((error) => {
+        setErrorMessage("getProject::Couldn't get project, error: " + error);
+        setLoading(false);
       });
-  }
+  }, [projectId]);
 
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="project-header">
-          <h1 className = "project-name">
-            {this.state.project.name}
-	  </h1>
-          <Link to={"/projects/" + this.state.project.id + "/settings"} className="project-settings-link">
-            <FontAwesomeIcon icon={faCogs} />
-          </Link>
-        </div>
-        <div className="row">
-          <div className="col-sm-6">
-            <div className="card project-card">
-              <div className="card-header">
-                <span>
-                  <Link to={"/" + this.state.project.id + "/launches"}>Launches</Link>
-                </span>
-              </div>
-              <div className="card-body">
-                <LaunchesWidget limit={5} projectId={this.state.project.id} />
-              </div>
-            </div>
-          </div>
-          <div className="col-sm-6">
-            <div className="card project-card">
-              <div className="card-header">
-                <span>
-                  <Link to={"/" + this.state.project.id + "/testsuites"}>Test Suites</Link>
-                </span>
-              </div>
-              <div className="card-body">
-                <TestSuitesWidget limit={11} projectId={this.state.project.id} />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-6">
-            <div className="card project-card">
-              <div className="card-header">
-                <span>
-                  <Link to={"/" + this.state.project.id + "/launches"}>Last 20 Launches</Link>
-                </span>
-              </div>
-              <div className="card-body">
-                <LaunchesTrendWidget projectId={this.state.project.id} />
-              </div>
-            </div>
-          </div>
-          <div className="col-sm-6">
-            <div className="card project-card">
-              <div className="card-header">
-                <span>
-                  <Link to={"/" + this.state.project.id + "/projectscratchpad"}></Link>
-                </span>
-              </div>
-              <div className="card-body">
-                <ProjectScratchpadWidget limit={11} projectId={this.state.project.id} />
-              </div>
-            </div>
-          </div>
-	 </div>
+  const handleChange = (event) => {
+    // Implementation placeholder
+  };
+
+  const handleSubmit = (event) => {
+    // Implementation placeholder
+  };
+
+  // Initial load and project ID changes
+  useEffect(() => {
+    if (projectId) {
+      setProject((prev) => ({ ...prev, id: projectId }));
+      if (onProjectChange) {
+        onProjectChange(projectId);
+      }
+      getProject();
+    }
+  }, [projectId, onProjectChange, getProject]);
+
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div className="project-header">
+        <h1 className="project-name">{project.name}</h1>
+        <Link
+          to={"/projects/" + project.id + "/settings"}
+          className="project-settings-link"
+        >
+          <FontAwesomeIcon icon={faCogs} />
+        </Link>
       </div>
-    );
-  }
-}
+      <div className="row">
+        <div className="col-sm-6">
+          <div className="card project-card">
+            <div className="card-header">
+              <span>
+                <Link to={"/" + project.id + "/launches"}>Launches</Link>
+              </span>
+            </div>
+            <div className="card-body">
+              <LaunchesWidget limit={5} projectId={project.id} />
+            </div>
+          </div>
+        </div>
+        <div className="col-sm-6">
+          <div className="card project-card">
+            <div className="card-header">
+              <span>
+                <Link to={"/" + project.id + "/testsuites"}>Test Suites</Link>
+              </span>
+            </div>
+            <div className="card-body">
+              <TestSuitesWidget limit={11} projectId={project.id} />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="row">
+        <div className="col-6">
+          <div className="card project-card">
+            <div className="card-header">
+              <span>
+                <Link to={"/" + project.id + "/launches"}>
+                  Last 20 Launches
+                </Link>
+              </span>
+            </div>
+            <div className="card-body">
+              <LaunchesTrendWidget projectId={project.id} />
+            </div>
+          </div>
+        </div>
+        <div className="col-sm-6">
+          <div className="card project-card">
+            <div className="card-header">
+              <span>
+                <Link to={"/" + project.id + "/projectscratchpad"}></Link>
+              </span>
+            </div>
+            <div className="card-body">
+              <ProjectScratchpadWidget limit={11} projectId={project.id} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-export default withRouter(Project);
+export default Project;

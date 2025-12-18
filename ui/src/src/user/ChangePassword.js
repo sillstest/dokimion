@@ -1,82 +1,78 @@
-import React from "react";
-import { withRouter } from "../common/withRouter";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import SubComponent from "../common/SubComponent";
 import * as Utils from '../common/Utils';
 import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
 
-class ChangePassword extends SubComponent {
-  state = {session: {person:{}}, message: ""}
+const ChangePassword = () => {
+  const { profileId } = useParams();
+  const [session, setSession] = useState({ person: {} });
+  const [message, setMessage] = useState("");
+  const [password, setPassword] = useState("");
 
-  constructor(props) {
-    super(props);
+  useEffect(() => {
+    getSession();
+  }, []);
 
-    this.state.profileId = this.props.router.params.profileId;
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.getSession = this.getSession.bind(this);
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.getSession();
-  }
-
-  getSession() {
+  const getSession = () => {
     Backend.get("user/session")
       .then(response => {
-        this.state.session = response;
-        this.setState(this.state);
+        setSession(response);
       })
-      .catch(() => {console.log("Unable to fetch session");});
-  }
+      .catch(() => {
+        console.log("Unable to fetch session");
+      });
+  };
 
-  handleChange(event) {
-    this.state[event.target.name] = event.target.value;
-    this.setState(this.state);
-  }
+  const handleChange = (event) => {
+    setPassword(event.target.value);
+  };
 
-  handleSubmit(event) {
-    Backend.postPlain("user/change-password", { newPassword: this.state.password, login: this.state.profileId })
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    
+    Backend.postPlain("user/change-password", { 
+      newPassword: password, 
+      login: profileId 
+    })
       .then(response => {
-	if (response.status !== 200) {
-	   this.setState({message: "Error: Change Password Failed"});
-	} else {
-	   this.setState({message: "Success: Password updated"});
-	   window.location = decodeURI("/");
+        if (response.status !== 200) {
+          setMessage("Error: Change Password Failed");
+        } else {
+          setMessage("Success: Password updated");
+          window.location = decodeURI("/");
         }
       })
       .catch(error => {
-	this.setState({message: "Error: Couldn't change password"});
+        setMessage("Error: Couldn't change password");
       });
-    event.preventDefault();
-  }
+  };
 
-  render() {
-    return (
-      <div className="text-center">
-	<ControlledPopup popupMessage={this.state.message}/>
-        {Utils.isUserOwnerOrAdmin(this.state.session, this.state.session.person.login) && (
-            <form className="form-signin">
-              <h1 className="h3 mb-3 font-weight-normal">Change Password</h1>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                className="form-control"
-                placeholder="New Password"
-                required=""
-                onChange={this.handleChange}
-              />
-              <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
-                Submit
-              </button>
-            </form>
-        )}
-      </div>
-    );
-  }
-}
+  return (
+    <div className="text-center">
+      <ControlledPopup popupMessage={message} />
+      {Utils.isUserOwnerOrAdmin(session, session.person.login) && (
+        <form className="form-signin">
+          <h1 className="h3 mb-3 font-weight-normal">Change Password</h1>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            className="form-control"
+            placeholder="New Password"
+            required=""
+            onChange={handleChange}
+          />
+          <button 
+            className="btn btn-lg btn-primary btn-block" 
+            onClick={handleSubmit}
+          >
+            Submit
+          </button>
+        </form>
+      )}
+    </div>
+  );
+};
 
-export default withRouter(ChangePassword);
+export default ChangePassword;

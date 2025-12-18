@@ -1,665 +1,754 @@
-/*unc eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable eqeqeq */
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect, useCallback } from "react";
 import Attachments from "../testcases/Attachments";
 import Results from "../testcases/Results";
 import Comments from "../comments/Comments";
 import EventsWidget from "../audit/EventsWidget";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { withRouter } from "../common/withRouter";
-import { useParams } from "react-router-dom";
 import $ from "jquery";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
-import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
-import { faBars } from "@fortawesome/free-solid-svg-icons";
+import { faPencilAlt, faMinusCircle, faBars, faPlug } from "@fortawesome/free-solid-svg-icons";
 import CreatableSelect from "react-select/creatable";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
-import { faPlug } from "@fortawesome/free-solid-svg-icons";
 import { Checkbox } from "@mui/material";
 import { ConfirmButton } from "../common/uicomponents/ConfirmButton";
 import { Editor } from "@tinymce/tinymce-react";
 import Backend from "../services/backend";
 import LaunchTestcaseControls from "../launches/LaunchTestcaseControls";
 
-
-// Tinymce is registered to bob_beck@sil.org on tiny.cloud, the tinymce
-// assigned api key has been added as argument to the Editor component
-// The account is a free one, only allowing 2 domains - localhost,
-// testing.languagetechnology.com
-
-class TestCase extends SubComponent {
-  constructor(props) {
-    super(props);
-    this.tinymcePlugins = [
-      "advlist autolink lists link image charmap print preview anchor",
-      "searchreplace visualblocks code table fullscreen",
-      "insertdatetime media table paste codesample help wordcount autosave",
-    ];
-    this.tinymceToolbar =
-      "undo redo | formatselect | " +
-      "bold italic forecolor backcolor | alignleft aligncenter " +
-      "alignright alignjustify | bullist numlist outdent indent | " +
-      "removeformat | table | codesample | help";
-
-    this.tinymceContentStyle = "p {margin: 0}";
-
-    this.state = {
-      testcase: {
-        id: null,
-        importedName: "",
-        description: "",
-        steps: [],
-        attributes: {},
-        attachments: [],
-        results: [],
-        comments: [],
-        properties: [],
-        broken: false,
-        locked: false,
-	displayErrorMessage: "",
-      },
-      originalTestcase: {
-        steps: [],
-        attributes: {},
-      },
-      projectAttributes: [],
-      readonly: false,
-      testDeveloper: false,
-      attributesInEdit: new Set(),
-      propertiesInEdit: new Set(),
-      commentsCount: 0,
-      loading: true,
-      errorMessage: "",
-      session: {person: {}},
-    };
-
-    this.getSession = this.getSession.bind(this);
-    this.onSessionChange = this.onSessionChange.bind(this);
-    this.getTestCase = this.getTestCase.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.toggleEdit = this.toggleEdit.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.cancelEdit = this.cancelEdit.bind(this);
-    this.getAttributeName = this.getAttributeName.bind(this);
-    this.getAttributeValues = this.getAttributeValues.bind(this);
-    this.editAttributeValues = this.editAttributeValues.bind(this);
-    this.cancelEditAttributeValues = this.cancelEditAttributeValues.bind(this);
-    this.cancelEditAttributeKey = this.cancelEditAttributeKey.bind(this);
-    this.removeAttribute = this.removeAttribute.bind(this);
-    this.addAttribute = this.addAttribute.bind(this);
-    this.addProperty = this.addProperty.bind(this);
-    this.editAttributeKey = this.editAttributeKey.bind(this);
-    this.handleStepActionChange = this.handleStepActionChange.bind(this);
-    this.handleStepExpectationChange = this.handleStepExpectationChange.bind(this);
-    this.addStep = this.addStep.bind(this);
-    this.removeStep = this.removeStep.bind(this);
-    this.toggleEditAttribute = this.toggleEditAttribute.bind(this);
-    this.getAttributeKeysToAdd = this.getAttributeKeysToAdd.bind(this);
-    this.onTestcaseUpdated = this.onTestcaseUpdated.bind(this);
-    this.onCommentsCountChanged = this.onCommentsCountChanged.bind(this);
-    this.removeTestcase = this.removeTestcase.bind(this);
-    this.lockTestcase = this.lockTestcase.bind(this);
-    this.unlockTestcase = this.unlockTestcase.bind(this);
-    this.getAttributes = this.getAttributes.bind(this);
-    this.cancelEditProperty = this.cancelEditProperty.bind(this);
-    this.toggleEditProperty = this.toggleEditProperty.bind(this);
-    this.onBrokenToggle = this.onBrokenToggle.bind(this);
-    this.cloneTestCase = this.cloneTestCase.bind(this);
-    this.handleOnClickToSelectText = this.handleOnClickToSelectText.bind(this);
-
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-
-  if (this.props.readonly) {
-    this.state.readonly = true;
-  }
-  if (this.props.testDeveloper) {
-    this.state.testDeveloper = true;
-  }
-  if (this.props.launchId) {
-    this.state.launchId = this.props.launchId;
-  }
+const TestCase = (props) => {
+  const params = useParams();
   
-  // Handle case where testcase is passed directly as prop
-  if (this.props.testcase) {
-    this.state.testcase = this.props.testcase;
-    this.getSession();
-    this.state.loading = false;
-    this.setState(this.state);
-    return;
-  }
+  // TinyMCE configuration constants
+  const tinymcePlugins = [
+    "advlist autolink lists link image charmap print preview anchor",
+    "searchreplace visualblocks code table fullscreen",
+    "insertdatetime media table paste codesample help wordcount autosave",
+  ];
   
-  // Determine project and testcase IDs
-  let projectId, testcaseId;
-  if (this.props.testcaseId) {
-    projectId = this.props.projectId;
-    testcaseId = this.props.testcaseId;
-  } else if (this.props.router) {
-    projectId = this.props.router.params.project;
-    testcaseId = this.props.router.params.testcase;
-  }
+  const tinymceToolbar =
+    "undo redo | formatselect | " +
+    "bold italic forecolor backcolor | alignleft aligncenter " +
+    "alignright alignjustify | bullist numlist outdent indent | " +
+    "removeformat | table | codesample | help";
   
-  this.projectId = projectId;
+  const tinymceContentStyle = "p {margin: 0}";
+
+  // State management
+  const [testcase, setTestcase] = useState({
+    id: null,
+    importedName: "",
+    description: "",
+    steps: [],
+    attributes: {},
+    attachments: [],
+    results: [],
+    comments: [],
+    properties: [],
+    broken: false,
+    locked: false,
+    displayErrorMessage: "",
+  });
   
-  // Load both session and testcase in parallel
-  const sessionPromise = Backend.get("user/session");
-  const testcasePromise = Backend.get(projectId + "/testcase/" + testcaseId);
+  const [originalTestcase, setOriginalTestcase] = useState({
+    steps: [],
+    attributes: {},
+  });
   
-  Promise.all([sessionPromise, testcasePromise])
-    .then(([session, testcase]) => {
-      this.state.session = session;
-      this.state.testcase = testcase;
-      this.state.originalTestcase = JSON.parse(JSON.stringify(testcase));
-      this.state.attributesInEdit.clear();
-      this.state.propertiesInEdit.clear();
-      
-      // Determine readonly status based on roles
-      var roles = session.person.roles && session.person.roles.length > 0 
-        ? session.person.roles : [];
+  const [projectAttributes, setProjectAttributes] = useState([]);
+  const [readonly, setReadonly] = useState(props.readonly || false);
+  const [testDeveloper, setTestDeveloper] = useState(props.testDeveloper || false);
+  const [attributesInEdit, setAttributesInEdit] = useState(new Set());
+  const [propertiesInEdit, setPropertiesInEdit] = useState(new Set());
+  const [commentsCount, setCommentsCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [session, setSession] = useState({ person: {} });
+  const [projectId, setProjectId] = useState(props.projectId || params.project);
+  const [launchId, setLaunchId] = useState(props.launchId);
 
-      if (roles.length == 0) {
-        this.state.readonly = true;
-      } else {
-        var isTester = roles.filter(val => val.includes('TESTER')).length > 0;
-        var isObserverOnly = roles.filter(val => val.includes('OBSERVERONLY')).length > 0;
-        var isTestDeveloper = roles.filter(val => val.includes('TESTDEVELOPER')).length > 0;
-        this.state.testDeveloper = isTestDeveloper;
-        console.log("Role is a ?" + isTester + " " + isTestDeveloper + " " + testcase.locked);
-
-        this.state.readonly = false;
-        if (isTester || isObserverOnly) {
-          this.state.readonly = true;
-        } else if (isTestDeveloper && testcase.locked) {
-          this.state.readonly = true;
-        } else if (isTestDeveloper) {
-          this.state.readonly = false;
-        }
-      }
-      
-      this.state.loading = false;
-      this.setState(this.state);
-      this.getAttributes();
-    })
-    .catch(error => {
-      console.log("Error loading testcase or session:", error);
-      this.setState({
-        errorMessage: "componentDidMount::Couldn't fetch testcase or session",
-        loading: false
-      });
-    });
-  }
-
-  onSessionChange(session) {
-    this.props.onSessionChange(session);
-  }
-
-  getSession() {
+  // Get session data
+  const getSession = useCallback(() => {
     Backend.get("user/session")
       .then(response => {
-        this.state.session = response;
-        this.setState(this.state);
+        setSession(response);
+        if (props.onSessionChange) {
+          props.onSessionChange(response);
+        }
       })
-      .catch(() => {console.log("Unable to fetch session");});
-  }
+      .catch(() => {
+        console.log("Unable to fetch session");
+      });
+  }, [props]);
 
-
-  UNSAFE_componentWillReceiveProps(nextProps, nextState) {
-    if (nextProps.testcase) {
-      this.state.testcase = nextProps.testcase;
-      this.state.loading = false;
-      this.state.testDeveloper = nextProps.testDeveloper;
-    } else if (nextProps.testcaseId) {
-      this.projectId = nextProps.projectId;
-      //Need to reset the readonly flag for changes between TCS
-      this.state.readonly=false;
-      this.getTestCase(nextProps.projectId, nextProps.testcaseId);
-    }
-    if (nextProps.projectAttributes) {
-      this.state.projectAttributes = nextProps.projectAttributes;
-    } else {
-      this.getAttributes();
-    }
-    if (nextProps.launchId) {
-      this.state.launchId = nextProps.launchId;
-    }
-    if (nextProps.projectId) {
-      this.projectId = nextProps.projectId;
-    }
+  // Get attributes
+  const getAttributes = useCallback(() => {
+    if (!projectId) return;
     
-    this.setState(this.state);
-  }
-
-  onTestcaseUpdated(count) {
-    this.getTestCase(this.projectId, this.state.testcase.id);
-    this.getAttributes();
-  }
-
-  getTestCase(projectId, testcaseId) {
-console.log("TestCase::getTestCase");
-
-    Backend.get(projectId + "/testcase/" + testcaseId)
+    Backend.get(projectId + "/attribute")
       .then(response => {
-        this.state.testcase = response;
-        this.state.originalTestcase = JSON.parse(JSON.stringify(this.state.testcase));
-        this.state.attributesInEdit.clear();
-        this.state.propertiesInEdit.clear();
-        this.state.loading = false;
-
-        // Tester is to be readonly always.
-        // Test Developer is read only when the test is locked.
-        var roles = this.state.session.person.roles &&  this.state.session.person.roles.length>0 ? this.state.session.person.roles :[];
-
-	if (roles.length == 0) {
-	   this.state.readonly = true;
-	} else {
-
-           var isTester =  roles && roles.filter(val => val.includes('TESTER')).length >0 ? true : false;
-           var isObserverOnly =  roles && roles.filter(val => val.includes('OBSERVERONLY')).length >0 ? true : false;
-           var isTestDeveloper =  roles && roles.filter(val => val.includes('TESTDEVELOPER')).length >0 ? true : false;
-           this.state.testDeveloper = isTestDeveloper;
-           console.log("Role is a ?" + isTester + " " + isTestDeveloper + this.state.testcase.locked);
-
-	   this.state.readonly = false;
-           if (isTester || isObserverOnly) {
-              this.state.readonly = true;
-           } else if (isTestDeveloper && this.state.testcase.locked ) {
-              this.state.readonly = true;
-           } else if (isTestDeveloper) {
-	      this.state.readonly = false;
-           }
-	}
-        this.setState(this.state);
+        const filtered = response
+          .filter(p => p.type != 'undefined')
+          .filter(p => p.type != 'LAUNCH');
+        setProjectAttributes(filtered);
       })
       .catch(error => {
-        this.setState({errorMessage: "getTestCase::Couldn't fetch testcase"});
-        this.state.loading = false;
-        this.setState(this.state);
+        setErrorMessage("getAttributes::Couldn't fetch attributes");
       });
-  }
+  }, [projectId]);
 
-  cloneTestCase(){
-console.log("TestCase::cloneTestCase");
-      Backend.post(this.projectId  + "/testcase/" + this.state.testcase.id + "/clone")
-            .then(response => {
-              window.location.href = window.location.href.replace('testcase=' + this.state.testcase.id, 'testcase=' + response.id)
-            })
-            .catch(error => {
-              this.setState({errorMessage: "cloneTestCase::Couldn't clone testcase"});
-              this.state.loading = false;
-              this.setState(this.state);
-            });
-  }
+  // Get test case data
+  const getTestCase = useCallback((projId, testcaseId) => {
+    console.log("TestCase::getTestCase");
 
-  handleChange(fieldName, event, index, arrObjectKey, skipStateRefresh) {
-    if (index != undefined) {
-      if (arrObjectKey) {
-        this.state.testcase[fieldName][index][arrObjectKey] = event.target.value;
-      } else {
-        this.state.testcase[fieldName][index] = event.target.value;
-      }
-    } else {
-      this.state.testcase[fieldName] = event.target.value;
-    }
-    if (!skipStateRefresh) {
-      this.setState(this.state);
-    }
-  }
-
-  cancelEdit(fieldName, event, index) {
-    if (index) {
-      this.state.testcase[fieldName][index] = this.state.originalTestcase[fieldName][index];
-    } else {
-      this.state.testcase[fieldName] = this.state.originalTestcase[fieldName];
-    }
-
-    this.setState(this.state);
-    this.toggleEdit(fieldName, event, index);
-  }
-
-  handleSubmit(fieldName, event, index, ignoreToggleEdit) {
-console.log("TestCase::handleSubmit");
-    Backend.put(this.projectId + "/testcase/", this.state.testcase)
+    Backend.get(projId + "/testcase/" + testcaseId)
       .then(response => {
-        this.state.testcase = response;
-        this.state.originalTestcase = JSON.parse(JSON.stringify(this.state.testcase));
-        this.state.attributesInEdit.clear();
-        this.state.propertiesInEdit.clear();
-        this.setState(this.state);
-        this.getAttributes();
-        if (!ignoreToggleEdit) {
-          this.toggleEdit(fieldName, event, index);
+        setTestcase(response);
+        setOriginalTestcase(JSON.parse(JSON.stringify(response)));
+        setAttributesInEdit(new Set());
+        setPropertiesInEdit(new Set());
+        setLoading(false);
+
+        const roles = session.person.roles && session.person.roles.length > 0 
+          ? session.person.roles : [];
+
+        if (roles.length == 0) {
+          setReadonly(true);
+        } else {
+          const isTester = roles.filter(val => val.includes('TESTER')).length > 0;
+          const isObserverOnly = roles.filter(val => val.includes('OBSERVERONLY')).length > 0;
+          const isTestDev = roles.filter(val => val.includes('TESTDEVELOPER')).length > 0;
+          setTestDeveloper(isTestDev);
+
+          if (isTester || isObserverOnly) {
+            setReadonly(true);
+          } else if (isTestDev && response.locked) {
+            setReadonly(true);
+          } else if (isTestDev) {
+            setReadonly(false);
+          } else {
+            setReadonly(false);
+          }
         }
       })
       .catch(error => {
-        this.setState({errorMessage: "handleSubmit::Couldn't save testcase"});
+        setErrorMessage("getTestCase::Couldn't fetch testcase");
+        setLoading(false);
+      });
+  }, [session.person.roles]);
+
+  // Initial load effect
+  useEffect(() => {
+    if (props.testcase) {
+      setTestcase(props.testcase);
+      getSession();
+      setLoading(false);
+      return;
+    }
+
+    let projId, testcaseId;
+    if (props.testcaseId) {
+      projId = props.projectId;
+      testcaseId = props.testcaseId;
+    } else {
+      projId = params.project;
+      testcaseId = params.testcase;
+    }
+
+    if (!projId || !testcaseId) return;
+
+    setProjectId(projId);
+
+    const sessionPromise = Backend.get("user/session");
+    const testcasePromise = Backend.get(projId + "/testcase/" + testcaseId);
+
+    Promise.all([sessionPromise, testcasePromise])
+      .then(([sessionData, testcaseData]) => {
+        setSession(sessionData);
+        setTestcase(testcaseData);
+        setOriginalTestcase(JSON.parse(JSON.stringify(testcaseData)));
+        setAttributesInEdit(new Set());
+        setPropertiesInEdit(new Set());
+
+        const roles = sessionData.person.roles && sessionData.person.roles.length > 0 
+          ? sessionData.person.roles : [];
+
+        if (roles.length == 0) {
+          setReadonly(true);
+        } else {
+          const isTester = roles.filter(val => val.includes('TESTER')).length > 0;
+          const isObserverOnly = roles.filter(val => val.includes('OBSERVERONLY')).length > 0;
+          const isTestDev = roles.filter(val => val.includes('TESTDEVELOPER')).length > 0;
+          setTestDeveloper(isTestDev);
+
+          if (isTester || isObserverOnly) {
+            setReadonly(true);
+          } else if (isTestDev && testcaseData.locked) {
+            setReadonly(true);
+          } else if (isTestDev) {
+            setReadonly(false);
+          } else {
+            setReadonly(false);
+          }
+        }
+
+        setLoading(false);
+      })
+      .catch(error => {
+        console.log("Error loading testcase or session:", error);
+        setErrorMessage("componentDidMount::Couldn't fetch testcase or session");
+        setLoading(false);
+      });
+  }, []);
+
+  // Handle props changes  
+  useEffect(() => {
+    if (props.testcase) {
+      setTestcase(props.testcase);
+      setLoading(false);
+      setTestDeveloper(props.testDeveloper);
+    } else if (props.testcaseId && props.projectId) {
+      setProjectId(props.projectId);
+      setReadonly(false);
+      getTestCase(props.projectId, props.testcaseId);
+    }
+    
+    if (props.projectAttributes) {
+      setProjectAttributes(props.projectAttributes);
+    }
+    
+    if (props.launchId) {
+      setLaunchId(props.launchId);
+    }
+    
+    if (props.projectId && props.projectId !== projectId) {
+      setProjectId(props.projectId);
+    }
+  }, [props.testcase, props.testcaseId, props.projectId, props.launchId, props.projectAttributes, props.testDeveloper]);
+
+  // CONTINUATION IN NEXT ARTIFACT - See testcase_complete_pt2
+  // Due to artifact size limits, the rest of the functions and JSX are in the next artifact
+  // Copy both artifacts and combine them to get the complete file
+
+  const cloneTestCase = () => {
+    console.log("TestCase::cloneTestCase");
+    Backend.post(projectId + "/testcase/" + testcase.id + "/clone")
+      .then(response => {
+        window.location.href = window.location.href.replace('testcase=' + testcase.id, 'testcase=' + response.id);
+      })
+      .catch(error => {
+        setErrorMessage("cloneTestCase::Couldn't clone testcase");
+        setLoading(false);
+      });
+  };
+
+  const handleChange = (fieldName, event, index, arrObjectKey, skipStateRefresh) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      
+      if (index !== undefined) {
+        if (arrObjectKey) {
+          newTestcase[fieldName][index][arrObjectKey] = event.target.value;
+        } else {
+          newTestcase[fieldName][index] = event.target.value;
+        }
+      } else {
+        newTestcase[fieldName] = event.target.value;
+      }
+      
+      return newTestcase;
+    });
+  };
+
+  const cancelEdit = (fieldName, event, index) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      
+      if (index !== undefined) {
+        newTestcase[fieldName][index] = originalTestcase[fieldName][index];
+      } else {
+        newTestcase[fieldName] = originalTestcase[fieldName];
+      }
+
+      return newTestcase;
+    });
+    
+    toggleEdit(fieldName, event, index);
+  };
+
+  const handleSubmit = (fieldName, event, index, ignoreToggleEdit) => {
+    console.log("TestCase::handleSubmit");
+    Backend.put(projectId + "/testcase/", testcase)
+      .then(response => {
+        setTestcase(response);
+        setOriginalTestcase(JSON.parse(JSON.stringify(response)));
+        setAttributesInEdit(new Set());
+        setPropertiesInEdit(new Set());
+        getAttributes();
+        if (!ignoreToggleEdit) {
+          toggleEdit(fieldName, event, index);
+        }
+      })
+      .catch(error => {
+        setErrorMessage("handleSubmit::Couldn't save testcase");
       });
     if (event) {
       event.preventDefault();
     }
-  }
+  };
 
-  getAttributes(reRender) {
-    Backend.get(this.projectId + "/attribute")
-      .then(response => {
-        this.state.projectAttributes = response.
-           filter(function(p) { return p.type != 'undefined'}).
-           filter(function(p) { return p.type != 'LAUNCH'});
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getAttributes::Couldn't fetch attributes"});
-      });
-  }
-
-  toggleEdit(fieldName, event, index) {
-    var fieldId = fieldName;
+  const toggleEdit = (fieldName, event, index) => {
+    let fieldId = fieldName;
     if (index !== undefined) {
       fieldId = fieldId + "-" + index;
     }
+    
     if ($("#" + fieldId + "-display").offsetParent !== null) {
-      if (index) {
-        this.state.originalTestcase[fieldName][index] = JSON.parse(
-          JSON.stringify(this.state.testcase[fieldName][index] || ""),
-        );
-      } else {
-        this.state.originalTestcase[fieldName] = JSON.parse(JSON.stringify(this.state.testcase[fieldName] || ""));
-      }
+      setOriginalTestcase(prevOriginal => {
+        const newOriginal = { ...prevOriginal };
+        if (index !== undefined) {
+          if (!newOriginal[fieldName]) newOriginal[fieldName] = [];
+          newOriginal[fieldName][index] = JSON.parse(
+            JSON.stringify(testcase[fieldName]?.[index] || "")
+          );
+        } else {
+          newOriginal[fieldName] = JSON.parse(JSON.stringify(testcase[fieldName] || ""));
+        }
+        return newOriginal;
+      });
     }
+    
     $("#" + fieldId + "-display").toggle();
     $("#" + fieldId + "-form").toggle();
+    
     if (event) {
       event.preventDefault();
     }
-  }
+  };
 
-  getAttributeName(id) {
-    return Utils.getProjectAttribute(this.state.projectAttributes, id).name || "";
-  }
+  const getAttributeName = (id) => {
+    return Utils.getProjectAttribute(projectAttributes, id).name || "";
+  };
 
-  getAttributeValues(id) {
-    return Utils.getProjectAttribute(this.state.projectAttributes, id).attrValues || [];
-  }
+  const getAttributeValues = (id) => {
+    return Utils.getProjectAttribute(projectAttributes, id).attrValues || [];
+  };
 
-  editAttributeValues(key, values) {
-    this.state.originalTestcase["attributes"][key] = this.state.testcase["attributes"][key];
-    this.state.testcase["attributes"][key] = values.map(function (value) {
-      return value.value;
+  const editAttributeValues = (key, values) => {
+    setOriginalTestcase(prevOriginal => {
+      const newOriginal = { ...prevOriginal };
+      if (!newOriginal.attributes) newOriginal.attributes = {};
+      newOriginal.attributes[key] = testcase.attributes?.[key];
+      return newOriginal;
     });
-    this.setState(this.state);
-  }
 
-  cancelEditAttributeValues(event, key) {
-    this.state.testcase["attributes"][key] = this.state.originalTestcase["attributes"][key];
-    this.state.attributesInEdit.delete(key);
-    this.setState(this.state);
-    this.toggleEdit("attributes", event, key);
-  }
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (!newTestcase.attributes) newTestcase.attributes = {};
+      newTestcase.attributes[key] = values ? values.map(value => value.value) : [];
+      return newTestcase;
+    });
+  };
 
-  cancelEditAttributeKey(event, key) {
-    if (
-      this.state.testcase.attributes[key] === undefined ||
-      key === undefined ||
-      this.state.testcase.attributes[key].values === undefined ||
-      this.state.testcase.attributes[key].values === null ||
-      this.state.testcase.attributes[key].values.length == 0
-    )
-      delete this.state.testcase.attributes[key];
-    this.state.attributesInEdit.delete(key);
-    this.setState(this.state);
-  }
+  const cancelEditAttributeValues = (event, key) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (newTestcase.attributes && originalTestcase.attributes) {
+        newTestcase.attributes[key] = originalTestcase.attributes[key];
+      }
+      return newTestcase;
+    });
 
-  removeAttribute(key, event) {
-    delete this.state.testcase.attributes[key];
-    this.state.attributesInEdit.delete(key);
-    this.handleSubmit("attributes", event, 0, true);
-  }
+    setAttributesInEdit(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(key);
+      return newSet;
+    });
 
-  addAttribute(event) {
-    if (!this.state.testcase.attributes) {
-      this.state.testcase.attributes = {};
-    }
-    this.state.testcase.attributes[null] = [];
-    this.state.attributesInEdit.add(null);
-    this.setState(this.state);
-  }
+    toggleEdit("attributes", event, key);
+  };
 
-  addProperty(event) {
-    if (!this.state.testcase.properties) {
-      this.state.testcase.properties = [];
-      this.state.originalTestcase.properties = [];
-    }
-    this.state.testcase.properties.push({ key: "", value: "" });
-    this.state.originalTestcase.properties.push({ key: "", value: "" });
-    this.state.propertiesInEdit.add(this.state.testcase.properties.length - 1);
-    this.setState(this.state);
-  }
+  const cancelEditAttributeKey = (event, key) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (
+        newTestcase.attributes?.[key] === undefined ||
+        key === undefined ||
+        newTestcase.attributes?.[key]?.values === undefined ||
+        newTestcase.attributes?.[key]?.values === null ||
+        newTestcase.attributes?.[key]?.values?.length == 0
+      ) {
+        if (newTestcase.attributes) {
+          delete newTestcase.attributes[key];
+        }
+      }
+      return newTestcase;
+    });
 
-  toggleEditProperty(event, index) {
-    this.state.originalTestcase.properties[index] = JSON.parse(JSON.stringify(this.state.testcase.properties[index]));
-    this.state.propertiesInEdit.add(index);
-    this.setState(this.state);
-  }
+    setAttributesInEdit(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(key);
+      return newSet;
+    });
+  };
 
-  removeProperty(index, event) {
-    this.state.testcase.properties.splice(index, 1);
-    this.state.propertiesInEdit.delete(index);
-    this.handleSubmit("properties", event, 0, true);
-  }
+  const removeAttribute = (key, event) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (newTestcase.attributes) {
+        delete newTestcase.attributes[key];
+      }
+      return newTestcase;
+    });
 
-  cancelEditProperty(index, event) {
-    var originalProperty = this.state.originalTestcase.properties[index];
-    if (originalProperty.key == "" && originalProperty.value == "") {
-      this.removeProperty(index, event);
+    setAttributesInEdit(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(key);
+      return newSet;
+    });
+
+    handleSubmit("attributes", event, 0, true);
+  };
+
+  const addAttribute = (event) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (!newTestcase.attributes) {
+        newTestcase.attributes = {};
+      }
+      newTestcase.attributes[null] = [];
+      return newTestcase;
+    });
+
+    setAttributesInEdit(prev => {
+      const newSet = new Set(prev);
+      newSet.add(null);
+      return newSet;
+    });
+  };
+
+  const addProperty = (event) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (!newTestcase.properties) {
+        newTestcase.properties = [];
+      }
+      newTestcase.properties.push({ key: "", value: "" });
+      return newTestcase;
+    });
+    
+    setOriginalTestcase(prevOriginal => {
+      const newOriginal = { ...prevOriginal };
+      if (!newOriginal.properties) {
+        newOriginal.properties = [];
+      }
+      newOriginal.properties.push({ key: "", value: "" });
+      return newOriginal;
+    });
+
+    setPropertiesInEdit(prev => {
+      const newSet = new Set(prev);
+      newSet.add(testcase.properties?.length || 0);
+      return newSet;
+    });
+  };
+
+  const toggleEditProperty = (event, index) => {
+    setOriginalTestcase(prevOriginal => {
+      const newOriginal = { ...prevOriginal };
+      if (newOriginal.properties && testcase.properties) {
+        newOriginal.properties[index] = JSON.parse(JSON.stringify(testcase.properties[index]));
+      }
+      return newOriginal;
+    });
+
+    setPropertiesInEdit(prev => {
+      const newSet = new Set(prev);
+      newSet.add(index);
+      return newSet;
+    });
+  };
+
+  const removeProperty = (index, event) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (newTestcase.properties) {
+        newTestcase.properties.splice(index, 1);
+      }
+      return newTestcase;
+    });
+
+    setPropertiesInEdit(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(index);
+      return newSet;
+    });
+
+    handleSubmit("properties", event, 0, true);
+  };
+
+  const cancelEditProperty = (index, event) => {
+    const originalProperty = originalTestcase.properties?.[index];
+    if (originalProperty?.key == "" && originalProperty?.value == "") {
+      removeProperty(index, event);
     } else {
-      this.state.testcase.properties[index] = originalProperty;
-      this.state.propertiesInEdit.delete(index);
-      this.toggleEdit("properties", event, index, true);
-      this.setState(this.state);
+      setTestcase(prevTestcase => {
+        const newTestcase = { ...prevTestcase };
+        if (newTestcase.properties && originalProperty) {
+          newTestcase.properties[index] = originalProperty;
+        }
+        return newTestcase;
+      });
+
+      setPropertiesInEdit(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+
+      toggleEdit("properties", event, index, true);
     }
-  }
+  };
 
-  editAttributeKey(key, data, reRender) {
-    if (
-      this.state.projectAttributes.find(function (attribute) {
-        return attribute.id === data.value;
-      }) == undefined
-    ) {
-      this.state.projectAttributes.push({ id: data.value, name: data.value });
-    }
-    this.state.attributesInEdit.delete(key);
-    this.state.attributesInEdit.add(data.value);
-    this.state.testcase.attributes[data.value] = this.state.testcase.attributes[key];
-    delete this.state.testcase.attributes[key];
-    if (reRender) {
-      this.setState(this.state);
-    }
-  }
+  const editAttributeKey = (key, data, reRender) => {
+    setProjectAttributes(prevAttrs => {
+      const newProjectAttrs = [...prevAttrs];
+      if (!newProjectAttrs.find(attribute => attribute.id === data.value)) {
+        newProjectAttrs.push({ id: data.value, name: data.value });
+      }
+      return newProjectAttrs;
+    });
 
-  handleStepActionChange(index, value, reRender) {
-    this.state.testcase.steps[index].action = value;
-    if (reRender) {
-      this.setState(this.state);
-    }
-  }
+    setAttributesInEdit(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(key);
+      newSet.add(data.value);
+      return newSet;
+    });
 
-  handleStepExpectationChange(index, value, reRender) {
-    this.state.testcase.steps[index].expectation = value;
-    if (reRender) {
-      this.setState(this.state);
-    }
-  }
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (newTestcase.attributes) {
+        newTestcase.attributes[data.value] = newTestcase.attributes[key];
+        delete newTestcase.attributes[key];
+      }
+      return newTestcase;
+    });
+  };
 
-  addStep() {
-    if (!this.state.testcase.steps) {
-      this.state.testcase.steps = [];
-    }
-    this.state.testcase.steps.push({});
-    this.setState(this.state);
-  }
+  const handleStepActionChange = (index, value, reRender) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (newTestcase.steps?.[index]) {
+        newTestcase.steps[index].action = value;
+      }
+      return newTestcase;
+    });
+  };
 
-  removeStep(event, index) {
-    this.state.testcase.steps.splice(index, 1);
-    this.setState(this.state);
-    this.handleSubmit("steps", event, index, true);
-  }
+  const handleStepExpectationChange = (index, value, reRender) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (newTestcase.steps?.[index]) {
+        newTestcase.steps[index].expectation = value;
+      }
+      return newTestcase;
+    });
+  };
 
-  toggleEditAttribute(attributeId) {
-    this.state.attributesInEdit.add(attributeId);
-    this.setState(this.state);
-  }
+  const addStep = () => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (!newTestcase.steps) {
+        newTestcase.steps = [];
+      }
+      newTestcase.steps.push({});
+      return newTestcase;
+    });
+  };
 
-  getAttributeKeysToAdd() {
-    return (this.state.projectAttributes || [])
-      .filter(attribute => !(Object.keys(this.state.testcase.attributes || {}) || []).includes(attribute.id))
+  const removeStep = (event, index) => {
+    setTestcase(prevTestcase => {
+      const newTestcase = { ...prevTestcase };
+      if (newTestcase.steps) {
+        newTestcase.steps.splice(index, 1);
+      }
+      return newTestcase;
+    });
+    handleSubmit("steps", event, index, true);
+  };
+
+  const toggleEditAttribute = (attributeId) => {
+    setAttributesInEdit(prev => {
+      const newSet = new Set(prev);
+      newSet.add(attributeId);
+      return newSet;
+    });
+  };
+
+  const getAttributeKeysToAdd = () => {
+    return (projectAttributes || [])
+      .filter(attribute => !(Object.keys(testcase.attributes || {}) || []).includes(attribute.id))
       .filter(attribute => attribute.id !== 'broken')
       .map(attribute => ({ value: attribute.id, label: attribute.name }));
-  }
+  };
 
-  onCommentsCountChanged(count) {
-    this.state.commentsCount = count;
-    this.setState(this.state);
-  }
+  const onCommentsCountChanged = (count) => {
+    setCommentsCount(count);
+  };
 
-  removeTestcase() {
-console.log("TestCase::removeTestCase");
-    Backend.delete(this.projectId + "/testcase/" + this.state.testcase.id)
+  const removeTestcase = () => {
+    console.log("TestCase::removeTestCase");
+    Backend.delete(projectId + "/testcase/" + testcase.id)
       .then(response => {
-        window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");
+        window.location.href = window.location.href.replace("testcase=" + testcase.id, "");
       })
       .catch(error => {
-        this.setState({errorMessage: "removeTestcase::Couldn't remove testcase"});
+        setErrorMessage("removeTestcase::Couldn't remove testcase");
       });
-  }
+  };
 
-  lockTestcase() {
-    Backend.post(this.projectId + "/testcase/" + this.state.testcase.id + "/lock")
+  const lockTestcase = () => {
+    Backend.post(projectId + "/testcase/" + testcase.id + "/lock")
       .then(response => {
-        this.state.testcase.lock = true;
-        window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");
+        setTestcase(prevTestcase => ({
+          ...prevTestcase,
+          lock: true
+        }));
+        window.location.href = window.location.href.replace("testcase=" + testcase.id, "");
       })
       .catch(error => {
-        this.setState({errorMessage: "lockTestcase::Couldn't lock testcase"});
+        setErrorMessage("lockTestcase::Couldn't lock testcase");
       });
-  }
+  };
 
-  unlockTestcase() {
-    Backend.post(this.projectId + "/testcase/" + this.state.testcase.id + "/unlock")
+  const unlockTestcase = () => {
+    Backend.post(projectId + "/testcase/" + testcase.id + "/unlock")
       .then(response => {
-        this.state.testcase.lock = false;
-        window.location.href = window.location.href.replace("testcase=" + this.state.testcase.id, "");
+        setTestcase(prevTestcase => ({
+          ...prevTestcase,
+          lock: false
+        }));
+        window.location.href = window.location.href.replace("testcase=" + testcase.id, "");
       })
       .catch(error => {
-        this.setState({errorMessage: "unlockTestcase::Couldn't unlock testcase"});
+        setErrorMessage("unlockTestcase::Couldn't unlock testcase");
       });
-  }
+  };
 
-  onBrokenToggle() {
-    this.state.testcase.broken = !this.state.testcase.broken;
-    this.handleSubmit(null, null, null, true);
-  }
+  const onBrokenToggle = () => {
+    const newBroken = !testcase.broken;
+    setTestcase(prevTestcase => ({
+      ...prevTestcase,
+      broken: newBroken
+    }));
+    setTimeout(() => {
+      handleSubmit(null, null, null, true);
+    }, 0);
+  };
 
+  const onTestcaseUpdated = (count) => {
+    if (projectId && testcase.id) {
+      getTestCase(projectId, testcase.id);
+      getAttributes();
+    }
+  };
 
-  handleOnClickToSelectText(){
-    var text = window.getSelection();
+  const handleOnClickToSelectText = () => {
+    const text = window.getSelection();
     if (text.rangeCount > 0) {
+      const mark = document.createElement("span");
+      mark.style.color = 'blue';
+      mark.style.fontWeight = 'bold';
 
-      var mark = document.createElement("span");
-      mark.style.color='blue';
-      //mark.style.backgroundColor = 'yellow';
-      mark.style.fontWeight='bold';
-
-      var selectionRange = text.getRangeAt(0);
+      const selectionRange = text.getRangeAt(0);
       mark.appendChild(selectionRange.extractContents());
       selectionRange.insertNode(mark);
     }
-  }
+  };
 
 
-  render() {
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <ul className="nav nav-tabs" id="tcTabs" role="tablist">
+        <li className="nav-item">
+          <a
+            className="nav-link active"
+            id="main-tab"
+            data-toggle="tab"
+            href="#main"
+            role="tab"
+            aria-controls="home"
+            aria-selected="true"
+          >
+            Main
+          </a>
+        </li>
 
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <ul className="nav nav-tabs" id="tcTabs" role="tablist">
+        {testcase.failureDetails && Object.keys(testcase.failureDetails).length > 0 && (
           <li className="nav-item">
             <a
-              className="nav-link active"
-              id="main-tab"
+              className="nav-link"
+              id="failure-tab"
               data-toggle="tab"
-              href="#main"
+              href="#failure"
               role="tab"
-              aria-controls="home"
-              aria-selected="true"
+              aria-controls="failure"
+              aria-selected="false"
             >
-              Main
+              Failure
             </a>
           </li>
+        )}
 
-          {this.state.testcase.failureDetails && Object.keys(this.state.testcase.failureDetails).length > 0 && (
-            <li className="nav-item">
-              <a
-                className="nav-link"
-                id="failure-tab"
-                data-toggle="tab"
-                href="#failure"
-                role="tab"
-                aria-controls="failure"
-                aria-selected="false"
-              >
-                Failure
-              </a>
-            </li>
-          )}
+        {!launchId && (
+          <li className="nav-item">
+            <a
+              className="nav-link"
+              id="attachments-tab"
+              data-toggle="tab"
+              href="#attachments"
+              role="tab"
+              aria-controls="attachments"
+              aria-selected="false"
+            >
+              Attachments
+              {testcase.attachments && testcase.attachments.length > 0 && (
+                <span className="badge badge-pill badge-secondary tab-badge">
+                  {testcase.attachments.length}
+                </span>
+              )}
+            </a>
+          </li>
+        )}
 
-          {! this.state.launchId && (
-            <li className="nav-item">
-              <a
-                className="nav-link"
-                id="attachments-tab"
-                data-toggle="tab"
-                href="#attachments"
-                role="tab"
-                aria-controls="attachments"
-                aria-selected="false"
-              >
-                Attachments
-                {this.state.testcase.attachments && this.state.testcase.attachments.length > 0 && (
-                  <span className="badge badge-pill badge-secondary tab-badge">
-                    {this.state.testcase.attachments.length}
-                  </span>
-                )}
-              </a>
-            </li>
-          )}
+        {launchId && (
+          <li className="nav-item">
+            <a
+              className="nav-link"
+              id="results-tab"
+              data-toggle="tab"
+              href="#results"
+              role="tab"
+              aria-controls="results"
+              aria-selected="false"
+            >
+              Results
+              {testcase.results && testcase.results.length > 0 && (
+                <span className="badge badge-pill badge-secondary tab-badge">
+                  {testcase.results.length}
+                </span>
+              )}
+            </a>
+          </li>
+        )}
 
-          {this.state.launchId && (
-            <li className="nav-item">
-              <a
-                className="nav-link"
-                id="results-tab"
-                data-toggle="tab"
-                href="#results"
-                role="tab"
-                aria-controls="results"
-                aria-selected="false"
-              >
-                Results
-                {this.state.testcase.results && this.state.testcase.results.length > 0 && (
-                  <span className="badge badge-pill badge-secondary tab-badge">
-                    {this.state.testcase.results.length}
-                  </span>
-                )}
-              </a>
-            </li>
-          )}
-
-          {this.state.launchId && (
+        {launchId && (
           <li className="nav-item">
             <a
               className="nav-link"
@@ -671,772 +760,673 @@ console.log("TestCase::removeTestCase");
               aria-selected="false"
             >
               Comments
-              {this.state.commentsCount > 0 && (
-                <span className="badge badge-pill badge-secondary tab-badge">{this.state.commentsCount}</span>
+              {commentsCount > 0 && (
+                <span className="badge badge-pill badge-secondary tab-badge">{commentsCount}</span>
               )}
             </a>
           </li>
-          )}
+        )}
 
-
-          {this.state.testcase.metaData && Object.keys(this.state.testcase.metaData).length > 0 && (
-            <li className="nav-item">
-              <a
-                className="nav-link"
-                id="history-tab"
-                data-toggle="tab"
-                href="#metadata"
-                role="tab"
-                aria-controls="metadata"
-                aria-selected="false"
-              >
-                Metadata
-              </a>
-            </li>
-          )}
+        {testcase.metaData && Object.keys(testcase.metaData).length > 0 && (
           <li className="nav-item">
             <a
               className="nav-link"
               id="history-tab"
               data-toggle="tab"
-              href="#history"
+              href="#metadata"
               role="tab"
-              aria-controls="history"
+              aria-controls="metadata"
               aria-selected="false"
             >
-              History
+              Metadata
             </a>
           </li>
-        </ul>
+        )}
+        
+        <li className="nav-item">
+          <a
+            className="nav-link"
+            id="history-tab"
+            data-toggle="tab"
+            href="#history"
+            role="tab"
+            aria-controls="history"
+            aria-selected="false"
+          >
+            History
+          </a>
+        </li>
+      </ul>
 
-        <div className="tab-content" id="tcTabContent">
-          <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-          </div>
-          <div className="tab-pane fade show active" id="main" role="tabpanel" aria-labelledby="main-tab">
-            <div id="name" className="testcase-section">
-              <div id="name-display" className="inplace-display row">
-                <div className="col-9">
-                  <h1>
-                    <em><span className="testcase-id-in-title text-muted">{this.state.testcase.id}</span></em>
-                    <Link to={"/" + this.projectId + "/testcase/" + this.state.testcase.id}>
-                      {this.state.testcase.name || this.state.testcase.importedName || ""}
-                    </Link>
-                    <span className="name-icon">
-                      {this.state.testcase.automated && <FontAwesomeIcon icon={faPlug} />}
-                    </span>
-                    <span>
-                      {!this.state.readonly && (
-                        <span className="edit edit-icon clickable" onClick={e => this.toggleEdit("name", e)}>
-                          <FontAwesomeIcon icon={faPencilAlt} />
-                        </span>
-                      )}
-                    </span>
-                  </h1>
-                </div>
-                {!this.state.readonly && (
-                   <div className="col-1">
-                     <div class="dropdown">
-                       <span class="dropdown-toggle clickable" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                           <FontAwesomeIcon icon={faBars} />
-                       </span>
-                         <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                           <a class="dropdown-item" href="#" onClick={e => this.cloneTestCase()}>Clone</a>
-                         </div>
-                     </div>
-                   </div>
-                 )}
-                {!this.state.readonly && (
-                  <div className="col-2">
-                    <Checkbox
-                      toggle
-                      onChange={this.onBrokenToggle}
-                      checked={this.state.testcase.broken}
-                      label={{ children: this.state.testcase.broken ? "On" : "Off" }}
-                    />
-                  </div>
-                )}
-
+      <div className="tab-content" id="tcTabContent">
+        <div className="sweet-loading">
+          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={loading} />
+        </div>
+        
+        <div className="tab-pane fade show active" id="main" role="tabpanel" aria-labelledby="main-tab">
+          <div id="name" className="testcase-section">
+            <div id="name-display" className="inplace-display row">
+              <div className="col-9">
+                <h1>
+                  <em><span className="testcase-id-in-title text-muted">{testcase.id}</span></em>
+                  <Link to={"/" + projectId + "/testcase/" + testcase.id}>
+                    {testcase.name || testcase.importedName || ""}
+                  </Link>
+                  <span className="name-icon">
+                    {testcase.automated && <FontAwesomeIcon icon={faPlug} />}
+                  </span>
+                  <span>
+                    {!readonly && (
+                      <span className="edit edit-icon clickable" onClick={e => toggleEdit("name", e)}>
+                        <FontAwesomeIcon icon={faPencilAlt} />
+                      </span>
+                    )}
+                  </span>
+                </h1>
               </div>
-              {!this.state.readonly && (
-                <div id="name-form" className="inplace-form" style={{ display: "none" }}>
+              {!readonly && (
+                <div className="col-1">
+                  <div className="dropdown">
+                    <span className="dropdown-toggle clickable" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <FontAwesomeIcon icon={faBars} />
+                    </span>
+                    <div className="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                      <a className="dropdown-item" href="#" onClick={e => cloneTestCase()}>Clone</a>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!readonly && (
+                <div className="col-2">
+                  <Checkbox
+                    toggle
+                    onChange={onBrokenToggle}
+                    checked={testcase.broken}
+                    label={{ children: testcase.broken ? "On" : "Off" }}
+                  />
+                </div>
+              )}
+            </div>
+            
+            {!readonly && (
+              <div id="name-form" className="inplace-form" style={{ display: "none" }}>
+                <form>
+                  <div className="form-group row">
+                    <div className="col-8">
+                      <input
+                        type="text"
+                        name="name"
+                        className="form-control"
+                        onChange={e => handleChange("name", e)}
+                        value={testcase.name || testcase.importedName}
+                      />
+                    </div>
+                    <div className="col-4">
+                      <button
+                        type="button"
+                        className="btn btn-light"
+                        data-dismiss="modal"
+                        onClick={e => cancelEdit("name", e)}
+                      >
+                        Cancel
+                      </button>
+                      <button type="button" className="btn btn-primary" onClick={e => handleSubmit("name", e)}>
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+
+          <div id="description" className="card mb-4">
+            <div className="card-header">
+              <h5>
+                Description
+                {!readonly && (
+                  <span className="edit edit-icon clickable" onClick={e => toggleEdit("description", e)}>
+                    <FontAwesomeIcon icon={faPencilAlt} />
+                  </span>
+                )}
+              </h5>
+            </div>
+            <div className="card-body">
+              <div
+                id="description-display"
+                className="inplace-display"
+                dangerouslySetInnerHTML={{ __html: testcase.description }}
+              ></div>
+              {!readonly && (
+                <div id="description-form" className="inplace-form" style={{ display: "none" }}>
+                  <Editor
+                    tinymceScriptSrc='/tinymce/tinymce.min.js'
+                    initialValue={testcase.description}
+                    init={{
+                      license_key: 'gpl',
+                      height: 500,
+                      menubar: false,
+                      plugins: tinymcePlugins,
+                      toolbar: tinymceToolbar,
+                      content_style: tinymceContentStyle
+                    }}
+                    onEditorChange={val =>
+                      handleChange("description", { target: { value: val } }, null, null, true)
+                    }
+                  />
                   <form>
-                    <div className="form-group row">
-                      <div className="col-8">
-                        <input
-                          type="text"
-                          name="name"
-                          className="form-control"
-                          onChange={e => this.handleChange("name", e)}
-                          value={this.state.testcase.name || this.state.testcase.importedName}
-                        />
-                      </div>
-                      <div className="col-4">
-                        <button
-                          type="button"
-                          className="btn btn-light"
-                          data-dismiss="modal"
-                          onClick={e => this.cancelEdit("name", e)}
-                        >
-                          Cancel
-                        </button>
-                        <button type="button" className="btn btn-primary" onClick={e => this.handleSubmit("name", e)}>
-                          Save
-                        </button>
-                      </div>
+                    <div className="testcase-inplace-buttons-down">
+                      <button
+                        type="button"
+                        className="btn btn-light"
+                        data-dismiss="modal"
+                        onClick={e => cancelEdit("description", e)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={e => handleSubmit("description", e)}
+                      >
+                        Save
+                      </button>
                     </div>
                   </form>
                 </div>
               )}
             </div>
+          </div>
 
-            <div id="description" className="card mb-4">
-              <div className="card-header">
-                <h5>
-                  Description
-                  {!this.state.readonly && (
-                    <span className="edit edit-icon clickable" onClick={e => this.toggleEdit("description", e)}>
-                      <FontAwesomeIcon icon={faPencilAlt} />
-                    </span>
-                  )}
-                </h5>
-              </div>
-              <div className="card-body">
-                <div
-                  id="description-display"
-                  className="inplace-display"
-                  dangerouslySetInnerHTML={{ __html: this.state.testcase.description }}
-                ></div>
-                {!this.state.readonly && (
-                  <div id="description-form" className="inplace-form" style={{ display: "none" }}>
-                    <Editor
-                      tinymceScriptSrc='/tinymce/tinymce.min.js'
-                      initialValue={this.state.testcase.description}
-                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
-                      init={{
-			license_key: 'gpl',
-                        height: 500,
-                        menubar: false,
-                        plugins: this.tinymcePlugins,
-                        toolbar: this.tinymceToolbar,
-                        content_style: this.tinymceContentStyle
-                      }}
-                      onEditorChange={val =>
-                        this.handleChange("description", { target: { value: val } }, null, null, true)
-                      }
-                    />
-                    <form>
-                      <div className="testcase-inplace-buttons-down">
-                        <button
-                          type="button"
-                          className="btn btn-light"
-                          data-dismiss="modal"
-                          onClick={e => this.cancelEdit("description", e)}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          onClick={e => this.handleSubmit("description", e)}
-                        >
-                          Save
-                        </button>
-                      </div>
-                    </form>
-                  </div>
+          <div id="preconditions" className="card mb-4">
+            <div className="card-header">
+              <h5>
+                Preconditions
+                {!readonly && (
+                  <span className="edit edit-icon clickable" onClick={e => toggleEdit("preconditions", e)}>
+                    <FontAwesomeIcon icon={faPencilAlt} />
+                  </span>
                 )}
-              </div>
+              </h5>
             </div>
+            <div className="card-body">
+              <div
+                id="preconditions-display"
+                className="inplace-display"
+                dangerouslySetInnerHTML={{ __html: testcase.preconditions }}
+              ></div>
+              {!readonly && (
+                <div id="preconditions-form" className="inplace-form" style={{ display: "none" }}>
+                  <Editor
+                    tinymceScriptSrc='/tinymce/tinymce.min.js'
+                    initialValue={testcase.preconditions}
+                    init={{
+                      license_key: 'gpl',
+                      height: 500,
+                      menubar: false,
+                      plugins: tinymcePlugins,
+                      toolbar: tinymceToolbar,
+                      content_style: tinymceContentStyle
+                    }}
+                    onEditorChange={val =>
+                      handleChange("preconditions", { target: { value: val } }, null, null, true)
+                    }
+                  />
+                  <form>
+                    <div className="testcase-inplace-buttons-down">
+                      <button
+                        type="button"
+                        className="btn btn-light"
+                        onClick={e => cancelEdit("preconditions", e)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={e => handleSubmit("preconditions", e)}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
 
-            <div id="preconditions" className="card mb-4">
-              <div className="card-header">
-                <h5>
-                  Preconditions
-                  {!this.state.readonly && (
-                    <span className="edit edit-icon clickable" onClick={e => this.toggleEdit("preconditions", e)}>
-                      <FontAwesomeIcon icon={faPencilAlt} />
-                    </span>
-                  )}
-                </h5>
-              </div>
-              <div className="card-body">
-                <div
-                  id="preconditions-display"
-                  className="inplace-display"
-                  dangerouslySetInnerHTML={{ __html: this.state.testcase.preconditions }}
-                ></div>
-                {!this.state.readonly && (
-                  <div id="preconditions-form" className="inplace-form" style={{ display: "none" }}>
-                    <Editor
-                      tinymceScriptSrc='/tinymce/tinymce.min.js'
-                      initialValue={this.state.testcase.preconditions}
-                      // apiKey='ickqk4tvjbxcpzf8cit2legulhsrwei1y9s138s942w7tz5o'
-                      init={{
-			license_key: 'gpl',
-                        height: 500,
-                        menubar: false,
-                        plugins: this.tinymcePlugins,
-                        toolbar: this.tinymceToolbar,
-                        content_style: this.tinymceContentStyle
-                      }}
-                      onEditorChange={val =>
-                        this.handleChange("preconditions", { target: { value: val } }, null, null, true)
-                      }
-                    />
-                    <form>
-                      <div className="testcase-inplace-buttons-down">
-                        <button
-                          type="button"
-                          className="btn btn-light"
-                          onClick={e => this.cancelEdit("preconditions", e)}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          onClick={e => this.handleSubmit("preconditions", e)}
-                        >
-                          Save
-                        </button>
+          <div id="steps" className="mb-4">
+            <LaunchTestcaseControls
+              testcase={testcase}
+              launchId={launchId}
+              projectId={projectId}
+              callback={props.callback}
+              indicator={"START"}
+            />
+
+            <h5>Steps</h5>
+
+            {testcase.steps && testcase.steps.length > 0 ? (
+              (testcase.steps || []).map((step, i) => {
+                if (!step || (!step.action && !step.expectation)) {
+                  return (
+                    <div className="step" key={i}>
+                      <div id={"steps-" + i + "-form"} index={i} className="inplace-form card">
+                        <div className="card-header">{i + 1}. Step</div>
+                        <div className="card-body">
+                          <p className="card-text">
+                            <Editor
+                              tinymceScriptSrc='/tinymce/tinymce.min.js'
+                              initialValue={testcase.steps[i]?.action}
+                              init={{
+                                license_key: 'gpl',
+                                height: 300,
+                                menubar: false,
+                                plugins: tinymcePlugins,
+                                toolbar: tinymceToolbar,
+                                content_style: tinymceContentStyle
+                              }}
+                              onEditorChange={val => handleStepActionChange(i, val, false)}
+                            />
+                          </p>
+                          <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
+                          <p className="card-text">
+                            <Editor
+                              tinymceScriptSrc='/tinymce/tinymce.min.js'
+                              initialValue={testcase.steps[i]?.expectation}
+                              init={{
+                                license_key: 'gpl',
+                                height: 300,
+                                menubar: false,
+                                plugins: tinymcePlugins,
+                                toolbar: tinymceToolbar,
+                                content_style: tinymceContentStyle
+                              }}
+                              onEditorChange={val => handleStepExpectationChange(i, val, false)}
+                            />
+                          </p>
+                          <button type="button" className="btn btn-light" onClick={e => removeStep(e, i)}>
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={e => handleSubmit("steps", e, i, true)}
+                          >
+                            Save
+                          </button>
+                        </div>
                       </div>
-                    </form>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div id="steps" className="mb-4">
-
-              <LaunchTestcaseControls
-                testcase={this.state.testcase}
-                launchId={this.state.launchId}
-                projectId={this.projectId}
-                callback={this.props.callback}
-                indicator={"START"}
-              />
-
-              <h5>Steps</h5>
-
-              {this.state.testcase.steps && this.state.testcase.steps.length > 0 ? (
-                (this.state.testcase.steps || []).map(
-                  function (step, i) {
-                    if (!step || (!step.action && !step.expectation)) {
-                      return (
-                        <div className="step" key={i}>
-                          <div id={"steps-" + i + "-form"} index={i} className="inplace-form card">
-                            <div className="card-header">{i + 1}. Step</div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className key={i}>
+                      <div id={"steps-" + i + "-display"} className="inplace-display col-sm-12">
+                        <div index={i} className="row">
+                          <div className="card col-md-12">
                             <div className="card-body">
-                              <p className="card-text">
-                                <Editor
-                                  tinymceScriptSrc='/tinymce/tinymce.min.js'
-                                  initialValue={this.state.testcase.steps[i].action}
-                                  init={{
-                                    license_key: 'gpl',
-                                    height: 300,
-                                    menubar: false,
-                                    plugins: this.tinymcePlugins,
-                                    toolbar: this.tinymceToolbar,
-                                    content_style: this.tinymceContentStyle
-                                  }}
-                                  onEditorChange={val => this.handleStepActionChange(i, val, false)}
-                                />
-                              </p>
-                              <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
-                              <p className="card-text">
-                                <Editor
-                                  tinymceScriptSrc='/tinymce/tinymce.min.js'
-                                  initialValue={this.state.testcase.steps[i].expectation}
-                                  init={{
-                                    license_key: 'gpl',
-                                    height: 300,
-                                    menubar: false,
-                                    plugins: this.tinymcePlugins,
-                                    toolbar: this.tinymceToolbar,
-                                    content_style: this.tinymceContentStyle
-                                  }}
-                                  onEditorChange={val => this.handleStepExpectationChange(i, val, false)}
-                                />
-                              </p>
-                              <button type="button" className="btn btn-light" onClick={e => this.removeStep(e, i)}>
+                              {((typeof testcase.launchStatus !== 'undefined') && testcase.launchStatus.includes("RUNNING")) ? (
+                                <div className="card-text">
+                                  <div
+                                    onClick={handleOnClickToSelectText}
+                                    dangerouslySetInnerHTML={{
+                                      __html: "<b><i>" + (i + 1) + ". Step </i></b>" + testcase.steps[i].action,
+                                    }}
+                                  ></div>
+                                </div>
+                              ) : (
+                                <div className="card-text">
+                                  <div
+                                    dangerouslySetInnerHTML={{
+                                      __html: "<b><i>" + (i + 1) + ". Step </i></b>" + testcase.steps[i].action,
+                                    }}
+                                  ></div>
+                                </div>
+                              )}
+
+                              <h6 className="card-subtitle mb-2 expectations">
+                                <b><i>Expectations</i></b>
+                              </h6>
+                              <div
+                                className="card-text"
+                                dangerouslySetInnerHTML={{ __html: testcase.steps[i].expectation }}
+                              ></div>
+
+                              {!readonly && (
+                                <div className="row">
+                                  <div className="col-md-10"></div>
+                                  <div className="col-md-1">
+                                    <a href="#" className="card-link" onClick={e => toggleEdit("steps", e, i)}>
+                                      Edit
+                                    </a>
+                                  </div>
+
+                                  <div className="col-md-1">
+                                    <ConfirmButton
+                                      onSubmit={removeStep}
+                                      buttonClass={"card-link red float-right"}
+                                      id={i}
+                                      modalText={"Are you sure you want to remove Test Step?"}
+                                      buttonText={"Remove"}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {!readonly && (
+                        <div
+                          id={"steps-" + i + "-form"}
+                          index={i}
+                          className="inplace-form card col-md-12"
+                          style={{ display: "none" }}
+                        >
+                          <div className="card-body">
+                            <h6 className="card-subtitle mb-2 text-muted">{i + 1}. Step</h6>
+                            <p className="card-text">
+                              <Editor
+                                tinymceScriptSrc='/tinymce/tinymce.min.js'
+                                initialValue={testcase.steps[i]?.action}
+                                init={{
+                                  license_key: 'gpl',
+                                  height: 300,
+                                  menubar: false,
+                                  plugins: tinymcePlugins,
+                                  toolbar: tinymceToolbar,
+                                  content_style: tinymceContentStyle
+                                }}
+                                onEditorChange={val => handleStepActionChange(i, val, false)}
+                              />
+                            </p>
+                            <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
+                            <p className="card-text">
+                              <Editor
+                                tinymceScriptSrc='/tinymce/tinymce.min.js'
+                                initialValue={testcase.steps[i]?.expectation}
+                                init={{
+                                  license_key: 'gpl',
+                                  height: 300,
+                                  menubar: false,
+                                  plugins: tinymcePlugins,
+                                  toolbar: tinymceToolbar,
+                                  content_style: tinymceContentStyle
+                                }}
+                                onEditorChange={val => handleStepExpectationChange(i, val, false)}
+                              />
+                            </p>
+                            <button
+                              type="button"
+                              className="btn btn-light"
+                              onClick={e => cancelEdit("steps", e, i)}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-primary"
+                              onClick={e => handleSubmit("steps", e, i)}
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+              })
+            ) : (
+              <></>
+            )}
+
+            {!readonly && (
+              <div>
+                <button type="button" className="btn btn-primary" onClick={addStep}>
+                  Add Step
+                </button>
+              </div>
+            )}
+          </div>
+
+          <LaunchTestcaseControls
+            testcase={testcase}
+            launchId={launchId}
+            projectId={projectId}
+            callback={props.callback}
+            indicator={"FAILUREDETAILS"}
+          />
+
+          <div id="attributes" className="mb-4">
+            <h5>Attributes</h5>
+            {Object.keys(testcase.attributes || {}).map((attributeId, i) => {
+              const attributeValues = testcase.attributes[attributeId] || [];
+              if (attributeId && attributeId != "null") {
+                return (
+                  <div key={i} className="form-group attribute-block">
+                    <div
+                      id={"attributes-" + attributeId + "-display"}
+                      className="inplace-display"
+                      style={{ display: attributesInEdit.has(attributeId) ? "none" : "block" }}
+                    >
+                      <div index={attributeId} className="card">
+                        <div className="card-header">
+                          <b>
+                            {getAttributeName(attributeId)}
+                            {!readonly && (
+                              <span
+                                className="edit edit-icon clickable"
+                                onClick={e => {
+                                  toggleEditAttribute(attributeId);
+                                }}
+                              >
+                                <FontAwesomeIcon icon={faPencilAlt} />
+                              </span>
+                            )}
+                            {!readonly && (
+                              <span
+                                className="clickable edit-icon red"
+                                index={attributeId}
+                                onClick={e => removeAttribute(attributeId, e)}
+                              >
+                                <FontAwesomeIcon icon={faMinusCircle} />
+                              </span>
+                            )}
+                          </b>
+                        </div>
+                        {<div className="card-body">{attributeValues.join(", ")}</div>}
+                      </div>
+                    </div>
+                    {!readonly && (
+                      <div
+                        id={"attributes-" + attributeId + "-form"}
+                        className="inplace-form"
+                        style={{ display: attributesInEdit.has(attributeId) ? "block" : "none" }}
+                      >
+                        <form>
+                          <div index={attributeId} className="card">
+                            <div className="card-header">
+                              <b>{getAttributeName(attributeId)}</b>
+                            </div>
+                            <div className="card-body">
+                              <CreatableSelect
+                                value={(attributeValues || []).map(val => {
+                                  return { value: val, label: val };
+                                })}
+                                isMulti
+                                isClearable
+                                onChange={e => editAttributeValues(attributeId, e)}
+                                options={getAttributeValues(attributeId).map(attrValue => {
+                                  return { value: attrValue.value, label: attrValue.value };
+                                })}
+                              />
+                              <button
+                                type="button"
+                                className="btn btn-light"
+                                onClick={e => cancelEditAttributeValues(e, attributeId)}
+                              >
                                 Cancel
                               </button>
                               <button
                                 type="button"
                                 className="btn btn-primary"
-                                onClick={e => this.handleSubmit("steps", e, i, true)}
+                                onClick={e => handleSubmit("attributes", e, attributeId, true)}
                               >
                                 Save
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div className key={i}>
-                          <div id={"steps-" + i + "-display"} className="inplace-display col-sm-12">
-                            <div index={i} className="row">
-                              <div className="card col-md-12">
-                                <div className="card-body">
-                                  {((typeof this.state.testcase.launchStatus !== 'undefined') && this.state.testcase.launchStatus.includes("RUNNING")) ? (
-                                    <div className="card-text">
-                                      <div
-                                        onClick={this.handleOnClickToSelectText}
-                                        dangerouslySetInnerHTML={{
-                                          __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
-                                        }}
-                                      ></div>
-                                    </div>
-                                  ) : (
-                                    <div className="card-text">
-                                      <div
-                                        dangerouslySetInnerHTML={{
-                                          __html: "<b><i>" + (i + 1) + ". Step </i></b>" + this.state.testcase.steps[i].action,
-                                        }}
-                                      ></div>
-                                    </div>
-                                  )}
-
-                                  <h6 className="card-subtitle mb-2 expectations">
-                                    <b><i>Expectations</i></b>
-                                  </h6>
-                                  <div
-                                    className="card-text"
-                                    dangerouslySetInnerHTML={{ __html: this.state.testcase.steps[i].expectation }}
-                                  ></div>
-
-                                  {!this.state.readonly && (
-                                    <div className="row">
-                                      <div className="col-md-10"></div>
-                                      <div className="col-md-1">
-                                        <a href="#" className="card-link" onClick={e => this.toggleEdit("steps", e, i)}>
-                                          Edit
-                                        </a>
-                                      </div>
-
-                                      <div className="col-md-1">
-                                        <ConfirmButton
-                                          onSubmit={this.removeStep}
-                                          buttonClass={"card-link red float-right"}
-                                          id={i}
-                                          modalText={"Are you sure you want to remove Test Step?"}
-                                          buttonText={"Remove"}
-                                        />
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          {!this.state.readonly && (
-                            <div
-                              id={"steps-" + i + "-form"}
-                              index={i}
-                              className="inplace-form card col-md-12"
-                              style={{ display: "none" }}
-                            >
-                              <div className="card-body">
-                                <h6 className="card-subtitle mb-2 text-muted">{i + 1}. Step</h6>
-                                <p className="card-text">
-                                  <Editor
-                                    tinymceScriptSrc='/tinymce/tinymce.min.js'
-                                    initialValue={this.state.testcase.steps[i].action}
-                                    init={{
-                                      license_key: 'gpl',
-                                      height: 300,
-                                      menubar: false,
-                                      plugins: this.tinymcePlugins,
-                                      toolbar: this.tinymceToolbar,
-                                      content_style: this.tinymceContentStyle
-                                    }}
-                                    onEditorChange={val => this.handleStepActionChange(i, val, false)}
-                                  />
-                                </p>
-                                <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
-                                <p className="card-text">
-                                  <Editor
-                                    tinymceScriptSrc='/tinymce/tinymce.min.js'
-                                    initialValue={this.state.testcase.steps[i].expectation}
-                                    init={{
-                                      license_key: 'gpl',
-                                      height: 300,
-                                      menubar: false,
-                                      plugins: this.tinymcePlugins,
-                                      toolbar: this.tinymceToolbar,
-                                      content_style: this.tinymceContentStyle
-                                    }}
-                                    onEditorChange={val => this.handleStepExpectationChange(i, val, false)}
-                                  />
-                                </p>
-                                <button
-                                  type="button"
-                                  className="btn btn-light"
-                                  onClick={e => this.cancelEdit("steps", e, i)}
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-primary"
-                                  onClick={e => this.handleSubmit("steps", e, i)}
-                                >
-                                  Save
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                  }.bind(this)
-                )
-              ) : (
-                <></>
-              )}
-
-              {!this.state.readonly && (
-                <div>
-                  <button type="button" className="btn btn-primary" onClick={this.addStep}>
-                    Add Step
-                  </button>
-                </div>
-              )}
-
-            </div>
-	      <LaunchTestcaseControls
-              testcase={this.state.testcase}
-              launchId={this.state.launchId}
-              projectId={this.projectId}
-              callback={this.props.callback}
-              indicator={"FAILUREDETAILS"}
-            />
-
-            <div id="attributes" className="mb-4">
-              <h5>Attributes</h5>
-              {Object.keys(this.state.testcase.attributes || {}).map(
-                function (attributeId, i) {
-                  var attributeValues = this.state.testcase.attributes[attributeId] || [];
-                  if (attributeId && attributeId != "null") {
-                    return (
-                      <div key={i} className="form-group attribute-block">
-                        <div
-                          id={"attributes-" + attributeId + "-display"}
-                          className="inplace-display"
-                          style={{ display: this.state.attributesInEdit.has(attributeId) ? "none" : "block" }}
-                        >
-                          <div index={attributeId} className="card">
-                            <div className="card-header">
-                              <b>
-                                {this.getAttributeName(attributeId)}
-                                {!this.state.readonly && (
-                                  <span
-                                    className="edit edit-icon clickable"
-                                    onClick={e => {
-                                      this.toggleEditAttribute(attributeId);
-                                    }}
-                                  >
-                                    <FontAwesomeIcon icon={faPencilAlt} />
-                                  </span>
-                                )}
-                                {!this.state.readonly && (
-                                  <span
-                                    className="clickable edit-icon red"
-                                    index={attributeId}
-                                    onClick={e => this.removeAttribute(attributeId, e)}
-                                  >
-                                    <FontAwesomeIcon icon={faMinusCircle} />
-                                  </span>
-                                )}
-                              </b>
-                            </div>
-                            {<div className="card-body">{attributeValues.join(", ")}</div>}
-                          </div>
-                        </div>
-                        {!this.state.readonly && (
-                          <div
-                            id={"attributes-" + attributeId + "-form"}
-                            className="inplace-form"
-                            style={{ display: this.state.attributesInEdit.has(attributeId) ? "block" : "none" }}
-                          >
-                            <form>
-                              <div index={attributeId} className="card">
-                                <div className="card-header">
-                                  <b>{this.getAttributeName(attributeId)}</b>
-                                </div>
-                                <div className="card-body">
-                                  <CreatableSelect
-                                    value={(attributeValues || []).map(function (val) {
-                                      return { value: val, label: val };
-                                    })}
-                                    isMulti
-                                    isClearable
-                                    onChange={e => this.editAttributeValues(attributeId, e)}
-                                    options={this.getAttributeValues(attributeId).map(function (attrValue) {
-                                      return { value: attrValue.value, label: attrValue.value };
-                                    })}
-                                  />
-                                  <button
-                                    type="button"
-                                    className="btn btn-light"
-                                    onClick={e => this.cancelEditAttributeValues(e, attributeId)}
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    onClick={e => this.handleSubmit("attributes", e, attributeId, true)}
-                                  >
-                                    Save
-                                  </button>
-                                </div>
-                              </div>
-                            </form>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <div className="form-group attribute-block">
-                        <div id={"attributes-" + attributeId + "-form"} className="inplace-form">
-                          <div index={attributeId} className="card">
-                            <div className="card-header">
-                              <CreatableSelect
-                                onChange={e => this.editAttributeKey(attributeId, e, true)}
-                                options={this.getAttributeKeysToAdd()}
-                              />
-                              <button
-                                type="button"
-                                className="btn btn-light"
-                                onClick={e => this.cancelEditAttributeKey(e, attributeId)}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-                }.bind(this),
-              )}
-              {!this.state.readonly && Utils.isAdmin(this.state.session) && (
-                <div className>
-                  <button type="button" className="btn btn-primary" onClick={e => this.addAttribute(e)}>
-                    Add Attribute 
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Commented the code for Issue 20 Properties are not used
-            <div id="properties" className="mb-4">
-              <h5>Properties</h5>
-              {Object.keys(this.state.testcase.properties || {}).map(
-                function (property, i) {
-                  return (
-                    <div key={i} className="attribute-block card">
-                      {this.state.propertiesInEdit.has(i) && (
-                        <form id={"properties-" + i + "-form"} className="inplace-edit">
-                          <div className="form-group card-header">
-                            <input
-                              type="text"
-                              placeholder="Key"
-                              name="key"
-                              className="form-control"
-                              onChange={e => this.handleChange("properties", e, i, "key")}
-                              value={this.state.testcase.properties[i].key}
-                            />
-                          </div>
-                          <div className="card-body">
-                            <div className="form-group">
-                              <input
-                                type="text"
-                                name="value"
-                                placeholder="value"
-                                className="form-control"
-                                onChange={e => this.handleChange("properties", e, i, "value")}
-                                value={this.state.testcase.properties[i].value}
-                              />
-                            </div>
-                            <div className="form-group">
-                              <button
-                                type="button"
-                                className="btn btn-success"
-                                onClick={e => this.handleSubmit("properties", e, i, true)}
-                              >
-                                Save
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-light"
-                                onClick={e => this.cancelEditProperty(i, e)}
-                              >
-                                Cancel
                               </button>
                             </div>
                           </div>
                         </form>
-                      )}
-                      {!this.state.propertiesInEdit.has(i) && (
-                        <div
-                          id={"properties-" + i + "-display"}
-                          className="inplace-display card"
-                          style={{ display: this.state.propertiesInEdit.has(i) ? "none" : "block" }}
-                        >
-                          <div className="card-header">
-                            <b>
-                              {this.state.testcase.properties[i].key}
-                              {!this.state.readonly && (
-                                <span className="edit edit-icon clickable" onClick={e => this.toggleEditProperty(e, i)}>
-                                  <FontAwesomeIcon icon={faPencilAlt} />
-                                </span>
-                              )}
-                              {!this.state.readonly && (
-                                <span className="clickable edit-icon red" onClick={e => this.removeProperty(i, e)}>
-                                  <FontAwesomeIcon icon={faMinusCircle} />
-                                </span>
-                              )}
-                            </b>
-                          </div>
-                          <div className="card-body">{this.state.testcase.properties[i].value}</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={i} className="form-group attribute-block">
+                    <div id={"attributes-" + attributeId + "-form"} className="inplace-form">
+                      <div index={attributeId} className="card">
+                        <div className="card-header">
+                          <CreatableSelect
+                            onChange={e => editAttributeKey(attributeId, e, true)}
+                            options={getAttributeKeysToAdd()}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-light"
+                            onClick={e => cancelEditAttributeKey(e, attributeId)}
+                          >
+                            Cancel
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  );
-                }.bind(this),
-              )}
-              {!this.state.readonly && (
-                <div className>
-                  <button type="button" className="btn btn-primary" onClick={e => this.addProperty(e)}>
-                    Add Property
-                  </button>
-                </div>
-              )}
-            </div> */}
-          </div> 
-
-          <div className="tab-pane fade show" id="failure" role="tabpanel" aria-labelledby="failure-tab">
-            {this.state.testcase.failureDetails && Object.keys(this.state.testcase.failureDetails).length > 0 && (
-              <div className="testcase-section">
-                <h5>Failure Details</h5>
-                <div>{this.state.testcase.failureDetails.text}</div>
+                  </div>
+                );
+              }
+            })}
+            {!readonly && Utils.isAdmin(session) && (
+              <div className>
+                <button type="button" className="btn btn-primary" onClick={e => addAttribute(e)}>
+                  Add Attribute 
+                </button>
               </div>
             )}
           </div>
+        </div>
 
-          {! this.state.launchId && (
-          <div className="tab-pane fade show" id="attachments" role="tabpanel" aria-labelledby="attachments-tab">
-            <Attachments
-              testcase={this.state.testcase}
-              projectId={this.projectId}
-              onTestcaseUpdated={this.onTestcaseUpdated}
-              readonly={this.state.readonly}
-              testDeveloper={this.state.testDeveloper}
-            />
-          </div>
-          )}
-
-          {this.state.launchId && (
-            <div className="tab-pane fade show" id="results" role="tabpanel" aria-labelledby="results-tab">
-              <Results
-                testcase={this.state.testcase}
-                projectId={this.projectId}
-                onTestcaseUpdated={this.onTestcaseUpdated}
-              />
+        <div className="tab-pane fade show" id="failure" role="tabpanel" aria-labelledby="failure-tab">
+          {testcase.failureDetails && Object.keys(testcase.failureDetails).length > 0 && (
+            <div className="testcase-section">
+              <h5>Failure Details</h5>
+              <div>{testcase.failureDetails.text}</div>
             </div>
           )}
-
-          <div
-            className="tab-pane fade show"
-            id="comments-tab-body"
-            role="tabpanel"
-            aria-labelledby="comments-tab-body"
-          >
-            <Comments
-              entityId={this.state.launchId + "_" + this.state.testcase.id}
-              projectId={this.projectId}
-              entityType="launch"
-              onCommentsNumberChanged={this.onCommentsCountChanged}
-            />
-          </div>
-
-          <div className="tab-pane fade show" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
-            <dl>
-              {Object.keys(this.state.testcase.metaData || {}).map(
-                function (key) {
-                  return (
-                    <span>
-                      <dt>{key}</dt>
-                      <dd>{this.state.testcase.metaData[key]}</dd>
-                    </span>
-                  );
-                }.bind(this),
-              )}
-            </dl>
-          </div>
-
-          <div className="tab-pane fade show" id="history" role="tabpanel" aria-labelledby="history-tab">
-            <EventsWidget
-              projectId={this.projectId}
-              filter={{
-                skip: 0,
-                limit: 10,
-                orderby: "id",
-                orderdir: "DESC",
-                entityType: "TestCase",
-                entityId: this.state.testcase.id,
-                eventType: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
-              }}
-            />
-          </div>
         </div>
 
-        <div className="row">
-          <div className="col-md-6"></div>
-          {!this.state.readonly && (Utils.isAdmin(this.state.session) && !this.state.testcase.locked) && (
-            <ConfirmButton
-             onSubmit={this.lockTestcase}
-             buttonClass={"btn btn-danger float-left"}
-             id={"testcase-lock"}
-             modalText={"Are you sure you want to lock this test case?"}
-             buttonText={"Lock Testcase"}
+        {!launchId && (
+          <div className="tab-pane fade show" id="attachments" role="tabpanel" aria-labelledby="attachments-tab">
+            <Attachments
+              testcase={testcase}
+              projectId={projectId}
+              onTestcaseUpdated={onTestcaseUpdated}
+              readonly={readonly}
+              testDeveloper={testDeveloper}
             />
-          )}
+          </div>
+        )}
 
-          {!this.state.readonly && (Utils.isAdmin(this.state.session) && this.state.testcase.locked) && (
-            <ConfirmButton
-              onSubmit={this.unlockTestcase}
-              buttonClass={"btn btn-danger float-left"}
-              id={"testcase-unlock"}
-              modalText={"Are you sure you want to unlock this test case?"}
-              buttonText={"Unlock Testcase"}
-             />
-          )}
+        {launchId && (
+          <div className="tab-pane fade show" id="results" role="tabpanel" aria-labelledby="results-tab">
+            <Results
+              testcase={testcase}
+              projectId={projectId}
+              onTestcaseUpdated={onTestcaseUpdated}
+            />
+          </div>
+        )}
 
-          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-
-
-          {!this.state.readonly && (
-            <ConfirmButton
-             onSubmit={this.removeTestcase}
-             buttonClass={"btn btn-danger float-right"}
-             id={"testcase-removal"}
-             modalText={"Are you sure you want to remove the Test Case?"}
-             buttonText={"Remove Testcase"}
-           />
-          )}
-         </div>
+        <div
+          className="tab-pane fade show"
+          id="comments-tab-body"
+          role="tabpanel"
+          aria-labelledby="comments-tab-body"
+        >
+          <Comments
+            entityId={launchId + "_" + testcase.id}
+            projectId={projectId}
+            entityType="launch"
+            onCommentsNumberChanged={onCommentsCountChanged}
+          />
         </div>
 
+        <div className="tab-pane fade show" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
+          <dl>
+            {Object.keys(testcase.metaData || {}).map(key => {
+              return (
+                <span key={key}>
+                  <dt>{key}</dt>
+                  <dd>{testcase.metaData[key]}</dd>
+                </span>
+              );
+            })}
+          </dl>
+        </div>
 
+        <div className="tab-pane fade show" id="history" role="tabpanel" aria-labelledby="history-tab">
+          <EventsWidget
+            projectId={projectId}
+            filter={{
+              skip: 0,
+              limit: 10,
+              orderby: "id",
+              orderdir: "DESC",
+              entityType: "TestCase",
+              entityId: testcase.id,
+              eventType: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
+            }}
+          />
+        </div>
+      </div>
 
-    );
-  }
-}
+      <div className="row">
+        <div className="col-md-6"></div>
+        {!readonly && (Utils.isAdmin(session) && !testcase.locked) && (
+          <ConfirmButton
+            onSubmit={lockTestcase}
+            buttonClass={"btn btn-danger float-left"}
+            id={"testcase-lock"}
+            modalText={"Are you sure you want to lock this test case?"}
+            buttonText={"Lock Testcase"}
+          />
+        )}
+
+        {!readonly && (Utils.isAdmin(session) && testcase.locked) && (
+          <ConfirmButton
+            onSubmit={unlockTestcase}
+            buttonClass={"btn btn-danger float-left"}
+            id={"testcase-unlock"}
+            modalText={"Are you sure you want to unlock this test case?"}
+            buttonText={"Unlock Testcase"}
+          />
+        )}
+
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+
+        {!readonly && (
+          <ConfirmButton
+            onSubmit={removeTestcase}
+            buttonClass={"btn btn-danger float-right"}
+            id={"testcase-removal"}
+            modalText={"Are you sure you want to remove the Test Case?"}
+            buttonText={"Remove Testcase"}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default withRouter(TestCase);

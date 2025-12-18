@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import { Routes, Route } from "react-router-dom";
-
+import { Routes, Route, useParams } from "react-router-dom";
 import TestCases from "../testcases/TestCases";
 import TestSuites from "../testsuites/TestSuites";
 import Projects from "../projects/Projects";
@@ -28,14 +27,24 @@ import Events from "../audit/Events";
 import Redirect from "../common/Redirect";
 import ForgotPassword from "../user/ForgotPassword";
 
-class Main extends Component {
-  onProjectChange = (project) => {
-    this.props.onProjectChange(project);
-  };
+// Wrapper components to handle params in v6
+const RedirectWithParams = ({ requestUrl }) => {
+  const params = useParams();
+  const login = params.login || "";
+  const finalUrl = requestUrl.includes("?") 
+    ? requestUrl.replace(":login", login)
+    : requestUrl;
+  return <Redirect requestUrl={finalUrl} />;
+};
 
-  onSessionChange = (session) => {
+class Main extends Component {
+  onProjectChange(project) {
+    this.props.onProjectChange(project);
+  }
+
+  onSessionChange(session) {
     this.props.onSessionChange(session);
-  };
+  }
 
   render() {
     return (
@@ -54,11 +63,10 @@ class Main extends Component {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/new" element={<ProjectForm />} />
 
-          <Route
+          <Route 
             path="/orgselect"
-            element={<OrgSelect onSessionChange={this.onSessionChange} />}
+            element={<OrgSelect onSessionChange={this.onSessionChange.bind(this)} />}
           />
-
           <Route path="/organizations/new" element={<OrganizationForm />} />
           <Route
             path="/organizations/edit"
@@ -68,111 +76,108 @@ class Main extends Component {
           <Route path="/auth" element={<Auth />} />
           <Route
             path="/idpauth"
-            element={<IdpAuth onSessionChange={this.onSessionChange} />}
+            element={<IdpAuth onSessionChange={this.onSessionChange.bind(this)} />}
           />
 
           <Route
             path="/user/create-redirect"
             element={<Redirect requestUrl="user/create-redirect" />}
           />
+
           <Route
             path="/user/all-users-redirect"
             element={<Redirect requestUrl="user/all-redirect" />}
           />
           <Route
             path="/user/change-password-redirect/:login"
-            element={<Redirect />}
+            element={<RedirectWithParams requestUrl="user/change-password-redirect?login=:login" />}
           />
 
           <Route path="/user/create" element={<CreateUser />} />
           <Route
-            path="/user"
-            element={<Users onProjectChange={this.onProjectChange} />}
+            path="/user/"
+            element={<Users onProjectChange={this.onProjectChange.bind(this)} />}
           />
+
           <Route path="/user/delete" element={<DeleteUser />} />
-          <Route
-            path="/user/profile/:profileId"
-            element={<Profile />}
-          />
-          <Route
-            path="/user/changepass/:profileId"
-            element={<ChangePassword />}
-          />
+
+          <Route path="/user/profile/:profileId" element={<Profile />} />
+          <Route path="/user/changepass/:profileId" element={<ChangePassword />} />
 
           <Route
             path="/login"
             element={
               <Login
-                onProjectChange={this.onProjectChange}
-                onSessionChange={this.onSessionChange}
+                onProjectChange={this.onProjectChange.bind(this)}
+                onSessionChange={this.onSessionChange.bind(this)}
               />
             }
           />
-          <Route path="/forgot_password" element={<ForgotPassword />} />
-
+          <Route
+            path="/forgot_password"
+            element={<ForgotPassword />}
+          />
           <Route
             path="/:project/testcases/new"
-            element={
-              <TestCaseForm onProjectChange={this.onProjectChange} />
-            }
+            element={<TestCaseForm onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
             path="/projects/:project"
-            element={<Project onProjectChange={this.onProjectChange} />}
+            element={<Project onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
             path="/projects/:project/settings"
             element={
-              <ProjectSettings
-                onProjectChange={this.onProjectChange}
-                onSessionChange={this.onSessionChange}
+              <ProjectSettings 
+                onProjectChange={this.onProjectChange.bind(this)}
+                onSessionChange={this.onSessionChange.bind(this)}
               />
             }
           />
           <Route
             path="/:project/testcase/:testcase"
             element={
-              <TestCase
-                onProjectChange={this.onProjectChange}
-                onSessionChange={this.onSessionChange}
+              <TestCase 
+                onProjectChange={this.onProjectChange.bind(this)} 
+                onSessionChange={this.onSessionChange.bind(this)} 
               />
             }
           />
           <Route
             path="/:project/testcases"
-            element={<TestCases onProjectChange={this.onProjectChange} />}
+            element={<TestCases onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
             path="/:project/testsuites"
-            element={<TestSuites onProjectChange={this.onProjectChange} />}
+            element={<TestSuites onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
-            path="/:project/launches"
-            element={<Launches onProjectChange={this.onProjectChange} />}
+            path="/:project/launches/"
+            element={<Launches onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
-            path="/:project/launches/statistics"
-            element={<LaunchesStatistics onProjectChange={this.onProjectChange} />}
+            path="/:project/launches/statistics/"
+            element={<LaunchesStatistics onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
-            path="/:project/launches/heatmap"
-            element={<LaunchTestcasesHeatmap onProjectChange={this.onProjectChange} />}
+            path="/:project/launches/heatmap/"
+            element={<LaunchTestcasesHeatmap onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
             path="/:project/launch/:launchId"
-            element={<Launch onProjectChange={this.onProjectChange} />}
+            element={<Launch onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
             path="/:project/launch/:launchId/:testcaseUuid"
-            element={<Launch onProjectChange={this.onProjectChange} />}
+            element={<Launch onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
             path="/:project/attributes"
-            element={<Attributes onProjectChange={this.onProjectChange} />}
+            element={<Attributes onProjectChange={this.onProjectChange.bind(this)} />}
           />
           <Route
             path="/:project/audit"
-            element={<Events onProjectChange={this.onProjectChange} />}
+            element={<Events onProjectChange={this.onProjectChange.bind(this)} />}
           />
         </Routes>
       </main>
@@ -181,4 +186,3 @@ class Main extends Component {
 }
 
 export default Main;
-

@@ -1,79 +1,62 @@
-import React, { Component } from "react";
-import { withRouter } from "../common/withRouter";
+import React, { useState } from "react";
 import ControlledPopup from '../common/ControlledPopup';
 import Backend from "../services/backend";
-import * as Utils from "../common/Utils";
 
-class DeleteUser extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      login: "",
-      filter: {
-        skip: 0,
-        limit: 20,
-        orderby: "login",
-        orderdir: "ASC",
-        includedFields: "login",
-      },
-      message: "",
-    };
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
+const DeleteUser = () => {
+  const [login, setLogin] = useState("");
+  const [message, setMessage] = useState("");
 
-  }
+  const handleChange = (event) => {
+    setLogin(event.target.value);
+  };
 
-  // called after 1st render
-  componentDidMount() {
-  }
-
-  handleChange(event) {
-    // eslint-disable-next-line react/no-direct-mutation-state
-    this.setState({ login: event.target.value });
-  }
-
-
-  handleSubmit(event) {
-    Backend.postPlain("user/delete?login=" + this.state.login)
-        .then(response => {
-          if (response.statusText != "Internal Server Error") {
-	    window.location = decodeURI("/");
-	  } else {
-	    this.setState({message: "Couldn't delete user: " + this.state.login});
-	  }
-        }).catch(error => {
-          this.setState({message: "Couldn't delete a user: " + error});
-        });
+  const handleSubmit = (event) => {
     event.preventDefault();
-  }
 
+    Backend.postPlain("user/delete?login=" + login)
+      .then(response => {
+        if (response.statusText !== "Internal Server Error") {
+          window.location = decodeURI("/");
+        } else {
+          setMessage("Couldn't delete user: " + login);
+        }
+      })
+      .catch(error => {
+        setMessage("Couldn't delete a user: " + error);
+      });
+  };
 
-  render() {
-    return (
-     <div>
-        <ControlledPopup popupMessage={this.state.message}/>
-        <h1>Delete User</h1>
-        <div className="delete-user-form">
-          <form>
-            <div class="form-row">
-              <div class="form-group col-md-6">
-                <div>
-                  <label for="login">Login: </label>
-                </div>
-                <div className="mx-auto">
-                  <input style={{width: "300px"}} class="form-control" type="text" name="login" id="login" onChange={this.handleChange} />
-                </div>
+  return (
+    <div>
+      <ControlledPopup popupMessage={message} />
+      <h1>Delete User</h1>
+      <div className="delete-user-form">
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+            <div className="form-group col-md-6">
+              <div>
+                <label htmlFor="login">Login: </label>
+              </div>
+              <div className="mx-auto">
+                <input
+                  style={{width: "300px"}}
+                  className="form-control"
+                  type="text"
+                  name="login"
+                  id="login"
+                  value={login}
+                  onChange={handleChange}
+                />
               </div>
             </div>
-            <button onClick={this.handleSubmit} class="btn btn-primary">
-              Delete
-            </button>
-          </form>
-        </div>
-     </div>
-    );
-  }
+          </div>
+          <button type="submit" className="btn btn-primary">
+            Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
 
-}
-
-export default withRouter(DeleteUser);
+export default DeleteUser;

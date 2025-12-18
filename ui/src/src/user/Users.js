@@ -1,126 +1,126 @@
-import React from "react";
-import { withRouter } from "../common/withRouter";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams, Link } from "react-router-dom";
 import Pager from "../pager/Pager";
-import { Link } from "react-router-dom";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
-class Users extends SubComponent {
-  state = {
-    users: [],
-    filter: {
-      skip: 0,
-      limit: 20,
-      orderby: "firstName",
-      orderdir: "ASC",
-      includedFields: "firstName,lastName,login,id,email,role",
-    },
-    pager: {
-      total: 0,
-      current: 0,
-      maxVisiblePage: 7,
-      itemsOnPage: 20,
-    },
-    loading: true,
-  };
 
-  constructor(props) {
-    super(props);
+const Users = ({ onProjectChange }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
 
-    this.getUsers = this.getUsers.bind(this);
-    this.getPager = this.getPager.bind(this);
-    this.updateUrl = this.updateUrl.bind(this);
-    this.handlePageChanged = this.handlePageChanged.bind(this);
-  }
+  const [users, setUsers] = useState([]);
+  const [filter, setFilter] = useState({
+    skip: 0,
+    limit: 20,
+    orderby: "firstName",
+    orderdir: "ASC",
+    includedFields: "firstName,lastName,login,id,email,role",
+  });
+  const [pager, setPager] = useState({
+    total: 0,
+    current: 0,
+    maxVisiblePage: 7,
+    itemsOnPage: 20,
+  });
+  const [loading, setLoading] = useState(true);
 
-  componentDidMount() {
-    super.componentDidMount();
+  // Handle SubComponent's onProjectChange callback
+  useEffect(() => {
+    if (onProjectChange && params.project) {
+      onProjectChange(params.project);
+    }
+  }, [onProjectChange, params.project]);
 
-    this.state.filter = Object.assign(this.state.filter, Utils.queryToFilter(this.props.router.location.search.substring(1)));
-    this.getUsers();
-    this.getPager();
-  }
+  // Initialize filter from URL on mount
+  useEffect(() => {
+    const queryParams = Utils.queryToFilter(location.search.substring(1));
+    setFilter(prevFilter => ({ ...prevFilter, ...queryParams }));
+  }, []); // Only run once on mount
 
-  getUsers() {
-    Backend.get("user?" + Utils.filterToQuery(this.state.filter))
+  // Fetch users and pager when filter changes
+  useEffect(() => {
+    getUsers();
+    getPager();
+  }, [filter]);
+
+  const getUsers = () => {
+    Backend.get("user?" + Utils.filterToQuery(filter))
       .then(response => {
-        this.state.users = response;
-        this.state.loading = false;
-        this.setState(this.state);
+        setUsers(response);
+        setLoading(false);
       })
       .catch(error => {
         console.log("Couldn't get users: " + error);
-        this.state.loading = false;
-        this.setState(this.state);
+        setLoading(false);
       });
-  }
+  };
 
-  getPager() {
-    var countFilter = Object.assign({}, this.state.filter);
-    countFilter.skip = 0;
-    countFilter.limit = 0;
+  const getPager = () => {
+    const countFilter = { ...filter, skip: 0, limit: 0 };
     Backend.get("user/count?" + Utils.filterToQuery(countFilter))
       .then(response => {
-        this.state.pager.total = response;
-        this.state.pager.current = this.state.filter.skip / this.state.filter.limit;
-        this.state.pager.visiblePage = Math.min(
-          response / this.state.pager.itemsOnPage + 1,
-          this.state.pager.maxVisiblePage,
-        );
-        this.setState(this.state);
+        setPager(prevPager => ({
+          ...prevPager,
+          total: response,
+          current: filter.skip / filter.limit,
+          visiblePage: Math.min(
+            response / prevPager.itemsOnPage + 1,
+            prevPager.maxVisiblePage
+          ),
+        }));
       })
       .catch(error => console.log(error));
-  }
+  };
 
-  updateUrl() {
-    this.props.history.push("/user?" + Utils.filterToQuery(this.state.filter));
-  }
+  const updateUrl = () => {
+    navigate("/user?" + Utils.filterToQuery(filter));
+  };
 
-  handlePageChanged(newPage) {
-    this.state.pager.current = newPage;
-    this.state.filter.skip = newPage * this.state.pager.itemsOnPage;
-    this.getUsers();
-    this.setState(this.state);
-    this.updateUrl();
-  }
+  const handlePageChanged = (newPage) => {
+    const newFilter = {
+      ...filter,
+      skip: newPage * pager.itemsOnPage,
+    };
+    setFilter(newFilter);
+    setPager(prevPager => ({ ...prevPager, current: newPage }));
+    updateUrl();
+  };
 
-  render() {
-    return (
+  return (
+    <div>
       <div>
-        <div>
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th scope="col">User</th>
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td>
+                  <Link to={"/user/profile/" + user.login}>
+                    {user.firstName} {user.lastName}{" "}
+                    <span className="text-muted">@{user.login}</span>
+                  </Link>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {this.state.users.map(function (user) {
-                return (
-                  <tr>
-                    <td>
-                      <Link to={"/user/profile/" + user.login}>
-                        {user.firstName} {user.lastName} <span className="text-muted">@{user.login}</span>
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div>
-            <Pager
-              totalItems={this.state.pager.total}
-              currentPage={this.state.pager.current}
-              visiblePages={this.state.pager.maxVisiblePage}
-              itemsOnPage={this.state.pager.itemsOnPage}
-              onPageChanged={this.handlePageChanged}
-            />
-          </div>
+            ))}
+          </tbody>
+        </table>
+        <div>
+          <Pager
+            totalItems={pager.total}
+            currentPage={pager.current}
+            visiblePages={pager.maxVisiblePage}
+            itemsOnPage={pager.itemsOnPage}
+            onPageChanged={handlePageChanged}
+          />
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
-export default withRouter(Users);
+export default Users;
