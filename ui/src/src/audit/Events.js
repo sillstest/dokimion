@@ -1,5 +1,4 @@
-/* eslint-disable eqeqeq */
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import SubComponent from "../common/SubComponent";
 import Pager from "../pager/Pager";
 import * as Utils from "../common/Utils";
@@ -8,283 +7,271 @@ import DatePicker from "react-date-picker";
 import Select from "react-select";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
-import { withRouter } from "../common/withRouter";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 
-class Events extends SubComponent {
-  state = {
-    events: [],
-    allEventTypes: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
-    entityTypes: ["TestCase"],
-    filter: {
-      skip: 0,
-      limit: 20,
-      orderby: "id",
-      orderdir: "DESC",
-      entityType: "",
-      entityId: "",
-      eventType: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
-    },
-    pager: {
-      total: 0,
-      current: 0,
-      maxVisiblePage: 7,
-      itemsOnPage: 20,
-    },
-    loading: true,
-    errorMessage: "",
+const Events = ({ entityUrl, entityName }) => {
+  const { project } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const allEventTypes = ["PASSED", "FAILED", "BROKEN", "UPDATED"];
+  const entityTypes = ["TestCase"];
+
+  const [events, setEvents] = useState([]);
+  const [filter, setFilter] = useState({
+    skip: 0,
+    limit: 20,
+    orderby: "id",
+    orderdir: "DESC",
+    entityType: "",
+    entityId: "",
+    eventType: ["PASSED", "FAILED", "BROKEN", "UPDATED"],
+  });
+  const [pager, setPager] = useState({
+    total: 0,
+    current: 0,
+    maxVisiblePage: 7,
+    itemsOnPage: 20,
+  });
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Load filter from URL on mount
+  useEffect(() => {
+    const urlFilter = Utils.queryToFilter(searchParams.toString());
+    let newFilter = { ...filter, ...urlFilter };
+
+    if (newFilter.eventType && !Array.isArray(newFilter.eventType)) {
+      newFilter.eventType = [newFilter.eventType];
+    }
+
+    setFilter(newFilter);
+  }, [searchParams]);
+
+  // Fetch events when filter changes
+  const getEvents = useCallback(() => {
+    if (!project) return;
+
+    setLoading(true);
+    setErrorMessage("");
+
+    Backend.get(`${project}/audit?${Utils.filterToQuery(filter)}`)
+      .then((response) => {
+        setEvents(response);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setErrorMessage(`getEvents::Couldn't get events, error: ${error}`);
+        setLoading(false);
+      });
+  }, [project, filter]);
+
+  // Fetch total count for pager
+  const getPager = useCallback(() => {
+    if (!project) return;
+
+    const countFilter = { ...filter, skip: 0, limit: 0 };
+    Backend.get(`${project}/audit/count?${Utils.filterToQuery(countFilter)}`)
+      .then((total) => {
+        setPager((prev) => ({
+          ...prev,
+          total,
+          current: filter.skip / filter.limit,
+          visiblePage: Math.min(
+            Math.ceil(total / prev.itemsOnPage),
+            prev.maxVisiblePage
+          ),
+        }));
+      })
+      .catch((error) => console.log("Error fetching count:", error));
+  }, [project, filter]);
+
+  useEffect(() => {
+    getEvents();
+    getPager();
+  }, [getEvents, getPager]);
+
+  // Update URL with current filter
+  const updateUrl = () => {
+    const query = Utils.filterToQuery(filter);
+    navigate(`/${project}/audit?${query}`);
   };
 
-  constructor(props) {
-    super(props);
-    this.getEvents = this.getEvents.bind(this);
-    this.getPager = this.getPager.bind(this);
-    this.handlePageChanged = this.handlePageChanged.bind(this);
-    this.updateUrl = this.updateUrl.bind(this);
-    this.onFilter = this.onFilter.bind(this);
-    this.handleFilterChange = this.handleFilterChange.bind(this);
-    this.handleFromDateFilterChange = this.handleFromDateFilterChange.bind(this);
-    this.handleToDateFilterChange = this.handleToDateFilterChange.bind(this);
-    this.handleTypesChanged = this.handleTypesChanged.bind(this);
-  }
+  // Handle pagination
+  const handlePageChanged = (newPage) => {
+    const newSkip = newPage * pager.itemsOnPage;
+    setFilter((prev) => ({ ...prev, skip: newSkip }));
+    setPager((prev) => ({ ...prev, current: newPage }));
+    updateUrl();
+  };
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.state.filter = Object.assign(this.state.filter, Utils.queryToFilter(this.props.location.search.substring(1)));
-    if (this.state.filter.eventType && !Array.isArray(this.state.filter.eventType)) {
-      this.state.filter.eventType = [this.state.filter.eventType];
-    }
-    this.state.entityUrl = this.props.entityUrl;
-    this.state.entityName = this.props.entityName;
-    this.getEvents();
-    this.getPager();
-  }
-
-  getEvents() {
-    Backend.get(this.props.router.params.project + "/audit?" + Utils.filterToQuery(this.state.filter))
-      .then(response => {
-        this.state.events = response;
-        this.state.loading = false;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getEvents::Couldn't get events, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
-
-  handlePageChanged(newPage) {
-    this.state.pager.current = newPage;
-    this.state.filter.skip = newPage * this.state.pager.itemsOnPage;
-    this.getEvents();
-    this.setState(this.state);
-    this.updateUrl();
-  }
-
-  getPager() {
-    var countFilter = Object.assign({ skip: 0, limit: 0 }, this.state.filter);
-    Backend.get(this.props.router.params.project + "/audit/count?" + Utils.filterToQuery(countFilter))
-      .then(response => {
-        this.state.pager.total = response;
-        this.state.pager.current = this.state.filter.skip / this.state.filter.limit;
-        this.state.pager.visiblePage = Math.min(
-          response / this.state.pager.itemsOnPage + 1,
-          this.state.pager.maxVisiblePage,
-        );
-        this.setState(this.state);
-      })
-      .catch(error => console.log(error));
-  }
-
-  handleFilterChange(fieldName, event, index) {
-    if (index) {
-      if (event.target.value == "") {
-        delete this.state.filter[fieldName][index];
+  // Generic filter field change
+  const handleFilterChange = (fieldName, value) => {
+    setFilter((prev) => {
+      const newFilter = { ...prev };
+      if (value === "" || value == null) {
+        delete newFilter[fieldName];
       } else {
-        this.state.filter[fieldName][index] = event.target.value;
+        newFilter[fieldName] = value;
       }
-    } else {
-      if (event.target.value == "") {
-        delete this.state.filter[fieldName];
-      } else {
-        this.state.filter[fieldName] = event.target.value;
-      }
-    }
-    this.setState(this.state);
-  }
-
-  handleFromDateFilterChange(value, formattedValue) {
-    if (value == null) {
-      delete this.state.filter.from_createdTime;
-    } else {
-      this.state.filter.from_createdTime = value.getTime();
-    }
-    this.setState(this.state);
-  }
-
-  handleToDateFilterChange(value, formattedValue) {
-    if (value == null) {
-      delete this.state.filter.to_createdTime;
-    } else {
-      this.state.filter.to_createdTime = value.getTime();
-    }
-    this.setState(this.state);
-  }
-
-  handleTypesChanged(values) {
-    this.state.filter.eventType = values.map(function (value) {
-      return value.value;
+      return newFilter;
     });
-    this.setState(this.state);
-  }
+  };
 
-  onFilter(event) {
-    this.updateUrl();
-    this.getEvents();
-    this.getPager();
-    event.preventDefault();
-  }
+  // Date filters
+  const handleFromDateFilterChange = (date) => {
+    setFilter((prev) => ({
+      ...prev,
+      from_createdTime: date ? date.getTime() : undefined,
+    }));
+  };
 
-  updateUrl() {
-    this.props.router.navigate("/" + this.props.router.params.project + "/audit?" + Utils.filterToQuery(this.state.filter));
-  }
+  const handleToDateFilterChange = (date) => {
+    setFilter((prev) => ({
+      ...prev,
+      to_createdTime: date ? date.getTime() : undefined,
+    }));
+  };
 
-  render() {
-    return (
-      <div className="row">
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="col-sm-3 events-filter">
-          <form>
-            <div class="form-group">
-              <label for="created">
-                <h5>Event Time</h5>
-              </label>
-              <div class="input-group mb-2">
-                <DatePicker
-                  id="from_createdTime"
-                  value={Utils.getDatepickerTime(this.state.filter.from_createdTime)}
-                  onChange={this.handleFromDateFilterChange}
-                  placeholder="Event after"
-                />
-                <DatePicker
-                  id="to_createdTime"
-                  value={Utils.getDatepickerTime(this.state.filter.to_createdTime)}
-                  onChange={this.handleToDateFilterChange}
-                  placeholder="Event before"
-                />
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="created">
-                <h5>Event Type</h5>
-              </label>
-              <div>
-                <Select
-                  value={this.state.filter.eventType.map(function (val) {
-                    return { value: val, label: val };
-                  })}
-                  isMulti
-                  onChange={this.handleTypesChanged}
-                  options={this.state.allEventTypes.map(function (val) {
-                    return { value: val, label: val };
-                  })}
-                />
-              </div>
-            </div>
+  // Event types multi-select
+  const handleTypesChanged = (selectedOptions) => {
+    const values = selectedOptions ? selectedOptions.map((opt) => opt.value) : [];
+    setFilter((prev) => ({ ...prev, eventType: values }));
+  };
 
-            <div class="form-group">
-              <label for="created">
-                <h5>Entity Type</h5>
-              </label>
-              <div class="input-group mb-2">
-                <select
-                  id="launcher-select"
-                  className="form-control"
-                  onChange={e => this.handleFilterChange("entityType", e)}
-                >
-                  <option> </option>
-                  {this.state.entityTypes.map(
-                    function (entityType) {
-                      var selected = this.state.filter.entityType == entityType;
-                      if (selected) {
-                        return (
-                          <option value={entityType} selected>
-                            {entityType}
-                          </option>
-                        );
-                      }
-                      return <option value={entityType}>{entityType}</option>;
-                    }.bind(this),
-                  )}
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="title">
-                <h5>Entity Id</h5>
-              </label>
-              <input
-                type="text"
-                class="form-control"
-                id="entityId"
-                name="entityId"
-                aria-describedby="Event Entity Id"
-                placeholder="Event Entity Id"
-                value={this.state.filter.entityId || ""}
-                onChange={e => this.handleFilterChange("entityId", e)}
+  // Apply filter
+  const onFilter = (e) => {
+    e.preventDefault();
+    setFilter((prev) => ({ ...prev, skip: 0 })); // Reset to first page
+    updateUrl();
+  };
+
+  return (
+    <div className="row">
+      <ControlledPopup popupMessage={errorMessage} />
+
+      {/* Filter Sidebar */}
+      <div className="col-sm-3 events-filter">
+        <form onSubmit={onFilter}>
+          <div className="form-group">
+            <label>
+              <h5>Event Time</h5>
+            </label>
+            <div className="input-group mb-2">
+              <DatePicker
+                value={Utils.getDatepickerTime(filter.from_createdTime)}
+                onChange={handleFromDateFilterChange}
+                clearIcon={null}
+                format="y-MM-dd"
+                className="form-control"
+              />
+              <DatePicker
+                value={Utils.getDatepickerTime(filter.to_createdTime)}
+                onChange={handleToDateFilterChange}
+                clearIcon={null}
+                format="y-MM-dd"
+                className="form-control ml-2"
               />
             </div>
-            <button type="submit" class="btn btn-primary" onClick={this.onFilter}>
-              Filter
-            </button>
-          </form>
-        </div>
-
-        <div className="col-sm-9">
-          <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col">Type</th>
-                <th scope="col">Date</th>
-                <th>User</th>
-              </tr>
-            </thead>
-            <tbody>
-              {this.state.events.map(function (event, i) {
-                let eventUser = "";
-                if (event.createdBy) {
-                  eventUser = event.createdBy;
-                } else if (event.lastModifiedBy) {
-                  eventUser = event.lastModifiedBy;
-                } else {
-                  eventUser = event.user;
-                }
-                return (
-                  <tr key={i} className={Utils.getStatusColorClass(event.eventType)}>
-                    <td>{event.eventType}</td>
-                    <td>{Utils.timeToDate(event.createdTime)}</td>
-                    <td>{eventUser}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div>
-            <Pager
-              totalItems={this.state.pager.total}
-              currentPage={this.state.pager.current}
-              visiblePages={this.state.pager.maxVisiblePage}
-              itemsOnPage={this.state.pager.itemsOnPage}
-              onPageChanged={this.handlePageChanged}
+
+          <div className="form-group">
+            <label>
+              <h5>Event Type</h5>
+            </label>
+            <Select
+              isMulti
+              value={filter.eventType?.map((val) => ({ value: val, label: val }))}
+              onChange={handleTypesChanged}
+              options={allEventTypes.map((val) => ({ value: val, label: val }))}
             />
           </div>
-        </div>
-      </div>
-    );
-  }
-}
 
-export default withRouter(Events);
+          <div className="form-group">
+            <label>
+              <h5>Entity Type</h5>
+            </label>
+            <select
+              className="form-control"
+              value={filter.entityType || ""}
+              onChange={(e) => handleFilterChange("entityType", e.target.value)}
+            >
+              <option value=""> </option>
+              {entityTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>
+              <h5>Entity Id</h5>
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Event Entity Id"
+              value={filter.entityId || ""}
+              onChange={(e) => handleFilterChange("entityId", e.target.value)}
+            />
+          </div>
+
+          <button type="submit" className="btn btn-primary">
+            Filter
+          </button>
+        </form>
+      </div>
+
+      {/* Events Table */}
+      <div className="col-sm-9">
+        <div className="sweet-loading">
+          <FadeLoader
+            sizeUnit={"px"}
+            size={100}
+            color={"#135f38"}
+            loading={loading}
+          />
+        </div>
+
+        <table className="table">
+          <thead>
+            <tr>
+              <th scope="col">Type</th>
+              <th scope="col">Date</th>
+              <th>User</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.map((event, i) => {
+              const eventUser =
+                event.createdBy || event.lastModifiedBy || event.user || "";
+
+              return (
+                <tr
+                  key={event.id || i}
+                  className={Utils.getStatusColorClass(event.eventType)}
+                >
+                  <td>{event.eventType}</td>
+                  <td>{Utils.timeToDate(event.createdTime)}</td>
+                  <td>{eventUser}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        <Pager
+          totalItems={pager.total}
+          currentPage={pager.current}
+          visiblePages={pager.maxVisiblePage}
+          itemsOnPage={pager.itemsOnPage}
+          onPageChanged={handlePageChanged}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default Events;

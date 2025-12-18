@@ -1,109 +1,111 @@
-/* eslint-disable react/no-direct-mutation-state */
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
-class EventsWidget extends Component {
-  constructor(props) {
-    super(props);
+const EventsWidget = ({ projectId: propProjectId, filter: propFilter }) => {
+  const [events, setEvents] = useState([]);
+  const [projectId, setProjectId] = useState("");
+  const [filter, setFilter] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-    this.state = {
-      events: [],
-      projectId: "",
-      errorMessage: "",
-    };
-  }
+  // Sync props into local state when they change
+  useEffect(() => {
+    if (propProjectId) {
+      setProjectId(propProjectId);
+    }
+  }, [propProjectId]);
 
-  getEvents() {
-    Backend.get(this.state.projectId + "/audit?" + Utils.filterToQuery(this.state.filter))
-      .then(response => {
-        this.state.events = response;
-        this.state.loading = false;
-        this.setState(this.state);
+  useEffect(() => {
+    if (propFilter) {
+      setFilter(propFilter);
+    }
+  }, [propFilter]);
+
+  // Fetch events when both projectId and filter are available
+  useEffect(() => {
+    if (!projectId || !filter) return;
+
+    setLoading(true);
+    setErrorMessage("");
+
+    Backend.get(`${projectId}/audit?${Utils.filterToQuery(filter)}`)
+      .then((response) => {
+        setEvents(response);
+        setLoading(false);
       })
-      .catch(error => {
-        this.setState({errorMessage: "getEvents::Couldn't get events, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
+      .catch((error) => {
+        setErrorMessage(`getEvents::Couldn't get events, error: ${error}`);
+        setLoading(false);
       });
+  }, [projectId, filter]);
 
-  }
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.projectId) {
-      this.state.projectId = nextProps.projectId;
-    }
-    if (nextProps.filter) {
-      this.state.filter = nextProps.filter;
-    }
-    if (this.state.filter && this.state.projectId) {
-      this.getEvents();
-    }
-}
+      <div className="col-sm-9">
+        {/* Loading Spinner */}
+        <div className="sweet-loading">
+          <FadeLoader
+            sizeUnit={"px"}
+            size={100}
+            color={"#135f38"}
+            loading={loading}
+          />
+        </div>
 
-  render() {
+        {/* Events Table */}
+        <table className="table">
+          <thead>
+            <tr>
+              <th scope="col">Type</th>
+              <th scope="col">Date</th>
+              <th>User</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.map((event, i) => {
+              const eventUser =
+                event.createdBy || event.lastModifiedBy || event.user || "";
 
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="col-sm-9">
-          <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-          </div>
-          <table className="table">
-            <thead>
-              <tr>
-                <th scope="col">Type</th>
-                <th scope="col">Date</th>
-                <th>User</th>
-                <th>Duration</th>
-              </tr>
-            </thead>
-            <tbody>
-          
-            
+              return (
+                <tr
+                  key={event.id || i} // Prefer event.id if available
+                  className={Utils.getStatusColorClass(event.eventType)}
+                >
+                  <td>{event.eventType}</td>
+                  <td>{Utils.timeToDate(event.createdTime)}</td>
+                  <td>{eventUser}</td>
+                  <td>
+                    {event.eventType !== "UPDATED"
+                      ? Utils.timePassed(event.duration)
+                      : "-"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
 
-              {this.state.events.map(function (event, i) {
-                let eventUser = "";
-                if (event.createdBy) {
-                  eventUser = event.createdBy;
-                } else if (event.lastModifiedBy) {
-                  eventUser = event.lastModifiedBy;
-                } else {
-                  eventUser = event.user;
-                }
-
-                return (
-                  <tr key={i} className={Utils.getStatusColorClass(event.eventType)}>
-                    <td>{event.eventType}</td>
-                    <td>{Utils.timeToDate(event.createdTime)}</td>
-                    <td>{eventUser}</td>
-                    <td>
-                      {(event.eventType !=="UPDATED" ) ? 
-                      
-                      Utils.timePassed(event.duration) : "-"}
-                      </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
+        {/* Link to full audit log */}
+        {projectId && filter && (
           <div>
             <a
-              href={"/" + this.state.projectId + "/audit?" + Utils.filterToQuery(this.state.filter || {})}
+              href={`/${projectId}/audit?${Utils.filterToQuery(filter)}`}
               target="_blank"
               rel="noreferrer"
             >
               All Events
             </a>
           </div>
-        </div>
+        )}
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default EventsWidget;
