@@ -1,190 +1,200 @@
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import $ from "jquery";
-import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend, { getApiBaseUrl } from "../services/backend";
+
 require("popper.js/dist/umd/popper.min.js");
 require("bootstrap-fileinput/css/fileinput.min.css");
 require("bootstrap-fileinput/js/fileinput.min.js");
 require("bootstrap-icons/font/bootstrap-icons.css");
 
-class Attachments extends SubComponent {
-  constructor(props) {
-    super(props);
+export default function Attachments({
+  projectId,
+  testcase,
+  readonly,
+  testDeveloper,
+  onTestcaseUpdated,
+}) {
+  const [currentTestcase, setCurrentTestcase] = useState(testcase);
+  const [errorMessage, setErrorMessage] = useState("");
+  const attachmentToRemoveRef = useRef(null);
 
-    this.attachmentToRemove = null;
+  /* -------------------- sync props -------------------- */
 
-    this.state = {
-      testcase: {
-        attachments: [],
-      },
-      projectId: props.projectId,
-      // eslint-disable-next-line no-dupe-keys
-      testcase: props.testcase,
-      readonly: props.readonly,
-      testDeveloper: props.testDeveloper,
-      errorMessage: "",
+  useEffect(() => {
+    if (testcase) {
+      setCurrentTestcase(testcase);
+    }
+  }, [testcase]);
+
+  /* -------------------- fileinput init -------------------- */
+
+  useEffect(() => {
+    if (!projectId || !currentTestcase?.id) return;
+
+    $("#file-data").fileinput("destroy");
+    $("#file-data").fileinput({
+      previewFileType: "any",
+      uploadUrl: getApiBaseUrl(
+        `${projectId}/testcase/${currentTestcase.id}/attachment`
+      ),
+      maxFileSize: 100000,
+    });
+
+    $("#file-data").on("fileuploaded", () => {
+      onTestcaseUpdated && onTestcaseUpdated();
+    });
+
+    return () => {
+      $("#file-data").fileinput("destroy");
     };
-    this.getAttachmentUrl = this.getAttachmentUrl.bind(this);
-    this.removeAttachment = this.removeAttachment.bind(this);
-    this.removeAttachmentConfirmation = this.removeAttachmentConfirmation.bind(this);
-    this.cancelRemoveAttachmentConfirmation = this.cancelRemoveAttachmentConfirmation.bind(this);
-  }
+  }, [projectId, currentTestcase?.id]);
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.testcase) {
-      this.state.testcase = nextProps.testcase;
-    }
-    if (nextProps.projectId) {
-      this.state.projectId = nextProps.projectId;
-    }
-    this.state.readonly = nextProps.readonly;
+  /* -------------------- handlers -------------------- */
 
-    this.setState(this.state);
-    if (this.state.projectId && this.state.testcase.id && this.state.testcase.id != null) {
-      $("#file-data").fileinput('destroy');
-      $("#file-data").fileinput({
-        previewFileType: "any",
-        uploadUrl: getApiBaseUrl(this.state.projectId + "/testcase/" + this.state.testcase.id + "/attachment"),
-        maxFileSize: 100000
-      });
-      $("#file-data").on(
-        "fileuploaded",
-        function (event, file, previewId, index) {
-            this.onTestcaseUpdated();
-        }.bind(this),
-      );
-    }
-  }
+  const removeAttachmentConfirmation = (attachmentId) => {
+    attachmentToRemoveRef.current = attachmentId;
+    $("#remove-attachment-confirmation").modal("show");
+  };
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.onTestcaseUpdated = this.props.onTestcaseUpdated;
-    this.state.readonly = this.props.readonly;
-    this.state.testDeveloper = this.props.testDeveloper;
-  }
+  const cancelRemoveAttachmentConfirmation = () => {
+    attachmentToRemoveRef.current = null;
+    $("#remove-attachment-confirmation").modal("hide");
+  };
 
-  removeAttachment() {
-console.log("Attachments::removeAttachment");
+  const removeAttachment = () => {
+    const attachmentId = attachmentToRemoveRef.current;
+    if (!attachmentId) return;
 
     Backend.delete(
-      this.state.projectId + "/testcase/" + this.state.testcase.id + "/attachment/" + this.attachmentToRemove,
+      `${projectId}/testcase/${currentTestcase.id}/attachment/${attachmentId}`
     )
-      .then(response => {
-        this.attachmentToRemove = null;
+      .then(() => {
+        attachmentToRemoveRef.current = null;
         $("#remove-attachment-confirmation").modal("hide");
-        this.state.testcase.attachments = (this.state.testcase.attachments || []).filter(
-          attachment => attachment.id !== this.attachmentToRemove,
-        );
-        this.onTestcaseUpdated();
+
+        setCurrentTestcase((prev) => ({
+          ...prev,
+          attachments: (prev.attachments || []).filter(
+            (a) => a.id !== attachmentId
+          ),
+        }));
+
+        onTestcaseUpdated && onTestcaseUpdated();
       })
-      .catch(error => {
-        this.setState({errorMessage: "removeAttachment::Couldn't remove attachment"});
+      .catch(() => {
+        setErrorMessage("removeAttachment::Couldn't remove attachment");
       });
-  }
+  };
 
-  removeAttachmentConfirmation(attachmentId) {
-    this.attachmentToRemove = attachmentId;
-    $("#remove-attachment-confirmation").modal("show");
-  }
+  /* -------------------- render helpers -------------------- */
 
-  cancelRemoveAttachmentConfirmation() {
-    this.issueToRemove = null;
-    $("#remove-attachment-confirmation").modal("hide");
-  }
-
-  getAttachmentUrl(attachment) {
-    return (
-      <div className="row">
-        <div className="col-sm-11">
-          <a
-            href={
-              getApiBaseUrl("") +
-              this.state.projectId +
-              "/testcase/" +
-              this.state.testcase.id +
-              "/attachment/" +
-              attachment.id
-            }
-            target="_blank"
-            rel="noreferrer"
-          >
-            {attachment.title}
-          </a>
-        </div>
-        {!(this.state.readonly || this.state.testDeveloper) && (
-          <div className="col-sm-1">
-            <span
-              className="clickable edit-icon-visible red"
-              onClick={e => this.removeAttachmentConfirmation(attachment.id, e)}
-            >
-              <FontAwesomeIcon icon={faMinusCircle} />
-            </span>
-          </div>
-        )}
+  const renderAttachment = (attachment) => (
+    <div className="row" key={attachment.id}>
+      <div className="col-sm-11">
+        <a
+          href={
+            getApiBaseUrl("") +
+            projectId +
+            "/testcase/" +
+            currentTestcase.id +
+            "/attachment/" +
+            attachment.id
+          }
+          target="_blank"
+          rel="noreferrer"
+        >
+          {attachment.title}
+        </a>
       </div>
-    );
-  }
 
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div id="files" className="attachments-list">
-          {(this.state.testcase.attachments || []).map(this.getAttachmentUrl)}
+      {!(readonly || testDeveloper) && (
+        <div className="col-sm-1">
+          <span
+            className="clickable edit-icon-visible red"
+            onClick={() => removeAttachmentConfirmation(attachment.id)}
+          >
+            <FontAwesomeIcon icon={faMinusCircle} />
+          </span>
         </div>
+      )}
+    </div>
+  );
 
-        {!this.state.readonly && (
-          <div>
-            <form id="file-form" encType="multipart/form-data">
-              <div className="file-loading">
-                <input
-                  id="file-data"
-                  className="file"
-                  type="file"
-                  name="file"
-                  multiple
-                  data-min-file-count="0"
-                  data-theme="fas"
-                />
-              </div>
-              <br />
-            </form>
+  /* -------------------- render -------------------- */
+
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+
+      <div id="files" className="attachments-list">
+        {(currentTestcase?.attachments || []).map(renderAttachment)}
+      </div>
+
+      {!readonly && (
+        <form id="file-form" encType="multipart/form-data">
+          <div className="file-loading">
+            <input
+              id="file-data"
+              className="file"
+              type="file"
+              name="file"
+              multiple
+              data-min-file-count="0"
+              data-theme="fas"
+            />
           </div>
-        )}
+          <br />
+        </form>
+      )}
 
-        <div className="modal fade" tabIndex="-1" role="dialog" id="remove-attachment-confirmation">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Remove Attachment</h5>
-                <button
-                  type="button"
-                  className="close"
-                  onClick={this.cancelRemoveAttachmentConfirmation}
-                  aria-label="Close"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">Are you sure you want to remove attachment?</div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={this.cancelRemoveAttachmentConfirmation}>
-                  Close
-                </button>
-                <button type="button" className="btn btn-danger" onClick={this.removeAttachment}>
-                  Remove Attachment
-                </button>
-              </div>
+      {/* Remove confirmation modal */}
+      <div
+        className="modal fade"
+        tabIndex="-1"
+        role="dialog"
+        id="remove-attachment-confirmation"
+      >
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Remove Attachment</h5>
+              <button
+                type="button"
+                className="close"
+                onClick={cancelRemoveAttachmentConfirmation}
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              Are you sure you want to remove attachment?
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={cancelRemoveAttachmentConfirmation}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={removeAttachment}
+              >
+                Remove Attachment
+              </button>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
-export default Attachments;
