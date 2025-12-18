@@ -1,131 +1,108 @@
-/* eslint-disable react/no-direct-mutation-state */
-import React, { Component } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
+import React, { useEffect, useState } from "react";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
-import CreatableSelect from "react-select/creatable";
-import * as Utils from "../common/Utils";
-import equal from "fast-deep-equal";
 
-class URLForm extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      project: this.props.project,
-      url: this.props.url,
-      session: {person: {}},
-      saveButtonClicked: false,
-    };
+export default function URLForm({
+  project,
+  url: initialUrl,
+  onURLAdded,
+}) {
+  const [url, setUrl] = useState(initialUrl || "");
+  const [session, setSession] = useState({ person: {} });
+  const [saveButtonClicked, setSaveButtonClicked] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleAddSave = this.handleAddSave.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.onSessionChange = this.onSessionChange.bind(this);
-  }
+  /* -------------------- lifecycle -------------------- */
 
-  onSessionChange(session) {
-    this.props.onSessionChange(session);
-  }
-
-  getSession() {
+  useEffect(() => {
     Backend.get("user/session")
-      .then(response => {
-        this.state.session = response;
-        this.setState(this.state);
-      })
-      .catch(() => {console.log("Unable to fetch session");});
-  }
+      .then(setSession)
+      .catch(() => console.log("Unable to fetch session"));
+  }, []);
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    this.setState({ project: nextProps.project, 
-      url:nextProps.urlToAdd, 
-    });
-  }
+  useEffect(() => {
+    setUrl(initialUrl || "");
+  }, [initialUrl]);
 
-  handleChange(event) {
-    this.state.url = event.target.value;
-    this.setState(this.state);
-  }
+  /* -------------------- handlers -------------------- */
 
-  handleAddSave(event) {
+  const handleChange = (event) => {
+    setUrl(event.target.value);
+  };
 
-    if (this.state.saveButtonClicked == false) {
-
-       if (this.state.url.startsWith("http")) {
-          this.props.onURLAdded(this.state.url);
-	  this.state.url="";
-          this.state.saveButtonClicked = true;
-          this.setState(this.state);
-       } else {
-	  this.setState({errorMessage: "handleAddSave::Invalid url format"});
-       }
-    }
+  const handleAddSave = (event) => {
     event.preventDefault();
 
-  }  
+    if (saveButtonClicked) return;
 
-
-  handleClose(event) {
-    this.state.saveButtonClicked = false;
-    this.state.errorMessage='';
-    this.state.url = "";
-    this.setState(this.state);
-    event.preventDefault();
-  }
-
-  componentDidMount() {
-    if (this.props.project.id) {
-      Backend.get(this.props.project + "/project")
-        .then(response => {
-          const newState = Object.assign({}, this.state, {
-            project: response,
-          });
-          this.setState(newState);
-        })
-        .catch(error => console.log(error));
+    if (url.startsWith("http")) {
+      onURLAdded(url);
+      setUrl("");
+      setSaveButtonClicked(true);
+    } else {
+      setErrorMessage("handleAddSave::Invalid url format");
     }
-    this.getSession();
-  }
+  };
 
-  render() {
-    return (
-      <div className="modal-dialog" role="document">
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title" id="editAttributeLabel">
-              URL
-            </h5>
-            <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.handleClose}>
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div className="modal-body">
-              <div className="form-group row">
-                <div className="col-sm-8">
-                  <input
-                    type="text"
-                    name="name"
-                    className="col-sm-12"
-                    value={this.state.url}
-                    onChange={this.handleChange}
-                  />
-                </div>
-              </div>
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-primary" onClick={this.handleAddSave}>
-              Save
-            </button>
-            <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.handleClose}>
-              Close
-            </button>
+  const handleClose = (event) => {
+    event.preventDefault();
+    setSaveButtonClicked(false);
+    setErrorMessage("");
+    setUrl("");
+  };
+
+  /* -------------------- render -------------------- */
+
+  return (
+    <div className="modal-dialog" role="document">
+      <ControlledPopup popupMessage={errorMessage} />
+
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">URL</h5>
+          <button
+            type="button"
+            className="close"
+            data-dismiss="modal"
+            aria-label="Close"
+            onClick={handleClose}
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <div className="form-group row">
+            <div className="col-sm-8">
+              <input
+                type="text"
+                className="col-sm-12"
+                value={url}
+                onChange={handleChange}
+              />
+            </div>
           </div>
         </div>
+
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleAddSave}
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            data-dismiss="modal"
+            onClick={handleClose}
+          >
+            Close
+          </button>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
-export default URLForm;
