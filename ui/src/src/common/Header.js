@@ -46,15 +46,6 @@ class Header extends Component {
               !window.location.pathname.includes("/user/changepass")
             ) {
               this.props.history.push("/user/change-password-redirect/" + this.state.session.person.login);
-            } else if (
-              this.state.session.metainfo.organizationsEnabled &&
-              !this.state.session.metainfo.currentOrganization &&
-              // CHANGED: Use strict equality (!==) instead of loose equality (!=)
-              window.location.pathname !== "/orgselect" &&
-              // CHANGED: Use strict equality (!==) instead of loose equality (!=)
-              window.location.pathname !== "/organizations/new"
-            ) {
-              this.props.history.push("/orgselect");
             }
           });
         }
@@ -173,7 +164,7 @@ class Header extends Component {
     if (this.state.session.id) {
       profileContext = (
         <span>
-        {!this.state.session.metainfo || !this.state.session.metainfo.organizationsEnabled && (
+        {!this.state.session.metainfo && (
           <div>
             <a className="dropdown-item" href={"/user/profile/" + this.state.session.person.login}>
                 Profile
@@ -181,34 +172,7 @@ class Header extends Component {
           </div>
          )}
 
-          {this.state.session.metainfo && this.state.session.metainfo.organizationsEnabled && (
-            <div>
-                {this.state.session.metainfo.organizations.map(function (organization, index) {
-                  return (
-                    // CHANGED: Use 'key' prop instead of 'index' attribute and use organization.id for proper React reconciliation
-                    // CHANGED: Simplified onClick handler - removed event parameter and use arrow function
-                    <div 
-                      key={organization.id}  
-                      className='clickable dropdown-item' 
-                      onClick={() => this.changeOrganization(organization.id)}
-                    >
-                        {organization.name}
-                        {this.state.session.metainfo.currentOrganization === organization.id && (<span> <FontAwesomeIcon icon={faCheck} /></span>)}
-                    </div>
-                  )
-                }.bind(this))}
-                <div className="dropdown-divider"></div>
-                <Link className="dropdown-item " to="/organizations/edit">
-                    Edit Current Organization
-                </Link>
-                <Link className="dropdown-item " to="/organizations/new">
-                    Create New Organization
-                </Link>
-
-            </div>
-          )}
-
-          {Utils.isUserOwnerOrAdmin(this.state.session) && (!this.state.session.metainfo || !this.state.session.metainfo.organizationsEnabled) && (
+          {Utils.isUserOwnerOrAdmin(this.state.session) && (!this.state.session.metainfo) && (
             <div>
               <div className="dropdown-divider"></div>
               <a className="dropdown-item" href={"/user/all-users-redirect"}>
