@@ -1,296 +1,297 @@
-/* eslint-disable eqeqeq */
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import $ from "jquery";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
-import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
+import { faPencilAlt, faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
-class Comments extends SubComponent {
-  constructor(props) {
-    super(props);
+const Comments = ({
+  projectId: propProjectId,
+  entityId: propEntityId,
+  entityType: propEntityType,
+  onCommentsNumberChanged,
+  hideForm = false,
+  forceFetch = false,
+}) => {
+  const [comments, setComments] = useState([]);
+  const [commentToEdit, setCommentToEdit] = useState({
+    text: "",
+    entityId: propEntityId,
+    entityType: propEntityType,
+  });
+  const [session, setSession] = useState({ person: {} });
+  const [errorMessage, setErrorMessage] = useState("");
 
-    this.commentToRemove = null;
+  const commentToRemoveRef = useRef(null); // To store comment ID for deletion
 
-    this.state = {
-      comments: [],
-      commentToEdit: {},
-      session: {person:{}},
-      errorMessage: "",
-    };
+  // Sync commentToEdit when entity props change
+  useEffect(() => {
+    setCommentToEdit((prev) => ({
+      ...prev,
+      entityId: propEntityId,
+      entityType: propEntityType,
+    }));
+  }, [propEntityId, propEntityType]);
 
-    this.projectId = props.projectId;
-    this.entityId = props.entityId;
-    this.entityType = props.entityType;
-    this.onCommentsNumberChanged = props.onCommentsNumberChanged;
-    this.getComments = this.getComments.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.cancelEdit = this.cancelEdit.bind(this);
-    this.refreshCommentToEdit = this.refreshCommentToEdit.bind(this);
-    this.removeComment = this.removeComment.bind(this);
-    this.removeCommentConfirmation = this.removeCommentConfirmation.bind(this);
-    this.cancelRemoveCommentConfirmation = this.cancelRemoveCommentConfirmation.bind(this);
-    this.refreshCommentToEdit();
-    this.handleUpdateChange = this.handleUpdateChange.bind(this);
-    this.handleUpdateSubmit = this.handleUpdateSubmit.bind(this);
-    this.getSession = this.getSession.bind(this);
-  }
+  // Fetch session
+  useEffect(() => {
+    Backend.get("user/session")
+      .then((response) => setSession(response))
+      .catch(() => console.log("Unable to fetch session"));
+  }, []);
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.getSession();
-  }
+  // Fetch comments
+  const getComments = () => {
+    if (!propProjectId || !propEntityId || !propEntityType) return;
 
-  getSession() {
-    Backend.get("user/session").then(response => {this.state.session = response;})
-        .catch(() => {console.log("Unable to fetch session");});
-    }
-
-  componentWillReceiveProps(nextProps) {
-    var fetchCommentsNeeded = nextProps.forceFetch || false;
-    if (nextProps.entityId) {
-      fetchCommentsNeeded = fetchCommentsNeeded || this.entityId != nextProps.entityId;
-      this.entityId = nextProps.entityId;
-      this.state.commentToEdit.entityId = nextProps.entityId;
-      this.refreshCommentToEdit();
-    }
-    if (nextProps.entityType) {
-      fetchCommentsNeeded = fetchCommentsNeeded || this.entityType != nextProps.entityType;
-      this.entityType = nextProps.entityType;
-      this.state.commentToEdit.entityType = nextProps.entityType;
-      this.refreshCommentToEdit();
-    }
-    if (nextProps.projectId) {
-      fetchCommentsNeeded = fetchCommentsNeeded || this.projectId != nextProps.projectId;
-      this.projectId = nextProps.projectId;
-    }
-    if (nextProps.hideForm) {
-      this.hideForm = nextProps.hideForm;
-    }
-    if (fetchCommentsNeeded) {
-      this.getComments();
-    } else {
-      this.setState(this.state);
-    }
-  }
-
-  refreshCommentToEdit() {
-    this.state.commentToEdit = { text: "", entityId: this.entityId, entityType: this.entityType };
-  }
-
-  getComments() {
     Backend.get(
-      this.projectId +
-        "/comment?entityType=" +
-        this.entityType +
-        "&entityId=" +
-        this.entityId +
-        "&orderby=createdTime&orderdir=DESC",
+      `${propProjectId}/comment?entityType=${propEntityType}&entityId=${propEntityId}&orderby=createdTime&orderdir=DESC`
     )
-      .then(response => {
-        this.state.comments = response;
-        if (this.onCommentsNumberChanged) {
-          this.onCommentsNumberChanged(this.state.comments.length);
+      .then((response) => {
+        setComments(response);
+        if (onCommentsNumberChanged) {
+          onCommentsNumberChanged(response.length);
         }
-        this.setState(this.state);
       })
-      .catch(error => console.log(error));
-  }
+      .catch((error) => console.log("Error fetching comments:", error));
+  };
 
-  handleChange(fieldName, event, index) {
-    this.state.commentToEdit[fieldName] = event.target.value;
-    this.setState(this.state);
-  }
+  useEffect(() => {
+    getComments();
+  }, [propProjectId, propEntityId, propEntityType, forceFetch]);
 
-  cancelEdit(index, event) {
-    $("#comment-" + index + "-display").show();
-    $("#comment-" + index + "-form").hide();
-  }
+  const handleChange = (e) => {
+    setCommentToEdit((prev) => ({ ...prev, text: e.target.value }));
+  };
 
-  toggleEdit(index, event) {
-    $("#comment-" + index + "-display").hide();
-    $("#comment-" + index + "-form").show();
-  }
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  removeCommentConfirmation(commentId) {
-    this.commentToRemove = commentId;
+    if (!commentToEdit.text.trim()) return;
+
+    Backend.put(`${propProjectId}/comment/`, commentToEdit)
+      .then((response) => {
+        setComments((prev) => [response, ...prev]);
+        setCommentToEdit({ text: "", entityId: propEntityId, entityType: propEntityType });
+        if (onCommentsNumberChanged) {
+          onCommentsNumberChanged(comments.length + 1);
+        }
+      })
+      .catch((error) => {
+        setErrorMessage(`handleSubmit::Couldn't create comment, error: ${error}`);
+      });
+  };
+
+  const toggleEdit = (index) => {
+    $(`#comment-${index}-display`).hide();
+    $(`#comment-${index}-form`).show();
+  };
+
+  const cancelEdit = (index) => {
+    $(`#comment-${index}-display`).show();
+    $(`#comment-${index}-form`).hide();
+  };
+
+  const handleUpdateChange = (index, e) => {
+    const newText = e.target.value;
+    setComments((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], text: newText };
+      return updated;
+    });
+  };
+
+  const handleUpdateSubmit = (index, e) => {
+    e.preventDefault();
+    const comment = comments[index];
+
+    Backend.post(`${propProjectId}/comment/`, comment)
+      .then((response) => {
+        setComments((prev) => {
+          const updated = [...prev];
+          updated[index] = response;
+          return updated;
+        });
+        cancelEdit(index);
+      })
+      .catch((error) => {
+        setErrorMessage(`handleUpdateSubmit::Couldn't update comment, error: ${error}`);
+      });
+  };
+
+  const removeCommentConfirmation = (commentId) => {
+    commentToRemoveRef.current = commentId;
     $("#remove-comment-confirmation").modal("show");
-  }
+  };
 
-  cancelRemoveCommentConfirmation() {
-    this.commentToRemove = null;
+  const cancelRemoveCommentConfirmation = () => {
+    commentToRemoveRef.current = null;
     $("#remove-comment-confirmation").modal("hide");
-  }
+  };
 
-  removeComment(event) {
-console.log("Comments::removeComment - " + this.commentToRemove);
-    Backend.delete(this.projectId + "/comment/" + this.commentToRemove)
+  const removeComment = () => {
+    const commentId = commentToRemoveRef.current;
+    if (!commentId) return;
+
+    Backend.delete(`${propProjectId}/comment/${commentId}`)
       .then(() => {
-        this.state.comments = this.state.comments.filter(comment => comment.id != this.commentToRemove);
-        if (this.onCommentsNumberChanged) {
-          this.onCommentsNumberChanged(this.state.comments.length);
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        if (onCommentsNumberChanged) {
+          onCommentsNumberChanged(comments.length - 1);
         }
-        this.commentToRemove = null;
+        commentToRemoveRef.current = null;
         $("#remove-comment-confirmation").modal("hide");
-        this.setState(this.state);
       })
-      .catch(error => {
-        this.setState({errorMessage: "removeComment::Couldn't delete comment, error: " + error});
+      .catch((error) => {
+        setErrorMessage(`removeComment::Couldn't delete comment, error: ${error}`);
       });
-  }
+  };
 
-  handleSubmit(event) {
-console.log("Comments::handleSubmit - " + this.commentToEdit);
-    Backend.put(this.projectId + "/comment/", this.state.commentToEdit)
-      .then(response => {
-        this.state.comments.unshift(response);
-        this.refreshCommentToEdit();
-        if (this.onCommentsNumberChanged) {
-          this.onCommentsNumberChanged(this.state.comments.length);
-        }
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "handleSubmit::Couldn't create comment, error: " + error});
-      });
-    event.preventDefault();
-  }
+  const isOwnerOrAdmin = (createdBy) => {
+    return Utils.isUserOwnerOrAdmin(session, createdBy);
+  };
 
-  handleUpdateChange(index, event) {
-console.log("Comments::handleUpdateChange - " + index);
-    this.state.comments[index].text = event.target.value;
-    this.setState(this.state);
-    event.preventDefault();
-  }
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
 
-  handleUpdateSubmit(index, event) {
-console.log("Comments::handleUpdateSubmit - " + this.state.comments);
-    Backend.post(this.projectId + "/comment/", this.state.comments[index])
-      .then(response => {
-        this.state.comments[index] = response;
-        this.setState(this.state);
-        this.cancelEdit(index, event);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "handleUpdateSubmit::Couldn't update comment, error: " + error});
-      });
-  }
+      <div id="comments">
+        {comments.map((comment, i) => (
+          <div key={comment.id || i} className="card project-card container mb-3">
+            <div className="card-header row align-items-center">
+              <div className="col-10">
+                <Link to={`/user/profile/${comment.createdBy}`}>
+                  {comment.createdBy}
+                </Link>{" "}
+                {Utils.timeToDate(comment.createdTime)}
+              </div>
 
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div id="comments">
-          {this.state.comments.map(
-            function (comment, i) {
-              return (
-                <div className="card project-card container">
-                  <div className="card-header row">
-                    <div className="col-10">
-                      <Link to={"/user/profile/" + comment.createdBy}>{comment.createdBy}</Link>{" "}
-                      {Utils.timeToDate(comment.createdTime)}
-                    </div>
-
-                    {Utils.isUserOwnerOrAdmin(this.state.session, comment.createdBy) && (
-                      <div className="col-2">
-                        <span className="clickable edit-icon-visible" onClick={e => this.toggleEdit(i, e)}>
-                          <FontAwesomeIcon icon={faPencilAlt} />
-                        </span>
-                        <span
-                          className="clickable edit-icon-visible red"
-                          onClick={e => this.removeCommentConfirmation(comment.id, e)}
-                        >
-                          <FontAwesomeIcon icon={faMinusCircle} />
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="card-body">
-                    <div className="inplace-display" id={"comment-" + i + "-display"} index={i}>
-                      <p className="card-text">{comment.textFormatted || ""}</p>
-                    </div>
-                    <div id={"comment-" + i + "-form"} index={i} className="inplace-form" style={{ display: "none" }}>
-                      <form>
-                        <textarea
-                          rows="7"
-                          cols="70"
-                          name="text"
-                          onChange={e => this.handleUpdateChange(i, e)}
-                          value={comment.text}
-                        ></textarea>
-                        <div>
-                          <button type="button" className="btn btn-light" onClick={e => this.cancelEdit(i, e)}>
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={e => this.handleUpdateSubmit(i, e)}
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
+              {isOwnerOrAdmin(comment.createdBy) && (
+                <div className="col-2 text-right">
+                  <span
+                    className="clickable edit-icon-visible mr-3"
+                    onClick={() => toggleEdit(i)}
+                  >
+                    <FontAwesomeIcon icon={faPencilAlt} />
+                  </span>
+                  <span
+                    className="clickable edit-icon-visible red"
+                    onClick={() => removeCommentConfirmation(comment.id)}
+                  >
+                    <FontAwesomeIcon icon={faMinusCircle} />
+                  </span>
                 </div>
-              );
-            }.bind(this),
-          )}
-        </div>
-        {!this.hideForm && (
-          <div id="comment-form">
-            <form>
-              <textarea
-                rows="7"
-                cols="70"
-                name="text"
-                onChange={e => this.handleChange("text", e)}
-                value={this.state.commentToEdit.text}
-              ></textarea>
-              <div>
-                <button type="button" className="btn btn-primary" onClick={e => this.handleSubmit(e)}>
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+              )}
+            </div>
 
-        <div className="modal fade" tabIndex="-1" role="dialog" id="remove-comment-confirmation">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Remove Comment</h5>
-                <button
-                  type="button"
-                  className="close"
-                  onClick={this.cancelRemoveCommentConfirmation}
-                  aria-label="Close"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
+            <div className="card-body">
+              {/* Display Mode */}
+              <div className="inplace-display" id={`comment-${i}-display`}>
+                <p className="card-text">{comment.textFormatted || comment.text || ""}</p>
               </div>
-              <div className="modal-body">Are you sure you want to remove comment?</div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={this.cancelRemoveCommentConfirmation}>
-                  Close
-                </button>
-                <button type="button" className="btn btn-danger" onClick={this.removeComment}>
-                  Remove Comment
-                </button>
+
+              {/* Edit Mode */}
+              <div
+                id={`comment-${i}-form`}
+                className="inplace-form"
+                style={{ display: "none" }}
+              >
+                <form>
+                  <textarea
+                    rows="7"
+                    className="form-control mb-2"
+                    value={comment.text || ""}
+                    onChange={(e) => handleUpdateChange(i, e)}
+                  />
+                  <div>
+                    <button
+                      type="button"
+                      className="btn btn-light mr-2"
+                      onClick={() => cancelEdit(i)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={(e) => handleUpdateSubmit(i, e)}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add New Comment Form */}
+      {!hideForm && (
+        <div id="comment-form" className="mt-4">
+          <form onSubmit={handleSubmit}>
+            <textarea
+              rows="7"
+              className="form-control mb-2"
+              value={commentToEdit.text || ""}
+              onChange={handleChange}
+              placeholder="Write a comment..."
+            />
+            <div>
+              <button type="submit" className="btn btn-primary">
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal (jQuery/Bootstrap controlled) */}
+      <div
+        className="modal fade"
+        tabIndex="-1"
+        role="dialog"
+        id="remove-comment-confirmation"
+      >
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Remove Comment</h5>
+              <button
+                type="button"
+                className="close"
+                onClick={cancelRemoveCommentConfirmation}
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              Are you sure you want to remove this comment?
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={cancelRemoveCommentConfirmation}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={removeComment}
+              >
+                Remove Comment
+              </button>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default Comments;
