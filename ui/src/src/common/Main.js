@@ -5,7 +5,6 @@ import TestSuites from "../testsuites/TestSuites";
 import Projects from "../projects/Projects";
 import ProjectForm from "../projects/ProjectForm";
 import Project from "../projects/Project";
-import OrganizationForm from "../organizations/OrganizationForm";
 import ProjectSettings from "../projects/ProjectSettings";
 import Launches from "../launches/Launches";
 import Launch from "../launches/Launch";
@@ -66,11 +65,6 @@ class Main extends Component {
           <Route 
             path="/orgselect"
             element={<OrgSelect onSessionChange={this.onSessionChange.bind(this)} />}
-          />
-          <Route path="/organizations/new" element={<OrganizationForm />} />
-          <Route
-            path="/organizations/edit"
-            element={<OrganizationForm editCurrent="true" />}
           />
 
           <Route path="/auth" element={<Auth />} />
