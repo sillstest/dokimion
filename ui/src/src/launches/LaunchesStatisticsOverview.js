@@ -1,7 +1,5 @@
-import React from "react";
-import { withRouter } from "../common/withRouter";
-import { useParams } from "react-router-dom";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect } from "react";
+import { useParams, useLocation } from "react-router-dom";
 import LaunchesTrendWidget from "../launches/LaunchesTrendWidget";
 import LaunchesByStatusesPieWidget from "../launches/LaunchesByStatusesPieWidget";
 import LaunchesByUsersPieWidget from "../launches/LaunchesByUsersPieWidget";
@@ -11,100 +9,92 @@ import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 import LaunchesByUserExecutionTrend from "./LaunchesByUserExecutionTrend";
 
-class LaunchesStatisticsOverview extends SubComponent {
-  state = {
-    stats: {
-      all: {
-        launchTimes: {},
-      },
+const LaunchesStatisticsOverview = () => {
+  const { project: projectId } = useParams();
+  const location = useLocation();
+
+  const [stats, setStats] = useState({
+    all: {
+      launchTimes: {},
     },
-    loading: true,
-    errorMessage: "",
-  };
+  });
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  constructor(props) {
-    super(props);
-    this.state.projectId = this.props.router.params.project;
-    this.getStats = this.getStats.bind(this);
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.state.projectId = this.props.router.params.project;
-    this.getStats();
-  }
-
-  getStats() {
-    Backend.get(this.state.projectId + "/launch/statistics" + this.props.router.location.search)
+  const getStats = () => {
+    Backend.get(`${projectId}/launch/statistics${location.search}`)
       .then(response => {
-        this.state.stats = response;
-        this.state.loading = false;
-        this.setState(this.state);
+        setStats(response);
+        setLoading(false);
       })
       .catch(error => {
-        this.setState({errorMessage: "getStats::Couldn't get launch statistics, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
+        setErrorMessage(`getStats::Couldn't get launch statistics, error: ${error}`);
+        setLoading(false);
       });
-  }
+  };
 
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
-        <div className="row">
-          <div className="col-6">
-            {typeof(this.state.stats.all) != 'undefined' &&
-            <table class="table">
+  useEffect(() => {
+    getStats();
+  }, [projectId, location.search]);
+
+  const filter = Utils.queryToFilter(location.search.substring(1));
+
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div className="sweet-loading">
+        <FadeLoader sizeUnit="px" size={100} color="#135f38" loading={loading} />
+      </div>
+      <div className="row">
+        <div className="col-6">
+          {stats.all && (
+            <table className="table">
               <tbody>
                 <tr>
-                  <td>Total Launches: {this.state.stats.all.launchCount || 0}</td>
-                  <td>Total Duration: {Utils.timePassed(this.state.stats.all.launchTimes.duration || 0)}</td>
-                  <td>Idle Time: {Utils.timePassed(this.state.stats.all.launchTimes.idle || 0)}</td>
+                  <td>Total Launches: {stats.all.launchCount || 0}</td>
+                  <td>Total Duration: {Utils.timePassed(stats.all.launchTimes?.duration || 0)}</td>
+                  <td>Idle Time: {Utils.timePassed(stats.all.launchTimes?.idle || 0)}</td>
                 </tr>
                 <tr>
-                  <td>First Started: {Utils.timeToDate(this.state.stats.all.launchTimes.firstStart || 0)}</td>
-                  <td>Last Finished: {Utils.timeToDate(this.state.stats.all.launchTimes.lastFinish || 0)}</td>
+                  <td>First Started: {Utils.timeToDate(stats.all.launchTimes?.firstStart || 0)}</td>
+                  <td>Last Finished: {Utils.timeToDate(stats.all.launchTimes?.lastFinish || 0)}</td>
                   <td></td>
                 </tr>
               </tbody>
             </table>
-            }
-          </div>
-        </div>
-         <div className="row">
-          <div className="col-6">
-            <LaunchesByStatusesPieWidget
-              projectId={this.state.projectId}
-              filter={Utils.queryToFilter(this.props.router.location.search.substring(1))}
-            />
-          </div>
-          <div className="col-6">
-            <LaunchesByUsersPieWidget
-              projectId={this.state.projectId}
-              filter={Utils.queryToFilter(this.props.router.location.search.substring(1))}
-            />
-          </div>
-        </div> 
-        <div className="row">
-          <div className="col-6">
-            <LaunchesTrendWidget
-              projectId={this.state.projectId}
-              filter={Utils.queryToFilter(this.props.router.location.search.substring(1))}
-            />
-          </div>
-          <div className="col-6">
-          <LaunchesByUserExecutionTrend projectId={this.state.projectId}
-          filter={Utils.queryToFilter(this.props.router.location.search.substring(1))}
-          />
-          </div>
+          )}
         </div>
       </div>
-    );
-  }
-}
+      <div className="row">
+        <div className="col-6">
+          <LaunchesByStatusesPieWidget
+            projectId={projectId}
+            filter={filter}
+          />
+        </div>
+        <div className="col-6">
+          <LaunchesByUsersPieWidget
+            projectId={projectId}
+            filter={filter}
+          />
+        </div>
+      </div>
+      <div className="row">
+        <div className="col-6">
+          <LaunchesTrendWidget
+            projectId={projectId}
+            filter={filter}
+          />
+        </div>
+        <div className="col-6">
+          <LaunchesByUserExecutionTrend 
+            projectId={projectId}
+            filter={filter}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
-export default withRouter(LaunchesStatisticsOverview);
+export default LaunchesStatisticsOverview;

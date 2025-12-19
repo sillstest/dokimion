@@ -1,5 +1,4 @@
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect } from "react";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Highcharts from "highcharts";
@@ -7,100 +6,67 @@ import HighchartsReact from "highcharts-react-official";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
-class LaunchesByStatusesPieWidget extends SubComponent {
-  state = {
-    launches: [],
-    filter: {
-      skip: 0,
-      limit: 20,
-      orderby: "id",
-      orderdir: "ASC",
-      includedFields: "launchStats,createdTime",
-    },
-    loading: true,
-    errorMessage: "",
+const LaunchesByStatusesPieWidget = ({ projectId, filter: propFilter }) => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const defaultFilter = {
+    skip: 0,
+    limit: 20,
+    orderby: "id",
+    orderdir: "ASC",
+    includedFields: "launchStats,createdTime",
   };
 
-  constructor(props) {
-    super(props);
-    this.getStats = this.getStats.bind(this);
-    this.setUpStatusPieSeries = this.setUpStatusPieSeries.bind(this);
-    this.statusPieChartRender = this.statusPieChartRender.bind(this);
-  }
+  const filter = { ...defaultFilter, ...propFilter };
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.projectId) {
-      this.state.projectId = nextProps.projectId;
-    }
-    if (nextProps.filter) {
-      this.state.filter = nextProps.filter;
-    }
-    this.getStats();
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.getStats();
-  }
-
-  getStats() {
-    if (!this.state.projectId) {
+  const setUpStatusPieSeries = (statsData) => {
+    if (!statsData?.all?.launchStats?.statusCounters) {
       return [];
     }
-    Backend.get(this.state.projectId + "/launch/statistics?" + Utils.filterToQuery(this.state.filter))
-      .then(response => {
-        this.state.stats = response;
-        this.setUpStatusPieSeries();
-        this.state.loading = false;
-        this.setState(this.state);
-        this.statusPieChartRender();
-      })
-      .catch(error => {
-        this.setState({errorMessage:"getStats::Couldn't get launch statistics, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
 
-  setUpStatusPieSeries() {
-    if (typeof(this.state.stats.all) != 'undefined') {
-    this.state.statusSeries = [
+    const { statusCounters } = statsData.all.launchStats;
+
+    return [
       {
         name: "Statuses",
         data: [
           {
             name: "Passed",
-            y: this.state.stats.all.launchStats.statusCounters.PASSED,
+            y: statusCounters.PASSED || 0,
             color: "#28a745",
           },
           {
             name: "Failed",
-            y: this.state.stats.all.launchStats.statusCounters.FAILED,
+            y: statusCounters.FAILED || 0,
             color: "#dc3545",
           },
           {
             name: "Broken",
-            y: this.state.stats.all.launchStats.statusCounters.BROKEN,
+            y: statusCounters.BROKEN || 0,
             color: "#ffc107",
           },
           {
             name: "Runnable",
-            y: this.state.stats.all.launchStats.statusCounters.RUNNABLE,
+            y: statusCounters.RUNNABLE || 0,
             color: "#7cb5ec",
           },
           {
             name: "Running",
-            y: this.state.stats.all.launchStats.statusCounters.RUNNING,
+            y: statusCounters.RUNNING || 0,
             color: "#007bff",
           },
         ],
       },
     ];
-   }
-  }
+  };
 
-  statusPieChartRender() {
-    if (typeof(this.state.stats.all) != 'undefined') {
+  const statusPieChartRender = (statusSeries) => {
+    if (!statusSeries || statusSeries.length === 0 || !statusSeries[0].data.length) {
+      return;
+    }
+
     Highcharts.chart({
       chart: {
         type: "pie",
@@ -122,22 +88,46 @@ class LaunchesByStatusesPieWidget extends SubComponent {
           innerSize: "70%",
         },
       },
-      series: this.state.statusSeries,
+      series: statusSeries,
     });
-    }
-  }
+  };
 
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div id="pie-by-statuses"></div>
-        <div id="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
+  const getStats = () => {
+    if (!projectId) {
+      return;
+    }
+
+    setLoading(true);
+    Backend.get(`${projectId}/launch/statistics?${Utils.filterToQuery(filter)}`)
+      .then(response => {
+        setStats(response);
+        const statusSeries = setUpStatusPieSeries(response);
+        setLoading(false);
+        
+        // Defer chart rendering to next tick to ensure DOM is ready
+        setTimeout(() => {
+          statusPieChartRender(statusSeries);
+        }, 0);
+      })
+      .catch(error => {
+        setErrorMessage(`getStats::Couldn't get launch statistics, error: ${error}`);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getStats();
+  }, [projectId, JSON.stringify(filter)]);
+
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div id="pie-by-statuses"></div>
+      <div id="sweet-loading">
+        <FadeLoader sizeUnit="px" size={100} color="#135f38" loading={loading} />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default LaunchesByStatusesPieWidget;

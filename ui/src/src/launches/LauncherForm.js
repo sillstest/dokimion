@@ -1,76 +1,171 @@
-/* eslint-disable eqeqeq */
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect, useCallback } from "react";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
-class LauncherForm extends SubComponent {
-  state = {
-    launcherDescriptors: [],
-    launcherConfig: {},
-    configIndex: 0,
-    selectableType: true,
-    errorMessage: "",
-  };
+const LauncherForm = ({
+  projectId,
+  launcherDescriptors = [],
+  launcherConfig,
+  configIndex,
+  selectableType = true,
+  handleLauncherChange,
+}) => {
+  const [project, setProject] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  constructor(props) {
-    super(props);
-    this.state.projectId = props.projectId;
-    this.state.launcherDescriptors = props.launcherDescriptors || [];
-    this.state.launcherConfig = props.launcherConfig;
-    this.state.configIndex = props.configIndex;
-    this.state.selectableType = props.selectableType;
-    if (this.state.projectId) {
-      this.getProject();
-    }
-    this.handleLauncherChange = props.handleLauncherChange;
-    this.getProject = this.getProject.bind(this);
-    this.getLauncherPropertyFormTemplate = this.getLauncherPropertyFormTemplate.bind(this);
-    this.getLauncherPropertyTemplate = this.getLauncherPropertyTemplate.bind(this);
-    this.getLauncherPropertyBooleanTemplate = this.getLauncherPropertyBooleanTemplate.bind(this);
-    this.handleLauncherBooleanChange = this.handleLauncherBooleanChange.bind(this);
-    this.setState(this.state);
-  }
+  const getProject = useCallback(() => {
+    if (!projectId) return;
 
-  componentDidMount() {
-    super.componentDidMount();
-  }
-
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.launcherConfig) {
-      this.state.launcherConfig = nextProps.launcherConfig;
-    }
-    if (nextProps.launcherDescriptors) {
-      this.state.launcherDescriptors = nextProps.launcherDescriptors;
-    }
-    if (nextProps.configIndex) {
-      this.state.configIndex = nextProps.configIndex;
-    }
-    this.setState(this.state);
-  }
-
-  getProject() {
-    Backend.get("project/" + this.state.projectId)
+    Backend.get(`project/${projectId}`)
       .then(response => {
-        this.state.project = response;
-        this.setState(this.state);
+        setProject(response);
       })
       .catch(error => {
-        this.setState({errorMessage: "getProject::Couldn't get project, error: " + error});
+        setErrorMessage(`getProject::Couldn't get project, error: ${error}`);
       });
-  }
+  }, [projectId]);
 
-  getLauncherForm(config, index) {
+  useEffect(() => {
+    if (projectId) {
+      getProject();
+    }
+  }, [projectId, getProject]);
+
+  const handleLauncherBooleanChange = (event, index, propertyKey) => {
+    event.target.value = event.target.checked;
+    handleLauncherChange(event, index, propertyKey);
+  };
+
+  const getLauncherPropertyBooleanTemplate = (descriptorItem, config, index) => {
+    const isChecked = config.properties[descriptorItem.key]?.toLowerCase() === "true";
+
+    return (
+      <input
+        type="checkbox"
+        className="form-control"
+        name={descriptorItem.key}
+        value={config.properties[descriptorItem.key] || ""}
+        index={index}
+        placeholder={descriptorItem.defaultValues.join(", ")}
+        onChange={e => handleLauncherBooleanChange(e, index, descriptorItem.key)}
+        checked={isChecked}
+      />
+    );
+  };
+
+  const getLauncherPropertyPasswordTemplate = (descriptorItem, config, index) => {
+    return (
+      <input
+        type="password"
+        className="form-control"
+        name={descriptorItem.key}
+        value={config.properties[descriptorItem.key] || ""}
+        index={index}
+        onChange={e => handleLauncherChange(e, index, descriptorItem.key)}
+      />
+    );
+  };
+
+  const getLauncherPropertyTextTemplate = (descriptorItem, config, index) => {
+    return (
+      <input
+        type="text"
+        className="form-control"
+        name={descriptorItem.key}
+        value={config.properties[descriptorItem.key] || ""}
+        index={index}
+        onChange={e => handleLauncherChange(e, index, descriptorItem.key)}
+      />
+    );
+  };
+
+  const getLauncherPropertyTextDisabledTemplate = (descriptorItem, config, index) => {
+    return (
+      <input
+        type="text"
+        className="form-control"
+        name={descriptorItem.key}
+        value={config.properties[descriptorItem.key] || ""}
+        index={index}
+        disabled
+        onChange={e => handleLauncherChange(e, index, descriptorItem.key)}
+      />
+    );
+  };
+
+  const getLauncherPropertySelectRestrictedTemplate = (descriptorItem, config, index) => {
+    return (
+      <select
+        className="form-control"
+        name={descriptorItem.key}
+        value={config.properties[descriptorItem.key] || ""}
+        index={index}
+        onChange={e => handleLauncherChange(e, index, descriptorItem.key)}
+      >
+        {descriptorItem.defaultValues.map((defaultValue, idx) => (
+          <option key={idx} value={defaultValue}>
+            {defaultValue}
+          </option>
+        ))}
+      </select>
+    );
+  };
+
+  const getLauncherPropertySelectEditableTemplate = (descriptorItem, config, index) => {
+    return (
+      <input
+        type="text"
+        className="form-control"
+        name={descriptorItem.key}
+        value={config.properties[descriptorItem.key] || ""}
+        index={index}
+        placeholder={descriptorItem.defaultValues.join(", ")}
+        onChange={e => handleLauncherChange(e, index, descriptorItem.key)}
+      />
+    );
+  };
+
+  const getLauncherPropertyFormTemplate = (descriptorItem, config, index) => {
+    if (descriptorItem.defaultValues.length > 1 && !descriptorItem.restricted) {
+      return getLauncherPropertySelectEditableTemplate(descriptorItem, config, index);
+    }
+    if (descriptorItem.defaultValues.length > 1 && descriptorItem.restricted) {
+      return getLauncherPropertySelectRestrictedTemplate(descriptorItem, config, index);
+    }
+    if (descriptorItem.boolean) {
+      return getLauncherPropertyBooleanTemplate(descriptorItem, config, index);
+    }
+    if (descriptorItem.password) {
+      return getLauncherPropertyPasswordTemplate(descriptorItem, config, index);
+    }
+    if (descriptorItem.restricted) {
+      return getLauncherPropertyTextDisabledTemplate(descriptorItem, config, index);
+    }
+    return getLauncherPropertyTextTemplate(descriptorItem, config, index);
+  };
+
+  const getLauncherPropertyTemplate = (descriptorItem, config, index) => {
+    return (
+      <div key={descriptorItem.key} className="form-group row">
+        <label className="col-4 col-form-label">{descriptorItem.name}</label>
+        <div className="col-8">{getLauncherPropertyFormTemplate(descriptorItem, config, index)}</div>
+      </div>
+    );
+  };
+
+  const getLauncherForm = (config, index) => {
     if (!config) {
       return "";
     }
-    var descriptor = Utils.getLaunchDescriptor(this.state.launcherDescriptors, config.launcherId) || {};
+
+    const descriptor = Utils.getLaunchDescriptor(launcherDescriptors, config.launcherId) || {};
+
     return (
-      <p className="card-text">
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
+      <div className="card-text">
+        <ControlledPopup popupMessage={errorMessage} />
         <form>
-          {this.state.selectableType && (
+          {selectableType && (
             <div>
               <div className="form-group row">
                 <label className="col-4 col-form-label">Launcher</label>
@@ -79,20 +174,15 @@ class LauncherForm extends SubComponent {
                     id="launcherId"
                     className="form-control"
                     index={index}
-                    onChange={e => this.handleLauncherChange(e, index, "launcherId")}
+                    onChange={e => handleLauncherChange(e, index, "launcherId")}
+                    value={config.launcherId || ""}
                   >
-                    <option> </option>
-                    {this.state.launcherDescriptors.map(function (descriptor) {
-                      var selected = descriptor.launcherId == config.launcherId;
-                      if (selected) {
-                        return (
-                          <option value={descriptor.launcherId} selected>
-                            {descriptor.name}
-                          </option>
-                        );
-                      }
-                      return <option value={descriptor.launcherId}>{descriptor.name}</option>;
-                    })}
+                    <option value=""> </option>
+                    {launcherDescriptors.map((desc, idx) => (
+                      <option key={idx} value={desc.launcherId}>
+                        {desc.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -106,171 +196,28 @@ class LauncherForm extends SubComponent {
                     name="name"
                     value={config.name || ""}
                     index={index}
-                    onChange={e => this.handleLauncherChange(e, index, "name")}
+                    onChange={e => handleLauncherChange(e, index, "name")}
                   />
                 </div>
               </div>
             </div>
           )}
-          {!this.state.selectableType && (
+          {!selectableType && (
             <div className="form-group row">
-              <label className="col-12 col-form-label">Launcher: {(this.state.launcherConfig || {}).name || ""}</label>
+              <label className="col-12 col-form-label">
+                Launcher: {launcherConfig?.name || ""}
+              </label>
             </div>
           )}
-          {(descriptor.configDescriptors || []).map(
-            function (descriptorItem) {
-              return this.getLauncherPropertyTemplate(descriptorItem, config, index);
-            }.bind(this),
+          {(descriptor.configDescriptors || []).map(descriptorItem =>
+            getLauncherPropertyTemplate(descriptorItem, config, index)
           )}
         </form>
-      </p>
-    );
-  }
-
-  handleLauncherBooleanChange(event, index, propertyKey) {
-    event.target.value = event.target.checked;
-    this.handleLauncherChange(event, index, propertyKey);
-  }
-
-  getLauncherPropertyTemplate(descriptorItem, config, index) {
-    return (
-      <div className="form-group row">
-        <label className="col-4 col-form-label">{descriptorItem.name}</label>
-        <div className="col-8">{this.getLauncherPropertyFormTemplate(descriptorItem, config, index)}</div>
       </div>
     );
-  }
+  };
 
-  getLauncherPropertyFormTemplate(descriptorItem, config, index) {
-    if (descriptorItem.defaultValues.length > 1 && !descriptorItem.restricted) {
-      return this.getLauncherPropertySelectEditableTemplate(descriptorItem, config, index);
-    }
-    if (descriptorItem.defaultValues.length > 1 && descriptorItem.restricted) {
-      return this.getLauncherPropertySelectRestrictedTemplate(descriptorItem, config, index);
-    }
-    if (descriptorItem.boolean) {
-      return this.getLauncherPropertyBooleanTemplate(descriptorItem, config, index);
-    }
-    if (descriptorItem.password) {
-      return this.getLauncherPropertyPasswordTemplate(descriptorItem, config, index);
-    }
-    if (descriptorItem.restricted) {
-      return this.getLauncherPropertyTextDisabledTemplate(descriptorItem, config, index);
-    }
-    return this.getLauncherPropertyTextTemplate(descriptorItem, config, index);
-  }
-
-  getLauncherPropertyPasswordTemplate(descriptorItem, config, index) {
-    return (
-      <input
-        type="password"
-        className="form-control"
-        name={descriptorItem.key}
-        value={config.properties[descriptorItem.key] || ""}
-        index={index}
-        onChange={e => this.handleLauncherChange(e, index, descriptorItem.key)}
-      />
-    );
-  }
-
-  getLauncherPropertyTextTemplate(descriptorItem, config, index) {
-    return (
-      <input
-        type="text"
-        className="form-control"
-        name={descriptorItem.key}
-        value={config.properties[descriptorItem.key] || ""}
-        index={index}
-        onChange={e => this.handleLauncherChange(e, index, descriptorItem.key)}
-      />
-    );
-  }
-
-  getLauncherPropertyTextDisabledTemplate(descriptorItem, config, index) {
-    return (
-      <input
-        type="text"
-        className="form-control"
-        name={descriptorItem.key}
-        value={config.properties[descriptorItem.key] || ""}
-        index={index}
-        disabled="true"
-        onChange={e => this.handleLauncherChange(e, index, descriptorItem.key)}
-      />
-    );
-  }
-
-  getLauncherPropertySelectRestrictedTemplate(descriptorItem, config, index) {
-    return (
-      <select
-        className="form-control"
-        name={descriptorItem.key}
-        value={config.properties[descriptorItem.key] || ""}
-        index={index}
-        onChange={e => this.handleLauncherChange(e, index, descriptorItem.key)}
-      >
-        {descriptorItem.defaultValues.map(function (defaultValue) {
-          var selected = defaultValue == config.properties[descriptorItem.key];
-          if (selected) {
-            return (
-              <option value={defaultValue} selected>
-                {defaultValue}
-              </option>
-            );
-          }
-          return <option value={defaultValue}>{defaultValue}</option>;
-        })}
-      </select>
-    );
-  }
-
-  getLauncherPropertySelectEditableTemplate(descriptorItem, config, index) {
-    return (
-      <input
-        type="text"
-        className="form-control"
-        name={descriptorItem.key}
-        value={config.properties[descriptorItem.key] || ""}
-        index={index}
-        placeholder={descriptorItem.defaultValues.join(", ")}
-        onChange={e => this.handleLauncherChange(e, index, descriptorItem.key)}
-      />
-    );
-  }
-
-  getLauncherPropertyBooleanTemplate(descriptorItem, config, index) {
-    return (
-      <div>
-        {config.properties[descriptorItem.key] && config.properties[descriptorItem.key].toLowerCase() == "true" && (
-          <input
-            type="checkbox"
-            className="form-control"
-            name={descriptorItem.key}
-            value={config.properties[descriptorItem.key] || ""}
-            index={index}
-            placeholder={descriptorItem.defaultValues.join(", ")}
-            onChange={e => this.handleLauncherBooleanChange(e, index, descriptorItem.key)}
-            checked
-          />
-        )}
-        {(!config.properties[descriptorItem.key] || config.properties[descriptorItem.key].toLowerCase() != "true") && (
-          <input
-            type="checkbox"
-            className="form-control"
-            name={descriptorItem.key}
-            value={config.properties[descriptorItem.key] || ""}
-            index={index}
-            placeholder={descriptorItem.defaultValues.join(", ")}
-            onChange={e => this.handleLauncherBooleanChange(e, index, descriptorItem.key)}
-          />
-        )}
-      </div>
-    );
-  }
-
-  render() {
-    return <div>{this.getLauncherForm(this.state.launcherConfig, this.state.configIndex)}</div>;
-  }
-}
+  return <div>{getLauncherForm(launcherConfig, configIndex)}</div>;
+};
 
 export default LauncherForm;

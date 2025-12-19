@@ -1,45 +1,43 @@
-import React from "react";
-import { withRouter } from "../common/withRouter";
-import SubComponent from "../common/SubComponent";
+import React, { useEffect, useMemo } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import * as Utils from "../common/Utils";
 
-class LaunchAttributeStatsChart extends SubComponent {
-  state = {
-    data: {},
-    attrKey: "",
-    statusSeries: [],
+const LaunchAttributeStatsChart = ({ stats, attrKey }) => {
+  const seriesConfig = useMemo(() => Utils.getChartSeriesConfig(), []);
+
+  const getChartContainerId = () => {
+    return `launch-attr-stats-${attrKey}`;
   };
 
-  constructor(props) {
-    super(props);
-    this.getChartContainerId = this.getChartContainerId.bind(this);
-    this.setUpStatusSeries = this.setUpStatusSeries.bind(this);
-    this.statusChartRender = this.statusChartRender.bind(this);
+  const setUpStatusSeries = () => {
+    return Object.keys(seriesConfig).map(statusKey => ({
+      name: statusKey,
+      color: seriesConfig[statusKey].color,
+      data: Object.keys(stats.values).map(attrValue => ({
+        name: seriesConfig[statusKey].name,
+        y: stats.values[attrValue][statusKey],
+      })),
+    }));
+  };
 
-    this.seriesConfig = Utils.getChartSeriesConfig();
+  const statusChartRender = () => {
+    if (!stats?.values) {
+      return;
+    }
 
-    this.state.data = props.stats;
-    this.state.attrKey = props.attrKey;
-  }
+    const statusSeries = setUpStatusSeries();
 
-  componentDidMount() {
-    this.setUpStatusSeries();
-    this.statusChartRender();
-  }
-
-  statusChartRender() {
     Highcharts.chart({
       chart: {
         type: "column",
-        renderTo: this.getChartContainerId(),
+        renderTo: getChartContainerId(),
       },
       title: {
-        text: this.state.data.name,
+        text: stats.name,
       },
       xAxis: {
-        categories: Object.keys(this.state.data.values),
+        categories: Object.keys(stats.values),
       },
       yAxis: {
         title: {
@@ -57,35 +55,21 @@ class LaunchAttributeStatsChart extends SubComponent {
           },
         },
       },
-      series: this.state.statusSeries,
+      series: statusSeries,
     });
-  }
+  };
 
-  setUpStatusSeries() {
-    this.state.statusSeries = Object.keys(this.seriesConfig).map(statusKey => {
-      return {
-        name: statusKey,
-        color: this.seriesConfig[statusKey].color,
-        data: Object.keys(this.state.data.values).map(attrValue => {
-          return {
-            name: this.seriesConfig[statusKey].name,
-            y: this.state.data.values[attrValue][statusKey],
-          };
-        }),
-      };
-    });
-  }
+  useEffect(() => {
+    // Defer chart rendering to next tick to ensure DOM is ready
+    setTimeout(() => {
+      statusChartRender();
+    }, 0);
+  }, [stats, attrKey]);
 
-  getChartContainerId() {
-    return "launch-attr-stats-" + this.state.attrKey;
-  }
+  return (
+    <div id={getChartContainerId()} className="launch-attr-stats-chart">
+    </div>
+  );
+};
 
-  render() {
-    return (
-      <div id={this.getChartContainerId()} className="launch-attr-stats-chart">
-      </div>
-    );
-  }
-}
-
-export default withRouter(LaunchAttributeStatsChart);
+export default LaunchAttributeStatsChart;

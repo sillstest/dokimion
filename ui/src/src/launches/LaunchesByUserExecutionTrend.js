@@ -1,6 +1,4 @@
-/* eslint-disable react/no-direct-mutation-state */
-import React, { Component } from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect } from "react";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Highcharts from "highcharts";
@@ -8,98 +6,88 @@ import HighchartsReact from "highcharts-react-official";
 import Backend from "../services/backend";
 import { FadeLoader } from "react-spinners";
 
-class LaunchesByUserExecutionTrend extends SubComponent {
-  state = {
-    stats:[],
-    launches: [],
-    filter: {
-      skip: 0,
-      limit: 20,
-      orderby: "id",
-      orderdir: "DESC",
-      includedFields: "launchStats,createdTime,testCaseTree",
-    },
-    loading: true,
-    errorMessage: "",
+const LaunchesByUserExecutionTrend = ({ projectId, filter: propFilter }) => {
+  const [stats, setStats] = useState([]);
+  const [launches, setLaunches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const defaultFilter = {
+    skip: 0,
+    limit: 20,
+    orderby: "id",
+    orderdir: "DESC",
+    includedFields: "launchStats,createdTime,testCaseTree",
   };
 
-  constructor(props) {
-    super(props);
-    this.getLaunches = this.getLaunches.bind(this);
-    this.getSeries = this.getSeries.bind(this);
-    this.getStats = this.getStats.bind(this);
-    this.renderChart = this.renderChart.bind(this);
-  }
+  const filter = { ...defaultFilter, ...propFilter };
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.projectId) {
-      this.state.projectId = nextProps.projectId;
-    }
-    if (nextProps.filter) {
-      this.state.filter = nextProps.filter;
-    }
-    this.getStats();
-  }
+  const getSeries = (launchesData, statsData) => {
+    const users = statsData?.all?.users 
+      ? Object.keys(statsData.all.users).map(user => ({
+          name: user,
+          data: []
+        }))
+      : [];
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.getStats();
-  }
+    const totalDuration = [];
 
+    if (launchesData && statsData?.all) {
+      launchesData.forEach(launch => {
+        if (launch.testCaseTree != null) {
+          let testCases = [];
+          
+          if (launch.testCaseTree.testCases?.length > 0) {
+            testCases = launch.testCaseTree.testCases;
+          } else if (launch.testCaseTree.children) {
+            launch.testCaseTree.children.forEach(child => {
+              testCases = testCases.concat(child.testCases || []);
+            });
+          }
 
-  getStats() {
-    if (!this.state.projectId) {
-      return [];
-    }
-    
-    Backend.get(this.state.projectId + "/launch/statistics?" + Utils.filterToQuery(this.state.filter))
-      .then(response => {
-        this.state.stats = response;
-        this.getLaunches();
-        // this.state.loading = false;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getStats::Couldn't get launch statistics, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
+          if (testCases) {
+            const series = testCases.map(tc => ({
+              launchName: launch.name,
+              userName: tc.currentUser,
+              duration: tc.duration,
+              total: launch.duration
+            }));
+
+            for (let i = 0; i < users.length; i++) {
+              let totalUserDuration = 0;
+              series.forEach(val => {
+                if (users[i].name === val.userName) {
+                  totalUserDuration += val.duration;
+                }
+              });
+              users[i].data.push(totalUserDuration);
+            }
+          }
+        }
+        totalDuration.push(launch.duration);
       });
-  }
-
-
-
-  getLaunches() {
-    if (!this.state.projectId) {
-      return [];
     }
-    Backend.get(this.state.projectId + "/launch?" + Utils.filterToQuery(this.state.filter))
-      .then(response => {
-        this.state.launches = response.reverse();
-        this.state.loading = false;
-        //chart is displayed
-        this.renderChart();
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getLaunches::Couldn't get launches, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
 
-  renderChart() {
-    if (typeof(this.state.launches) != 'undefined') {
+    users.push({ name: 'Total', data: totalDuration });
+    console.log("DATA POINTS : " + JSON.stringify(users));
+    return users;
+  };
+
+  const renderChart = (launchesData, statsData) => {
+    if (!launchesData || launchesData.length === 0) {
+      return;
+    }
+
     Highcharts.chart("exetrend", {
       title: {
         text: "Launches Time Duration Trend",
       },
-
       yAxis: {
         title: {
           text: "Total Time (H:M)",
         },
         type: 'datetime',
-        dateTimeLabelFormats: { //force all formats to be hour:minute:second
+        dateTimeLabelFormats: {
           second: '%H:%M',
           minute: '%H:%M',
           hour: '%H:%M',
@@ -109,30 +97,25 @@ class LaunchesByUserExecutionTrend extends SubComponent {
           year: '%H:%M'
         }
       },
-
       xAxis: {
         title: {
           text: "Launch Start time",
         },
-        categories: this.state.launches.map(launch => Utils.timeToDateNoTime(launch.startTime)),
+        categories: launchesData.map(launch => Utils.timeToDateNoTime(launch.startTime)),
       },
-
       legend: {
         layout: "vertical",
         align: "right",
         verticalAlign: "middle",
       },
-
-      tooltip:{
-       formatter : function(){
-
-        return  `<div>${this.x} <br>
-                <span style='color:${this.point.color}'>\u25CF</span>
-                <b> ${this.series.name}: ${Utils.timePassed(this.y)}</b><br/>
-                </div>`
-      }
+      tooltip: {
+        formatter: function() {
+          return `<div>${this.x} <br>
+                  <span style='color:${this.point.color}'>\u25CF</span>
+                  <b> ${this.series.name}: ${Utils.timePassed(this.y)}</b><br/>
+                  </div>`;
+        }
       },
-
       plotOptions: {
         series: {
           label: {
@@ -140,9 +123,7 @@ class LaunchesByUserExecutionTrend extends SubComponent {
           },
         },
       },
-      
-
-      series:  this.getSeries(),
+      series: getSeries(launchesData, statsData),
       responsive: {
         rules: [
           {
@@ -160,74 +141,59 @@ class LaunchesByUserExecutionTrend extends SubComponent {
         ],
       },
     });
+  };
+
+  const getLaunches = (statsData) => {
+    if (!projectId) {
+      return;
     }
-  }
 
+    Backend.get(`${projectId}/launch?${Utils.filterToQuery(filter)}`)
+      .then(response => {
+        const reversedLaunches = [...response].reverse();
+        setLaunches(reversedLaunches);
+        setLoading(false);
+        
+        // Defer chart rendering to next tick to ensure DOM is ready
+        setTimeout(() => {
+          renderChart(reversedLaunches, statsData);
+        }, 0);
+      })
+      .catch(error => {
+        setErrorMessage(`getLaunches::Couldn't get launches, error: ${error}`);
+        setLoading(false);
+      });
+  };
 
-  getSeries() {
-   var users = typeof(this.state.stats.all) != 'undefined' &&  Object.keys(this.state.stats.all.users) ?
-                Object.keys(this.state.stats.all.users).map(
-                  function (user) {
-                    return {  name: user , data: [] };
-                  }.bind(this),
-                ) :[]
+  const getStats = () => {
+    if (!projectId) {
+      return;
+    }
 
-    var series =[];
-    var totalUserDuration =0;
-    var totalDuration = [];
-    if(typeof(this.state.launches) != 'undefined' && typeof(this.state.stats.all) != 'undefined' ) {
-    this.state.launches.forEach(launch => {
-      if(launch.testCaseTree !=null )
-      {
-        var testCases = [];
-        if(launch.testCaseTree.testCases.length >0)
-          {
-            testCases = launch.testCaseTree.testCases;
-          }else if(launch.testCaseTree.children){
-              
-              launch.testCaseTree.children.forEach(child=> 
-                {
-                   testCases = testCases.concat(child.testCases)
-                })
-          }
-          if(testCases){
-                series =testCases.map(tc =>({launchName:launch.name,  userName: tc.currentUser, duration:tc.duration , total : launch.duration})) 
-                // console.log("Series " + JSON.stringify(series));
-          }
-      }
+    Backend.get(`${projectId}/launch/statistics?${Utils.filterToQuery(filter)}`)
+      .then(response => {
+        setStats(response);
+        getLaunches(response);
+      })
+      .catch(error => {
+        setErrorMessage(`getStats::Couldn't get launch statistics, error: ${error}`);
+        setLoading(false);
+      });
+  };
 
-      for(let i=0;i< users.length ;i++){
-        totalUserDuration=0; 
-        series.forEach(val => {
-          if(users[i].name === val.userName){
-          totalUserDuration = totalUserDuration + val.duration;
-          }
-        })
-          users[i].data.push(totalUserDuration);
-      }
-     
-    });
+  useEffect(() => {
+    getStats();
+  }, [projectId, JSON.stringify(filter)]);
 
-
-    totalDuration = typeof(this.state.launches) != 'undefined' ? 
-    this.state.launches.map(l=>l.duration) : [];
-  }
-  users.push({name:'Total', data: totalDuration});
-    console.log("DATA POINTS : " + JSON.stringify(users));
-    return Object.keys(users).map(key => users[key]);
-  }
-
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div id="exetrend"></div>
-        <div id="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div id="exetrend"></div>
+      <div id="sweet-loading">
+        <FadeLoader sizeUnit="px" size={100} color="#135f38" loading={loading} />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default LaunchesByUserExecutionTrend;

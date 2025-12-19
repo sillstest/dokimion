@@ -1,5 +1,4 @@
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect, useRef } from "react";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Highcharts from "highcharts";
@@ -7,78 +6,43 @@ import HighchartsReact from "highcharts-react-official";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
-class LaunchesByUsersPieWidget extends SubComponent {
-  state = {
-    launches: [],
-    filter: {
-      skip: 0,
-      limit: 20,
-      orderby: "id",
-      orderdir: "ASC",
-      includedFields: "launchStats,createdTime",
-    },
-    loading: true,
-    errorMessage: "",
+const LaunchesByUsersPieWidget = ({ projectId, filter: propFilter }) => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const chartRenderedRef = useRef(false);
+
+  const defaultFilter = {
+    skip: 0,
+    limit: 20,
+    orderby: "id",
+    orderdir: "ASC",
+    includedFields: "launchStats,createdTime",
   };
 
-  constructor(props) {
-    super(props);
-    this.getStats = this.getStats.bind(this);
-    this.setUpUsersPieSeries = this.setUpUsersPieSeries.bind(this);
-    this.usersPieChartRender = this.usersPieChartRender.bind(this);
-  }
+  const filter = { ...defaultFilter, ...propFilter };
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.projectId) {
-      this.state.projectId = nextProps.projectId;
-    }
-    if (nextProps.filter) {
-      this.state.filter = nextProps.filter;
-    }
-    this.getStats();
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.getStats();
-  }
-
-  getStats() {
-    if (!this.state.projectId) {
+  const setUpUsersPieSeries = (statsData) => {
+    if (!statsData?.all?.users) {
       return [];
     }
-    Backend.get(this.state.projectId + "/launch/statistics?" + Utils.filterToQuery(this.state.filter))
-      .then(response => {
-        this.state.stats = response;
-        this.setUpUsersPieSeries();
-        this.state.loading = false;
-        this.setState(this.state);
-        this.usersPieChartRender();
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getStats::Couldn't get launch statistics, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
 
-  setUpUsersPieSeries() {
-    if (typeof(this.state.stats.all) != 'undefined') {
-    this.state.userSeries = [
+    return [
       {
         name: "Statuses",
-        data: typeof(this.state.stats.all) != 'undefined' && Object.keys(this.state.stats.all.users).map(
-          function (user) {
-            return { name: user, y: this.state.stats.all.users[user] };
-          }.bind(this),
-        ),
+        data: Object.keys(statsData.all.users).map(user => ({
+          name: user,
+          y: statsData.all.users[user]
+        })),
       },
     ];
-    }
-  }
+  };
 
-  usersPieChartRender() {
-    if (typeof(this.state.stats.all) != 'undefined') {
+  const usersPieChartRender = (userSeries) => {
+    if (!userSeries || userSeries.length === 0 || !userSeries[0].data.length) {
+      return;
+    }
+
     Highcharts.chart({
       chart: {
         type: "pie",
@@ -100,22 +64,46 @@ class LaunchesByUsersPieWidget extends SubComponent {
           innerSize: "70%",
         },
       },
-      series: this.state.userSeries,
+      series: userSeries,
     });
-    }
-  }
+  };
 
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div id="pie-by-users"></div>
-        <div id="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
+  const getStats = () => {
+    if (!projectId) {
+      return;
+    }
+
+    setLoading(true);
+    Backend.get(`${projectId}/launch/statistics?${Utils.filterToQuery(filter)}`)
+      .then(response => {
+        setStats(response);
+        const userSeries = setUpUsersPieSeries(response);
+        setLoading(false);
+        
+        // Defer chart rendering to next tick to ensure DOM is ready
+        setTimeout(() => {
+          usersPieChartRender(userSeries);
+        }, 0);
+      })
+      .catch(error => {
+        setErrorMessage(`getStats::Couldn't get launch statistics, error: ${error}`);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getStats();
+  }, [projectId, JSON.stringify(filter)]);
+
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div id="pie-by-users"></div>
+      <div id="sweet-loading">
+        <FadeLoader sizeUnit="px" size={100} color="#135f38" loading={loading} />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default LaunchesByUsersPieWidget;
