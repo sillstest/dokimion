@@ -34,6 +34,8 @@ export default function TestCases() {
 
   const [testcasesTree, setTestcasesTree] = useState({ children: [] });
   const [testcaseToEdit, setTestcaseToEdit] = useState(DEFAULT_TESTCASE);
+  const [testcases, setTestcases] = useState(DEFAULT_TESTCASE);
+  const [testSuite, setTestSuite] = useState();
   const [projectAttributes, setProjectAttributes] = useState([]);
   const [selectedTestCase, setSelectedTestCase] = useState({});
   const [loading, setLoading] = useState(true);
@@ -154,6 +156,85 @@ export default function TestCases() {
       );
   };
 
+  const editTestcase = (testcaseId) => {
+    var tcs = testcases.find(function (testcase) {
+        return testcaseId === testcase.id;
+      }) || {};
+    setTestcaseToEdit(tcs);
+
+    $("#editTestcase").modal("toggle");
+  }
+
+  const onTestCaseAdded = (testcase) => {
+    var tc = Object.assign({}, DEFAULT_TESTCASE, { attributes: {}, steps: [] });
+    onFilter(
+      filter,
+      function () {
+        onTestcaseSelected(testcase.id);
+        refreshTree();
+      }.bind(this),
+    );
+    setTestcaseToEdit(tc);
+
+    $("#editTestcase").modal("hide");
+  }
+
+  const onTestcaseSelected = (id) => {
+    var stc = Utils.getTestCaseFromTree(id, testcasesTree, function (testCase, id) {
+      return testCase.id === id;
+    });
+    navigate(
+      "/" + project + "/testcases?" + getQueryParams(filter),
+    );
+    setSelectedTestCase(stc);
+  }
+
+  const getQueryParams = (filter) => {
+    var testcaseIdAttr = "";
+    if (selectedTestCase && selectedTestCase.id) {
+      testcaseIdAttr = "testcase=" + selectedTestCase.id;
+    }
+    var urlParts = [getFilterQParams(filter), getGroupingQParams(filter), testcaseIdAttr, getFulltextQParams(filter)];
+    if (testSuite) {
+      urlParts.push("testSuite=" + testSuite.id);
+    }
+    return urlParts
+      .filter(function (val) {
+        return val !== "";
+      })
+      .join("&");
+  }
+
+  const getFulltextQParams = (filter) => {
+    if (!filter.fulltext || filter.fulltext == "") return "";
+    return "fulltext=" + filter.fulltext;
+  }
+
+  const getFilterQParams = (filter) => {
+    var activeFilters =
+      filter.filters.filter(function (filter) {
+        return filter.id;
+      }) || [];
+    var attributesPairs = [];
+    activeFilters.forEach(function (filter) {
+      var tokens = filter.attrValues.map(function (attrValue) {
+        return "attribute=" + filter.id + ":" + attrValue.value;
+      });
+      attributesPairs = attributesPairs.concat(tokens);
+    });
+
+    return attributesPairs.join("&") || "";
+  }
+
+  const getGroupingQParams = (filter) => {
+    return (
+      filter.groups
+        .map(function (group) {
+          return "groups=" + group;
+        })
+        .join("&") || ""
+    );
+  }
   /* -------------------- tree -------------------- */
 
   const refreshTree = (treeData = testcasesTree, f = filter) => {
@@ -190,6 +271,24 @@ export default function TestCases() {
         onFilter={onFilter}
         project={project}
       />
+
+      <div>
+        <div
+          className="modal fade"
+          id="editTestcase"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="editTestcaseLabel"
+          aria-hidden="true"
+        >
+          <TestCaseForm
+            project={project}
+            testcase={testcaseToEdit}
+            projectAttributes={projectAttributes}
+            onTestCaseAdded={onTestCaseAdded}
+          />
+        </div>
+      </div>
 
       <div className="row filter-control-row">
         <div className="col-6">

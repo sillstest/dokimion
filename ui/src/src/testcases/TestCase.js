@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable eqeqeq */
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useReducer, useState, useEffect, useCallback } from "react";
 import Attachments from "../testcases/Attachments";
 import Results from "../testcases/Results";
 import Comments from "../comments/Comments";
@@ -101,48 +101,10 @@ const TestCase = (props) => {
       });
   }, [projectId]);
 
-  // Get test case data
-  const getTestCase = useCallback((projId, testcaseId) => {
-    console.log("TestCase::getTestCase");
-
-    Backend.get(projId + "/testcase/" + testcaseId)
-      .then(response => {
-        setTestcase(response);
-        setOriginalTestcase(JSON.parse(JSON.stringify(response)));
-        setAttributesInEdit(new Set());
-        setPropertiesInEdit(new Set());
-        setLoading(false);
-
-        const roles = session.person.roles && session.person.roles.length > 0 
-          ? session.person.roles : [];
-
-        if (roles.length == 0) {
-          setReadonly(true);
-        } else {
-          const isTester = roles.filter(val => val.includes('TESTER')).length > 0;
-          const isObserverOnly = roles.filter(val => val.includes('OBSERVERONLY')).length > 0;
-          const isTestDev = roles.filter(val => val.includes('TESTDEVELOPER')).length > 0;
-          setTestDeveloper(isTestDev);
-
-          if (isTester || isObserverOnly) {
-            setReadonly(true);
-          } else if (isTestDev && response.locked) {
-            setReadonly(true);
-          } else if (isTestDev) {
-            setReadonly(false);
-          } else {
-            setReadonly(false);
-          }
-        }
-      })
-      .catch(error => {
-        setErrorMessage("getTestCase::Couldn't fetch testcase");
-        setLoading(false);
-      });
-  }, [session.person.roles]);
 
   // Initial load effect
   useEffect(() => {
+
     if (props.testcase) {
       setTestcase(props.testcase);
       getSession();
@@ -162,6 +124,12 @@ const TestCase = (props) => {
     if (!projId || !testcaseId) return;
 
     setProjectId(projId);
+
+    getTestCase(projId, testcaseId);
+
+  }, []);
+
+  const getTestCase = (projId, testcaseId) => {
 
     const sessionPromise = Backend.get("user/session");
     const testcasePromise = Backend.get(projId + "/testcase/" + testcaseId);
@@ -203,7 +171,7 @@ const TestCase = (props) => {
         setErrorMessage("componentDidMount::Couldn't fetch testcase or session");
         setLoading(false);
       });
-  }, []);
+  };
 
   // Handle props changes  
   useEffect(() => {
@@ -514,50 +482,55 @@ const TestCase = (props) => {
     }
   };
 
+
   const editAttributeKey = (key, data, reRender) => {
-    setProjectAttributes(prevAttrs => {
-      const newProjectAttrs = [...prevAttrs];
-      if (!newProjectAttrs.find(attribute => attribute.id === data.value)) {
-        newProjectAttrs.push({ id: data.value, name: data.value });
-      }
-      return newProjectAttrs;
-    });
 
-    setAttributesInEdit(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(key);
-      newSet.add(data.value);
-      return newSet;
-    });
+    var projAttr = projectAttributes;
+    if (
+      projAttr.find(function (attribute) {
+        return attribute.id === data.value;
+      }) == undefined
+    ) {
+      projAttr.push({ id: data.value, name: data.value });
+    }
+   
+    var attribEdit = attributesInEdit;
+    attribEdit.delete(key);
+    attribEdit.add(data.value);
 
-    setTestcase(prevTestcase => {
-      const newTestcase = { ...prevTestcase };
-      if (newTestcase.attributes) {
-        newTestcase.attributes[data.value] = newTestcase.attributes[key];
-        delete newTestcase.attributes[key];
-      }
-      return newTestcase;
-    });
+    var tc = testcase;
+    tc.attributes[data.value] = tc.attributes[key];
+    delete tc.attributes[key];
+    if (reRender) {
+       setProjectAttributes(projAttr);
+       setAttributesInEdit(attribEdit);
+       setTestcase(tc);
+    }
+
   };
 
   const handleStepActionChange = (index, value, reRender) => {
-    setTestcase(prevTestcase => {
-      const newTestcase = { ...prevTestcase };
-      if (newTestcase.steps?.[index]) {
-        newTestcase.steps[index].action = value;
-      }
-      return newTestcase;
-    });
+
+    var newTestcase = testcase;
+    if (newTestcase.steps?.[index]) {
+       newTestcase.steps[index].action = value;
+    }
+    if (reRender) {
+       setTestcase(newTestcase);
+    }
+
   };
 
   const handleStepExpectationChange = (index, value, reRender) => {
-    setTestcase(prevTestcase => {
-      const newTestcase = { ...prevTestcase };
-      if (newTestcase.steps?.[index]) {
-        newTestcase.steps[index].expectation = value;
-      }
-      return newTestcase;
-    });
+
+    var newTestcase = testcase;
+    if (newTestcase.steps?.[index]) {
+       newTestcase.steps[index].expectation = value;
+    }
+    if (reRender) {
+       setTestcase(newTestcase);
+    }
+
   };
 
   const addStep = () => {
@@ -1429,4 +1402,4 @@ const TestCase = (props) => {
   );
 };
 
-export default withRouter(TestCase);
+export default TestCase;
