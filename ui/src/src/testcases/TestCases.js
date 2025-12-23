@@ -30,7 +30,7 @@ export default function TestCases() {
   const { project } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const treeRef = useRef(null);
+  var tree = null;
 
   const [testcasesTree, setTestcasesTree] = useState({ children: [] });
   const [testcaseToEdit, setTestcaseToEdit] = useState(DEFAULT_TESTCASE);
@@ -93,6 +93,10 @@ export default function TestCases() {
   }, [tcSizesFilter]);
 
   useEffect(() => {
+    refreshTree();
+  }, [testcasesTree]);
+
+  useEffect(() => {
     const params = qs.parse(location.search.substring(1));
 
     if (params.testcase) {
@@ -114,7 +118,6 @@ export default function TestCases() {
         });
 
         setProjectAttributes(attrs);
-	refreshTree();
       })
       .catch(err =>
         setErrorMessage("Couldn't fetch attributes: " + err)
@@ -152,7 +155,6 @@ export default function TestCases() {
         setTestcasesTree(response);
         setLoading(false);
         getTotalNumberOfTestCases();
-        refreshTree();
         if (onResponse) {
 	   onResponse();
 	}
@@ -197,7 +199,6 @@ export default function TestCases() {
       filter,
       function () {
         onTestcaseSelected(testcase.id);
-        refreshTree();
       }.bind(this),
     );
     setTestcaseToEdit(tc);
@@ -265,11 +266,14 @@ export default function TestCases() {
 
   const refreshTree = () => {
 
-    if (treeRef.current) {
-      treeRef.current.destroy();
+    if (testcasesTree.count === undefined)
+       return;
+
+    if (tree) {
+      tree.destroy();
     }
 
-    treeRef.current = $("#tree").tree({
+    tree = $("#tree").tree({
       primaryKey: "id",
       uiLibrary: "bootstrap4",
       checkboxes: true,
@@ -281,12 +285,14 @@ export default function TestCases() {
       ),
     });
 
-    treeRef.current.select(
+    tree.on(
+      "select",
       function (e, node, id) {
         onTestcaseSelected(id);
       }.bind(this),
     );
-    treeRef.current.checkboxChange(
+    tree.on(
+      "checkboxChange",
       function (e, $node, record, state) {
         if (state === "indeterminate") return;
         processElementChecked(record, state === "checked");
@@ -295,9 +301,9 @@ export default function TestCases() {
     if (!(selectedTestCase === undefined) &&
          (!(selectedTestCase.id === undefined)) &&
          (selectedTestCase.id)) {
-      var node = treeRef.getNodeById(selectedTestCase.id);
+      var node = tree.getNodeById(selectedTestCase.id);
       if (!node) return;
-      treeRef.select(node);
+      tree.select(node);
       var f = filter.groups.forEach(
         function (groupId) {
           var attributes =
@@ -311,8 +317,8 @@ export default function TestCases() {
           var values = attributes[groupId] || ["None"];
           values.forEach(
             function (value) {
-              var node = treeRef.getNodeById(groupId + ":" + value);
-              treeRef.expand(node);
+              var node = tree.getNodeById(groupId + ":" + value);
+              tree.expand(node);
             }.bind(this),
           );
         }.bind(this),
@@ -328,7 +334,6 @@ export default function TestCases() {
     .then(response => {
         if (response) {
           testcasesTree.testCases = testcasesTree.testCases.concat(response);
-          refreshTree();
         } else {
           filter.skip = (filter.skip || 0) - TESTCASES_FETCH_LIMIT;
         }
@@ -446,8 +451,7 @@ export default function TestCases() {
           //  console.log(" TC :" + JSON.stringify(testcase));
            if(!equal(originalTC, testcase)){
             console.log("Testcase Modified need to update : " + testcase.id);
-            this.handleSubmit(testcase);
-            this.refreshTree();
+            handleSubmit(testcase);
            }else{
             console.log("Testcase Not modified : " + testcase.id);
            }
@@ -522,7 +526,6 @@ export default function TestCases() {
            if(!equal(originalTC, testcase)){
             console.log("Testcase Modified need to update : " + testcase.id);
             handleSubmit(testcase);
-            refreshTree();
            }else{
             console.log("Testcase Not modified : " + testcase.id);
            }
