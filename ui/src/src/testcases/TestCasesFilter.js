@@ -63,14 +63,13 @@ const TestCasesFilter = ({
     } catch (err) {
       console.log("Unable to fetch session");
     }
-  }, [onSessionChange]);
+  });
 
   const getAttributeName = useCallback(
     (id) => {
       const attr = projectAttributes.find((attribute) => attribute.id === id);
       return attr ? attr.name : "";
     },
-    [projectAttributes]
   );
 
   const getValuesByAttributeId = useCallback(
@@ -82,7 +81,6 @@ const TestCasesFilter = ({
       const attr = projectAttributes.find((attribute) => attribute.id === id);
       return attr?.attrValues || [];
     },
-    [projectAttributes]
   );
 
   const getProjectAttributesSelect = useCallback(() => {
@@ -90,7 +88,7 @@ const TestCasesFilter = ({
       value: val.id,
       label: val.name,
     }));
-  }, [projectAttributes]);
+  });
 
   useEffect(() => {
     getSession();
@@ -112,7 +110,7 @@ const TestCasesFilter = ({
               label: getAttributeName(attrId),
             }))
           );
-          onFilter(loadedSuite.filter);
+          onFilter(testSuite.filter);
         })
         .catch(() => {
           setErrorMessage("componentDidMount::Couldn't fetch testsuite");
@@ -121,22 +119,32 @@ const TestCasesFilter = ({
       let newFilter = { ...testSuite.filter };
 
       if (params.groups) {
-        const groups = Array.isArray(params.groups) ? params.groups : [params.groups];
-        newFilter.groups = groups;
-        setGroupsToDisplay(
-          groups.map((attrId) => ({
-            value: attrId,
-            label: getAttributeName(attrId),
-          }))
-        );
-      }
+        if (!Array.isArray(params.groups)) {
+          params.groups = [params.groups];
+        }
+        var tSuite = testSuite;
+        tSuite.filter.groups = params.groups;
+	setTestSuite(tSuite);
 
+        var groups = groupsToDisplay; 
+        groups = params.groups.map(
+          function (attrId) {
+            return { value: attrId, label: getAttributeName(attrId) };
+          }.bind(this),
+        );
+	setGroupsToDisplay(groups);
+      }
       if (params.attribute) {
-        const attributes = Array.isArray(params.attribute) ? params.attribute : [params.attribute];
-        const map = {};
-        attributes.forEach((pair) => {
-          const [key, value] = pair.split(":");
-          if (!map[key]) map[key] = [];
+        if (!Array.isArray(params.attribute)) {
+          params.attribute = [params.attribute];
+        }
+        var map = {};
+        params.attribute.forEach(function (pair) {
+          var key = pair.split(":")[0];
+          var value = pair.split(":")[1];
+          if (!map[key]) {
+            map[key] = [];
+          }
           map[key].push(value);
         });
 
@@ -156,10 +164,13 @@ const TestCasesFilter = ({
         newFilter.fulltext = params.fulltext;
       }
 
-      setTestSuite((prev) => ({ ...prev, filter: newFilter }));
+      var tSuite = testSuite;
+      tSuite.filter = newFilter;
+      setTestSuite(tSuite);
+
       onFilter(newFilter);
     }
-  }, [location.search, project, getAttributeName, onFilter, getSession]);
+  }, []);
 
   useEffect(() => {
     if (projectAttributes.length > 0) {
@@ -181,7 +192,7 @@ const TestCasesFilter = ({
         }))
       );
     }
-  }, [projectAttributes, getAttributeName]);
+  }, []);
 
   const changeGrouping = (values) => {
     const groupIds = values.map((v) => v.value);

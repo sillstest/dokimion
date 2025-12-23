@@ -101,9 +101,11 @@ export default function TestCases() {
 
     Backend.get(`${project}/attribute`)
       .then((response) => {
-        const attrs = response
-          .filter(p => p.type !== "undefined" && p.type !== "LAUNCH")
-          .sort((a, b) => (a.name || "").localeCompare(b.name));
+        var attrs = response.
+           filter(function(p) { return p.type != 'undefined'}).
+           filter(function(p) { return p.type != 'LAUNCH'});
+
+        attrs = attrs.sort((a, b) => (a.name || "").localeCompare(b.name));
 
         attrs.unshift({
           id: "broken",
@@ -112,7 +114,7 @@ export default function TestCases() {
         });
 
         setProjectAttributes(attrs);
-        onFilter(filter);
+	refreshTree();
       })
       .catch(err =>
         setErrorMessage("Couldn't fetch attributes: " + err)
@@ -121,24 +123,40 @@ export default function TestCases() {
 
   /* -------------------- filtering -------------------- */
 
-  const onFilter = useCallback((newFilter, onResponse) => {
-    const f = { ...newFilter };
+  const onFilter = (filter, onResponse) => {
+    var params = qs.parse(location.search.substring(1));
+    if (params.testcase) {
+      setSelectedTestCase({ id: params.testcase });
+    }
 
+    var f = filter;
     if (!f.groups || f.groups.length === 0) {
       f.skip = f.skip || 0;
       f.limit = TESTCASES_FETCH_LIMIT;
     }
+
+    f.includedFields = f.includedFields || [];
+    f.includedFields.push("name");
+    f.includedFields.push("id");
+    f.includedFields.push("attributes");
+
+    f.notFields = f.notFields || {};
+    f.notFields.id = f.notFields.id || [];
 
     setLoading(true);
     setFilter(f);
 
     Backend.get(`${project}/testcase/tree?${getFilterApiRequestParams(f)}`)
       .then((response) => {
+	setTotalNoofTestCase(response.count);
         setTestcasesTree(response);
         setLoading(false);
-        refreshTree(response, f);
-        getTotalNumberOfTestCases(f);
-        if (onResponse) onResponse();
+        getTotalNumberOfTestCases();
+        refreshTree();
+        if (onResponse) {
+	   onResponse();
+	}
+	updateCount();
       })
       .catch(err => {
         setErrorMessage("Couldn't fetch testcases: " + err);
@@ -146,11 +164,19 @@ export default function TestCases() {
       });
 
     navigate(`/${project}/testcases`);
-  }, []);
+  };
 
-  const getTotalNumberOfTestCases = (f) => {
-    Backend.get(`${project}/testcase/count?${getFilterApiRequestParams(f)}`)
-      .then(setTotalNoofTestCase)
+  const getTotalNumberOfTestCases = () => {
+
+    var newFilter = filter;
+    delete newFilter.skip;
+    delete newFilter.limit;
+    setFilter(newFilter);
+    
+    Backend.get(`${project}/testcase/count?${getFilterApiRequestParams(filter)}`)
+      .then(response => {
+	setTotalNoofTestCase(response);
+      })
       .catch(err =>
         setErrorMessage("Couldn't fetch testcase count: " + err)
       );
@@ -237,7 +263,8 @@ export default function TestCases() {
   }
   /* -------------------- tree -------------------- */
 
-  const refreshTree = (treeData = testcasesTree, f = filter) => {
+  const refreshTree = () => {
+
     if (treeRef.current) {
       treeRef.current.destroy();
     }
@@ -248,17 +275,323 @@ export default function TestCases() {
       checkboxes: true,
       checkedField: "checked",
       dataSource: Utils.parseTree(
-        treeData,
-        f.notFields?.id || [],
+        testcasesTree,
+        filter.notFields?.id || [],
         tcSizes
       ),
     });
 
-    treeRef.current.on("select", (_, __, id) => {
-      setSelectedTestCase({ id });
-      navigate(`/${project}/testcases`);
+    treeRef.current.select(
+      function (e, node, id) {
+        onTestcaseSelected(id);
+      }.bind(this),
+    );
+    treeRef.current.checkboxChange(
+      function (e, $node, record, state) {
+        if (state === "indeterminate") return;
+        processElementChecked(record, state === "checked");
+      }.bind(this),
+    );
+    if (!(selectedTestCase === undefined) &&
+         (!(selectedTestCase.id === undefined)) &&
+         (selectedTestCase.id)) {
+      var node = treeRef.getNodeById(selectedTestCase.id);
+      if (!node) return;
+      treeRef.select(node);
+      var f = filter.groups.forEach(
+        function (groupId) {
+          var attributes =
+            Utils.getTestCaseFromTree(
+              selectedTestCase.id,
+              testcasesTree,
+              function (testCase, id) {
+                return testCase.id === id;
+              },
+            ).attributes || {};
+          var values = attributes[groupId] || ["None"];
+          values.forEach(
+            function (value) {
+              var node = treeRef.getNodeById(groupId + ":" + value);
+              treeRef.expand(node);
+            }.bind(this),
+          );
+        }.bind(this),
+      );
+    }
+  }
+
+  const loadMoreTestCases = (event) => {
+    filter.skip = (filter.skip || 0) + TESTCASES_FETCH_LIMIT;
+    //Added for Issue 28
+    filter.limit = TESTCASES_FETCH_LIMIT;
+    Backend.get(project + "/testcase?" + getFilterApiRequestParams(filter))
+    .then(response => {
+        if (response) {
+          testcasesTree.testCases = testcasesTree.testCases.concat(response);
+          refreshTree();
+        } else {
+          filter.skip = (filter.skip || 0) - TESTCASES_FETCH_LIMIT;
+        }
+      })
+      .catch(error => {
+        setErrorMessage("loadMoreTestCases::Couldn't fetch testcases: " + error);
+      });
+    event.preventDefault();
+  }
+
+  const showLoadMore = () => {
+    if  ((((filter || {}).groups || []).length > 0) || !count) {
+      return false;
+    }
+    return ((filter || {}).skip || 0) + TESTCASES_FETCH_LIMIT <= count;
+  }
+
+  const updateCount = () => {
+    Backend.get(
+      project + "/testcase/count?" + getFilterApiRequestParams(filter),
+    )
+    .then(response => {
+      setCount(response);
+    })
+    .catch(error => {
+      setErrorMessage("updateCount::Couldn't fetch testcases number: " + error);
     });
-  };
+  }
+
+  const processElementChecked = (element, isChecked) => {
+    if (element.isLeaf) {
+      if (isChecked) {
+        filter.notFields.id = filter.notFields.id.filter(e => e !== element.id);
+      } else if (!filter.notFields.id.includes(element.id)) {
+        filter.notFields.id.push(element.id);
+      }
+    }
+    (element.children || []).forEach(e => this.processElementChecked(e, isChecked));
+  }
+
+  const handleBulkAddAttributes = (filterAttribs) => {
+    let projectId = project;
+    let Tcs = testcasesTree.testCases.map(tc => tc.id);
+    let NotSelected = filter.notFields.id;
+
+    let selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId===id));
+    //Remove broken and empty object
+    let newValidAttribs =   filterAttribs.filter(id => !((id.id === null) || (id.id==='broken')));
+    //Array of all selected ids
+    var selectedAttribIds = newValidAttribs.map( val => val.id);
+    console.log("Filter Attribs : " + JSON.stringify(newValidAttribs));
+    if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
+      {
+        setErrorMessage("handleBulkAddAttributes::Select an Attribute to Add");
+        return;
+      }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
+        console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
+        setErrorMessage("handleBulkAddAttributes::Select an Attribute to Add");
+        return;
+      }
+      else{
+        setErrorMessage(" ");
+      }
+
+    selectedTCS.forEach((item, index, temp)=>{
+      Backend.get(projectId + "/testcase/" + item)
+      .then(response => {
+        const testcase = response;
+        const originalTC = JSON.parse(JSON.stringify(testcase));
+
+          //No Attribs
+        if(Object.keys(testcase.attributes).length === 0){
+            //add the attribs to testcase
+            var attributeValues =[];
+            newValidAttribs.forEach((elem, index) =>{
+            var selectedAttribValues = elem.attrValues.map( val => val.value);
+            testcase.attributes[elem.id] = attributeValues.concat(selectedAttribValues);
+    //        console.log("Updated Attribuyes " + JSON.stringify(testcase.attributes));
+          })
+        }else{
+            //Check if the selectedID is present not in TC Attributes
+            var attributetobeaddedAdditionally = selectedAttribIds.filter((id)=> !Object.keys(testcase.attributes).includes(id));
+            //console.log("TO BE Added : " + attributetobeaddedAdditionally + " length " + Object.keys(attributetobeaddedAdditionally).length);
+            if(attributetobeaddedAdditionally.length>0){
+              var attributeValues =[];
+              attributetobeaddedAdditionally.forEach((elem, index) =>{
+                if(elem!==null&& elem!==undefined){
+                  var filterObject = newValidAttribs.find((val)=> val.id.includes(elem));
+                  var selectedAttribValues = filterObject.attrValues.map( val => val.value);
+                  testcase.attributes[filterObject.id] = attributeValues.concat(selectedAttribValues);
+  //                console.log("New Attribs added" + JSON.stringify(testcase.attributes));
+                }
+            })}
+
+              //Only if TC has exisitng attributes
+              Object.keys(testcase.attributes || {}).map(
+                function (attributeId, i) {
+                  if (attributeId && attributeId != "null") {
+                  var attributeValues = testcase.attributes[attributeId] || [];
+                //  console.log("Attrib ID " + attributeId + " AttribValues " + attributeValues);
+                  var valueAttribTobeAdded =[];
+                  newValidAttribs.forEach((elem, index) =>{
+                    var selectedAttribValues = elem.attrValues.map( val => val.value);
+                if(elem.id === attributeId){
+
+                    valueAttribTobeAdded = selectedAttribValues.filter(val => !attributeValues.includes(val));
+                    testcase.attributes[attributeId] = attributeValues.concat(valueAttribTobeAdded) ;
+                }
+
+              })
+              }
+            }.bind(this));
+           }//closing else
+          //  console.log("Original TC :" + JSON.stringify(originalTC));
+          //  console.log(" TC :" + JSON.stringify(testcase));
+           if(!equal(originalTC, testcase)){
+            console.log("Testcase Modified need to update : " + testcase.id);
+            this.handleSubmit(testcase);
+            this.refreshTree();
+           }else{
+            console.log("Testcase Not modified : " + testcase.id);
+           }
+
+          }).catch(error => {
+              this.setState({errorMessage: "handleBulkAddAttributes::Couldn't fetch testcase"});
+
+      })})
+
+    setErrorMessage("handleBulkAddAttributes::Added Attributes in selected Tescases");
+    navigate( "/" + project +"/testcases"
+   );
+
+   return "OK";
+  }
+
+  const handleBulkRemoveAttributes = (filterAttribs) => {
+    //console.log("Entered here in handleBulkRemoveAttributes" + JSON.stringify(filterAttribs));
+
+    let projectId = project;
+    let Tcs = testcasesTree.testCases.map(tc => tc.id);
+    let NotSelected = filter.notFields.id;
+    let selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId===id));
+    let newValidAttribs =    filterAttribs.filter(id => !((id.id === null) || (id.id==='broken')));
+
+    if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
+    {
+      setErrorMessage("handleBulkRemoveAttributes::Select an Attribute to Remove");
+      return;
+    }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
+      console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
+      setErrorMessage("handleBulkRemoveAttributes::Select an Attribute to Remove");
+      return;
+    }
+    else{
+      setErrorMessage(" ");
+    }
+
+    selectedTCS.forEach((item, index, temp)=>{
+
+      Backend.get(projectId + "/testcase/" + item)
+      .then(response => {
+      //  console.log("TC from DB" + JSON.stringify(response));
+        const testcase = response;
+        const originalTC = JSON.parse(JSON.stringify(testcase));
+          //No Attribs
+          if(Object.keys(testcase.attributes).length === 0){
+            //If the attributes are empty nothing left to delete
+            console.log("Selected attribute not present in TC " + testcase.id);
+        }else{
+              //Only if TC has exisitng attributes
+              Object.keys(testcase.attributes || {}).map(
+                function (attributeId, i) {
+                  if (attributeId && attributeId != "null") {
+                  var attributeValues = testcase.attributes[attributeId] || [];
+                  var valueAttribTobeAdded =[];
+                  newValidAttribs.forEach((elem, index) =>{
+                    if(elem.id === attributeId){
+                      var selectedAttribValues = elem.attrValues.map( val => val.value);
+
+                      valueAttribTobeAdded = attributeValues.filter(val => !selectedAttribValues.includes(val));
+                      if(valueAttribTobeAdded.length===0){
+      //                console.log("Deleted empty attributes with Key" + attributeId);
+                        delete testcase.attributes[attributeId];
+                      }else{
+                        testcase.attributes[attributeId] = valueAttribTobeAdded ;
+                      }
+                }})
+              }
+            }.bind(this));
+           }//closing else
+           if(!equal(originalTC, testcase)){
+            console.log("Testcase Modified need to update : " + testcase.id);
+            handleSubmit(testcase);
+            refreshTree();
+           }else{
+            console.log("Testcase Not modified : " + testcase.id);
+           }
+          }).catch(error => {
+              setErrorMessage("handleBulkRemoveAttributes::Couldn't fetch testcase");
+      })})
+
+
+    setErrorMessage("handleBulkRemoveAttributes::Removed Attributes in selected Tescases");
+    navigate("/" + project +"/testcases");
+    return "OK";
+  }
+
+  //Added for Issue 84
+  const handleLockAllTestCases = () => {
+    console.log("Entered here in the handleLockAllTestcases in Testcases.js");
+    Backend.post( this.props.match.params.project +"/testcase/lockall")
+    .then(response => {
+      console.log("Locked all testcases : " + JSON.stringify(response));
+      // if(response.status === 200 ){
+      setErrorMessage("handleLockAllTestCases::Locked All Testcases");
+      // }
+    })
+    .catch(error => {
+      setErrorMessage("handleLockAllTestCases::Couldn't lock all testcases");
+    });
+    navigate("/" + project +"/testcases");
+  }
+
+  const handleUnLockAllTestCases = () => {
+    console.log("Entered here in the handleUnLockAllTestcases in Testcases.js");
+    Backend.post( project +"/testcase/unlockall")
+    .then(response => {
+      console.log("UnLocked all testcases : " + JSON.stringify(response));
+      // if(response.status === 200 ){
+      setErrorMessage("handleUnLockAllTestCases::Unlocked All Testcases");
+      // }
+    })
+    .catch(error => {
+      setErrorMessage("handleUnLockAllTestCases::Couldn't unlock all testcases");
+    });
+    navigate("/" + project +"/testcases");
+
+  }
+  
+  const handleGetTCSizes = () => {
+
+    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery(tcSizesFilter))
+    .then(response => {
+      tcSizes = response;
+    })
+    .catch(() => {
+      console.log("Error in handleGetTCsizes");
+    });
+
+  }
+
+  const handleSubmit = (testcase) => {
+
+    Backend.put(project + "/testcase/", testcase)
+    .then(response => {
+      testcase = response;
+      console.log("After DB update : " + JSON.stringify(testcase));
+    })
+    .catch(error => {
+      setErrorMessage("handleSubmit::Couldn't save testcase: " + error);
+    });
+
+  }
 
   /* -------------------- render -------------------- */
 
@@ -270,6 +603,10 @@ export default function TestCases() {
         projectAttributes={projectAttributes}
         onFilter={onFilter}
         project={project}
+        handleBulkAddAttributes={handleBulkAddAttributes}
+        handleBulkRemoveAttributes={handleBulkRemoveAttributes}
+        handleLockAllTestCases={handleLockAllTestCases}
+        handleUnLockAllTestCases={handleUnLockAllTestCases}
       />
 
       <div>
@@ -292,16 +629,23 @@ export default function TestCases() {
 
       <div className="row filter-control-row">
         <div className="col-6">
-          Number of Test Cases:
-          <strong> {totalNoofTestCase}</strong>
+          Number of Test Cases : <span style={{fontWeight : 'bold'}}>{totalNoofTestCase}</span>
         </div>
       </div>
-
-      <FadeLoader loading={loading} />
+      <div className="sweet-loading">
+          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={loading} />
+      </div>
 
       <div className="grid_container">
-        <div className="tree-side">
-          <div id="tree" />
+          <div className="tree-side">
+            <div id="tree"></div>
+            {showLoadMore() && (
+              <div>
+                <a href="" onClick={loadMoreTestCases}>
+                  Load more
+                </a>
+              </div>
+            )}
         </div>
 
         <div className="testcase-side">
