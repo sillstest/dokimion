@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import SubComponent from "../common/SubComponent";
 import TestCaseForm from "../testcases/TestCaseForm";
@@ -62,7 +62,7 @@ export default function TestCases() {
 
   /* -------------------- helpers -------------------- */
 
-  const getFilterApiRequestParams = useCallback((filter) => {
+  const getFilterApiRequestParams = (filter) => {
     const tokens = [];
 
     (filter.groups || []).forEach((g) => tokens.push(`groups=${g}`));
@@ -82,7 +82,7 @@ export default function TestCases() {
     if (filter.fulltext) tokens.push(`fulltext=${filter.fulltext}`);
 
     return tokens.join("&");
-  }, []);
+  };
 
   /* -------------------- data loading -------------------- */
 
@@ -126,13 +126,13 @@ export default function TestCases() {
 
   /* -------------------- filtering -------------------- */
 
-  const onFilter = (filter, onResponse) => {
+  const onFilter = (filterArg, onResponse) => {
     var params = qs.parse(location.search.substring(1));
     if (params.testcase) {
       setSelectedTestCase({ id: params.testcase });
     }
 
-    var f = filter;
+    var f = filterArg;
     if (!f.groups || f.groups.length === 0) {
       f.skip = f.skip || 0;
       f.limit = TESTCASES_FETCH_LIMIT;
