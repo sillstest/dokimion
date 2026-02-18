@@ -76,7 +76,9 @@ System.out.flush();
         if (user.isLocked()) {
 System.out.println("UserService::userCanDelete - user locked = true");
 System.out.flush();
-           return false;
+           if (isAdmin(session) == false) {
+              return false;
+	   }
         }
 System.out.println("UserService::userCanDelete - user locked = false");
 System.out.flush();
