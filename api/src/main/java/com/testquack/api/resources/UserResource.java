@@ -438,6 +438,9 @@ System.out.flush();
     @GET
     @Path("/change-profile-redirect")
     public RedirectResponse changeProfileRedirect(){
+System.out.println("UserResource::changeProfileRedirect");
+System.out.flush();
+
         return authProvider.redirectChangePasswordTo(request);
     }
 

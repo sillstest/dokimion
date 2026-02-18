@@ -81,9 +81,6 @@ class Main extends Component {
 >}
           />
 
-          <Route exact path="/user/profile/:profileId" component={Profile} />
-          <Route exact path="/user/changeprofile/:profileId" component={ChangeProfile} />
-
           <Route
             exact
             path="/user/all-users-redirect"
@@ -109,6 +106,10 @@ class Main extends Component {
             render={props => <Users {...props} onProjectChange={this.onProjectChange.bind(this)} />}
           />
 
+
+          <Route exact path="/user/profile/:profileId" component={Profile} />
+          <Route exact path="/user/changepass/:profileId" component={ChangeProfile} />
+	   // changepass - legacy dependence in base package
 
 
           <Route
