@@ -458,6 +458,7 @@ System.out.flush();
     }
 
     private E doSave(Session session, String projectId, E entity){
+System.out.println("BaseService::doSave start - session: " + session);
 System.out.println("BaseService::doSave start - projectId: " + projectId);
 System.out.println("BaseService::doSave start - entity: " + entity);
 System.out.flush();
@@ -465,6 +466,7 @@ System.out.flush();
 System.out.println("BaseService::doSave - after beforeSave call");
         if (validateEntity(entity) || (entity instanceof Event)) {
 System.out.println("BaseService::doSave after validateEntity");
+System.out.println("BaseService::doSave - getRepository: " + getRepository());
 System.out.flush();
             E newTestCaseEntity = getRepository().save(getCurrOrganizationId(session), projectId, entity);
 System.out.println("BaseService::doSave after save - newTestCaseEntity: " + newTestCaseEntity);

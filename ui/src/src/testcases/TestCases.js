@@ -27,7 +27,7 @@ const DEFAULT_TESTCASE = {
 const TESTCASES_FETCH_LIMIT = 50;
 
 export default function TestCases() {
-  const { project } = useParams();
+  const gParams = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   var tree = null;
@@ -87,14 +87,8 @@ export default function TestCases() {
   /* -------------------- data loading -------------------- */
 
   useEffect(() => {
-    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery(tcSizesFilter))
-      .then(setTcSizes)
-      .catch(() => console.error("Error loading TC sizes"));
-  }, [tcSizesFilter]);
-
-  useEffect(() => {
-    refreshTree();
-  }, [testcasesTree]);
+    handleGetTCSizes();
+  }, []);
 
   useEffect(() => {
     const params = qs.parse(location.search.substring(1));
@@ -103,7 +97,11 @@ export default function TestCases() {
       setSelectedTestCase({ id: params.testcase });
     }
 
-    Backend.get(`${project}/attribute`)
+    if (params.testSuite) {
+      setTestSuite({ id: params.testSuite });
+    }
+
+    Backend.get(gParams.project + "/attribute")
       .then((response) => {
         var attrs = response.
            filter(function(p) { return p.type != 'undefined'}).
@@ -118,6 +116,7 @@ export default function TestCases() {
         });
 
         setProjectAttributes(attrs);
+
       })
       .catch(err =>
         setErrorMessage("Couldn't fetch attributes: " + err)
@@ -138,6 +137,10 @@ export default function TestCases() {
       f.limit = TESTCASES_FETCH_LIMIT;
     }
 
+    if (f.includedFields !== undefined && (typeof f.includedFields === 'string')) {
+       console.log("TestCases::onFilter - f.includedFields is a string");
+       f.includedFields = [];
+    }
     f.includedFields = f.includedFields || [];
     f.includedFields.push("name");
     f.includedFields.push("id");
@@ -149,12 +152,14 @@ export default function TestCases() {
     setLoading(true);
     setFilter(f);
 
-    Backend.get(`${project}/testcase/tree?${getFilterApiRequestParams(f)}`)
+    Backend.get(gParams.project + "/testcase/tree?" + getFilterApiRequestParams(f))
       .then((response) => {
 	setTotalNoofTestCase(response.count);
         setTestcasesTree(response);
         setLoading(false);
         getTotalNumberOfTestCases();
+        handleGetTCSizes();
+        refreshTree(response, tcSizes);
         if (onResponse) {
 	   onResponse();
 	}
@@ -165,7 +170,9 @@ export default function TestCases() {
         setLoading(false);
       });
 
-    navigate(`/${project}/testcases`);
+    if (!params.testSuite) {
+       navigate(gParams.project + "/testcases?" + getQueryParams(f));
+    }
   };
 
   const getTotalNumberOfTestCases = () => {
@@ -175,7 +182,7 @@ export default function TestCases() {
     delete newFilter.limit;
     setFilter(newFilter);
     
-    Backend.get(`${project}/testcase/count?${getFilterApiRequestParams(filter)}`)
+    Backend.get(gParams.project  + "/testcase/count?" + getFilterApiRequestParams(filter))
       .then(response => {
 	setTotalNoofTestCase(response);
       })
@@ -211,7 +218,7 @@ export default function TestCases() {
       return testCase.id === id;
     });
     navigate(
-      "/" + project + "/testcases?" + getQueryParams(filter),
+      "/" + gParams.project + "/testcases?" + getQueryParams(filter),
     );
     setSelectedTestCase(stc);
   }
@@ -264,9 +271,12 @@ export default function TestCases() {
   }
   /* -------------------- tree -------------------- */
 
-  const refreshTree = () => {
+  const refreshTree = (testcasesTreeArg, tcSizesArg) => {
 
-    if (testcasesTree.count === undefined)
+    if (testcasesTreeArg === undefined || testcasesTreeArg.count === undefined)
+       return;
+
+    if (tcSizesArg === undefined || tcSizesArg === undefined)
        return;
 
     if (tree) {
@@ -279,9 +289,9 @@ export default function TestCases() {
       checkboxes: true,
       checkedField: "checked",
       dataSource: Utils.parseTree(
-        testcasesTree,
+        testcasesTreeArg,
         filter.notFields?.id || [],
-        tcSizes
+        tcSizesArg
       ),
     });
 
@@ -330,10 +340,11 @@ export default function TestCases() {
     filter.skip = (filter.skip || 0) + TESTCASES_FETCH_LIMIT;
     //Added for Issue 28
     filter.limit = TESTCASES_FETCH_LIMIT;
-    Backend.get(project + "/testcase?" + getFilterApiRequestParams(filter))
+    Backend.get(gParams.project + "/testcase?" + getFilterApiRequestParams(filter))
     .then(response => {
         if (response) {
           testcasesTree.testCases = testcasesTree.testCases.concat(response);
+          setTestcasesTree(testcasesTree);
         } else {
           filter.skip = (filter.skip || 0) - TESTCASES_FETCH_LIMIT;
         }
@@ -353,7 +364,7 @@ export default function TestCases() {
 
   const updateCount = () => {
     Backend.get(
-      project + "/testcase/count?" + getFilterApiRequestParams(filter),
+      gParams.project + "/testcase/count?" + getFilterApiRequestParams(filter),
     )
     .then(response => {
       setCount(response);
@@ -375,7 +386,7 @@ export default function TestCases() {
   }
 
   const handleBulkAddAttributes = (filterAttribs) => {
-    let projectId = project;
+    let projectId = gParams.project;
     let Tcs = testcasesTree.testCases.map(tc => tc.id);
     let NotSelected = filter.notFields.id;
 
@@ -399,7 +410,7 @@ export default function TestCases() {
       }
 
     selectedTCS.forEach((item, index, temp)=>{
-      Backend.get(projectId + "/testcase/" + item)
+      Backend.get(gParams.projectId + "/testcase/" + item)
       .then(response => {
         const testcase = response;
         const originalTC = JSON.parse(JSON.stringify(testcase));
@@ -462,7 +473,7 @@ export default function TestCases() {
       })})
 
     setErrorMessage("handleBulkAddAttributes::Added Attributes in selected Tescases");
-    navigate( "/" + project +"/testcases"
+    navigate( "/" + gParams.project +"/testcases"
    );
 
    return "OK";
@@ -471,7 +482,7 @@ export default function TestCases() {
   const handleBulkRemoveAttributes = (filterAttribs) => {
     //console.log("Entered here in handleBulkRemoveAttributes" + JSON.stringify(filterAttribs));
 
-    let projectId = project;
+    let projectId = gParams.project;
     let Tcs = testcasesTree.testCases.map(tc => tc.id);
     let NotSelected = filter.notFields.id;
     let selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId===id));
@@ -535,14 +546,14 @@ export default function TestCases() {
 
 
     setErrorMessage("handleBulkRemoveAttributes::Removed Attributes in selected Tescases");
-    navigate("/" + project +"/testcases");
+    navigate("/" + gParams.project +"/testcases");
     return "OK";
   }
 
   //Added for Issue 84
   const handleLockAllTestCases = () => {
     console.log("Entered here in the handleLockAllTestcases in Testcases.js");
-    Backend.post( this.props.match.params.project +"/testcase/lockall")
+    Backend.post( gParams.project +"/testcase/lockall")
     .then(response => {
       console.log("Locked all testcases : " + JSON.stringify(response));
       // if(response.status === 200 ){
@@ -552,12 +563,12 @@ export default function TestCases() {
     .catch(error => {
       setErrorMessage("handleLockAllTestCases::Couldn't lock all testcases");
     });
-    navigate("/" + project +"/testcases");
+    navigate("/" + gParams.project +"/testcases");
   }
 
   const handleUnLockAllTestCases = () => {
     console.log("Entered here in the handleUnLockAllTestcases in Testcases.js");
-    Backend.post( project +"/testcase/unlockall")
+    Backend.post( gParams.project +"/testcase/unlockall")
     .then(response => {
       console.log("UnLocked all testcases : " + JSON.stringify(response));
       // if(response.status === 200 ){
@@ -567,7 +578,7 @@ export default function TestCases() {
     .catch(error => {
       setErrorMessage("handleUnLockAllTestCases::Couldn't unlock all testcases");
     });
-    navigate("/" + project +"/testcases");
+    navigate("/" + gParams.project +"/testcases");
 
   }
   
@@ -575,7 +586,7 @@ export default function TestCases() {
 
     Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery(tcSizesFilter))
     .then(response => {
-      tcSizes = response;
+      setTcSizes(response);
     })
     .catch(() => {
       console.log("Error in handleGetTCsizes");
@@ -585,7 +596,7 @@ export default function TestCases() {
 
   const handleSubmit = (testcase) => {
 
-    Backend.put(project + "/testcase/", testcase)
+    Backend.put(gParams.project + "/testcase/", testcase)
     .then(response => {
       testcase = response;
       console.log("After DB update : " + JSON.stringify(testcase));
@@ -605,7 +616,7 @@ export default function TestCases() {
       <TestCasesFilter
         projectAttributes={projectAttributes}
         onFilter={onFilter}
-        project={project}
+        project={gParams.project}
         handleBulkAddAttributes={handleBulkAddAttributes}
         handleBulkRemoveAttributes={handleBulkRemoveAttributes}
         handleLockAllTestCases={handleLockAllTestCases}
@@ -622,7 +633,7 @@ export default function TestCases() {
           aria-hidden="true"
         >
           <TestCaseForm
-            project={project}
+            project={gParams.project}
             testcase={testcaseToEdit}
             projectAttributes={projectAttributes}
             onTestCaseAdded={onTestCaseAdded}
@@ -654,7 +665,7 @@ export default function TestCases() {
         <div className="testcase-side">
           {selectedTestCase?.id && (
             <TestCase
-              projectId={project}
+              projectId={gParams.project}
               projectAttributes={projectAttributes}
               testcaseId={selectedTestCase.id}
             />

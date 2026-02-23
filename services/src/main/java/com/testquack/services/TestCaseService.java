@@ -63,7 +63,9 @@ public class TestCaseService extends BaseService<TestCase> {
     private EventService eventService;
 
     @Override
-    protected CommonRepository<TestCase> getRepository() {
+    protected CommonRepository<TestCase> getRepository()
+    {
+	System.out.println("TestCaseService::getRepo - " + repository);
         return repository;
     }
 

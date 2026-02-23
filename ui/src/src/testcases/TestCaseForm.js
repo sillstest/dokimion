@@ -7,7 +7,7 @@ import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
-function TestCaseForm({ testcase: initialTestcase, projectAttributes: initialProjectAttributes, onTestCaseAdded, id }) {
+function TestCaseForm({ testcase: initialTestcase, projectAttributes: initialProjectAttributes, onTestCaseAdded }) {
   const params = useParams();
   
   const [testcase, setTestcase] = useState(initialTestcase || { name: "", description: "", attributes: {} });
@@ -40,16 +40,14 @@ function TestCaseForm({ testcase: initialTestcase, projectAttributes: initialPro
       setProjectAttributes(initialProjectAttributes);
     }
     
-    if (id) {
-      Backend.get(params.project + "/testcase/" + id)
-        .then(response => {
-          setTestcase(response);
-        })
-        .catch(error => console.log(error));
-    }
+    Backend.get(params.project + "/testcase/" + testcase.id)
+      .then(response => {
+        setTestcase(response);
+      })
+      .catch(error => console.log(error));
     
     loadDefaultProjectAttributes();
-  }, [id, params.project]);
+  }, [params.project]);
 
   // Handle props changes
   useEffect(() => {

@@ -86,7 +86,11 @@ if (entity instanceof Project) {
       System.out.flush();
    }
 }
+System.out.println("CommonRepositoryImpl::save - prior to mongoOperations call");
+System.out.flush();
         mongoOperations.save(entity, getCollectionName(organizationId, projectId));
+System.out.println("CommonRepositoryImpl::save - after mongoOperations call: entity: " + entity);
+System.out.flush();
         return entity;
     }
 
