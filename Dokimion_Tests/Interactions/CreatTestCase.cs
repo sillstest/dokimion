@@ -23,6 +23,7 @@ namespace Dokimion.Interactions
         {
             UserActions userActions = new UserActions();
             userActions.LogConsoleMessage("Click on the Testcases on header");
+            actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 60);
             actor.AttemptsTo(Click.On(Header.TestCases));
 
             userActions.LogConsoleMessage("Click on the '+' to Add Test cases");
