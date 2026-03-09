@@ -1,0 +1,24 @@
+HOW TO GET CHANGES FROM PRODUCTION
+----------------------------------
+
+1. cp load_balancer.conf from dokimion.psont:/etc/nginx/sites-available/load_balancer.conf
+
+2. change testing.languagetechnology to test_staging.languagetechnology
+
+3. change prod_server to stage_server
+
+STATUS
+------
+
+1. Done - tested steps 1-3 from above
+2. Done - removed OCSP stapling since cloudflare supplies it
+3. Done - tested
+
+TBD
+1. cp dokimion/config/staging/s-dokimion/load_balancer.conf to 
+dokimion.psonet:/etc/nginx/sites-available/load_balancer.conf
+
+2. Test manually
+
+3. Put updated config file in git
+
