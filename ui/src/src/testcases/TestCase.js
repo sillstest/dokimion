@@ -1333,45 +1333,46 @@ console.log("TestCase::removeTestCase");
           </div>
         </div>
 
-        <div className="row">
+        <div className="row" style={{position: "relative"}}>
           <div className="col-md-6"></div>
-          {!this.state.readonly && (Utils.isAdmin(this.state.session) && !this.state.testcase.locked) && (
-            <ConfirmButton
-             onSubmit={this.lockTestcase}
-             buttonClass={"btn btn-danger float-left"}
-             id={"testcase-lock"}
-             modalText={"Are you sure you want to lock this test case?"}
-             buttonText={"Lock Testcase"}
-            />
-          )}
+            <div style={{marginLeft: "auto", display: "flex", alignItems: "center", marginRight: "10px"}}>
+              {!this.state.readonly && (Utils.isAdmin(this.state.session) && !this.state.testcase.locked) && (
+	        <div style={{marginRight: "10px"}}>
+                  <ConfirmButton
+                   onSubmit={this.lockTestcase}
+                   buttonClass={"btn btn-danger"}
+                   id={"testcase-lock"}
+                   modalText={"Are you sure you want to lock this test case?"}
+                   buttonText={"Lock Testcase"}
+                  />
+	        </div>
+              )}
 
-          {!this.state.readonly && (Utils.isAdmin(this.state.session) && this.state.testcase.locked) && (
-            <ConfirmButton
-              onSubmit={this.unlockTestcase}
-              buttonClass={"btn btn-danger float-left"}
-              id={"testcase-unlock"}
-              modalText={"Are you sure you want to unlock this test case?"}
-              buttonText={"Unlock Testcase"}
-             />
-          )}
-
-          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+              {!this.state.readonly && (Utils.isAdmin(this.state.session) && this.state.testcase.locked) && (
+	        <div style={{marginRight: "10px"}}>
+                  <ConfirmButton
+                   onSubmit={this.unlockTestcase}
+                   buttonClass={"btn btn-danger"}
+                   id={"testcase-unlock"}
+                   modalText={"Are you sure you want to unlock this test case?"}
+                   buttonText={"Unlock Testcase"}
+                  />
+	        </div>
+              )}
 
 
           {!this.state.readonly && (
             <ConfirmButton
              onSubmit={this.removeTestcase}
-             buttonClass={"btn btn-danger float-right"}
+             buttonClass={"btn btn-danger"}
              id={"testcase-removal"}
              modalText={"Are you sure you want to remove the Test Case?"}
              buttonText={"Remove Testcase"}
-           />
+            />
           )}
+	  </div>
          </div>
         </div>
-
-
-
     );
   }
 }
