@@ -685,7 +685,7 @@ console.log("TestCase::removeTestCase");
                      </div>
                    </div>
                  )}
-                {!this.state.readonly && (
+                {!this.state.readonly && this.state.testcase.launchStatus !== undefined && (
                   <div className="col-2">
                     <Checkbox
                       toggle
