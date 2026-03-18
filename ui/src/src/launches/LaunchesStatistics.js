@@ -15,22 +15,6 @@ class LaunchesStatistics extends SubComponent {
   render() {
     return (
       <div>
-        <ul class="nav nav-tabs" id="tcTabs" role="tablist">
-          <li class="nav-item">
-            <a
-              class="nav-link active"
-              id="overview-tab"
-              data-toggle="tab"
-              href="#overview"
-              role="tab"
-              aria-controls="overview"
-              aria-selected="true"
-            >
-              Overview
-            </a>
-          </li>
-        </ul>
-
         <div className="tab-content" id="tcTabContent">
           <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
             <LaunchesStatisticsOverview />
