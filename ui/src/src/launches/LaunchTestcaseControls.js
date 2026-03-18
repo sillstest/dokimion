@@ -95,12 +95,16 @@ class LaunchTestcaseControls extends Component {
     if (indicator == "FAILUREDETAILS") {
       return (
         <div>
-          <button class={this.getStatusAlertClass()} role="alert">
-            {this.state.testcase.launchStatus}
-          </button>
-          <button type="button" class="btn" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
+          {this.state.testcase.launchStatus !== undefined && (
+            <span>
+              <button class={this.getStatusAlertClass()} role="alert">
+                {this.state.testcase.launchStatus}
+              </button>
+              <button type="button" class="btn" onClick={e => this.handleStatusSubmit("RUNNABLE", e)}>
 	        X
-          </button>
+              </button>
+            </span>
+	  )}
         </div>
       );
     }
