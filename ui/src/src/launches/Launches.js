@@ -233,6 +233,9 @@ class Launches extends SubComponent {
                 Find by partly matching Launch title
               </small>
             </div>
+	    <button type="submit" class="btn btn-primary" onClick={this.onFilter}>
+              Filter
+            </button>
           </form>
         </div>
         <div className="col-sm-9">
