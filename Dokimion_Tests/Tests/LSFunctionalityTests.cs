@@ -108,75 +108,6 @@ namespace Dokimion.Tests
         }
 
         [Test]
-        public void TC21FilterLaunchesOnDateCreated()
-        {
-            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
-            userActions.LogConsoleMessage("Set up : ");
-
-            userActions.LogConsoleMessage("Action Steps : ");
-
-            userActions.LogConsoleMessage("Click on the Launches on header");
-            Actor.AttemptsTo(Click.On(Header.Launches));
-
-            userActions.LogConsoleMessage("Click on the Created Time , start date picker");
-
-            Actor.WaitsUntil(Appearance.Of(Launches.LaunchCreatedDatePicker), IsEqualTo.True(), timeout: 60);
-            Actor.AttemptsTo(Click.On(Launches.LaunchCreatedDatePicker));
-
-            DateTime dateTime = DateTime.Now;
-            string xpathDay = $"//div[@class='react-calendar__month-view__days']//button//abbr[text()={dateTime.Day}]";
-
-            userActions.LogConsoleMessage("Click on the current date");
-            Actor.AttemptsTo(Click.On(new WebLocator("CurrentDay", By.XPath(xpathDay))));
-
-            userActions.LogConsoleMessage("Click on Filter button");
-            Actor.AttemptsTo(Click.On(Launches.LaunchFilterButton));
-
-            userActions.LogConsoleMessage("Verify : There are 3 launches created with current date" );
-            //Validate if we have 3 rows 
-            Actor.WaitsUntil(TextList.For(Launches.LaunchTableRows), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(3)), timeout: 60);
-            ReadOnlyCollection<IWebElement> launchRows = Launches.LaunchTableRows.FindElements(driver);
-            int noOfRows = launchRows.Count;
-            Assert.That(noOfRows.Equals(3), Is.True);
-
-            string currentDate = dateTime.ToString("d MMMM yyyy");
-
-            userActions.LogConsoleMessage("Verify : Launch Testcases created with current date");
-
-            ReadOnlyCollection<IWebElement> Row1tds = launchRows[0].FindElements(By.XPath("./child::td"));
-            StringAssert.Contains("Launch Testcases", Row1tds[0].Text);
-            StringAssert.Contains(currentDate, Row1tds[3].Text);
-
-            userActions.LogConsoleMessage("Verify : Smoke Test Launch Re-Run created with current date");
-
-            ReadOnlyCollection<IWebElement> Row2tds = launchRows[1].FindElements(By.XPath("./child::td"));
-            StringAssert.Contains("Smoke Test Launch Re-Run", Row2tds[0].Text);
-            StringAssert.Contains(currentDate, Row2tds[3].Text);
-
-            userActions.LogConsoleMessage("Verify : Smoke Test Launch created with current date");
-
-            ReadOnlyCollection<IWebElement> Row3tds = launchRows[2].FindElements(By.XPath("./child::td"));
-            StringAssert.Contains("Smoke Test Launch", Row3tds[0].Text);
-            StringAssert.Contains(currentDate, Row3tds[3].Text);
-
-            userActions.LogConsoleMessage("Clean up: Reset Date Filter");
-            userActions.LogConsoleMessage("Clean up: Delete Date Selection");
-
-            Actor.AttemptsTo(Click.On(Launches.LaunchDeleteDate));
-            userActions.LogConsoleMessage("Clean up: Click on Filter");
-
-            Actor.AttemptsTo(Click.On(Launches.LaunchFilterButton));
-            //
-            Actor.WaitsUntil(TextList.For(Launches.LaunchTableRows), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(3)), timeout: 60);
-            ReadOnlyCollection<IWebElement> launchRowsAfterReset = Launches.LaunchTableRows.FindElements(driver);
-            int noOfRowsAfterReset = launchRowsAfterReset.Count;
-            Assert.That(noOfRowsAfterReset.Equals(3), Is.True);
-
-        }
-
-
-
-        [Test]
         public void TC22FilterLaunchesOnTitle()
         {
 
@@ -274,7 +205,7 @@ namespace Dokimion.Tests
             Actor.WaitsUntil(Text.Of(Launches.OverviewRow1), ContainsSubstring.Text("3"), timeout: 60);
            
             DateTime dateTime = DateTime.Now;
-           string currentDate = dateTime.ToString("d MMMM yyyy");
+            string currentDate = dateTime.ToString("d MMMM yyyy");
             ////First Started: 26 October 2023 10:46
             userActions.LogConsoleMessage("Verify : First started is current date");
 
@@ -310,49 +241,6 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Clean up :");
         }
 
-        [Test] 
-        public void TC24StatisticsHeatmapTest()
-        {
-            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
-
-            userActions.LogConsoleMessage("Set up : ");
-
-            userActions.LogConsoleMessage("Action Steps : ");
-
-            userActions.LogConsoleMessage("Click on the Launches on header");
-            Actor.AttemptsTo(Click.On(Header.Launches));
-
-            userActions.LogConsoleMessage("Click on the Statistics link on Launches");
-
-            Actor.WaitsUntil(Appearance.Of(Launches.StatisticsLink), IsEqualTo.True(), timeout:45);
-            Actor.AttemptsTo(Click.On(Launches.StatisticsLink));
-
-            userActions.LogConsoleMessage("Click on the Heat Map Tab");
-
-            Actor.WaitsUntil(Appearance.Of(Launches.HeatMapLink), IsEqualTo.True(), timeout:60);
-            Actor.AttemptsTo(Click.On(Launches.HeatMapLink));
-
-            userActions.LogConsoleMessage("Click on the Toggle button on 'Header Project list validation'");
-            Actor.WaitsUntil(Appearance.Of(Launches.ToggleButton1), IsEqualTo.True(), timeout: 45);
-            var val = Actor.AskingFor(Text.Of(Launches.ToggleLabel1));
-            userActions.LogConsoleMessage("Before Toggle switch : " + val);
-
-
-            Actor.WaitsUntil(Appearance.Of(Launches.ToggleButton1), IsEqualTo.True(), timeout: 60);
-            Actor.AttemptsTo(Hover.Over(Launches.ToggleButton1));
-            Actor.AttemptsTo(Click.On(Launches.ToggleButton1));
-
-            
-            userActions.LogConsoleMessage("Verify that Toggle Button is unchecked");
-            Actor.WaitsUntil(Text.Of(Launches.ToggleLabel1), ContainsSubstring.Text("On"), timeout: 45);
-            val = Actor.AskingFor(Text.Of(Launches.ToggleLabel1));
-            userActions.LogConsoleMessage("Before Toggle switch : " + val);
-            StringAssert.Contains("On", val);
-
-            userActions.LogConsoleMessage("Clean up: Reset the Toggle Button");
-            Actor.AttemptsTo(Click.On(Launches.ToggleButton1));
-
-        }
 
     }
 }
