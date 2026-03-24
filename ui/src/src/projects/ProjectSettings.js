@@ -327,70 +327,12 @@ class ProjectSettings extends SubComponent {
         </div>
         )}
 
-        <div className="project-settings-section">
-          <h3>Launchers</h3>
-          <form>
-            <div className="row form-group">
-              <label className="col-1 col-form-label">Environments</label>
-              <div className="col-6">
-                <CreatableSelect
-                  value={(this.state.project.environments || []).map(function (val) {
-                    return { value: val, label: val };
-                  })}
-                  isMulti
-                  isClearable
-                  cacheOptions
-                  onChange={this.changeEnvironments}
-                  options={[]}
-                />
-              </div>
-            </div>
-          </form>
-
-          <div className="row project-settings-launchers">
-            {(this.state.project.launcherConfigs || []).map(
-              function (config, i) {
-                return (
-                  <div className="card col-6">
-                    <div className="card-header row">
-                      <div className="col-11">{config.name || ""}</div>
-                      <div className="col-1">
-                        <span className="float-right clickable edit-icon-visible red">
-                          <FontAwesomeIcon
-                            icon={faMinusCircle}
-                            index={i}
-                            onClick={e => this.removeLauncherConfirmation(i)}
-                          />
-                        </span>
-                      </div>
-                    </div>
-                    <div className="card-body">
-                      <LauncherForm
-                        launcherDescriptors={this.state.launcherDescriptors}
-                        selectableType={true}
-                        launcherConfig={config}
-                        configIndex={i}
-                        handleLauncherChange={this.handleLauncherChange}
-                      />
-                    </div>
-                  </div>
-                );
-              }.bind(this),
-            )}
-          </div>
-          <div className="row project-settings-launchers">
-            <button type="button" className="btn btn-primary" onClick={this.addLauncher}>
-              Add Launcher
-            </button>
-          </div>
-        </div>
-
         <div className="project-settings-control row">
-          <div className="col-10">
+          <div className="col-1">
             <button type="button" className="btn btn-success" onClick={this.submit}>
               Save
             </button>
-          </div>
+	  </div>
           <div className="col-2">
             <button
               type="button"
@@ -422,32 +364,6 @@ class ProjectSettings extends SubComponent {
                     Remove Project
                   </button>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="modal fade" tabIndex="-1" role="dialog" id="remove-launcher-confirmation">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Remove Launcher</h5>
-                <button
-                  type="button"
-                  className="close"
-                  onClick={this.cancelRemoveLauncherConfirmation}
-                  aria-label="Close"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">Are you sure you want to remove Launcher?</div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={this.cancelRemoveLauncherConfirmation}>
-                  Close
-                </button>
-                <button type="button" className="btn btn-danger" onClick={this.removeLauncher}>
-                  Remove Launcher
-                </button>
               </div>
             </div>
           </div>
