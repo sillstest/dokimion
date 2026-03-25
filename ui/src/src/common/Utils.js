@@ -79,7 +79,7 @@ export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes,
       i += 1;
 
       resultNode.children.push({
-        text: getSizeOfTestcase(tcSizes, testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + launchSuffix + "<span class='text-muted'> (" + testCase.id + ")</span>",
+        text: getSizeOfTestcase(tcSizes, testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + launchSuffix + "<span> (" + testCase.id + ")</span>",
         id: testCase.id,
         uuid: testCase.uuid,
         isLeaf: true,
