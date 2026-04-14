@@ -43,22 +43,6 @@ class Login extends Component {
   handleSubmit(event) {
 
       let recaptcha = "";
-      if (process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) {
-        // no automated test - send reacaptcha string to back end
-        recaptcha = this.state.recaptcha;
-
-        if (this.state.recaptcha === "") {
-          alert("Enter recaptcha");
-	  return;
-        }
-
-      } else {
-        // automated test - send recaptcha string = "" to back end
-        recaptcha = "";
-      }
-
-      this.state.recaptcha = "";
-      this.setState(this.state);
 
       Backend.postPlain("user/login?login=" + this.state.login + "&password=" + this.state.password + "&recaptcha=" + recaptcha)
         .then(response => {
@@ -111,12 +95,6 @@ class Login extends Component {
             required=""
             onChange={this.handleChange}
           />
-	  {(process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) && (
-	  <ReCAPTCHA
-	   sitekey={process.env.REACT_APP_SITE_KEY}
-	   onChange={this.handleRecaptcha}
-	  />
-	  )}
           <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
             Sign in
           </button>

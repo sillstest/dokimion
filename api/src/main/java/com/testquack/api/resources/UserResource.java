@@ -169,9 +169,11 @@ System.out.println("UserResource::delete - rc: " + rc);
        }
        
 
+       /*
        if (sendVerifyRecaptchaMessage(recaptcha) == false) {
             return Response.serverError().entity("sendEmail - Invalid ReCaptcha").build();
        }
+       */
 
 
        Duration deltaTime = Duration.ZERO;
@@ -332,9 +334,11 @@ System.out.flush();
 System.out.println("session ok returned from doAuth");
 System.out.flush();
 
+/*
     if (sendVerifyRecaptchaMessage(recaptcha) == false) {
         return null;
     }
+*/
 
 
 System.out.println("UserResource::login - session: " + session);
