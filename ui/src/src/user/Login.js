@@ -4,7 +4,6 @@ import qs from "qs";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import TextField from '@material-ui/core/TextField';
-import ReCAPTCHA from "react-google-recaptcha";
 import { LinkButtons, forgotButton } from './components';
 import ControlledPopup from '../common/ControlledPopup';
 
@@ -15,19 +14,11 @@ class Login extends Component {
       login: "",
       password: "",
       errorMessage:"",
-      recaptcha: "",
     };
 
     this.handleChange = this.handleChange.bind(this);
-    this.handleRecaptcha = this.handleRecaptcha.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onSessionChange = this.onSessionChange.bind(this);
-  }
-
-  handleRecaptcha(value) {
-    if (value) {
-      this.state.recaptcha = value;
-    }
   }
 
   onSessionChange(session) {
@@ -42,9 +33,7 @@ class Login extends Component {
 
   handleSubmit(event) {
 
-      let recaptcha = "";
-
-      Backend.postPlain("user/login?login=" + this.state.login + "&password=" + this.state.password + "&recaptcha=" + recaptcha)
+      Backend.postPlain("user/login?login=" + this.state.login + "&password=" + this.state.password)
         .then(response => {
           this.onSessionChange(response);
 	  if (response.ok == false) {
