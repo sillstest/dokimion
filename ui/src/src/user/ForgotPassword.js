@@ -5,7 +5,6 @@ import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
 import qs from "qs";
 import TextField from '@material-ui/core/TextField';
-import ReCAPTCHA from "react-google-recaptcha";
 
 class ForgotPassword extends Component {
 	constructor(props) {
@@ -14,18 +13,10 @@ class ForgotPassword extends Component {
              login: "",
 	     email: "",
              message: "",
-             recaptcha: "",
 	   };
            this.handleChange = this.handleChange.bind(this);
-           this.handleRecaptcha = this.handleRecaptcha.bind(this);
 	   this.handleSubmit = this.handleSubmit.bind(this);
 	}
-
-	handleRecaptcha(value) {
-	  if (value) {
-	    this.state.recaptcha = value;
-          }
-        }
 
 	handleChange(event) {
            this.state[event.target.name] = event.target.value;
@@ -34,27 +25,9 @@ class ForgotPassword extends Component {
 
 	handleSubmit(event) {
 
-          let recaptcha = "";
-          if (process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) {
-            // no automated test - send reacaptcha string to back end
-            recaptcha = this.state.recaptcha;
-
-            if (this.state.recaptcha === "") {
-              alert("Enter recaptcha");
-              return;
-            }
-
-          } else {
-            // automated test - send recaptcha string = "" to back end
-            recaptcha = "";
-          }
-
-          this.state.recaptcha = "";
-          this.setState(this.state);
-
 	  const { login } = this.state;
 
-          Backend.postPlain("user/forgot_password?login=" + login + "&recaptcha=" + recaptcha)
+          Backend.postPlain("user/forgot_password?login=" + login)
            .then(response => {
 	      this.setState({message: "Success: Sent temporary password email for login"});
 	      window.location = decodeURI("/");
@@ -85,12 +58,6 @@ class ForgotPassword extends Component {
 		  autofocus=""
 		  onChange={this.handleChange}
 	        />
-		{(process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) && (
-		<ReCAPTCHA
-		 sitekey={process.env.REACT_APP_SITE_KEY}
-		 onChange={this.handleRecaptcha}
-		/>
-		)}
                 <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
 	          Send Email with Temporary Password
 		</button>
