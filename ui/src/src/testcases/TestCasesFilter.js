@@ -2,7 +2,7 @@
 /* eslint-disable react/no-direct-mutation-state */
 import React, { Component } from "react";
 import LaunchForm from "../launches/LaunchForm";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import Select from "react-select";
 import qs from "qs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

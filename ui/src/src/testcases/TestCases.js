@@ -1,4 +1,5 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
+import { withRouter } from "../common/withRouter";
 /* eslint-disable eqeqeq */
 import React from "react";
 import SubComponent from "../common/SubComponent";
@@ -664,7 +665,7 @@ handleUnLockAllTestCases(){
             </div>
         </div>
         <div className="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
         <div className="grid_container">
           <div className="tree-side">
@@ -692,4 +693,4 @@ handleUnLockAllTestCases(){
   }
 }
 
-export default TestCases;
+export default withRouter(TestCases);

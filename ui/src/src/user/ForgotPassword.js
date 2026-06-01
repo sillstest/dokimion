@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 import React, { Component } from 'react';
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import Backend from "../services/backend";
 import ControlledPopup from '../common/ControlledPopup';
 import qs from "qs";
-import TextField from '@material-ui/core/TextField';
+import TextField from '@mui/material/TextField';
 
 class ForgotPassword extends Component {
 	constructor(props) {

@@ -1,5 +1,5 @@
 import React from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import SubComponent from "../common/SubComponent";
 import LaunchesTrendWidget from "../launches/LaunchesTrendWidget";
 import LaunchesByStatusesPieWidget from "../launches/LaunchesByStatusesPieWidget";
@@ -52,7 +52,7 @@ class LaunchesStatisticsOverview extends SubComponent {
       <div>
         <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
         <div className="row">
           <div className="col-6">

@@ -130,7 +130,7 @@ class LaunchesByStatusesPieWidget extends SubComponent {
         <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div id="pie-by-statuses"></div>
         <div id="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
       </div>
     );

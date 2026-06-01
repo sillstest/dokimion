@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";

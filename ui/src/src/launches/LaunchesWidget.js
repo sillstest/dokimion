@@ -87,7 +87,7 @@ class LaunchesWidget extends SubComponent {
     return (
       <div>
         <div className="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
         <table className="table table-striped">
           <thead>

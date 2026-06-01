@@ -1,4 +1,5 @@
 import React from "react";
+import { withRouter } from "../common/withRouter";
 import SubComponent from "../common/SubComponent";
 import TestSuitesWidget from "../testsuites/TestSuitesWidget";
 import ProjectScratchpadWidget from "../projects/ProjectScratchpadWidget";
@@ -138,4 +139,4 @@ class Project extends SubComponent {
   }
 }
 
-export default Project;
+export default withRouter(Project);

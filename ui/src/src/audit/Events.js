@@ -1,4 +1,5 @@
 /* eslint-disable eqeqeq */
+import { withRouter } from "../common/withRouter";
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import Pager from "../pager/Pager";
@@ -163,13 +164,11 @@ class Events extends SubComponent {
                   id="from_createdTime"
                   value={Utils.getDatepickerTime(this.state.filter.from_createdTime)}
                   onChange={this.handleFromDateFilterChange}
-                  placeholder="Event after"
                 />
                 <DatePicker
                   id="to_createdTime"
                   value={Utils.getDatepickerTime(this.state.filter.to_createdTime)}
                   onChange={this.handleToDateFilterChange}
-                  placeholder="Event before"
                 />
               </div>
             </div>
@@ -241,7 +240,7 @@ class Events extends SubComponent {
 
         <div className="col-sm-9">
           <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+            <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
           <table class="table">
             <thead>
@@ -286,4 +285,4 @@ class Events extends SubComponent {
   }
 }
 
-export default Events;
+export default withRouter(Events);

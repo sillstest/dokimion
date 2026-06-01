@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import qs from "qs";
 import Backend from "../services/backend";
 import { Link } from "react-router-dom";

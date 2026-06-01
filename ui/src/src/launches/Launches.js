@@ -1,16 +1,16 @@
 /* eslint-disable eqeqeq */
+import { withRouter } from "../common/withRouter";
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import Pager from "../pager/Pager";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
-import Button from "@material-ui/core/Button";
+import Button from "@mui/material/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faPlug } from "@fortawesome/free-solid-svg-icons";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
-import DatePicker from "react-date-picker";
 
 class Launches extends SubComponent {
   state = {
@@ -240,7 +240,7 @@ class Launches extends SubComponent {
         </div>
         <div className="col-sm-9">
           <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+            <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
           <table class="table table-striped">
             <thead>
@@ -297,4 +297,4 @@ class Launches extends SubComponent {
   }
 }
 
-export default Launches;
+export default withRouter(Launches);

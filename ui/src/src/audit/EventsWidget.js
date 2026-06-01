@@ -48,7 +48,7 @@ class EventsWidget extends Component {
         <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="col-sm-9">
           <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+            <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
           <table className="table">
             <thead>

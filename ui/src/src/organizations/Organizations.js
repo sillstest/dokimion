@@ -38,7 +38,7 @@ class Organizations extends Component {
       <div className="container">
         <ControlledPopup popupMessage={this.state.errorMessage}/>
         <div className="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
         {this.state.organizations.map(function (organization) {
           return (

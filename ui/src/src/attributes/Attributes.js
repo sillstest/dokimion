@@ -1,4 +1,5 @@
 import React from "react";
+import { withRouter } from "../common/withRouter";
 import SubComponent from "../common/SubComponent";
 import AttributeForm from "../attributes/AttributeForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -74,7 +75,7 @@ class Attributes extends SubComponent {
     return (
       <div>
         <div className="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
         {this.state.attributes.map(
           function (attribute, i) {
@@ -122,4 +123,4 @@ class Attributes extends SubComponent {
   }
 }
 
-export default Attributes;
+export default withRouter(Attributes);

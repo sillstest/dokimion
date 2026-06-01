@@ -92,13 +92,31 @@
 
 ---
 
-## Phase 4 — Upgrade Blocking Libraries
+## Phase 4 — Upgrade Blocking Libraries ✅ COMPLETED 2026-06-01
 
-**Step 4.1** — Upgrade `react-router-dom` v4 → v6. Update all `<Switch>`, `<Route>`, and history/navigation patterns in `App.js` and router-aware components.
+**Step 4.1** ✅ — `react-router-dom` v4 → v6:
+- Created `src/common/withRouter.js` compat shim — provides v4-shaped `history`/`match`/`location` props via v6 hooks so all 23 class components needed zero changes
+- Rewrote `Main.js`: `<Switch>` → `<Routes>`, `component=` → `element=`, stripped `{...props}` render-prop spreads, added `ChangeProfileRedirectRoute` wrapper for the one dynamic-param redirect
+- Updated all `import { withRouter } from "react-router"` → local shim (sed sweep)
 
-**Step 4.2** — Upgrade `@material-ui/core` v4 → `@mui/material` v5. Rename all imports (`@material-ui/core/...` → `@mui/material/...`), update theme/style API. One sweep + fix compile errors.
+**Step 4.2** ✅ — `@material-ui/core` v4 → `@mui/material` v5:
+- Added `@emotion/react` and `@emotion/styled` peer deps
+- Replaced all `@material-ui/core/X` imports with `@mui/material/X` in 6 files (sed sweep)
 
-**Step 4.3** — Upgrade other flagged libraries from Step 1.1 one at a time. Test after each.
+**Step 4.3** ✅ — Other libraries:
+- Removed dead: `react-highcharts` (unused), `react-axios` (unused)
+- `@fortawesome/*` 1.x/5.x/0.1.x → 6.x/6.x/0.2.x (no code changes needed)
+- `react-spinners` 0.5 → 0.13: removed `sizeUnit` prop from 21 FadeLoader usages
+- `highcharts-react-official` 2 → 3; added `highcharts` 12.x as explicit dep
+- `react-select` 2 → 5: updated deep import paths (`lib/Creatable` → `creatable`, `lib/Async` → `async`) in 10 files
+- `react-date-picker` 7 → 10; `semantic-ui-react` 0.88 → 2.1.5; `semantic-ui-css` 2.4 → 2.5
+- `react-helmet` → `react-helmet-async`: updated Header.js import; added `<HelmetProvider>` wrapper in index.js
+- `react-date-picker` v10: added `DatePicker.css` + `Calendar.css` imports to `index.js`; removed dropped `placeholder` prop from 2 DatePickers in `Events.js`; removed unused import from `Launches.js`
+- `yarn build` succeeded: `Compiled with warnings` — all pre-existing formatting warnings, no new errors
+
+**Post-Phase-4 runtime fixes (found during testing):**
+- 7 route-level components were missing `withRouter` — they previously received `match`/`history`/`location` via the v4 `{...props}` render-prop spread which we removed. Fixed by adding `withRouter` export to: `Project.js`, `ProjectSettings.js`, `TestCases.js`, `TestSuites.js`, `Launches.js`, `Attributes.js`, `Events.js`
+- Guarded `SubComponent.componentDidMount` against `this.props.match` being undefined as a safety net
 
 ---
 

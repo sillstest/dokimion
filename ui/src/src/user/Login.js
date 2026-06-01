@@ -1,9 +1,9 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import qs from "qs";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
-import TextField from '@material-ui/core/TextField';
+import TextField from '@mui/material/TextField';
 import { LinkButtons, forgotButton } from './components';
 import ControlledPopup from '../common/ControlledPopup';
 

@@ -7,13 +7,13 @@ import Results from "../testcases/Results";
 import Comments from "../comments/Comments";
 import EventsWidget from "../audit/EventsWidget";
 import { Link } from "react-router-dom";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import $ from "jquery";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
-import CreatableSelect from "react-select/lib/Creatable";
+import CreatableSelect from "react-select/creatable";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
@@ -658,7 +658,7 @@ console.log("TestCase::removeTestCase");
 
         <div className="tab-content" id="tcTabContent">
           <div className="sweet-loading">
-            <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+            <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
           </div>
           <div className="tab-pane fade show active" id="main" role="tabpanel" aria-labelledby="main-tab">
             <div id="name" className="testcase-section">

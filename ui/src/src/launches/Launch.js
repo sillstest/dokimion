@@ -1,6 +1,6 @@
 /* eslint-disable eqeqeq */
 import React from "react";
-import { withRouter } from "react-router";
+import { withRouter } from "../common/withRouter";
 import SubComponent from "../common/SubComponent";
 import TestCase from "../testcases/TestCase";
 import LaunchAttributeStatsChart from "../launches/LaunchAttributeStatsChart";
@@ -536,7 +536,7 @@ class Launch extends SubComponent {
         </div>
         <br/>
         <div className="sweet-loading">
-          <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
         </div>
         <div className="grid_container">
           <div className="tree-side">

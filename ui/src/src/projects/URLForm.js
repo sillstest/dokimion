@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
-import CreatableSelect from "react-select/lib/Creatable";
+import CreatableSelect from "react-select/creatable";
 import * as Utils from "../common/Utils";
 import equal from "fast-deep-equal";
 

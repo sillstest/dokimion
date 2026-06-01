@@ -2,8 +2,8 @@
 import React from "react";
 import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
-import { withRouter } from "react-router";
-import CreatableSelect from "react-select/lib/Creatable";
+import { withRouter } from "../common/withRouter";
+import CreatableSelect from "react-select/creatable";
 import LauncherForm from "../launches/LauncherForm";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
@@ -385,7 +385,7 @@ class LaunchForm extends SubComponent {
 
           {this.state.loading && (
             <div className="sweet-loading launch-form-spinner">
-              <FadeLoader sizeUnit={"px"} size={100} color={"#135f38"} loading={this.state.loading} />
+              <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
             </div>
           )}
 
