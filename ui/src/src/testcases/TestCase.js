@@ -121,6 +121,7 @@ class TestCase extends SubComponent {
     }
     if (this.props.testcase) {
       this.state.testcase = this.props.testcase;
+      this.projectId = this.props.projectId;
     } else if (this.props.testcaseId) {
       this.projectId = this.props.projectId;
       this.getTestCase(this.props.projectId, this.props.testcaseId);
@@ -150,30 +151,37 @@ class TestCase extends SubComponent {
   }
 
 
-  componentWillReceiveProps(nextProps, nextState) {
-    if (nextProps.testcase) {
-      this.state.testcase = nextProps.testcase;
-      this.state.loading = false;
-      this.state.testDeveloper = nextProps.testDeveloper;
-    } else if (nextProps.testcaseId) {
-      this.projectId = nextProps.projectId;
-      //Need to reset the readonly flag for changes between TCS
-      this.state.readonly=false;
-      this.getTestCase(nextProps.projectId, nextProps.testcaseId);
+  componentDidUpdate(prevProps) {
+    const testcaseChanged = prevProps.testcase !== this.props.testcase || prevProps.testcaseId !== this.props.testcaseId;
+    const attribsChanged = prevProps.projectAttributes !== this.props.projectAttributes;
+    const launchChanged = prevProps.launchId !== this.props.launchId || prevProps.projectId !== this.props.projectId;
+
+    if (testcaseChanged) {
+      if (this.props.testcase) {
+        this.state.testcase = this.props.testcase;
+        this.state.loading = false;
+        this.state.testDeveloper = this.props.testDeveloper;
+      } else if (this.props.testcaseId) {
+        this.projectId = this.props.projectId;
+        //Need to reset the readonly flag for changes between TCS
+        this.state.readonly = false;
+        this.getTestCase(this.props.projectId, this.props.testcaseId);
+      }
     }
-    if (nextProps.projectAttributes) {
-      this.state.projectAttributes = nextProps.projectAttributes;
-    } else {
-      this.getAttributes();
+    if (attribsChanged) {
+      if (this.props.projectAttributes) {
+        this.state.projectAttributes = this.props.projectAttributes;
+      } else {
+        this.getAttributes();
+      }
     }
-    if (nextProps.launchId) {
-      this.state.launchId = nextProps.launchId;
+    if (launchChanged) {
+      if (this.props.launchId) this.state.launchId = this.props.launchId;
+      if (this.props.projectId) this.projectId = this.props.projectId;
     }
-    if (nextProps.projectId) {
-      this.projectId = nextProps.projectId;
+    if (testcaseChanged || attribsChanged || launchChanged) {
+      this.setState(this.state);
     }
-    
-    this.setState(this.state);
   }
 
   onTestcaseUpdated(count) {

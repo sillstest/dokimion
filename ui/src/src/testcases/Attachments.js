@@ -34,29 +34,28 @@ class Attachments extends SubComponent {
     this.cancelRemoveAttachmentConfirmation = this.cancelRemoveAttachmentConfirmation.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.testcase) {
-      this.state.testcase = nextProps.testcase;
-    }
-    if (nextProps.projectId) {
-      this.state.projectId = nextProps.projectId;
-    }
-    this.state.readonly = nextProps.readonly;
-
-    this.setState(this.state);
-    if (this.state.projectId && this.state.testcase.id && this.state.testcase.id != null) {
-      $("#file-data").fileinput('destroy');
-      $("#file-data").fileinput({
-        previewFileType: "any",
-        uploadUrl: getApiBaseUrl(this.state.projectId + "/testcase/" + this.state.testcase.id + "/attachment"),
-        maxFileSize: 100000
-      });
-      $("#file-data").on(
-        "fileuploaded",
-        function (event, file, previewId, index) {
-            this.onTestcaseUpdated();
-        }.bind(this),
-      );
+  componentDidUpdate(prevProps) {
+    if (prevProps.testcase !== this.props.testcase ||
+        prevProps.projectId !== this.props.projectId ||
+        prevProps.readonly !== this.props.readonly) {
+      if (this.props.testcase) this.state.testcase = this.props.testcase;
+      if (this.props.projectId) this.state.projectId = this.props.projectId;
+      this.state.readonly = this.props.readonly;
+      this.setState(this.state);
+      if (this.state.projectId && this.state.testcase.id && this.state.testcase.id != null) {
+        $("#file-data").fileinput('destroy');
+        $("#file-data").fileinput({
+          previewFileType: "any",
+          uploadUrl: getApiBaseUrl(this.state.projectId + "/testcase/" + this.state.testcase.id + "/attachment"),
+          maxFileSize: 100000
+        });
+        $("#file-data").on(
+          "fileuploaded",
+          function (event, file, previewId, index) {
+              this.onTestcaseUpdated();
+          }.bind(this),
+        );
+      }
     }
   }
 

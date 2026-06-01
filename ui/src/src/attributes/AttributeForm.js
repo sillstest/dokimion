@@ -42,10 +42,14 @@ class AttributeForm extends Component {
       .catch(() => {console.log("Unable to fetch session");});
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.setState({ attribute: nextProps.attribute, 
-      projectAttributes:nextProps.projectAttributes, 
-      edit: nextProps.edit});
+  componentDidUpdate(prevProps) {
+    if (prevProps.attribute !== this.props.attribute ||
+        prevProps.projectAttributes !== this.props.projectAttributes ||
+        prevProps.edit !== this.props.edit) {
+      this.setState({ attribute: this.props.attribute,
+        projectAttributes: this.props.projectAttributes,
+        edit: this.props.edit });
+    }
   }
 
   handleAttributeTypeChange(event) {

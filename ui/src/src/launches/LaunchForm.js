@@ -161,19 +161,19 @@ class LaunchForm extends SubComponent {
     event.preventDefault();
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.state.restart = nextProps.restart || false;
-    this.state.failedOnly = nextProps.failedOnly || false;
-    if (nextProps.testSuite) {
-      this.state.launch.testSuite = nextProps.testSuite;
+  componentDidUpdate(prevProps) {
+    if (prevProps.restart !== this.props.restart ||
+        prevProps.failedOnly !== this.props.failedOnly ||
+        prevProps.testSuite !== this.props.testSuite ||
+        prevProps.launch !== this.props.launch ||
+        prevProps.modalName !== this.props.modalName) {
+      this.state.restart = this.props.restart || false;
+      this.state.failedOnly = this.props.failedOnly || false;
+      if (this.props.testSuite) this.state.launch.testSuite = this.props.testSuite;
+      if (this.props.launch && this.props.launch.id) this.state.launch = this.props.launch;
+      if (this.props.modalName) this.state.modalName = this.props.modalName;
+      this.setState(this.state);
     }
-    if (nextProps.launch && nextProps.launch.id) {
-      this.state.launch = nextProps.launch;
-    }
-    if(nextProps.modalName){
-      this.state.modalName = nextProps.modalName;
-    }
-    this.setState(this.state);
   }
 
   componentDidMount() {

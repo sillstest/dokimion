@@ -38,10 +38,10 @@ class Project extends SubComponent {
     this.getProject();
   }
 
-  componentWillReceiveProps(nextProps) {
-    var nextProjectId = nextProps.match.params.project;
+  componentDidUpdate(prevProps) {
+    var nextProjectId = this.props.match.params.project;
     // eslint-disable-next-line eqeqeq
-    if (nextProjectId && this.state.project.id != nextProjectId) {
+    if (nextProjectId && nextProjectId != prevProps.match.params.project) {
       this.state.project.id = nextProjectId;
       this.onProjectChange(this.state.project.id);
       this.getProject();

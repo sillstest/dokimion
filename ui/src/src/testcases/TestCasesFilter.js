@@ -79,22 +79,23 @@ class TestCasesFilter extends Component {
   }
 
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.projectAttributes) {
-      this.state.projectAttributes = nextProps.projectAttributes;
-      this.state.testSuite.filter.filters.forEach(
-        function (filter) {
-          filter.name = this.getAttributeName(filter.id);
-        }.bind(this),
-      );
-
-      this.state.groupsToDisplay.forEach(
-        function (groupToDisplay) {
-          groupToDisplay.label = this.getAttributeName(groupToDisplay.value);
-        }.bind(this),
-      );
+  componentDidUpdate(prevProps) {
+    if (prevProps.projectAttributes !== this.props.projectAttributes) {
+      if (this.props.projectAttributes) {
+        this.state.projectAttributes = this.props.projectAttributes;
+        this.state.testSuite.filter.filters.forEach(
+          function (filter) {
+            filter.name = this.getAttributeName(filter.id);
+          }.bind(this),
+        );
+        this.state.groupsToDisplay.forEach(
+          function (groupToDisplay) {
+            groupToDisplay.label = this.getAttributeName(groupToDisplay.value);
+          }.bind(this),
+        );
+      }
+      this.setState(this.state);
     }
-    this.setState(this.state);
   }
 
   componentDidMount() {

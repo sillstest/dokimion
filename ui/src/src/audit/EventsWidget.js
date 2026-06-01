@@ -31,17 +31,15 @@ class EventsWidget extends Component {
 
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.projectId) {
-      this.state.projectId = nextProps.projectId;
+  componentDidUpdate(prevProps) {
+    if (prevProps.projectId !== this.props.projectId || prevProps.filter !== this.props.filter) {
+      if (this.props.projectId) this.state.projectId = this.props.projectId;
+      if (this.props.filter) this.state.filter = this.props.filter;
+      if (this.state.filter && this.state.projectId) {
+        this.getEvents();
+      }
     }
-    if (nextProps.filter) {
-      this.state.filter = nextProps.filter;
-    }
-    if (this.state.filter && this.state.projectId) {
-      this.getEvents();
-    }
-}
+  }
 
   render() {
 

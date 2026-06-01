@@ -28,14 +28,12 @@ class LaunchTestcaseControls extends Component {
     this.callback = this.props.callback || function (testcase) {};
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.testcase) {
-      this.state.testcase = nextProps.testcase;
+  componentDidUpdate(prevProps) {
+    if (prevProps.testcase !== this.props.testcase || prevProps.launchId !== this.props.launchId) {
+      if (this.props.testcase) this.state.testcase = this.props.testcase;
+      if (this.props.launchId) this.state.launchId = this.props.launchId;
+      this.setState(this.state);
     }
-    if (nextProps.launchId) {
-      this.state.launchId = nextProps.launchId;
-    }
-    this.setState(this.state);
   }
 
   handleStatusSubmit(status, event, dialogToDismiss) {

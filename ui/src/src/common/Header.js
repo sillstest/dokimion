@@ -68,13 +68,13 @@ class Header extends Component {
       .catch(() => {});
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.session && this.state.session != nextProps.session.id) {
-      this.state.session = nextProps.session;
+  componentDidUpdate(prevProps) {
+    if (this.props.session && this.props.session !== prevProps.session) {
+      this.state.session = this.props.session;
       this.setState(this.state);
     }
-    if (nextProps.project && this.state.projectId != nextProps.project) {
-      this.state.projectId = nextProps.project;
+    if (this.props.project && this.props.project !== prevProps.project) {
+      this.state.projectId = this.props.project;
       this.getProject();
     }
   }
@@ -103,11 +103,15 @@ class Header extends Component {
   }
 
   getProject() {
-    Backend.get("project/" + this.state.projectId).then(response => {
-      this.state.projectName = response.name;
-      this.state.projectId = response.id;
-      this.setState(this.state);
-    });
+    Backend.get("project/" + this.state.projectId)
+      .then(response => {
+        this.state.projectName = response.name;
+        this.state.projectId = response.id;
+        this.setState(this.state);
+      })
+      .catch(error => {
+        console.log("Couldn't get project: " + error);
+      });
   }
 
   logOut() {

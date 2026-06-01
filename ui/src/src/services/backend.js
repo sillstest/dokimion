@@ -7,13 +7,13 @@ const getOptions = options => ({
 
 const fetchInternal = (url, method, options) =>
   fetch(getApiBaseUrl(url), { ...getOptions(options), method }).then(async response => {
-
     if (!response.ok) {
-      if (response.status === 401 && window.location.pathname !== "/auth" && window.location.pathname !== "/idpauth" && window.location.pathname !== "/login" &&  window.location.pathname !== "orgselect") {
+      if (response.status === 401 && window.location.pathname !== "/auth" && window.location.pathname !== "/idpauth" && window.location.pathname !== "/login" && window.location.pathname !== "orgselect") {
         window.location.href = "/auth?" + qs.stringify({ retpath: window.location.pathname });
-      } else {
-	console.log(await response.text());
       }
+      const text = await response.text();
+      console.log(text);
+      throw new Error("Request failed (" + response.status + "): " + text.substring(0, 200));
     }
     return response;
   });

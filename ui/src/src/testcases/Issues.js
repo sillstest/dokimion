@@ -56,13 +56,13 @@ class Issues extends SubComponent {
     this.refreshIssues = this.refreshIssues.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.testcase) {
-      this.state.testcase = nextProps.testcase;
+  componentDidUpdate(prevProps) {
+    if (this.props.testcase && prevProps.testcase !== this.props.testcase) {
+      this.state.testcase = this.props.testcase;
       this.setState(this.state);
     }
-    if (nextProps.projectId && nextProps.projectId != this.state.projectId) {
-      this.state.projectId = nextProps.projectId;
+    if (this.props.projectId && this.props.projectId !== prevProps.projectId) {
+      this.state.projectId = this.props.projectId;
       Backend.get(this.state.projectId + "/testcase/issue/projects")
         .then(response => {
           this.state.suggestedTrackerProjects = response;
@@ -70,10 +70,10 @@ class Issues extends SubComponent {
           this.refreshIssues();
         })
         .catch(error => {
-          this.setState({errorMessage: "componentWillReceiveProps::Couldn't fetch projects from tracker, error: " + error});
+          this.setState({errorMessage: "Couldn't fetch projects from tracker, error: " + error});
         });
     }
-    if (nextProps.testcase && (nextProps.testcase.issues || []).length != this.state.testcase.issues) {
+    if (this.props.testcase && (this.props.testcase.issues || []).length !== (prevProps.testcase?.issues || []).length) {
       this.refreshIssues();
     }
   }

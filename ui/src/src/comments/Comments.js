@@ -51,30 +51,32 @@ class Comments extends SubComponent {
         .catch(() => {console.log("Unable to fetch session");});
     }
 
-  componentWillReceiveProps(nextProps) {
-    var fetchCommentsNeeded = nextProps.forceFetch || false;
-    if (nextProps.entityId) {
-      fetchCommentsNeeded = fetchCommentsNeeded || this.entityId != nextProps.entityId;
-      this.entityId = nextProps.entityId;
-      this.state.commentToEdit.entityId = nextProps.entityId;
+  componentDidUpdate(prevProps) {
+    var fetchCommentsNeeded = this.props.forceFetch && !prevProps.forceFetch;
+    if (this.props.entityId && this.props.entityId !== prevProps.entityId) {
+      fetchCommentsNeeded = true;
+      this.entityId = this.props.entityId;
+      this.state.commentToEdit.entityId = this.props.entityId;
       this.refreshCommentToEdit();
     }
-    if (nextProps.entityType) {
-      fetchCommentsNeeded = fetchCommentsNeeded || this.entityType != nextProps.entityType;
-      this.entityType = nextProps.entityType;
-      this.state.commentToEdit.entityType = nextProps.entityType;
+    if (this.props.entityType && this.props.entityType !== prevProps.entityType) {
+      fetchCommentsNeeded = true;
+      this.entityType = this.props.entityType;
+      this.state.commentToEdit.entityType = this.props.entityType;
       this.refreshCommentToEdit();
     }
-    if (nextProps.projectId) {
-      fetchCommentsNeeded = fetchCommentsNeeded || this.projectId != nextProps.projectId;
-      this.projectId = nextProps.projectId;
+    if (this.props.projectId && this.props.projectId !== prevProps.projectId) {
+      fetchCommentsNeeded = true;
+      this.projectId = this.props.projectId;
     }
-    if (nextProps.hideForm) {
-      this.hideForm = nextProps.hideForm;
+    if (this.props.hideForm && this.props.hideForm !== prevProps.hideForm) {
+      this.hideForm = this.props.hideForm;
     }
     if (fetchCommentsNeeded) {
       this.getComments();
-    } else {
+    } else if (this.props.entityId !== prevProps.entityId ||
+               this.props.entityType !== prevProps.entityType ||
+               this.props.projectId !== prevProps.projectId) {
       this.setState(this.state);
     }
   }

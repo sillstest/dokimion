@@ -69,7 +69,9 @@ class ProjectSettings extends SubComponent {
     this.props.onSessionChange(session);
   }
 
-  componentWillMount() {
+  componentDidMount() {
+    super.componentDidMount();
+
     Backend.get("project/" + this.state.projectId)
       .then(response => {
         this.state.project = response;
@@ -78,12 +80,8 @@ class ProjectSettings extends SubComponent {
         this.setState(this.state);
        })
       .catch(error => {
-        this.setState({errorMessage: "componentWillMount::Couldn't get project: " + error});
+        this.setState({errorMessage: "Couldn't get project: " + error});
       });
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
 
     Backend.get("launcher/descriptors")
       .then(response => {

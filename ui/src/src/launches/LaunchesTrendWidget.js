@@ -27,14 +27,12 @@ class LaunchesTrendWidget extends SubComponent {
     this.getSeries = this.getSeries.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.projectId) {
-      this.state.projectId = nextProps.projectId;
+  componentDidUpdate(prevProps) {
+    if (prevProps.projectId !== this.props.projectId || prevProps.filter !== this.props.filter) {
+      if (this.props.projectId) this.state.projectId = this.props.projectId;
+      if (this.props.filter) this.state.filter = this.props.filter;
+      this.getLaunches();
     }
-    if (nextProps.filter) {
-      this.state.filter = nextProps.filter;
-    }
-    this.getLaunches();
   }
 
   componentDidMount() {

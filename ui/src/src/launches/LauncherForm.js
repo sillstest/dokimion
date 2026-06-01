@@ -37,17 +37,15 @@ class LauncherForm extends SubComponent {
     super.componentDidMount();
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.launcherConfig) {
-      this.state.launcherConfig = nextProps.launcherConfig;
+  componentDidUpdate(prevProps) {
+    if (prevProps.launcherConfig !== this.props.launcherConfig ||
+        prevProps.launcherDescriptors !== this.props.launcherDescriptors ||
+        prevProps.configIndex !== this.props.configIndex) {
+      if (this.props.launcherConfig) this.state.launcherConfig = this.props.launcherConfig;
+      if (this.props.launcherDescriptors) this.state.launcherDescriptors = this.props.launcherDescriptors;
+      if (this.props.configIndex) this.state.configIndex = this.props.configIndex;
+      this.setState(this.state);
     }
-    if (nextProps.launcherDescriptors) {
-      this.state.launcherDescriptors = nextProps.launcherDescriptors;
-    }
-    if (nextProps.configIndex) {
-      this.state.configIndex = nextProps.configIndex;
-    }
-    this.setState(this.state);
   }
 
   getProject() {

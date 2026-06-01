@@ -60,23 +60,20 @@ class TestCaseForm extends SubComponent {
     event.preventDefault();
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.testcase) {
-      this.state.testcase = nextProps.testcase;
+  componentDidUpdate(prevProps) {
+    if (prevProps.testcase !== this.props.testcase || prevProps.projectAttributes !== this.props.projectAttributes) {
+      if (this.props.testcase) {
+        this.state.testcase = this.props.testcase;
+      }
+      if (this.props.projectAttributes) {
+        this.state.projectAttributes = this.props.projectAttributes;
+        var tempAttribs = this.state.projectAttributes.map(attribute => ({value: attribute.id, attributeValues: attribute.attrValues}));
+        //remove broken
+        tempAttribs.shift();
+        tempAttribs.map(t => (this.state.testcase.attributes[t.value] = (t.attributeValues != null ? t.attributeValues.map(t => t.value) : [])));
+      }
+      this.setState(this.state);
     }
-    if (nextProps.projectAttributes) {
-      this.state.projectAttributes = nextProps.projectAttributes;
-      var tempAttribs =  this.state.projectAttributes.map(attribute => ({value:attribute.id, attributeValues : attribute.attrValues}));
-      //remove broken
-      tempAttribs.shift();
-   
-      tempAttribs.map(t => (this.state.testcase.attributes[t.value] = ( t.attributeValues!=null? t.attributeValues.map(t=>t.value) 
-        :[])
-             
-        ))
-
-    }
-    this.setState(this.state);
   }
 
   loadDefaultProjectAttributes() {

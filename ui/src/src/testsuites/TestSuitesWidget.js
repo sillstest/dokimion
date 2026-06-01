@@ -22,11 +22,10 @@ class TestSuitesWidget extends SubComponent {
     this.onFilter = this.onFilter.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
-    var nextProjectId = nextProps.projectId;
+  componentDidUpdate(prevProps) {
     // eslint-disable-next-line eqeqeq
-    if (nextProjectId && this.state.projectId != nextProjectId) {
-      this.state.projectId = nextProjectId;
+    if (this.props.projectId && this.props.projectId != prevProps.projectId) {
+      this.state.projectId = this.props.projectId;
       this.getTestSuites();
     }
   }

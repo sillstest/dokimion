@@ -22,11 +22,13 @@ class Pager extends Component {
     this.setState(this.state);
   }
 
-  componentWillReceiveProps(props) {
-    this.state.totalItems = props.totalItems;
-    this.state.currentPage = props.currentPage;
-    this.state.pageObjects = this.getPageObjects();
-    this.setState(this.state);
+  componentDidUpdate(prevProps) {
+    if (prevProps.totalItems !== this.props.totalItems || prevProps.currentPage !== this.props.currentPage) {
+      this.state.totalItems = this.props.totalItems;
+      this.state.currentPage = this.props.currentPage;
+      this.state.pageObjects = this.getPageObjects();
+      this.setState(this.state);
+    }
   }
 
   getPageObjects() {
