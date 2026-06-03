@@ -27,9 +27,6 @@ import LaunchTestcaseControls from "../launches/LaunchTestcaseControls";
 const tinymcePlugins = "advlist autolink lists link image charmap preview anchor searchreplace visualblocks code table fullscreen insertdatetime media codesample help wordcount";
 
 
-//const tinymcePlugins = "lists advlist";
-
-
 const tinymceToolbar =
   "undo redo | formatselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | codesample | help";
 const tinymceContentStyle = "p {margin: 0}";
