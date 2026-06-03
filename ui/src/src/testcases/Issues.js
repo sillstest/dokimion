@@ -1,455 +1,219 @@
-/* eslint-disable react/jsx-no-duplicate-props */
 /* eslint-disable eqeqeq */
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
 import $ from "jquery";
-import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
-class Issues extends SubComponent {
-  constructor(props) {
-    super(props);
+const defaultIssue = () => ({ name: "", type: {}, description: "", priority: {}, trackerProject: {} });
+const mapToView = (items, id, label) => (items || []).map(i => ({ value: i[id], label: i[label] }));
 
-    this.issueToRemove = null;
+function Issues({ testcase, projectId, onTestcaseUpdated }) {
+  const [issue, setIssue] = useState(defaultIssue());
+  const [linkIssueView, setLinkIssueView] = useState({});
+  const [suggestedTrackerProjects, setSuggestedTrackerProjects] = useState([]);
+  const [issueTypes, setIssueTypes] = useState([]);
+  const [issuePriorities, setIssuePriorities] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const issueToRemove = useRef(null);
 
-    this.defaultIssue = {
-      name: "",
-      type: {},
-      description: "",
-      priority: {},
-      trackerProject: {},
-    };
+  useEffect(() => {
+    if (!projectId) return;
+    Backend.get(projectId + "/testcase/issue/projects")
+      .then(response => setSuggestedTrackerProjects(response))
+      .catch(error => setErrorMessage("Couldn't fetch tracker projects: " + error));
+  }, [projectId]);
 
-    this.state = {
-      projectId: props.projectId,
-      testcase: props.testcase || { issues: [] },
-      issue: Object.assign({}, this.defaultIssue),
-      linkIssueView: {},
-      suggestIssues: [],
-      suggestTrackerProjects: [],
-      issueTypes: [],
-      issuePriorities: [],
-      errorMessage: "",
-    };
-
-    this.unlinkIssue = this.unlinkIssue.bind(this);
-    this.unlinkIssueConfirmation = this.unlinkIssueConfirmation.bind(this);
-    this.cancelUnlinkIssueConfirmation = this.cancelUnlinkIssueConfirmation.bind(this);
-    this.getIssueUrl = this.getIssueUrl.bind(this);
-    this.createIssue = this.createIssue.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSelectChange = this.handleSelectChange.bind(this);
-    this.changeLinkIssueId = this.changeLinkIssueId.bind(this);
-    this.suggestIssues = this.suggestIssues.bind(this);
-    this.suggestProjects = this.suggestProjects.bind(this);
-    this.linkIssue = this.linkIssue.bind(this);
-    this.changeTrackerProject = this.changeTrackerProject.bind(this);
-    this.mapIssuePrioritiesToView = this.mapIssuePrioritiesToView.bind(this);
-    this.mapIssueTypesToView = this.mapIssueTypesToView.bind(this);
-    this.changeIssueType = this.changeIssueType.bind(this);
-    this.changeIssuePriority = this.changeIssuePriority.bind(this);
-    this.refreshIssues = this.refreshIssues.bind(this);
+  function suggestIssues(value, callback) {
+    const existingIds = (testcase?.issues || []).map(i => i.id);
+    Backend.get(projectId + "/testcase/issue/suggest?text=" + value).then(response => {
+      const filtered = (response || []).filter(i => !existingIds.includes(i.id));
+      callback(filtered.map(i => ({ value: i.id, label: i.id + " - " + i.name })));
+    });
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.testcase && prevProps.testcase !== this.props.testcase) {
-      this.state.testcase = this.props.testcase;
-      this.setState(this.state);
-    }
-    if (this.props.projectId && this.props.projectId !== prevProps.projectId) {
-      this.state.projectId = this.props.projectId;
-      Backend.get(this.state.projectId + "/testcase/issue/projects")
-        .then(response => {
-          this.state.suggestedTrackerProjects = response;
-          this.setState(this.state);
-          this.refreshIssues();
-        })
-        .catch(error => {
-          this.setState({errorMessage: "Couldn't fetch projects from tracker, error: " + error});
-        });
-    }
-    if (this.props.testcase && (this.props.testcase.issues || []).length !== (prevProps.testcase?.issues || []).length) {
-      this.refreshIssues();
-    }
+  function changeTrackerProject(value) {
+    setIssue(prev => ({ ...prev, trackerProject: { name: value.label, id: value.value } }));
+    Backend.get(projectId + "/testcase/issue/types?project=" + value.value)
+      .then(response => setIssueTypes(response));
+    Backend.get(projectId + "/testcase/issue/priorities?project=" + value.value)
+      .then(response => setIssuePriorities(response));
   }
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.onTestcaseUpdated = this.props.onTestcaseUpdated;
+  function createIssue(event) {
+    Backend.post(projectId + "/testcase/" + testcase.id + "/issue", issue)
+      .then(() => { $("#issue-modal").modal("hide"); setIssue(defaultIssue()); if (onTestcaseUpdated) onTestcaseUpdated(); })
+      .catch(() => setErrorMessage("Couldn't create issue"));
+    event.preventDefault();
   }
 
-  unlinkIssueConfirmation(issueId) {
-    this.issueToRemove = issueId;
+  function linkIssue(event) {
+    Backend.post(
+      projectId + "/testcase/" + testcase.id + "/issue/link/" + (linkIssueView.value || ""),
+      issue,
+    )
+      .then(() => { setLinkIssueView({}); $("#issue-modal").modal("hide"); if (onTestcaseUpdated) onTestcaseUpdated(); })
+      .catch(error => setErrorMessage("Couldn't link issue: " + error));
+    event.preventDefault();
+  }
+
+  function unlinkIssueConfirmation(issueId) {
+    issueToRemove.current = issueId;
     $("#unlink-issue-confirmation").modal("show");
   }
 
-  cancelUnlinkIssueConfirmation() {
-    this.issueToRemove = null;
+  function cancelUnlinkIssueConfirmation() {
+    issueToRemove.current = null;
     $("#unlink-issue-confirmation").modal("hide");
   }
 
-  unlinkIssue() {
-    Backend.delete(this.state.projectId + "/testcase/" + this.state.testcase.id + "/issue/" + this.issueToRemove)
-      .then(response => {
-        this.issueToRemove = null;
-        $("#unlink-issue-confirmation").modal("hide");
-        this.onTestcaseUpdated();
-      })
-      .catch(error => {
-        this.setState({errorMessage: "unlinkIssue::Couldn't unlink issue"});
-      });
+  function unlinkIssue() {
+    Backend.delete(projectId + "/testcase/" + testcase.id + "/issue/" + issueToRemove.current)
+      .then(() => { issueToRemove.current = null; $("#unlink-issue-confirmation").modal("hide"); if (onTestcaseUpdated) onTestcaseUpdated(); })
+      .catch(() => setErrorMessage("Couldn't unlink issue"));
   }
 
-  createIssue(event) {
-    Backend.post(this.state.projectId + "/testcase/" + this.state.testcase.id + "/issue", this.state.issue)
-      .then(response => {
-        $("#issue-modal").modal("hide");
-        this.state.issue = Object.assign({}, this.defaultIssue);
-        this.onTestcaseUpdated();
-      })
-      .catch(error => {
-        this.setState({errorMessage: "createIssue::Couldn't create issue"});
-      });
-    event.preventDefault();
-  }
+  const trackerProjectOptions = (suggestedTrackerProjects || []).map(p => ({ value: p.id, label: p.name }));
+  const issueTypeOptions = (issueTypes || []).map(t => ({ value: t.id, label: t.name }));
+  const issuePriorityOptions = (issuePriorities || []).map(p => ({ value: p.id, label: p.name }));
 
-  linkIssue(event) {
-    Backend.post(
-      this.state.projectId + "/testcase/" + this.state.testcase.id + "/issue/link/" + this.state.linkIssueView.value ||
-        "",
-      this.state.issue,
-    )
-      .then(response => {
-        this.state.linkIssueView = {};
-        $("#issue-modal").modal("hide");
-        this.onTestcaseUpdated();
-      })
-      .catch(error => {
-        this.setState({errorMessage: "linkIssue::Couldn't link issue, error: " + error});
-      });
-    event.preventDefault();
-  }
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div id="issues" className="issues-list">
+        <table className="table table-striped">
+          <tbody>
+            {(testcase?.issues || []).map(iss => (
+              <tr key={iss.id}>
+                <td>
+                  {iss.isClosed ? (
+                    <s><a href={iss.url || ""} target="_blank" rel="noreferrer">{iss.id} - {iss.name}</a></s>
+                  ) : (
+                    <a href={iss.url || ""} target="_blank" rel="noreferrer">{iss.id} - {iss.name}</a>
+                  )}
+                </td>
+                <td>{iss.type?.name}</td>
+                <td>{iss.status}</td>
+                <td>{iss.priority?.name}</td>
+                <td>
+                  <span className="clickable edit-icon-visible red" onClick={() => unlinkIssueConfirmation(iss.id)}>
+                    <FontAwesomeIcon icon={faMinusCircle} />
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-  refreshIssues() {
-    if (!this.state.testcase || !this.state.projectId) return;
-    (this.state.testcase.issues || []).forEach(
-      function (issue, index) {
-        Backend.get(this.state.projectId + "/testcase/issue/" + issue.id).then(response => {
-          this.state.testcase.issues[index] = response;
-          this.setState(this.state);
-        });
-      }.bind(this),
-    );
-  }
-
-  handleChange(event) {
-    this.state.issue[event.target.name] = event.target.value;
-    this.setState(this.state);
-  }
-
-  handleSelectChange(value, event) {
-    this.state.issue[event.name] = value.value;
-    this.setState(this.state);
-  }
-
-  suggestIssues(value, callback) {
-    var existingIssuesIds = (this.state.testcase.issues || []).map(issue => issue.id);
-    Backend.get(this.state.projectId + "/testcase/issue/suggest?text=" + value).then(response => {
-      this.state.suggestedIssues = (response || []).filter(issue => !existingIssuesIds.includes(issue.id));
-      this.setState(this.state);
-      callback(this.mapIssuesToView(this.state.suggestedIssues));
-    });
-  }
-
-  suggestProjects(value, callback) {
-    Backend.get(this.state.projectId + "/testcase/issue/projects/suggest?text=" + value).then(response => {
-      this.state.suggestedTrackerProjects = response;
-      this.setState(this.state);
-      callback(this.mapTrackerProjectsToView(this.state.suggestedTrackerProjects));
-    });
-  }
-
-  changeLinkIssueId(value) {
-    this.state.linkIssueView = value;
-    this.setState(this.state);
-  }
-
-  changeTrackerProject(value) {
-    this.state.issue.trackerProject = { name: value.label, id: value.value };
-    this.setState(this.state);
-
-    Backend.get(this.state.projectId + "/testcase/issue/types?project=" + this.state.issue.trackerProject.id).then(
-      response => {
-        this.state.issueTypes = response;
-        this.setState(this.state);
-      },
-    );
-
-    Backend.get(this.state.projectId + "/testcase/issue/priorities?project=" + this.state.issue.trackerProject.id).then(
-      response => {
-        this.state.issuePriorities = response;
-        this.setState(this.state);
-      },
-    );
-  }
-
-  changeIssueType(value) {
-    this.state.issue.type = { name: value.label, id: value.value };
-    this.setState(this.state);
-  }
-
-  changeIssuePriority(value) {
-    this.state.issue.priority = { name: value.label, id: value.value };
-    this.setState(this.state);
-  }
-
-  mapIssuesToView(issues) {
-    return (issues || []).map(function (issue) {
-      return { value: issue.id, label: issue.id + " - " + issue.name };
-    });
-  }
-
-  mapTrackerProjectsToView(trackerProjects) {
-    return (trackerProjects || []).map(function (trackerProject) {
-      return { value: trackerProject.id, label: trackerProject.name };
-    });
-  }
-
-  mapIssueTypesToView(issueTypes) {
-    return (issueTypes || []).map(function (issueType) {
-      return { value: issueType.id, label: issueType.name };
-    });
-  }
-
-  mapIssuePrioritiesToView(issuePriorities) {
-    return (issuePriorities || []).map(function (issuePriority) {
-      return { value: issuePriority.id, label: issuePriority.name };
-    });
-  }
-
-  getIssueUrl(issue) {
-    return (
-      <tr key={issue.id}>
-        <td>
-          {issue.isClosed && (
-            <s>
-              <a href={issue.url || ""} target="_blank" rel="noreferrer">
-                {issue.id} - {issue.name}
-              </a>
-            </s>
-          )}
-          {!issue.isClosed && (
-            <a href={issue.url || ""} target="_blank" rel="noreferrer">
-              {issue.id} - {issue.name}
-            </a>
-          )}
-        </td>
-        <td>{issue.type.name}</td>
-        <td>{issue.status}</td>
-        <td>{issue.priority.name}</td>
-        <td>
-          <span className="clickable edit-icon-visible red" onClick={e => this.unlinkIssueConfirmation(issue.id, e)}>
-            <FontAwesomeIcon icon={faMinusCircle} />
-          </span>
-        </td>
-      </tr>
-    );
-  }
-
-  render() {
-    return (
       <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div id="issues" className="issues-list">
-          <table className="table table-striped">
-            <tbody>{(this.state.testcase.issues || []).map(this.getIssueUrl)}</tbody>
-          </table>
-        </div>
+        <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#issue-modal">Add Issue</button>
+      </div>
 
-        <div>
-          <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#issue-modal">
-            Add Issue
-          </button>
-        </div>
-        <div className="modal fade bd-example-modal-lg" tabIndex="-1" role="dialog" id="issue-modal">
-          <div className="modal-dialog modal-lg" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <ul className="nav nav-tabs" id="issueTabs" role="tablist">
-                  <li className="nav-item">
-                    <a
-                      className="nav-link active"
-                      id="create-issue-tab"
-                      data-toggle="tab"
-                      href="#create-issue"
-                      role="tab"
-                      aria-controls="Create Issue"
-                      aria-selected="true"
-                    >
-                      <h5 className="modal-title">Create Issue</h5>
-                    </a>
-                  </li>
-                  <li className="nav-item">
-                    <a
-                      className="nav-link"
-                      id="link-issue-tab"
-                      data-toggle="tab"
-                      href="#link-issue"
-                      role="tab"
-                      aria-controls="Link Issue"
-                      aria-selected="false"
-                    >
-                      <h5 className="modal-title">Link Issue</h5>
-                    </a>
-                  </li>
-                </ul>
-                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-
-              <div className="tab-content" id="issuesTabContent">
-                <div
-                  className="tab-pane fade show active"
-                  id="create-issue"
-                  role="tabpanel"
-                  aria-labelledby="create-issue-tab"
-                >
-                  <div className="modal-body">
-                    <form>
-                      <div className="form-group row">
-                        <label className="col-sm-3 col-form-label">Project</label>
-                        <div className="col-sm-9">
-                          <Select
-                            value={{
-                              value: this.state.issue.trackerProject.id,
-                              label: this.state.issue.trackerProject.name,
-                            }}
-                            cacheOptions
-                            onChange={this.changeTrackerProject}
-                            options={this.mapTrackerProjectsToView(this.state.suggestedTrackerProjects)}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-group row">
-                        <label className="col-sm-3 col-form-label">Name</label>
-                        <div className="col-sm-9">
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="name"
-                            onChange={this.handleChange}
-                            value={this.state.issue.name}
-                          />
-                        </div>
-                      </div>
-                      <div className="form-group row">
-                        <label className="col-sm-3 col-form-label">Type</label>
-                        <div className="col-sm-9">
-                          <Select
-                            name="type"
-                            value={{ label: this.state.issue.type.name, value: this.state.issue.type.value }}
-                            onChange={this.changeIssueType}
-                            options={this.mapIssueTypesToView(this.state.issueTypes)}
-                          />
-                        </div>
-                      </div>
-                      <div className="form-group row">
-                        <label className="col-sm-3 col-form-label">Priority</label>
-                        <div className="col-sm-9">
-                          <Select
-                            name="type"
-                            value={{ label: this.state.issue.priority.name, value: this.state.issue.priority.id }}
-                            name="priority"
-                            onChange={this.changeIssuePriority}
-                            options={this.mapIssuePrioritiesToView(this.state.issuePriorities)}
-                          />
-                        </div>
-                      </div>
-                      <div className="form-group row">
-                        <label className="col-sm-3 col-form-label">Description</label>
-                        <div className="col-sm-9">
-                          <textarea
-                            rows="7"
-                            name="description"
-                            className="form-control"
-                            onChange={this.handleChange}
-                            value={this.state.issue.description}
-                          ></textarea>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                  <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal">
-                      Close
-                    </button>
-                    <button type="button" className="btn btn-primary" onClick={this.createIssue}>
-                      Create Issue
-                    </button>
-                  </div>
-                </div>
-
-                <div className="tab-pane fade" id="link-issue" role="tabpanel" aria-labelledby="link-issue-tab">
-                  <div className="modal-body">
-                    <form>
-                      <div className="form-group row">
-                        <label className="col-sm-3 col-form-label">Search</label>
-                        <div className="col-sm-9">
-                          <AsyncSelect
-                            value={this.state.linkIssueView}
-                            loadOptions={this.suggestIssues}
-                            onChange={this.changeLinkIssueId}
-                            options={this.mapIssuesToView(this.state.suggestedIssues)}
-                          />
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                  <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal">
-                      Close
-                    </button>
-                    <button type="button" className="btn btn-primary" onClick={this.linkIssue}>
-                      Link Issue
-                    </button>
-                  </div>
-                </div>
-              </div>
+      <div className="modal fade bd-example-modal-lg" tabIndex="-1" role="dialog" id="issue-modal">
+        <div className="modal-dialog modal-lg" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <ul className="nav nav-tabs" id="issueTabs" role="tablist">
+                <li className="nav-item">
+                  <a className="nav-link active" id="create-issue-tab" data-toggle="tab" href="#create-issue" role="tab">
+                    <h5 className="modal-title">Create Issue</h5>
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a className="nav-link" id="link-issue-tab" data-toggle="tab" href="#link-issue" role="tab">
+                    <h5 className="modal-title">Link Issue</h5>
+                  </a>
+                </li>
+              </ul>
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
             </div>
-          </div>
-        </div>
-
-        <div className="modal fade" tabIndex="-1" role="dialog" id="unlink-issue-confirmation">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Unlink Issue</h5>
-                <button type="button" className="close" onClick={this.cancelUnlinkIssueConfirmation} aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
+            <div className="tab-content" id="issuesTabContent">
+              <div className="tab-pane fade show active" id="create-issue" role="tabpanel">
+                <div className="modal-body">
+                  <form>
+                    <div className="form-group row">
+                      <label className="col-sm-3 col-form-label">Project</label>
+                      <div className="col-sm-9">
+                        <Select value={{ value: issue.trackerProject.id, label: issue.trackerProject.name }} onChange={changeTrackerProject} options={trackerProjectOptions} />
+                      </div>
+                    </div>
+                    <div className="form-group row">
+                      <label className="col-sm-3 col-form-label">Name</label>
+                      <div className="col-sm-9">
+                        <input type="text" className="form-control" name="name" onChange={e => setIssue(prev => ({ ...prev, name: e.target.value }))} value={issue.name} />
+                      </div>
+                    </div>
+                    <div className="form-group row">
+                      <label className="col-sm-3 col-form-label">Type</label>
+                      <div className="col-sm-9">
+                        <Select name="type" value={{ label: issue.type.name, value: issue.type.id }} onChange={v => setIssue(prev => ({ ...prev, type: { name: v.label, id: v.value } }))} options={issueTypeOptions} />
+                      </div>
+                    </div>
+                    <div className="form-group row">
+                      <label className="col-sm-3 col-form-label">Priority</label>
+                      <div className="col-sm-9">
+                        <Select name="priority" value={{ label: issue.priority.name, value: issue.priority.id }} onChange={v => setIssue(prev => ({ ...prev, priority: { name: v.label, id: v.value } }))} options={issuePriorityOptions} />
+                      </div>
+                    </div>
+                    <div className="form-group row">
+                      <label className="col-sm-3 col-form-label">Description</label>
+                      <div className="col-sm-9">
+                        <textarea rows="7" name="description" className="form-control" onChange={e => setIssue(prev => ({ ...prev, description: e.target.value }))} value={issue.description} />
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="button" className="btn btn-primary" onClick={createIssue}>Create Issue</button>
+                </div>
               </div>
-              <div className="modal-body">Are you sure you want to unlink issue?</div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={this.cancelUnlinkIssueConfirmation}>
-                  Close
-                </button>
-                <button type="button" className="btn btn-danger" onClick={this.unlinkIssue}>
-                  Unlink Issue
-                </button>
+              <div className="tab-pane fade" id="link-issue" role="tabpanel">
+                <div className="modal-body">
+                  <form>
+                    <div className="form-group row">
+                      <label className="col-sm-3 col-form-label">Search</label>
+                      <div className="col-sm-9">
+                        <AsyncSelect value={linkIssueView} loadOptions={suggestIssues} onChange={setLinkIssueView} />
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="button" className="btn btn-primary" onClick={linkIssue}>Link Issue</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
+
+      <div className="modal fade" tabIndex="-1" role="dialog" id="unlink-issue-confirmation">
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Unlink Issue</h5>
+              <button type="button" className="close" onClick={cancelUnlinkIssueConfirmation} aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body">Are you sure you want to unlink issue?</div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={cancelUnlinkIssueConfirmation}>Close</button>
+              <button type="button" className="btn btn-danger" onClick={unlinkIssue}>Unlink Issue</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default Issues;

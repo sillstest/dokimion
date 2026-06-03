@@ -1,11 +1,8 @@
 import { Component } from "react";
 
-class SubComponent extends Component {
-  componentDidMount() {
-    if (this.props.onProjectChange && this.props.match) {
-      this.props.onProjectChange(this.props.match.params.project);
-    }
-  }
-}
+// SubComponent was a base class for components needing onProjectChange/match injection.
+// All subclasses have been converted to function components; this file is retained
+// for backwards compatibility but is no longer extended by any component.
+class SubComponent extends Component {}
 
 export default SubComponent;

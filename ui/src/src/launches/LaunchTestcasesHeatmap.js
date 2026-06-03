@@ -1,7 +1,6 @@
 /* eslint-disable eqeqeq */
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { withRouter } from "../common/withRouter";
-import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
 import { FadeLoader } from "react-spinners";
 import * as Utils from "../common/Utils";
@@ -9,136 +8,71 @@ import { Checkbox } from "semantic-ui-react";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
-class LaunchTestcasesHeatmap extends SubComponent {
-  state = {
-    heatmap: [],
-    loading: true,
-    errorMessage: "",
-  };
+function LaunchTestcasesHeatmap({ match, location }) {
+  const projectId = match?.params?.project;
+  const [heatmap, setHeatmap] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  constructor(props) {
-    super(props);
-    this.state.projectId = this.props.match.params.project;
-    this.getHeatMap = this.getHeatMap.bind(this);
-    this.updateTestcase = this.updateTestcase.bind(this);
-    this.onBrokenToggle = this.onBrokenToggle.bind(this);
-  }
+  useEffect(() => {
+    if (!projectId) return;
+    Backend.get(projectId + "/launch/heatmap" + location.search)
+      .then(response => { setHeatmap(response); setLoading(false); })
+      .catch(() => { setErrorMessage("Couldn't get launch testcases heatmap"); setLoading(false); });
+  }, [projectId, location.search]);
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.state.projectId = this.props.match.params.project;
-    this.getHeatMap();
-  }
-
-  getHeatMap() {
-    console.info(this.props);
-    Backend.get(this.state.projectId + "/launch/heatmap" + this.props.location.search)
-      .then(response => {
-        this.state.heatmap = response;
-        this.state.loading = false;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getHeatMap::Couldn't get launch testcases heatmap"});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
-
-  getPercentile(testcase) {
-    if (testcase.total == 0) {
-      return 0;
-    }
+  function getPercentile(testcase) {
+    if (testcase.total == 0) return 0;
     return Utils.intDiv((testcase.statusCounters.FAILED + testcase.statusCounters.BROKEN) * 100, testcase.total);
   }
 
-  getCellColorClass(testcase) {
-    var failedPercent = this.getPercentile(testcase);
-    if (failedPercent > 33) {
-      return Utils.getStatusColorClass("FAILED");
-    }
-    if (failedPercent <= 33 && failedPercent > 0) {
-      return Utils.getStatusColorClass("BROKEN");
-    }
+  function getCellColorClass(testcase) {
+    const failedPercent = getPercentile(testcase);
+    if (failedPercent > 33) return Utils.getStatusColorClass("FAILED");
+    if (failedPercent <= 33 && failedPercent > 0) return Utils.getStatusColorClass("BROKEN");
     return Utils.getStatusColorClass("PASSED");
   }
 
-  onBrokenToggle(id, value, event) {
-    var testcaseToUpdate;
-    Backend.get(this.state.projectId + "/testcase/" + id)
+  function onBrokenToggle(id, value) {
+    Backend.get(projectId + "/testcase/" + id)
       .then(response => {
-        testcaseToUpdate = response;
-        if (testcaseToUpdate) {
-          testcaseToUpdate.launchBroken = value;
-          this.updateTestcase(testcaseToUpdate);
-        }
+        const updated = { ...response, launchBroken: value };
+        Backend.put(projectId + "/testcase/", updated)
+          .then(saved => {
+            setHeatmap(prev => prev.map(tc => tc.id == id ? { ...tc, launchBroken: saved.launchBroken } : tc));
+          })
+          .catch(() => setErrorMessage("Couldn't update testcase status"));
       })
-      .catch(error => {
-        this.setState({errorMessage: "onBrokenToggle::Couldn't update testcase status"});
-      });
+      .catch(() => setErrorMessage("Couldn't update testcase status"));
   }
 
-  updateTestcase(testcaseToUpdate) {
-    Backend.put(this.state.projectId + "/testcase/", testcaseToUpdate)
-      .then(response => {
-        var foundTestcaseStats = this.state.heatmap.find(testcaseStats => testcaseStats.id == testcaseToUpdate.id);
-        if (foundTestcaseStats) {
-          foundTestcaseStats.launchBroken = response.launchBroken;
-        }
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "updateTestcase::Couldn't update testcase status"});
-      });
-  }
-
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">Title</th>
-              <th scope="col" className="center-text">
-                Failures
-              </th>
-              <th scope="col">Active</th>
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <table className="table">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col" className="center-text">Failures</th>
+            <th scope="col">Active</th>
+          </tr>
+        </thead>
+        <tbody>
+          {heatmap.map(testcase => (
+            <tr key={testcase.id}>
+              <td><Link to={"/" + projectId + "/testcase/" + testcase.id}>{testcase.name}</Link></td>
+              <td className={getCellColorClass(testcase) + " center-text"}>{getPercentile(testcase)}%</td>
+              <td>
+                <Checkbox toggle onClick={() => onBrokenToggle(testcase.id, !testcase.launchBroken)}
+                  checked={testcase.launchBroken} label={{ children: testcase.launchBroken ? "On" : "Off" }} />
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {this.state.heatmap.map(
-              function (testcase) {
-                return (
-                  <tr>
-                    <td>
-                      <Link to={"/" + this.props.match.params.project + "/testcase/" + testcase.id}>
-                        {testcase.name}
-                      </Link>
-                    </td>
-                    <td className={this.getCellColorClass(testcase) + " center-text"}>
-                      {this.getPercentile(testcase)}%
-                    </td>
-                    <td>
-                      <Checkbox
-                        toggle
-                        onClick={e => this.onBrokenToggle(testcase.id, !testcase.launchBroken, e)}
-                        checked={testcase.launchBroken}
-                        label={{ children: testcase.launchBroken ? "On" : "Off" }}
-                      />
-                    </td>
-                  </tr>
-                );
-              }.bind(this),
-            )}
-          </tbody>
-        </table>
-        <div className="sweet-loading">
-          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
-      </div>
-    );
-  }
+          ))}
+        </tbody>
+      </table>
+      <div className="sweet-loading"><FadeLoader size={100} color={"#135f38"} loading={loading} /></div>
+    </div>
+  );
 }
 
 export default withRouter(LaunchTestcasesHeatmap);

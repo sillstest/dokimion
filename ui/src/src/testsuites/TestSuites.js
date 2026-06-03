@@ -1,8 +1,6 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { withRouter } from "../common/withRouter";
-import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
-import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
@@ -10,155 +8,105 @@ import $ from "jquery";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 
-class TestSuites extends SubComponent {
-  testSuiteToRemove = null;
+function TestSuites({ match }) {
+  const project = match?.params?.project;
+  const [testSuites, setTestSuites] = useState([]);
+  const [testSuitesToDisplay, setTestSuitesToDisplay] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const testSuiteToRemove = useRef(null);
 
-  state = {
-    testSuites: [],
-    testSuitesToDisplay: [],
-    loading: true,
-    errorMessage: "",
-  };
+  useEffect(() => {
+    if (!project) return;
+    Backend.get(project + "/testsuite")
+      .then(response => { setTestSuites(response); setTestSuitesToDisplay(response); setLoading(false); })
+      .catch(error => { setErrorMessage("Couldn't get testsuites: " + error); setLoading(false); });
+  }, [project]);
 
-  constructor(props) {
-    super(props);
-    this.getTestSuites = this.getTestSuites.bind(this);
-    this.onFilter = this.onFilter.bind(this);
-    this.removeTestSuite = this.removeTestSuite.bind(this);
-    this.removeTestSuiteConfirmation = this.removeTestSuiteConfirmation.bind(this);
-    this.cancelRemoveTestSuiteConfirmation = this.cancelRemoveTestSuiteConfirmation.bind(this);
+  function onFilter(event) {
+    const token = (event.target.value || "").toLowerCase();
+    setTestSuitesToDisplay(testSuites.filter(ts => (ts.name || "").toLowerCase().includes(token)));
   }
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.getTestSuites();
-  }
-
-  getTestSuites() {
-    Backend.get(this.props.match.params.project + "/testsuite")
-      .then(response => {
-        this.state.testSuites = response;
-        this.state.testSuitesToDisplay = this.state.testSuites.slice();
-        this.state.loading = false;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getTestSuites::Couldn't get testsuites, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
-
-  onFilter(event) {
-    var token = (event.target.value || "").toLowerCase();
-    this.state.testSuitesToDisplay = this.state.testSuites.filter(testSuite =>
-      (testSuite.name || "").toLowerCase().includes(token),
-    );
-    this.setState(this.state);
-  }
-
-  removeTestSuiteConfirmation(testSuiteId) {
-    this.testSuiteToRemove = testSuiteId;
+  function removeTestSuiteConfirmation(testSuiteId) {
+    testSuiteToRemove.current = testSuiteId;
     $("#remove-testsuite-confirmation").modal("show");
   }
 
-  cancelRemoveTestSuiteConfirmation() {
-    this.testSuiteToRemove = null;
+  function cancelRemoveTestSuiteConfirmation() {
+    testSuiteToRemove.current = null;
     $("#remove-testsuite-confirmation").modal("hide");
   }
 
-  removeTestSuite(event) {
-    Backend.delete(this.props.match.params.project + "/testsuite/" + this.testSuiteToRemove)
-      .then(response => {
+  function removeTestSuite() {
+    Backend.delete(project + "/testsuite/" + testSuiteToRemove.current)
+      .then(() => {
+        const id = testSuiteToRemove.current;
         // eslint-disable-next-line eqeqeq
-        this.state.testSuites = this.state.testSuites.filter(testSuite => testSuite.id != this.testSuiteToRemove);
-        this.state.testSuitesToDisplay = this.state.testSuites;
-        this.testSuiteToRemove = null;
+        setTestSuites(prev => { const u = prev.filter(ts => ts.id != id); setTestSuitesToDisplay(u); return u; });
+        testSuiteToRemove.current = null;
         $("#remove-testsuite-confirmation").modal("hide");
-        this.setState(this.state);
       })
-      .catch(error => {
-        this.setState({errorMessage: "removeTestSuite::Couldn't delete testsuite, error: " + error});
-      });
+      .catch(error => setErrorMessage("Couldn't delete testsuite: " + error));
   }
 
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="row">
-          <form className="col-sm-5">
-            <div class="form-group">
-              <input type="text" class="form-control" id="filter" placeholder="Filter" onChange={this.onFilter} />
-            </div>
-          </form>
-        </div>
-        <div className="row">
-          <div className="sweet-loading">
-            <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div className="row">
+        <form className="col-sm-5">
+          <div className="form-group">
+            <input type="text" className="form-control" id="filter" placeholder="Filter" onChange={onFilter} />
           </div>
-          {this.state.testSuitesToDisplay.map(
-            function (testSuite) {
-              return (
-                <div className="col-sm-6" key={testSuite.id}>
-                  <div className="card testsuite-card col-sm-10">
-                    <div className="card-body">
-                      <div className="row">
-                        <div className="col-11">
-                          <h5 className="card-title">{testSuite.name}</h5>
-                        </div>
-                        <div className="col1">
-                          <span
-                            className="clickable edit-icon-visible red float-right"
-                            onClick={e => this.removeTestSuiteConfirmation(testSuite.id)}
-                          >
-                            <FontAwesomeIcon icon={faMinusCircle} />
-                          </span>
-                        </div>
-                      </div>
-                      <p className="card-text">
-                        <Link to={"/" + this.props.match.params.project + "/testcases?testSuite=" + testSuite.id}>
-                          View
-                        </Link>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="col-sm-1"></div>
-                </div>
-              );
-            }.bind(this),
-          )}
+        </form>
+      </div>
+      <div className="row">
+        <div className="sweet-loading">
+          <FadeLoader size={100} color={"#135f38"} loading={loading} />
         </div>
+        {testSuitesToDisplay.map(testSuite => (
+          <div className="col-sm-6" key={testSuite.id}>
+            <div className="card testsuite-card col-sm-10">
+              <div className="card-body">
+                <div className="row">
+                  <div className="col-11">
+                    <h5 className="card-title">{testSuite.name}</h5>
+                  </div>
+                  <div className="col1">
+                    <span className="clickable edit-icon-visible red float-right" onClick={() => removeTestSuiteConfirmation(testSuite.id)}>
+                      <FontAwesomeIcon icon={faMinusCircle} />
+                    </span>
+                  </div>
+                </div>
+                <p className="card-text">
+                  <Link to={"/" + project + "/testcases?testSuite=" + testSuite.id}>View</Link>
+                </p>
+              </div>
+            </div>
+            <div className="col-sm-1"></div>
+          </div>
+        ))}
+      </div>
 
-        <div className="modal fade" tabIndex="-1" role="dialog" id="remove-testsuite-confirmation">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Remove Test Suite</h5>
-                <button
-                  type="button"
-                  className="close"
-                  onClick={this.cancelRemoveTestSuiteConfirmation}
-                  aria-label="Close"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">Are you sure you want to remove Test Suite?</div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={this.cancelRemoveTestSuiteConfirmation}>
-                  Close
-                </button>
-                <button type="button" className="btn btn-danger" onClick={this.removeTestSuite}>
-                  Remove Test Suite
-                </button>
-              </div>
+      <div className="modal fade" tabIndex="-1" role="dialog" id="remove-testsuite-confirmation">
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Remove Test Suite</h5>
+              <button type="button" className="close" onClick={cancelRemoveTestSuiteConfirmation} aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body">Are you sure you want to remove Test Suite?</div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={cancelRemoveTestSuiteConfirmation}>Close</button>
+              <button type="button" className="btn btn-danger" onClick={removeTestSuite}>Remove Test Suite</button>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default withRouter(TestSuites);

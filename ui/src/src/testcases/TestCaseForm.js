@@ -1,5 +1,4 @@
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect } from "react";
 import { withRouter } from "../common/withRouter";
 import CreatableSelect from "react-select/creatable";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,283 +7,171 @@ import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
-class TestCaseForm extends SubComponent {
-  constructor(props) {
-    super(props);
+function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsProp, onTestCaseAdded, match }) {
+  const [testcase, setTestcase] = useState(testcaseProp || { name: "", description: "", attributes: {} });
+  const [projectAttributes, setProjectAttributes] = useState(projectAttrsProp || []);
+  const [defaultProjectAttributes, setDefaultProjectAttributes] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
-    this.state = {
-      testcase: props.testcase,
-      projectAttributes: [],
-      errorMessage: "",
-      defaultProjectAttributesFilter: {
-        skip: 0,
-        limit: 20,
-        orderby: "project",
-        orderdir: "ASC",
-        includedFields: "project,attributes",
-      },
-      defaultProjectAttributes: [],
-    };
-    this.onTestCaseAdded = props.onTestCaseAdded;
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.addAttribute = this.addAttribute.bind(this);
-    this.getAttribute = this.getAttribute.bind(this);
-    this.getAttributeName = this.getAttributeName.bind(this);
-    this.getAttributeValues = this.getAttributeValues.bind(this);
-    this.editAttributeKey = this.editAttributeKey.bind(this);
-    this.editAttributeValues = this.editAttributeValues.bind(this);
-    this.removeAttribute = this.removeAttribute.bind(this);
-    this.getAttributeKeysToAdd = this.getAttributeKeysToAdd.bind(this);
-    this.getDefaultAttribValues=this.getDefaultAttribValues.bind(this);
-    this.loadDefaultProjectAttributes=this.loadDefaultProjectAttributes(this);
-  }
+  const defaultProjectAttributesFilter = {
+    skip: 0, limit: 20, orderby: "project", orderdir: "ASC", includedFields: "project,attributes",
+  };
 
-  handleChange(event) {
-    var testcaseUpd = this.state.testcase;
-    testcaseUpd[event.target.name] = event.target.value;
-    const newState = Object.assign({}, this.state, {
-      testcase: testcaseUpd,
-    });
-    this.setState(newState);
-  }
+  useEffect(() => {
+    if (testcaseProp) setTestcase(testcaseProp);
+  }, [testcaseProp]);
 
-  handleSubmit(event) {
-    Backend.post(this.props.match.params.project + "/testcase/", this.state.testcase)
-      .then(response => {
-        this.onTestCaseAdded(response);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "handleSubmit::Couldn't create testcase, error: " + error});
+  useEffect(() => {
+    if (projectAttrsProp) {
+      setProjectAttributes(projectAttrsProp);
+      const tempAttribs = projectAttrsProp.map(a => ({ value: a.id, attributeValues: a.attrValues }));
+      tempAttribs.shift(); // remove broken
+      setTestcase(prev => {
+        const attrs = { ...prev.attributes };
+        tempAttribs.forEach(t => {
+          attrs[t.value] = t.attributeValues != null ? t.attributeValues.map(v => v.value) : [];
+        });
+        return { ...prev, attributes: attrs };
       });
+    }
+  }, [projectAttrsProp]);
+
+  useEffect(() => {
+    const project = match?.params?.project;
+    if (project) {
+      Backend.get("defaultprojectattributes/getalldefaultprojattribs/" + project + "?" + Utils.filterToQuery(defaultProjectAttributesFilter))
+        .then(response => setDefaultProjectAttributes(response))
+        .catch(error => console.log(error));
+    }
+  }, [match?.params?.project]);
+
+  function getAttribute(id) {
+    return projectAttributes.find(a => a.id === id) || {};
+  }
+
+  function getAttributeName(id) { return getAttribute(id).name || ""; }
+  function getAttributeValues(id) { return getAttribute(id).attrValues || []; }
+
+  function getAttributeKeysToAdd() {
+    const attribs = (projectAttributes || [])
+      .filter(a => !Object.keys(testcase.attributes || {}).includes(a.id))
+      .map(a => ({ value: a.id, label: a.name }));
+    attribs.shift(); // remove broken
+    return attribs;
+  }
+
+  function getDefaultAttribValues(attribList) {
+    const project = match?.params?.project;
+    const allDefault = [];
+    for (let i = 0; i < defaultProjectAttributes.length; i++) {
+      if (project && project.includes(defaultProjectAttributes[i].project)) {
+        allDefault.push(...attribList.filter(val => defaultProjectAttributes[i].attributes.includes(val)));
+      }
+    }
+    return allDefault;
+  }
+
+  function editAttributeKey(key, event) {
+    setTestcase(prev => {
+      const attrs = { ...prev.attributes, [event.value]: prev.attributes[key] };
+      delete attrs[key];
+      return { ...prev, attributes: attrs };
+    });
+  }
+
+  function editAttributeValues(key, values) {
+    setTestcase(prev => ({
+      ...prev,
+      attributes: { ...prev.attributes, [key]: (values || []).map(v => v.value) },
+    }));
+  }
+
+  function removeAttribute(key) {
+    setTestcase(prev => {
+      const attrs = { ...prev.attributes };
+      delete attrs[key];
+      return { ...prev, attributes: attrs };
+    });
+  }
+
+  function handleChange(event) {
+    setTestcase(prev => ({ ...prev, [event.target.name]: event.target.value }));
+  }
+
+  function handleSubmit(event) {
+    Backend.post(match.params.project + "/testcase/", testcase)
+      .then(response => { if (onTestCaseAdded) onTestCaseAdded(response); })
+      .catch(error => setErrorMessage("Couldn't create testcase: " + error));
     event.preventDefault();
   }
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.testcase !== this.props.testcase || prevProps.projectAttributes !== this.props.projectAttributes) {
-      if (this.props.testcase) {
-        this.state.testcase = this.props.testcase;
-      }
-      if (this.props.projectAttributes) {
-        this.state.projectAttributes = this.props.projectAttributes;
-        var tempAttribs = this.state.projectAttributes.map(attribute => ({value: attribute.id, attributeValues: attribute.attrValues}));
-        //remove broken
-        tempAttribs.shift();
-        tempAttribs.map(t => (this.state.testcase.attributes[t.value] = (t.attributeValues != null ? t.attributeValues.map(t => t.value) : [])));
-      }
-      this.setState(this.state);
-    }
-  }
-
-  loadDefaultProjectAttributes() {
-
-    Backend.get("/defaultprojectattributes/getalldefaultprojattribs/" + 
-                 this.props.match.params.project + "?" + 
-                 Utils.filterToQuery(this.state.defaultProjectAttributesFilter))
-      .then(response => {
-         this.state.defaultProjectAttributes = response;
-      })
-      .catch(error => console.log(error));
-  }
-
-  addAttribute() {
-    this.state.testcase.attributes[null] = [];
-    this.setState(this.state);
-  }
-
-  editAttributeKey(key, event) {
-    this.state.testcase.attributes[event.value] = this.state.testcase.attributes[key];
-    delete this.state.testcase.attributes[key];
-    this.setState(this.state);
-  }
-
-  getAttribute(id) {
-    return (
-      this.state.projectAttributes.find(function (attribute) {
-        return attribute.id === id;
-      }) || {}
-    );
-  }
-
-  getAttributeName(id) {
-    return this.getAttribute(id).name || "";
-  }
-
-  getAttributeValues(id) {
-    return this.getAttribute(id).attrValues || [];
-  }
-
-  editAttributeValues(key, values) {
-    this.state.testcase.attributes[key] = values.map(function (value) {
-      return value.value;
-    });
-    this.setState(this.state);
-  }
-
-  removeAttribute(key, event) {
-    delete this.state.testcase.attributes[key];
-    this.setState(this.state);
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.state.projectAttributes = this.props.projectAttributes || [];
-    if (this.props.id) {
-      Backend.get(this.props.match.params.project + "/testcase/" + this.props.id)
-        .then(response => {
-          this.state.testcase = response;
-        })
-        .catch(error => console.log(error));
-    }
-    this.setState(this.state);
-  }
-
-  getAttributeKeysToAdd() {
-
-    var attribs = (this.state.projectAttributes || [])
-    .filter(attribute => !(Object.keys(this.state.testcase.attributes || {}) || []).includes(attribute.id))
-    .map(attribute => ({ value: attribute.id, label: attribute.name }));
-    //remove broken from the attribs list
-    attribs.shift();
-    return attribs;
-
-    // return (this.state.projectAttributes || [])
-    //   .filter(attribute => !(Object.keys(this.state.testcase.attributes || {}) || []).includes(attribute.id))
-    //   .map(attribute => ({ value: attribute.id, label: attribute.name }));
-  }
-
- //Added function to select the default values for 'Paratext'
- getDefaultAttribValues(attribList){
-
-    var allDefaultAttribs = [];
-    for (var i = 0; i < this.state.defaultProjectAttributes.length; i++) {
-
-       var projectId = this.props.match.params.project;
-       if (projectId.includes(this.state.defaultProjectAttributes[i].project)) {
-
-          var defaultAttribs = [];
-          defaultAttribs = attribList.filter(val => (this.state.defaultProjectAttributes[i].attributes.includes(val)));
-
-          allDefaultAttribs.push(...defaultAttribs);
-      }
-    }
-
-    return allDefaultAttribs;
-}
-
-  render() {
-    return (
-      <div className="modal-dialog" role="document" id="testcase-creation-form">
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title" id="editAttributeLabel">
-              Create Test Case
-            </h5>
-            <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div className="modal-body">
-            <form>
-              <div className="form-group row">
-                <label className="col-sm-3 col-form-label">Name</label>
-                <div className="col-sm-9">
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="name"
-                    value={this.state.testcase.name}
-                    onChange={this.handleChange}
-                  />
-                </div>
+  return (
+    <div className="modal-dialog" role="document" id="testcase-creation-form">
+      <ControlledPopup popupMessage={errorMessage} />
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title" id="editAttributeLabel">Create Test Case</h5>
+          <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div className="modal-body">
+          <form>
+            <div className="form-group row">
+              <label className="col-sm-3 col-form-label">Name</label>
+              <div className="col-sm-9">
+                <input type="text" className="form-control" name="name" value={testcase.name} onChange={handleChange} />
               </div>
-              <div className="form-group row">
-                <label className="col-sm-3 col-form-label">Description</label>
-                <div className="col-sm-9">
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="description"
-                    value={this.state.testcase.description}
-                    onChange={this.handleChange}
-                  />
-                </div>
+            </div>
+            <div className="form-group row">
+              <label className="col-sm-3 col-form-label">Description</label>
+              <div className="col-sm-9">
+                <input type="text" className="form-control" name="description" value={testcase.description} onChange={handleChange} />
               </div>
-              {Object.keys(this.state.testcase.attributes || {}).map(
-                function (attributeId, i) {
-                  var attributeValues = this.state.testcase.attributes[attributeId] || [];
-                  var defaultAttribs = this.getDefaultAttribValues(attributeValues);
-                  if (attributeId !== "null" && !attributeId.includes('broken')) {
-                    return (
-                      <div key={i} index={attributeId} className="form-group row">
-                        <label className="col-sm-3 col-form-label">{this.getAttributeName(attributeId)}</label>
-                        <div className="col-sm-8">
-                          <CreatableSelect
-                            // value={(attributeValues || []).map(function (val) {
-                            //   return { value: val, label: val };
-                            // })}
-                            isMulti
-                            isClearable
-                            defaultValue = {(defaultAttribs || []).map(function (val) {
-                                return { value: val, label: val };
-                              })}
-                            onChange={e => this.editAttributeValues(attributeId, e)}
-                            options={this.getAttributeValues(attributeId).map(function (attrValue) {
-                              return { value: attrValue.value, label: attrValue.value };
-                            })}
-                          />
-                        </div>
-                        {/* Commented as part of Issue 15,all attribs are mandatory
-                        <div className="col-sm-1">
-                          <span className="clickable red" index={i} onClick={e => this.removeAttribute(attributeId, e)}>
-                            <FontAwesomeIcon icon={faMinusCircle} />
-                          </span>
-                        </div> */}
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <div key={i} index={attributeId} className="form-group row">
-                        <label className="col-sm-3 col-form-label">Attribute</label>
-                        <div className="col-sm-8">
-                          <CreatableSelect
-                            onChange={e => this.editAttributeKey(attributeId, e)}
-                            options={this.getAttributeKeysToAdd()}
-                          />
-                        </div>
-                        <div className="col-sm-1">
-                          <span className="clickable red" index={i} onClick={e => this.removeAttribute(attributeId, e)}>
-                            <FontAwesomeIcon icon={faMinusCircle} />
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  }
-                }.bind(this),
-              )}
-              {/* Commented as part of Issue 15, all attribs are added by default
-               <div className="form-group row">
-                <div className="col-sm-4">
-                  <button type="button" className="btn btn-primary" id="addAttribute" onClick={this.addAttribute}>
-                    Add attribute
-                  </button>
-                </div>
-              </div> */}
-            </form>
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" data-dismiss="modal">
-              Close
-            </button>
-            <button type="button" className="btn btn-primary" onClick={this.handleSubmit}>
-              Save changes
-            </button>
-          </div>
+            </div>
+            {Object.keys(testcase.attributes || {}).map((attributeId, i) => {
+              const attributeValues = testcase.attributes[attributeId] || [];
+              const defaultAttribs = getDefaultAttribValues(attributeValues);
+              if (attributeId !== "null" && !attributeId.includes("broken")) {
+                return (
+                  <div key={i} className="form-group row">
+                    <label className="col-sm-3 col-form-label">{getAttributeName(attributeId)}</label>
+                    <div className="col-sm-8">
+                      <CreatableSelect
+                        isMulti
+                        isClearable
+                        defaultValue={(defaultAttribs || []).map(val => ({ value: val, label: val }))}
+                        onChange={e => editAttributeValues(attributeId, e)}
+                        options={getAttributeValues(attributeId).map(av => ({ value: av.value, label: av.value }))}
+                      />
+                    </div>
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={i} className="form-group row">
+                    <label className="col-sm-3 col-form-label">Attribute</label>
+                    <div className="col-sm-8">
+                      <CreatableSelect onChange={e => editAttributeKey(attributeId, e)} options={getAttributeKeysToAdd()} />
+                    </div>
+                    <div className="col-sm-1">
+                      <span className="clickable red" onClick={() => removeAttribute(attributeId)}>
+                        <FontAwesomeIcon icon={faMinusCircle} />
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+            })}
+          </form>
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" className="btn btn-primary" onClick={handleSubmit}>Save changes</button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default withRouter(TestCaseForm);

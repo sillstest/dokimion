@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import { Routes, Route, useParams } from "react-router-dom";
 import TestCases from "../testcases/TestCases";
 import TestSuites from "../testsuites/TestSuites";
@@ -32,17 +32,10 @@ function ChangeProfileRedirectRoute() {
   const { login } = useParams();
   return <Redirect requestUrl={"user/change-profile-redirect?login=" + (login || "")} />;
 }
+function Main({ onProjectChange, onSessionChange }) {
 
-class Main extends Component {
-  onProjectChange(project) {
-    this.props.onProjectChange(project);
-  }
 
-  onSessionChange(session) {
-    this.props.onSessionChange(session);
-  }
 
-  render() {
     return (
       <main>
         <div className="row justify-content-end">
@@ -59,19 +52,19 @@ class Main extends Component {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/new" element={<ProjectForm />} />
 
-          <Route path="/orgselect" element={<OrgSelect onSessionChange={this.onSessionChange.bind(this)} />} />
+          <Route path="/orgselect" element={<OrgSelect onSessionChange={onSessionChange} />} />
           <Route path="/organizations/new" element={<OrganizationForm />} />
           <Route path="/organizations/edit" element={<OrganizationForm editCurrent="true" />} />
 
           <Route path="/auth" element={<Auth />} />
-          <Route path="/idpauth" element={<IdpAuth onSessionChange={this.onSessionChange.bind(this)} />} />
+          <Route path="/idpauth" element={<IdpAuth onSessionChange={onSessionChange} />} />
 
           <Route path="/user/create-redirect" element={<Redirect requestUrl={"user/create-redirect"} />} />
           <Route path="/user/all-users-redirect" element={<Redirect requestUrl={"user/all-redirect"} />} />
           <Route path="/user/change-profile-redirect/:login" element={<ChangeProfileRedirectRoute />} />
 
           <Route path="/user/create" element={<CreateUser />} />
-          <Route path="/user/" element={<Users onProjectChange={this.onProjectChange.bind(this)} />} />
+          <Route path="/user/" element={<Users onProjectChange={onProjectChange} />} />
           <Route path="/user/delete" element={<DeleteUser />} />
 
           <Route path="/user/profile/:profileId" element={<Profile />} />
@@ -82,8 +75,8 @@ class Main extends Component {
             path="/login"
             element={
               <Login
-                onProjectChange={this.onProjectChange.bind(this)}
-                onSessionChange={this.onSessionChange.bind(this)}
+                onProjectChange={onProjectChange}
+                onSessionChange={onSessionChange}
               />
             }
           />
@@ -91,18 +84,18 @@ class Main extends Component {
 
           <Route
             path="/:project/testcases/new"
-            element={<TestCaseForm onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<TestCaseForm onProjectChange={onProjectChange} />}
           />
           <Route
             path="/projects/:project"
-            element={<Project onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Project onProjectChange={onProjectChange} />}
           />
           <Route
             path="/projects/:project/settings"
             element={
               <ProjectSettings
-                onProjectChange={this.onProjectChange.bind(this)}
-                onSessionChange={this.onSessionChange.bind(this)}
+                onProjectChange={onProjectChange}
+                onSessionChange={onSessionChange}
               />
             }
           />
@@ -110,51 +103,50 @@ class Main extends Component {
             path="/:project/testcase/:testcase"
             element={
               <TestCase
-                onProjectChange={this.onProjectChange.bind(this)}
-                onSessionChange={this.onSessionChange.bind(this)}
+                onProjectChange={onProjectChange}
+                onSessionChange={onSessionChange}
               />
             }
           />
           <Route
             path="/:project/testcases"
-            element={<TestCases onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<TestCases onProjectChange={onProjectChange} />}
           />
           <Route
             path="/:project/testsuites"
-            element={<TestSuites onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<TestSuites onProjectChange={onProjectChange} />}
           />
           <Route
             path="/:project/launches/"
-            element={<Launches onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Launches onProjectChange={onProjectChange} />}
           />
           <Route
             path="/:project/launches/statistics/"
-            element={<LaunchesStatistics onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<LaunchesStatistics onProjectChange={onProjectChange} />}
           />
           <Route
             path="/:project/launches/heatmap/"
-            element={<LaunchTestcasesHeatmap onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<LaunchTestcasesHeatmap onProjectChange={onProjectChange} />}
           />
           <Route
             path="/:project/launch/:launchId"
-            element={<Launch onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Launch onProjectChange={onProjectChange} />}
           />
           <Route
             path="/:project/launch/:launchId/:testcaseUuid"
-            element={<Launch onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Launch onProjectChange={onProjectChange} />}
           />
           <Route
             path="/:project/attributes"
-            element={<Attributes onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Attributes onProjectChange={onProjectChange} />}
           />
           <Route
             path="/:project/audit"
-            element={<Events onProjectChange={this.onProjectChange.bind(this)} />}
+            element={<Events onProjectChange={onProjectChange} />}
           />
         </Routes>
       </main>
     );
-  }
 }
 
 export default Main;

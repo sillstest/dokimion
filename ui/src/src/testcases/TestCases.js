@@ -1,8 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { withRouter } from "../common/withRouter";
 /* eslint-disable eqeqeq */
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import { withRouter } from "../common/withRouter";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import TestCaseForm from "../testcases/TestCaseForm";
 import TestCasesFilter from "../testcases/TestCasesFilter";
 import TestCase from "../testcases/TestCase";
@@ -23,674 +22,374 @@ global.jQuery = $;
 require("gijgo/js/gijgo.min.js");
 require("gijgo/css/gijgo.min.css");
 
-class TestCases extends SubComponent {
-  defaultTestcase = {
-    id: null,
-    name: "",
-    description: "",
-    steps: [],
-    attributes: {},
-  };
+const defaultTestcase = { id: null, name: "", description: "", steps: [], attributes: {} };
+const TC_FETCH_LIMIT = 50;
 
-  testCasesFetchLimit = 50;
+function TestCases({ match, history, location }) {
+  const project = match?.params?.project;
+  const treeRef = useRef(null);
 
-  state = {
-    testcasesTree: { children: [] },
-    testcaseToEdit: Object.assign({}, this.defaultTestcase, { attributes: {}, steps: [] }),
-    projectAttributes: [],
-    selectedTestCase: {},
-    filter: {
-      includedFields: "id,name,attributes,importedName,automated",
-      notFields: { id: [] },
-    },
-    loading: true,
-    showCasesSelectCheckboxes: false,
-    errorMessage: "",
-    tcSizesFilter: {
-      skip: 0,
-      limit: 20,
-      orderby: "name",
-      orderdir: "ASC",
-      includedFields: "name,minLines,maxLines",
-    },
-    tcSizes: {},
-    totalNoofTestCase: 0,
-  };
+  const [testcasesTree, setTestcasesTree] = useState({ children: [] });
+  const [testcaseToEdit, setTestcaseToEdit] = useState({ ...defaultTestcase, attributes: {}, steps: [] });
+  const [projectAttributes, setProjectAttributes] = useState([]);
+  const [selectedTestCase, setSelectedTestCase] = useState({});
+  const [filter, setFilter] = useState({ includedFields: "id,name,attributes,importedName,automated", notFields: { id: [] } });
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [tcSizes, setTcSizes] = useState({});
+  const [totalNoofTestCase, setTotalNoofTestCase] = useState(0);
+  const [count, setCount] = useState(0);
+  const [testSuite, setTestSuite] = useState(null);
 
-  constructor(props) {
-    super(props);
-    this.onFilter = this.onFilter.bind(this);
-    this.refreshTree = this.refreshTree.bind(this);
-    this.getQueryParams = this.getQueryParams.bind(this);
-    this.getFilterQParams = this.getFilterQParams.bind(this);
-    this.getGroupingQParams = this.getGroupingQParams.bind(this);
-    this.onTestcaseSelected = this.onTestcaseSelected.bind(this);
-    this.onTestCaseAdded = this.onTestCaseAdded.bind(this);
-    this.loadMoreTestCases = this.loadMoreTestCases.bind(this);
-    this.showLoadMore = this.showLoadMore.bind(this);
-    this.updateCount = this.updateCount.bind(this);
-    this.processElementChecked = this.processElementChecked.bind(this);
-    this.handleBulkAddAttributes=this.handleBulkAddAttributes.bind(this);
-    this.handleBulkRemoveAttributes=this.handleBulkRemoveAttributes.bind(this);
-    this.handleGetTCSizes = this.handleGetTCSizes.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.getTotalNumberOfTestCases = this.getTotalNumberOfTestCases.bind(this);
-    this.handleLockAllTestCases = this.handleLockAllTestCases.bind(this);
-    this.handleUnLockAllTestCases=this.handleUnLockAllTestCases.bind(this);
-  }
+  // Refs for values needed in callbacks without triggering re-renders
+  const filterRef = useRef(filter);
+  const testcasesTreeRef = useRef(testcasesTree);
+  const tcSizesRef = useRef(tcSizes);
+  const selectedTestCaseRef = useRef(selectedTestCase);
 
-  //Get the count of all testcases from DB without any limit Issue 28
-  getTotalNumberOfTestCases(){
-    delete this.state.filter.skip
-    delete this.state.filter.limit
-    Backend.get(
-      this.props.match.params.project + "/testcase/count?" + this.getFilterApiRequestParams(this.state.filter),
-      ).then(response => {
-        //Added for Issue 28
-        this.state.totalNoofTestCase = response;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getTotalNumberOfTestCases::Couldn't fetch testcases number, error: " + error});
-      });
-    this.handleLockAllTestCases = this.handleLockAllTestCases.bind(this);
-  }
+  useEffect(() => { filterRef.current = filter; }, [filter]);
+  useEffect(() => { testcasesTreeRef.current = testcasesTree; }, [testcasesTree]);
+  useEffect(() => { tcSizesRef.current = tcSizes; }, [tcSizes]);
+  useEffect(() => { selectedTestCaseRef.current = selectedTestCase; }, [selectedTestCase]);
 
-  handleGetTCSizes() {
-
-    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery(this.state.tcSizesFilter))
-      .then(response => {
-        this.state.tcSizes = response;
-        this.setState(this.state);
-      })
-      .catch(() => {
-        console.log("Error in handleGetTCsizes");
-      });
-
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.handleGetTCSizes();
-    var params = qs.parse(this.props.location.search.substring(1));
-    if (params.testcase) {
-      this.state.selectedTestCase = { id: params.testcase };
-      this.setState(this.state);
-    }
-    if (params.testSuite) {
-      this.state.testSuite = {
-        id: params.testSuite,
-      };
-      this.setState(this.state);
-    }
-
-    Backend.get(this.props.match.params.project + "/attribute")
-      .then(response => {
-        this.state.projectAttributes = response.
-           filter(function(p) { return p.type != 'undefined'}).
-           filter(function(p) { return p.type != 'LAUNCH'});
-        this.state.projectAttributes = this.state.projectAttributes.sort((a, b) => (a.name || "").localeCompare(b.name));
-        this.state.projectAttributes.unshift({
-          id: "broken",
-          name: "Broken",
-          values: ["True", "False"],
-        });
-        this.setState(this.state);
-        this.refreshTree();
-      })
-      .catch(error => {
-        this.setState({errorMessage: "componentDidMount::Couldn't fetch attributes, error: " + error});
-      });
-  }
-
-  editTestcase(testcaseId) {
-    this.state.testcaseToEdit =
-      this.state.testcases.find(function (testcase) {
-        return testcaseId === testcase.id;
-      }) || {};
-    this.setState(this.state);
-    $("#editTestcase").modal("toggle");
-  }
-
-  onTestCaseAdded(testcase) {
-    this.state.testcaseToEdit = Object.assign({}, this.defaultTestcase, { attributes: {}, steps: [] });
-    this.onFilter(
-      this.state.filter,
-      function () {
-        this.onTestcaseSelected(testcase.id);
-        this.refreshTree();
-      }.bind(this),
-    );
-    $("#editTestcase").modal("hide");
-  }
-
-  onFilter(filter, onResponse) {
-    var params = qs.parse(this.props.location.search.substring(1));
-    if (params.testcase) {
-      this.state.selectedTestCase = { id: params.testcase };
-    }
-
-    if (!filter.groups || filter.groups.length == 0 ) {
-      filter.skip = filter.skip || 0;
-      filter.limit = this.testCasesFetchLimit;
-    }
-    filter.includedFields = filter.includedFields || [];
-    filter.includedFields.push("name");
-    filter.includedFields.push("id");
-    filter.includedFields.push("attributes");
-
-    filter.notFields = filter.notFields || {};
-    filter.notFields.id = filter.notFields.id || [];
-
-    this.state.filter = filter;
-    this.state.loading = true;
-    this.setState(this.state);
-    
-    Backend.get(this.props.match.params.project + "/testcase/tree?" + this.getFilterApiRequestParams(filter))
-      .then(response => {
-        this.state.totolNoofTestCase = response.count;
-        this.state.testcasesTree = response;
-        this.state.loading = false;
-        this.setState(this.state);
-        //Added to reflect Total TC Issue 28
-        this.getTotalNumberOfTestCases();
-        this.refreshTree();
-        if (onResponse) {
-          onResponse();
-        }
-        this.updateCount();
-      })
-      .catch(error => {
-        this.setState({errorMessage: "onFilter::Couldn't fetch testcases tree: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-    if (!params.testSuite) {
-      this.props.history.push("/" + this.props.match.params.project + "/testcases?" + this.getQueryParams(filter));
-    }
-  }
-
-  updateCount() {
-    Backend.get(
-      this.props.match.params.project + "/testcase/count?" + this.getFilterApiRequestParams(this.state.filter),
-    )
-      .then(response => {
-        this.state.count = response;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "updateCount::Couldn't fetch testcases number: " + error});
-      });
-  }
-
-  loadMoreTestCases(event) {
-    this.state.filter.skip = (this.state.filter.skip || 0) + this.testCasesFetchLimit;
-    //Added for Issue 28
-    this.state.filter.limit = this.testCasesFetchLimit;
-    Backend.get(this.props.match.params.project + "/testcase?" + this.getFilterApiRequestParams(this.state.filter))
-      .then(response => {
-        if (response) {
-          this.state.testcasesTree.testCases = this.state.testcasesTree.testCases.concat(response);
-          this.setState(this.state);
-          this.refreshTree();
+  function getFilterApiRequestParams(f) {
+    var tokens = (f.groups || []).map(g => "groups=" + g);
+    (f.filters || []).forEach(function (filt) {
+      (filt.attrValues || []).forEach(function (attrValue) {
+        if (filt.id == "broken" && attrValue.value && attrValue.value != "") {
+          tokens.push(filt.id + "=" + attrValue.value);
         } else {
-          this.state.filter.skip = (this.state.filter.skip || 0) - this.testCasesFetchLimit;
-          this.setState(this.state);
-        }
-      })
-      .catch(error => {
-        this.setState({errorMessage: "loadMoreTestCases::Couldn't fetch testcases: " + error});
-      });
-    event.preventDefault();
-  }
-
-  getFilterApiRequestParams(filter) {
-    var tokens = (filter.groups || []).map(function (group) {
-      return "groups=" + group;
-    });
-    filter.filters.forEach(function (filter) {
-      filter.attrValues.forEach(function (attrValue) {
-        if (filter.id == "broken" && attrValue.value && attrValue.value != "") {
-          tokens.push(filter.id + "=" + attrValue.value);
-        } else {
-          tokens.push("attributes." + filter.id + "=" + attrValue.value);
+          tokens.push("attributes." + filt.id + "=" + attrValue.value);
         }
       });
     });
-
-    if ((filter.groups || []).length > 0) {
-      filter.skip = 0;
-      filter.limit = 0;
-    }
-    if (filter.skip) {
-      tokens.push("skip=" + filter.skip);
-    }
-    if (filter.limit) {
-      tokens.push("limit=" + filter.limit);
-    }
-    if (filter.fulltext && filter.fulltext != ""){
-        tokens.push("fulltext=" + filter.fulltext);
-    }
+    if ((f.groups || []).length > 0) { f.skip = 0; f.limit = 0; }
+    if (f.skip) tokens.push("skip=" + f.skip);
+    if (f.limit) tokens.push("limit=" + f.limit);
+    if (f.fulltext && f.fulltext != "") tokens.push("fulltext=" + f.fulltext);
     return tokens.join("&");
   }
 
-  onTestcaseSelected(id) {
-    this.state.selectedTestCase = Utils.getTestCaseFromTree(id, this.state.testcasesTree, function (testCase, id) {
-      return testCase.id === id;
+  function getFilterQParams(f) {
+    var activeFilters = (f.filters || []).filter(fi => fi.id);
+    var pairs = [];
+    activeFilters.forEach(fi => {
+      (fi.attrValues || []).forEach(av => pairs.push("attribute=" + fi.id + ":" + av.value));
     });
-    this.props.history.push(
-      "/" + this.props.match.params.project + "/testcases?" + this.getQueryParams(this.state.filter),
-    );
-    this.setState(this.state);
+    return pairs.join("&") || "";
   }
 
-  refreshTree() {
-    if (this.tree) {
-      this.tree.destroy();
-    }
+  function getGroupingQParams(f) {
+    return (f.groups || []).map(g => "groups=" + g).join("&") || "";
+  }
 
-    this.tree = $("#tree").tree({
+  function getFulltextQParams(f) {
+    if (!f.fulltext || f.fulltext == "") return "";
+    return "fulltext=" + f.fulltext;
+  }
+
+  function getQueryParams(f, selTC, ts) {
+    var testcaseIdAttr = (selTC && selTC.id) ? "testcase=" + selTC.id : "";
+    var parts = [getFilterQParams(f), getGroupingQParams(f), testcaseIdAttr, getFulltextQParams(f)];
+    if (ts) parts.push("testSuite=" + ts.id);
+    return parts.filter(v => v !== "").join("&");
+  }
+
+  function processElementChecked(element, isChecked, currentFilter) {
+    if (element.isLeaf) {
+      if (isChecked) {
+        currentFilter.notFields.id = currentFilter.notFields.id.filter(e => e !== element.id);
+      } else if (!currentFilter.notFields.id.includes(element.id)) {
+        currentFilter.notFields.id.push(element.id);
+      }
+    }
+    (element.children || []).forEach(e => processElementChecked(e, isChecked, currentFilter));
+    return currentFilter;
+  }
+
+  const refreshTree = useCallback((tree, selTC, f, sizes) => {
+    if (treeRef.current) { treeRef.current.destroy(); }
+    treeRef.current = $("#tree").tree({
       primaryKey: "id",
       uiLibrary: "bootstrap4",
       checkboxes: true,
       checkedField: "checked",
-      dataSource: Utils.parseTree(this.state.testcasesTree, this.state.filter.notFields.id, this.state.tcSizes),
+      dataSource: Utils.parseTree(tree, (f.notFields || {}).id, sizes),
     });
-    this.tree.on(
-      "select",
-      function (e, node, id) {
-        this.onTestcaseSelected(id);
-      }.bind(this),
-    );
-    this.tree.on(
-      "checkboxChange",
-      function (e, $node, record, state) {
-        if (state === "indeterminate") return;
-        this.processElementChecked(record, state === "checked");
-        this.setState(this.state);
-      }.bind(this),
-    );
-    if (!(this.state.selectedTestCase === undefined) &&
-         (!(this.state.selectedTestCase.id === undefined)) &&
-         (this.state.selectedTestCase.id)) {
-      var node = this.tree.getNodeById(this.state.selectedTestCase.id);
+    treeRef.current.on("select", function (e, node, id) {
+      const tc = Utils.getTestCaseFromTree(id, tree, (tc, id) => tc.id === id);
+      setSelectedTestCase(tc || {});
+      history.push("/" + project + "/testcases?" + getQueryParams(f, tc, testSuite));
+    });
+    treeRef.current.on("checkboxChange", function (e, $node, record, state) {
+      if (state === "indeterminate") return;
+      const updatedFilter = processElementChecked(record, state === "checked", { ...filterRef.current, notFields: { ...(filterRef.current.notFields || {}), id: [...((filterRef.current.notFields || {}).id || [])] } });
+      setFilter(updatedFilter);
+    });
+    if (selTC && selTC.id) {
+      var node = treeRef.current.getNodeById(selTC.id);
       if (!node) return;
-      this.tree.select(node);
-      this.state.filter.groups.forEach(
-        function (groupId) {
-          var attributes =
-            Utils.getTestCaseFromTree(
-              this.state.selectedTestCase.id,
-              this.state.testcasesTree,
-              function (testCase, id) {
-                return testCase.id === id;
-              },
-            ).attributes || {};
-          var values = attributes[groupId] || ["None"];
-          values.forEach(
-            function (value) {
-              var node = this.tree.getNodeById(groupId + ":" + value);
-              this.tree.expand(node);
-            }.bind(this),
-          );
-        }.bind(this),
-      );
+      treeRef.current.select(node);
     }
+  }, [project, history, testSuite]);
+
+  function updateCount(f) {
+    Backend.get(project + "/testcase/count?" + getFilterApiRequestParams({ ...f }))
+      .then(response => setCount(response))
+      .catch(error => console.log(error));
   }
 
-  processElementChecked(element, isChecked) {
-    if (element.isLeaf) {
-      if (isChecked) {
-        this.state.filter.notFields.id = this.state.filter.notFields.id.filter(e => e !== element.id);
-      } else if (!this.state.filter.notFields.id.includes(element.id)) {
-        this.state.filter.notFields.id.push(element.id);
-      }
-    }
-    (element.children || []).forEach(e => this.processElementChecked(e, isChecked));
+  function getTotalNumberOfTestCases(f) {
+    const countFilter = { ...f };
+    delete countFilter.skip;
+    delete countFilter.limit;
+    Backend.get(project + "/testcase/count?" + getFilterApiRequestParams(countFilter))
+      .then(response => setTotalNoofTestCase(response))
+      .catch(error => setErrorMessage("Couldn't fetch testcases number: " + error));
   }
 
-  getQueryParams(filter) {
-    var testcaseIdAttr = "";
-    if (this.state.selectedTestCase && this.state.selectedTestCase.id) {
-      testcaseIdAttr = "testcase=" + this.state.selectedTestCase.id;
-    }
-    var urlParts = [this.getFilterQParams(filter), this.getGroupingQParams(filter), testcaseIdAttr, this.getFulltextQParams(filter)];
-    if (this.state.testSuite) {
-      urlParts.push("testSuite=" + this.state.testSuite.id);
-    }
-    return urlParts
-      .filter(function (val) {
-        return val !== "";
-      })
-      .join("&");
+  function handleGetTCSizes() {
+    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery({ skip: 0, limit: 20, orderby: "name", orderdir: "ASC", includedFields: "name,minLines,maxLines" }))
+      .then(response => setTcSizes(response))
+      .catch(() => console.log("Error in handleGetTCSizes"));
   }
 
-  getFulltextQParams(filter){
-    if (!filter.fulltext || filter.fulltext == "") return "";
-    return "fulltext=" + filter.fulltext;
-  }
+  useEffect(() => {
+    handleGetTCSizes();
+    const params = qs.parse(location.search.substring(1));
+    let initialFilter = { ...filter };
+    if (params.testcase) setSelectedTestCase({ id: params.testcase });
+    if (params.testSuite) setTestSuite({ id: params.testSuite });
 
-  getFilterQParams(filter) {
-    var activeFilters =
-      filter.filters.filter(function (filter) {
-        return filter.id;
-      }) || [];
-    var attributesPairs = [];
-    activeFilters.forEach(function (filter) {
-      var tokens = filter.attrValues.map(function (attrValue) {
-        return "attribute=" + filter.id + ":" + attrValue.value;
-      });
-      attributesPairs = attributesPairs.concat(tokens);
-    });
-
-    return attributesPairs.join("&") || "";
-  }
-
-  getGroupingQParams(filter) {
-    return (
-      filter.groups
-        .map(function (group) {
-          return "groups=" + group;
-        })
-        .join("&") || ""
-    );
-  }
-
-  showLoadMore() {
-    if (((this.state.filter || {}).groups || []).length > 0 || !this.state.count) {
-      return false;
-    }
-    return ((this.state.filter || {}).skip || 0) + this.testCasesFetchLimit <= this.state.count;
-  }
-
-  handleSubmit(testcase) {
-
-    Backend.put(this.props.match.params.project + "/testcase/", testcase)
+    Backend.get(project + "/attribute")
       .then(response => {
-        testcase = response;
-        console.log("After DB update : " + JSON.stringify(testcase));
-      })
-      .catch(error => {
-        this.setState({errorMessage: "handleSubmit::Couldn't save testcase: " + error});
-      });
-    
-  }
-  
-  handleBulkAddAttributes(filterAttribs){
-    let projectId = this.props.match.params.project;
-    let Tcs = this.state.testcasesTree.testCases.map(tc => tc.id);
-    let NotSelected = this.state.filter.notFields.id;
-  
-    let selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId===id));
-    //Remove broken and empty object
-    let newValidAttribs =   filterAttribs.filter(id => !((id.id === null) || (id.id==='broken')));
-    //Array of all selected ids
-    var selectedAttribIds = newValidAttribs.map( val => val.id);
-    console.log("Filter Attribs : " + JSON.stringify(newValidAttribs));
-    if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
-      {
-        this.setState({errorMessage: "handleBulkAddAttributes::Select an Attribute to Add" });
-        return;
-      }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
-        console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
-        this.setState({errorMessage: "handleBulkAddAttributes::Select an Attribute to Add" });
-        return;
-      }
-      else{
-        this.setState({errorMessage: " " });
-      }
-  
-    selectedTCS.forEach((item, index, temp)=>{ 
-      Backend.get(projectId + "/testcase/" + item)
-      .then(response => {
-        const testcase = response;
-        const originalTC = JSON.parse(JSON.stringify(testcase));
-  
-          //No Attribs 
-        if(Object.keys(testcase.attributes).length === 0){
-            //add the attribs to testcase
-            var attributeValues =[];
-            newValidAttribs.forEach((elem, index) =>{ 
-            var selectedAttribValues = elem.attrValues.map( val => val.value);
-            testcase.attributes[elem.id] = attributeValues.concat(selectedAttribValues); 
-    //        console.log("Updated Attribuyes " + JSON.stringify(testcase.attributes));
+        const attrs = response
+          .filter(p => p.type != 'undefined')
+          .filter(p => p.type != 'LAUNCH')
+          .sort((a, b) => (a.name || "").localeCompare(b.name));
+        attrs.unshift({ id: "broken", name: "Broken", values: ["True", "False"] });
+        setProjectAttributes(attrs);
+
+        Backend.get(project + "/testcase/tree?" + getFilterApiRequestParams(initialFilter))
+          .then(response => {
+            setTestcasesTree(response);
+            setLoading(false);
+            getTotalNumberOfTestCases(initialFilter);
+            updateCount(initialFilter);
+            refreshTree(response, params.testcase ? { id: params.testcase } : {}, initialFilter, tcSizesRef.current);
           })
-        }else{
-            //Check if the selectedID is present not in TC Attributes
-            var attributetobeaddedAdditionally = selectedAttribIds.filter((id)=> !Object.keys(testcase.attributes).includes(id));
-            //console.log("TO BE Added : " + attributetobeaddedAdditionally + " length " + Object.keys(attributetobeaddedAdditionally).length);
-            if(attributetobeaddedAdditionally.length>0){
-              var attributeValues =[];
-              attributetobeaddedAdditionally.forEach((elem, index) =>{ 
-                if(elem!==null&& elem!==undefined){
-                  var filterObject = newValidAttribs.find((val)=> val.id.includes(elem));
-                  var selectedAttribValues = filterObject.attrValues.map( val => val.value);
-                  testcase.attributes[filterObject.id] = attributeValues.concat(selectedAttribValues); 
-  //                console.log("New Attribs added" + JSON.stringify(testcase.attributes));
-                }
-            })}
-  
-              //Only if TC has exisitng attributes 
-              Object.keys(testcase.attributes || {}).map( 
-                function (attributeId, i) { 
-                  if (attributeId && attributeId != "null") {
-                  var attributeValues = testcase.attributes[attributeId] || []; 
-                //  console.log("Attrib ID " + attributeId + " AttribValues " + attributeValues); 
-                  var valueAttribTobeAdded =[]; 
-                  newValidAttribs.forEach((elem, index) =>{ 
-                    var selectedAttribValues = elem.attrValues.map( val => val.value);
-                if(elem.id === attributeId){ 
-  
-                    valueAttribTobeAdded = selectedAttribValues.filter(val => !attributeValues.includes(val));
-                    testcase.attributes[attributeId] = attributeValues.concat(valueAttribTobeAdded) ; 
-                }
-              
-              }) 
-              }
-            }.bind(this)); 
-           }//closing else
-         
-          //  console.log("Original TC :" + JSON.stringify(originalTC));
-          //  console.log(" TC :" + JSON.stringify(testcase));
-           if(!equal(originalTC, testcase)){
-            console.log("Testcase Modified need to update : " + testcase.id);
-            this.handleSubmit(testcase);
-            this.refreshTree();
-           }else{
-            console.log("Testcase Not modified : " + testcase.id);
-           }
-         
-          }).catch(error => {
-              this.setState({errorMessage: "handleBulkAddAttributes::Couldn't fetch testcase"});
-              
-      })})
-     
-    this.setState({errorMessage: "handleBulkAddAttributes::Added Attributes in selected Tescases"});
-    this.props.history.push(
-      "/" + this.props.match.params.project +"/testcases"
-   );
-  
-   return "OK";
-  }
-  
-  
-  handleBulkRemoveAttributes(filterAttribs){
-    //console.log("Entered here in handleBulkRemoveAttributes" + JSON.stringify(filterAttribs));
-  
-    let projectId = this.props.match.params.project;
-    let Tcs = this.state.testcasesTree.testCases.map(tc => tc.id);
-    let NotSelected = this.state.filter.notFields.id;
-    let selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId===id));
-    let newValidAttribs =    filterAttribs.filter(id => !((id.id === null) || (id.id==='broken')));
-  
-    if(newValidAttribs.length === 0  && Object.keys(newValidAttribs).length === 0)
-    {
-      this.setState({errorMessage: "handleBulkRemoveAttributes::Select an Attribute to Remove" });
-      return;
-    }else if(newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0 ){
-      console.log ("On initial realod : " + JSON.stringify(newValidAttribs));
-      this.setState({errorMessage: "handleBulkRemoveAttributes::Select an Attribute to Remove" });
-      return;
-    }
-    else{
-      this.setState({errorMessage: " " });
+          .catch(error => { setErrorMessage("Couldn't fetch testcases: " + error); setLoading(false); });
+      })
+      .catch(error => setErrorMessage("Couldn't fetch attributes: " + error));
+  }, []);
+
+  function onFilter(newFilter, callback) {
+    const params = qs.parse(location.search.substring(1));
+    if (params.testcase) setSelectedTestCase({ id: params.testcase });
+
+    const f = { ...newFilter };
+    if ((f.groups || []).length === 0) { f.skip = f.skip || 0; f.limit = TC_FETCH_LIMIT; }
+    f.includedFields = (f.includedFields || []);
+    if (!f.includedFields.includes("name")) f.includedFields.push("name");
+    if (!f.includedFields.includes("id")) f.includedFields.push("id");
+    if (!f.includedFields.includes("attributes")) f.includedFields.push("attributes");
+    f.notFields = f.notFields || {};
+    f.notFields.id = f.notFields.id || [];
+
+    setFilter(f);
+    setLoading(true);
+
+    if (!params.testSuite) {
+      history.push("/" + project + "/testcases?" + getQueryParams(f, selectedTestCaseRef.current, testSuite));
     }
 
-  
-    selectedTCS.forEach((item, index, temp)=>{ 
-  
-      Backend.get(projectId + "/testcase/" + item)
+    Backend.get(project + "/testcase/tree?" + getFilterApiRequestParams(f))
       .then(response => {
-      //  console.log("TC from DB" + JSON.stringify(response));
+        setTestcasesTree(response);
+        setLoading(false);
+        getTotalNumberOfTestCases(f);
+        updateCount(f);
+        refreshTree(response, selectedTestCaseRef.current, f, tcSizesRef.current);
+        if (callback) callback();
+      })
+      .catch(error => { setErrorMessage("Couldn't fetch testcases: " + error); setLoading(false); });
+  }
+
+  function onTestCaseAdded(testcase) {
+    setTestcaseToEdit({ ...defaultTestcase, attributes: {}, steps: [] });
+    onFilter(filterRef.current, () => {
+      const tc = Utils.getTestCaseFromTree(testcase.id, testcasesTreeRef.current, (tc, id) => tc.id === id);
+      setSelectedTestCase(tc || {});
+      if (treeRef.current) {
+        const node = treeRef.current.getNodeById(testcase.id);
+        if (node) treeRef.current.select(node);
+      }
+    });
+    $("#editTestcase").modal("hide");
+  }
+
+  function loadMoreTestCases(event) {
+    const f = { ...filterRef.current, skip: ((filterRef.current.skip || 0) + TC_FETCH_LIMIT), limit: TC_FETCH_LIMIT };
+    Backend.get(project + "/testcase?" + getFilterApiRequestParams(f))
+      .then(response => {
+        setTestcasesTree(prev => ({ ...prev, testCases: (prev.testCases || []).concat(response) }));
+      })
+      .catch(error => setErrorMessage("Couldn't fetch testcases: " + error));
+    event.preventDefault();
+  }
+
+  function showLoadMore() {
+    if (((filterRef.current || {}).groups || []).length > 0 || !count) return false;
+    return ((filterRef.current || {}).skip || 0) + TC_FETCH_LIMIT <= count;
+  }
+
+  function handleSubmit(testcase) {
+    Backend.put(project + "/testcase/", testcase)
+      .catch(error => setErrorMessage("Couldn't save testcase: " + error));
+  }
+
+  function handleBulkAddAttributes(filterAttribs) {
+    const Tcs = (testcasesTreeRef.current.testCases || []).map(tc => tc.id);
+    const NotSelected = filterRef.current.notFields.id;
+    const selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId === id));
+    const newValidAttribs = filterAttribs.filter(id => !((id.id === null) || (id.id === 'broken')));
+    if (newValidAttribs.length === 0 || (newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0)) {
+      setErrorMessage("Select an Attribute to Add"); return;
+    }
+    setErrorMessage(" ");
+    const selectedAttribIds = newValidAttribs.map(val => val.id);
+    selectedTCS.forEach(item => {
+      Backend.get(project + "/testcase/" + item).then(response => {
         const testcase = response;
         const originalTC = JSON.parse(JSON.stringify(testcase));
-          //No Attribs 
-          if(Object.keys(testcase.attributes).length === 0){
-            //If the attributes are empty nothing left to delete
-            console.log("Selected attribute not present in TC " + testcase.id);
-        }else{
-              //Only if TC has exisitng attributes 
-              Object.keys(testcase.attributes || {}).map( 
-                function (attributeId, i) { 
-                  if (attributeId && attributeId != "null") {
-                  var attributeValues = testcase.attributes[attributeId] || []; 
-                  var valueAttribTobeAdded =[]; 
-                  newValidAttribs.forEach((elem, index) =>{ 
-                    if(elem.id === attributeId){ 
-                      var selectedAttribValues = elem.attrValues.map( val => val.value);
-                    
-                      valueAttribTobeAdded = attributeValues.filter(val => !selectedAttribValues.includes(val));
-                      if(valueAttribTobeAdded.length===0){
-      //                console.log("Deleted empty attributes with Key" + attributeId);
-                        delete testcase.attributes[attributeId];
-                      }else{
-                        testcase.attributes[attributeId] = valueAttribTobeAdded ; 
-                      }
-                }}) 
-              }
-            }.bind(this)); 
-           }//closing else
-           if(!equal(originalTC, testcase)){
-            console.log("Testcase Modified need to update : " + testcase.id);
-            this.handleSubmit(testcase);
-            this.refreshTree();
-           }else{
-            console.log("Testcase Not modified : " + testcase.id);
-           }
-          }).catch(error => {
-              this.setState({errorMessage: "handleBulkRemoveAttributes::Couldn't fetch testcase"});
-      })})
-  
-    
-    this.setState({errorMessage: "handleBulkRemoveAttributes::Removed Attributes in selected Tescases"});
-    this.props.history.push(
-      "/" + this.props.match.params.project +"/testcases"
-    );
+        if (Object.keys(testcase.attributes).length === 0) {
+          newValidAttribs.forEach(elem => { testcase.attributes[elem.id] = elem.attrValues.map(val => val.value); });
+        } else {
+          const toAdd = selectedAttribIds.filter(id => !Object.keys(testcase.attributes).includes(id));
+          toAdd.forEach(elem => {
+            const fo = newValidAttribs.find(val => val.id.includes(elem));
+            if (fo) testcase.attributes[fo.id] = fo.attrValues.map(val => val.value);
+          });
+          Object.keys(testcase.attributes || {}).forEach(attributeId => {
+            if (attributeId && attributeId != "null") {
+              const attributeValues = testcase.attributes[attributeId] || [];
+              newValidAttribs.forEach(elem => {
+                if (elem.id === attributeId) {
+                  const selectedVals = elem.attrValues.map(v => v.value);
+                  const toAddVals = selectedVals.filter(v => !attributeValues.includes(v));
+                  testcase.attributes[attributeId] = attributeValues.concat(toAddVals);
+                }
+              });
+            }
+          });
+        }
+        if (!equal(originalTC, testcase)) { handleSubmit(testcase); }
+      }).catch(() => setErrorMessage("Couldn't fetch testcase"));
+    });
+    setErrorMessage("Added Attributes in selected Testcases");
+    history.push("/" + project + "/testcases");
     return "OK";
   }
 
-//Added for Issue 84
-handleLockAllTestCases(){
-  console.log("Entered here in the handleLockAllTestcases in Testcases.js");
-  Backend.post( this.props.match.params.project +"/testcase/lockall")
-  .then(response => {
-    console.log("Locked all testcases : " + JSON.stringify(response));
-    // if(response.status === 200 ){
-      this.setState({errorMessage:"handleLockAllTestCases::Locked All Testcases"});
-    // }
-  })
-  .catch(error => {
-    this.setState({errorMessage: "handleLockAllTestCases::Couldn't lock all testcases"});
-  });
-  this.props.history.push(
-    "/" + this.props.match.params.project +"/testcases"
-  );
-}
+  function handleBulkRemoveAttributes(filterAttribs) {
+    const Tcs = (testcasesTreeRef.current.testCases || []).map(tc => tc.id);
+    const NotSelected = filterRef.current.notFields.id;
+    const selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId === id));
+    const newValidAttribs = filterAttribs.filter(id => !((id.id === null) || (id.id === 'broken')));
+    if (newValidAttribs.length === 0 || (newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0)) {
+      setErrorMessage("Select an Attribute to Remove"); return;
+    }
+    setErrorMessage(" ");
+    selectedTCS.forEach(item => {
+      Backend.get(project + "/testcase/" + item).then(response => {
+        const testcase = response;
+        const originalTC = JSON.parse(JSON.stringify(testcase));
+        if (Object.keys(testcase.attributes).length > 0) {
+          Object.keys(testcase.attributes || {}).forEach(attributeId => {
+            if (attributeId && attributeId != "null") {
+              const attributeValues = testcase.attributes[attributeId] || [];
+              newValidAttribs.forEach(elem => {
+                if (elem.id === attributeId) {
+                  const selectedVals = elem.attrValues.map(v => v.value);
+                  const remaining = attributeValues.filter(v => !selectedVals.includes(v));
+                  if (remaining.length === 0) delete testcase.attributes[attributeId];
+                  else testcase.attributes[attributeId] = remaining;
+                }
+              });
+            }
+          });
+        }
+        if (!equal(originalTC, testcase)) { handleSubmit(testcase); }
+      }).catch(() => setErrorMessage("Couldn't fetch testcase"));
+    });
+    setErrorMessage("Removed Attributes in selected Testcases");
+    history.push("/" + project + "/testcases");
+    return "OK";
+  }
 
-handleUnLockAllTestCases(){
-  console.log("Entered here in the handleUnLockAllTestcases in Testcases.js");
-  Backend.post( this.props.match.params.project +"/testcase/unlockall")
-  .then(response => {
-    console.log("UnLocked all testcases : " + JSON.stringify(response));
-    // if(response.status === 200 ){
-      this.setState({errorMessage:"handleUnLockAllTestCases::Unlocked All Testcases"});
-    // }
-  })
-  .catch(error => {
-    this.setState({errorMessage: "handleUnLockAllTestCases::Couldn't unlock all testcases"});
-  });
-  this.props.history.push(
-    "/" + this.props.match.params.project +"/testcases"
-  );
-  
-}
+  function handleLockAllTestCases() {
+    Backend.post(project + "/testcase/lockall")
+      .then(() => setErrorMessage("Locked All Testcases"))
+      .catch(() => setErrorMessage("Couldn't lock all testcases"));
+    history.push("/" + project + "/testcases");
+  }
 
+  function handleUnLockAllTestCases() {
+    Backend.post(project + "/testcase/unlockall")
+      .then(() => setErrorMessage("Unlocked All Testcases"))
+      .catch(() => setErrorMessage("Couldn't unlock all testcases"));
+    history.push("/" + project + "/testcases");
+  }
 
-  render() {
-    return (
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
       <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div>
-          <TestCasesFilter
-            projectAttributes={this.state.projectAttributes}
-            onFilter={this.onFilter}
-            project={this.props.match.params.project}
-            handleBulkAddAttributes={this.handleBulkAddAttributes}
-            handleBulkRemoveAttributes={this.handleBulkRemoveAttributes}
-            handleLockAllTestCases={this.handleLockAllTestCases}
-            handleUnLockAllTestCases={this.handleUnLockAllTestCases}
+        <TestCasesFilter
+          projectAttributes={projectAttributes}
+          onFilter={onFilter}
+          project={project}
+          handleBulkAddAttributes={handleBulkAddAttributes}
+          handleBulkRemoveAttributes={handleBulkRemoveAttributes}
+          handleLockAllTestCases={handleLockAllTestCases}
+          handleUnLockAllTestCases={handleUnLockAllTestCases}
+        />
+      </div>
+      <div>
+        <div className="modal fade" id="editTestcase" tabIndex="-1" role="dialog" aria-labelledby="editTestcaseLabel" aria-hidden="true">
+          <TestCaseForm
+            project={project}
+            testcase={testcaseToEdit}
+            projectAttributes={projectAttributes}
+            onTestCaseAdded={onTestCaseAdded}
           />
         </div>
-
-        <div>
-          <div
-            className="modal fade"
-            id="editTestcase"
-            tabIndex="-1"
-            role="dialog"
-            aria-labelledby="editTestcaseLabel"
-            aria-hidden="true"
-          >
-            <TestCaseForm
-              project={this.props.match.params.project}
-              testcase={this.state.testcaseToEdit}
-              projectAttributes={this.state.projectAttributes}
-              onTestCaseAdded={this.onTestCaseAdded}
+      </div>
+      <div className="row filter-control-row">
+        <div className="col-6">Number of Test Cases : <span style={{ fontWeight: "bold" }}>{totalNoofTestCase}</span></div>
+      </div>
+      <div className="sweet-loading">
+        <FadeLoader size={100} color={"#135f38"} loading={loading} />
+      </div>
+      <div className="grid_container">
+        <div className="tree-side">
+          <div id="tree"></div>
+          {showLoadMore() && (
+            <div><a href="" onClick={loadMoreTestCases}>Load more</a></div>
+          )}
+        </div>
+        <div id="testCase" className="testcase-side">
+          {selectedTestCase && selectedTestCase.id && (
+            <TestCase
+              projectId={project}
+              projectAttributes={projectAttributes}
+              testcaseId={selectedTestCase.id}
             />
-          </div>
-        </div>
-        <div className="row filter-control-row">
-            <div className="col-6">
-              Number of Test Cases : <span style={{fontWeight : 'bold'}}>{this.state.totalNoofTestCase}</span>
-            </div>
-        </div>
-        <div className="sweet-loading">
-          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
-        <div className="grid_container">
-          <div className="tree-side">
-            <div id="tree"></div>
-            {this.showLoadMore() && (
-              <div>
-                <a href="" onClick={this.loadMoreTestCases}>
-                  Load more
-                </a>
-              </div>
-            )}
-          </div>
-          <div id="testCase" className="testcase-side">
-            {this.state.selectedTestCase && this.state.selectedTestCase.id && (
-              <TestCase
-                projectId={this.props.match.params.project}
-                projectAttributes={this.state.projectAttributes}
-                testcaseId={this.state.selectedTestCase.id}
-              />
-            )}
-          </div>
+          )}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default withRouter(TestCases);

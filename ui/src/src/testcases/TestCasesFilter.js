@@ -1,6 +1,5 @@
 /* eslint-disable eqeqeq */
-/* eslint-disable react/no-direct-mutation-state */
-import React, { Component } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import LaunchForm from "../launches/LaunchForm";
 import { withRouter } from "../common/withRouter";
 import Select from "react-select";
@@ -12,530 +11,293 @@ import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
-class TestCasesFilter extends Component {
-  constructor(props) {
-    super(props);
+const defaultFilters = [{ title: "Select an attribute", attrValues: [] }];
+const defaultTestSuite = () => ({ name: "", filter: { groups: [], filters: [...defaultFilters] } });
 
-    this.defaultFilters = [
-      {
-        title: "Select an attribute",
-        attrValues: [],
-      },
-    ];
+function TestCasesFilter({ projectAttributes, onFilter, project, match, history, location,
+                           handleBulkAddAttributes, handleBulkRemoveAttributes,
+                           handleLockAllTestCases, handleUnLockAllTestCases }) {
+  const [testSuite, setTestSuite] = useState(defaultTestSuite());
+  const [groupsToDisplay, setGroupsToDisplay] = useState([]);
+  const [session, setSession] = useState({ person: {} });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [testSuiteNameToDisplay, setTestSuiteNameToDisplay] = useState("");
+  const [createdLaunch, setCreatedLaunch] = useState({ name: "", testSuite: { filter: {} }, properties: [] });
 
-    this.state = {
-      groupsToDisplay: [],
-      projectAttributes: [],
-      createdLaunch: {
-        name: "",
-        testSuite: { filter: {} },
-        properties: [],
-      },
-      testSuite: {
-        name: "",
-        filter: {
-          groups: [],
-          filters: this.defaultFilters,
-        },
-      },
-      testSuiteNameToDisplay: "",
-      errorMessage: "",
-      session: {person: {}},
-    };
-
-    this.changeGrouping = this.changeGrouping.bind(this);
-    this.getValuesByAttributeId = this.getValuesByAttributeId.bind(this);
-    this.changeFilterAttributeId = this.changeFilterAttributeId.bind(this);
-    this.changeFilterAttributeValues = this.changeFilterAttributeValues.bind(this);
-    this.changeFulltext = this.changeFulltext.bind(this);
-    this.handleFilter = this.handleFilter.bind(this);
-    this.getAttributeName = this.getAttributeName.bind(this);
-    this.createLaunchModal = this.createLaunchModal.bind(this);
-    this.saveSuite = this.saveSuite.bind(this);
-    this.showSuiteModal = this.showSuiteModal.bind(this);
-    this.suiteAttrChanged = this.suiteAttrChanged.bind(this);
-    this.removeFilter = this.removeFilter.bind(this);
-    this.getProjectAttributesSelect = this.getProjectAttributesSelect.bind(this);
-    this.handleBulkAddAttributes=this.handleBulkAddAttributes.bind(this);
-    this.handleBulkRemoveAttributes=this.handleBulkRemoveAttributes.bind(this);
-    this.getSession = this.getSession.bind(this);
-    this.onSessionChange = this.onSessionChange.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.handleLockAllTestCases =this.handleLockAllTestCases.bind(this);
-    this.handleUnLockAllTestCases=this.handleUnLockAllTestCases.bind(this);
-  }
-
-  onSessionChange(session) {
-    this.props.onSessionChange(session);
-  }
-
-  getSession() {
+  useEffect(() => {
     Backend.get("user/session")
-      .then(response => {
-        this.state.session = response;
-        this.setState(this.state);
-      })
-      .catch(() => {console.log("Unable to fetch session");});
-  }
+      .then(response => setSession(response))
+      .catch(() => console.log("Unable to fetch session"));
 
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.projectAttributes !== this.props.projectAttributes) {
-      if (this.props.projectAttributes) {
-        this.state.projectAttributes = this.props.projectAttributes;
-        this.state.testSuite.filter.filters.forEach(
-          function (filter) {
-            filter.name = this.getAttributeName(filter.id);
-          }.bind(this),
-        );
-        this.state.groupsToDisplay.forEach(
-          function (groupToDisplay) {
-            groupToDisplay.label = this.getAttributeName(groupToDisplay.value);
-          }.bind(this),
-        );
-      }
-      this.setState(this.state);
-    }
-  }
-
-  componentDidMount() {
-
-    this.getSession();
-    var params = qs.parse(this.props.location.search.substring(1));
-
+    const params = qs.parse(location.search.substring(1));
     if (params.testSuite) {
-      Backend.get(this.props.match.params.project + "/testsuite/" + params.testSuite)
+      Backend.get(match.params.project + "/testsuite/" + params.testSuite)
         .then(response => {
-          this.state.testSuite = response;
-          if (this.state.testSuite.filter.filters.length == 0){
-            this.state.testSuite.filter.filters = this.defaultFilters
-          }
-          this.state.testSuiteNameToDisplay = this.state.testSuite.name;
-          this.state.groupsToDisplay = this.state.testSuite.filter.groups.map(
-            function (attrId) {
-              return { value: attrId, label: this.getAttributeName(attrId) };
-            }.bind(this),
-          );
-          this.setState(this.state);
-          this.props.onFilter(this.state.testSuite.filter);
+          const ts = { ...response };
+          if ((ts.filter.filters || []).length === 0) ts.filter.filters = [...defaultFilters];
+          setTestSuite(ts);
+          setTestSuiteNameToDisplay(ts.name);
+          setGroupsToDisplay((ts.filter.groups || []).map(attrId => ({ value: attrId, label: getAttributeName(attrId, projectAttributes) })));
+          if (onFilter) onFilter(ts.filter);
         })
-        .catch(error => {
-          this.setState({errorMessage: "componentDidMount::Couldn't fetch testsuite"});
-        });
+        .catch(() => setErrorMessage("Couldn't fetch testsuite"));
     } else {
+      const parsedFilter = { groups: [], filters: [...defaultFilters] };
       if (params.groups) {
-        if (!Array.isArray(params.groups)) {
-          params.groups = [params.groups];
-        }
-        this.state.testSuite.filter.groups = params.groups;
-        this.state.groupsToDisplay = params.groups.map(
-          function (attrId) {
-            return { value: attrId, label: this.getAttributeName(attrId) };
-          }.bind(this),
-        );
+        parsedFilter.groups = Array.isArray(params.groups) ? params.groups : [params.groups];
+        setGroupsToDisplay(parsedFilter.groups.map(attrId => ({ value: attrId, label: getAttributeName(attrId, projectAttributes) })));
       }
-      if (params.attribute) {
-        if (!Array.isArray(params.attribute)) {
-          params.attribute = [params.attribute];
-        }
-        var map = {};
-        params.attribute.forEach(function (pair) {
-          var key = pair.split(":")[0];
-          var value = pair.split(":")[1];
-          if (!map[key]) {
-            map[key] = [];
-          }
-          map[key].push(value);
-        });
-
-        Object.keys(map).forEach(
-          function (key) {
-            this.state.testSuite.filter.filters.push({
-              id: key,
-              attrValues: map[key].map(val => ({ value: val })),
-              title: this.getAttributeName(key),
-            });
-          }.bind(this),
-        );
-
-        if (!this.state.testSuite.filter.filters[0].id) {
-          var emptyFilter = this.state.testSuite.filter.filters[0];
-          this.state.testSuite.filter.filters.push(emptyFilter);
-          this.state.testSuite.filter.filters.shift();
-        }
-      }
-      if (params.fulltext){
-          this.state.testSuite.filter.fulltext = params.fulltext;
-      }
-      this.setState(this.state);
-      this.props.onFilter(this.state.testSuite.filter);
+      if (params.fulltext) parsedFilter.fulltext = params.fulltext;
+      setTestSuite(prev => ({ ...prev, filter: parsedFilter }));
+      if (onFilter) onFilter(parsedFilter);
     }
-  }
+  }, []);
 
-  changeFilterAttributeId(index, formValue) {
-    var oldId = this.state.testSuite.filter.filters[index].id;
-    this.state.testSuite.filter.filters[index].id = formValue.value;
-    this.state.testSuite.filter.filters[index].name = formValue.label;
-    if (oldId !== formValue.value) {
-      this.state.testSuite.filter.filters[index].attrValues = [];
-    }
-    if (!oldId) {
-      this.state.testSuite.filter.filters.push({
-        id: null,
-        title: "Select an attribute",
-        attrValues: [],
+  useEffect(() => {
+    if (projectAttributes) {
+      setTestSuite(prev => {
+        const filters = (prev.filter.filters || []).map(f => ({ ...f, name: getAttributeName(f.id, projectAttributes) }));
+        const groups = groupsToDisplay.map(g => ({ ...g, label: getAttributeName(g.value, projectAttributes) }));
+        setGroupsToDisplay(groups);
+        return { ...prev, filter: { ...prev.filter, filters } };
       });
     }
+  }, [projectAttributes]);
 
-    this.setState(this.state);
+  function getAttributeName(id, attrs) {
+    return ((attrs || projectAttributes || []).find(a => a.id === id) || {}).name || "";
   }
 
-  changeFilterAttributeValues(index, formValues) {
-    this.state.testSuite.filter.filters[index].attrValues = formValues.map(function (formSingleVal) {
-      return { value: formSingleVal.value };
-    });
-    this.setState(this.state);
-  }
-
-  changeGrouping(values) {
-    this.state.testSuite.filter.groups = values.map(function (value) {
-      return value.value;
-    });
-    this.state.groupsToDisplay = values;
-    this.setState(this.state);
-  }
-
-  changeFulltext(event){
-    this.state.testSuite.filter.fulltext = event.target.value;
-    this.setState(this.state);
-  }
-
-  getValuesByAttributeId(id) {
+  function getValuesByAttributeId(id) {
     if (!id) return [];
-    if (id == "broken") {
-      return [{ value: "true" }, { value: "false" }];
-    }
-    return (
-      this.state.projectAttributes.find(function (attribute) {
-        return attribute.id === id;
-      }) || { attrValues: [] }
-    ).attrValues;
+    if (id == "broken") return [{ value: "true" }, { value: "false" }];
+    return ((projectAttributes || []).find(a => a.id === id) || { attrValues: [] }).attrValues;
   }
 
-  handleFilter() {
-    this.state.testSuite.filter.skip = 0;
-    this.props.onFilter(this.state.testSuite.filter);
+  function getProjectAttributesSelect() {
+    return (projectAttributes || []).map(val => ({ value: val.id, label: val.name }));
   }
 
-  getAttributeName(id) {
-    return (
-      this.state.projectAttributes.find(function (attribute) {
-        return attribute.id === id;
-      }) || { attrValues: [] }
-    ).name;
+  function changeGrouping(values) {
+    setGroupsToDisplay(values || []);
+    setTestSuite(prev => ({ ...prev, filter: { ...prev.filter, groups: (values || []).map(v => v.value) } }));
   }
 
-  createLaunchModal() {
-    this.state.createdLaunch = {
-      name: "",
-      testSuite: { filter: {} },
-      properties: [],
-    };
-    this.setState(this.state);
+  function changeFilterAttributeId(index, formValue) {
+    setTestSuite(prev => {
+      const filters = [...prev.filter.filters];
+      const oldId = filters[index].id;
+      filters[index] = { ...filters[index], id: formValue.value, name: formValue.label };
+      if (oldId !== formValue.value) filters[index].attrValues = [];
+      if (!oldId) filters.push({ id: null, title: "Select an attribute", attrValues: [] });
+      return { ...prev, filter: { ...prev.filter, filters } };
+    });
+  }
+
+  function changeFilterAttributeValues(index, formValues) {
+    setTestSuite(prev => {
+      const filters = [...prev.filter.filters];
+      filters[index] = { ...filters[index], attrValues: (formValues || []).map(v => ({ value: v.value })) };
+      return { ...prev, filter: { ...prev.filter, filters } };
+    });
+  }
+
+  function changeFulltext(event) {
+    setTestSuite(prev => ({ ...prev, filter: { ...prev.filter, fulltext: event.target.value } }));
+  }
+
+  function removeFilter(i) {
+    setTestSuite(prev => {
+      const filters = prev.filter.filters.filter((_, idx) => idx !== i);
+      return { ...prev, filter: { ...prev.filter, filters } };
+    });
+  }
+
+  function handleFilter() {
+    const updated = { ...testSuite.filter, skip: 0 };
+    if (onFilter) onFilter(updated);
+  }
+
+  function createLaunchModal() {
+    setCreatedLaunch({ name: "", testSuite: { filter: {} }, properties: [] });
     $("#launch-modal").modal("toggle");
   }
 
-  saveSuite(event) {
-    if (this.state.session.person.roles[0] != "ADMIN" &&
-	this.state.session.person.roles[0] != "TESTDEVELOPER") {
-        this.setState({errorMessage: "saveSuite::Couldn't save testsuites"});
-    }
-
-    var suiteToSave = JSON.parse(JSON.stringify(this.state.testSuite));
-    suiteToSave.filter.filters = (suiteToSave.filter.filters || []).filter(function (filter) {
-      return filter.id;
-    });
-    suiteToSave.filter.filters.forEach(function (filter) {
-      delete filter.title;
-    });
-    //Added code for Issue 41
-    if(suiteToSave && typeof suiteToSave.name === "string" && suiteToSave.name.length === 0){
-      this.setState({errorMessage:'saveSuite::Enter valid Suite Name'});
-    }else{
-    //retrieve existing names
-    Backend.get(this.props.match.params.project + "/testsuite")
-      .then(response => {
-       var testSuites = response.map(ts=>ts.name);
-       var duplicate = testSuites && testSuites.filter(val => val.toLowerCase() === suiteToSave.name.toLowerCase()).length > 0 ? true : false;
-        if(duplicate){
-          this.setState({errorMessage:'saveSuite::Duplicate Suite Name', testSuiteNameToDisplay:''});
-        }else{
-           Backend.post(this.props.match.params.project + "/testsuite/", suiteToSave)
-            .then(response => {
-              this.state.testSuite = response;
-              this.state.testSuiteNameToDisplay = this.state.testSuite.name;
-              this.setState(this.state);
-              $("#suite-modal").modal("toggle");
-              this.props.history.push(
-                "/" + this.props.match.params.project + "/testcases?testSuite=" + this.state.testSuite.id,
-              );
-            })
-            .catch(error => {
-              this.setState({errorMessage: "saveSuite::Couldn't save testsuite: " + error});
-            });
-        }
-      })
-      .catch(error => {
-        this.setState({errorMessage: "saveSuite::Couldn't get testsuites: " + error});
-      });
-
-    }
-    event.preventDefault();
-  }
-
-  showSuiteModal() {
+  function showSuiteModal() {
     $("#suite-modal").modal("toggle");
   }
 
-  suiteAttrChanged(event) {
-    this.state.testSuite[event.target.name] = event.target.value;
-    this.setState(this.state);
+  function suiteAttrChanged(event) {
+    setTestSuite(prev => ({ ...prev, [event.target.name]: event.target.value }));
   }
 
-  removeFilter(i, event) {
-    this.state.testSuite.filter.filters.splice(i, 1);
-    this.setState(this.state);
+  function handleClose(event) {
+    setErrorMessage("");
+    setTestSuiteNameToDisplay("");
+    setTestSuite(prev => ({ ...prev, name: "" }));
+    if (event) event.preventDefault();
   }
 
-  getProjectAttributesSelect() {
-    var projectAttributes = this.state.projectAttributes.map(function (val) {
-      return { value: val.id, label: val.name };
-    });
-    return projectAttributes;
-  }
+  function saveSuite(event) {
+    const roles = session?.person?.roles || [];
+    if (!roles.includes("ADMIN") && !roles.includes("TESTDEVELOPER")) {
+      setErrorMessage("Couldn't save testsuites");
+      event.preventDefault();
+      return;
+    }
+    if (!testSuite.name || testSuite.name.length === 0) {
+      setErrorMessage("Enter valid Suite Name");
+      event.preventDefault();
+      return;
+    }
+    const suiteToSave = JSON.parse(JSON.stringify(testSuite));
+    suiteToSave.filter.filters = (suiteToSave.filter.filters || []).filter(f => f.id);
+    suiteToSave.filter.filters.forEach(f => delete f.title);
 
- async handleBulkAddAttributes(){
-  const start = performance.now();
-    console.log("Entered in handleBulkAddAttributes : " + start);
-    let result =  await this.props.handleBulkAddAttributes(this.state.testSuite.filter.filters);
-    console.log(`Execution time of Bulk Add Attributes operation : ${performance.now() - start} ms with value ${result}`);
-  }
-
-
-async  handleBulkRemoveAttributes(){
-  const start = performance.now();
-    console.log("Entered in handleBulkRemoveAttributes : " + start)
-    let result =  await this.props.handleBulkRemoveAttributes(this.state.testSuite.filter.filters);
-   console.log(`Execution time of Bulk Remove Attributes operation : ${performance.now() - start} ms  with value ${result}`);  
-  }
-
-  handleClose(event) {
-    console.log("Entered in the close n reset values in testSuites" + JSON.stringify(this.state.testSuite.name));
-    this.state.errorMessage="";
-    this.state.testSuiteNameToDisplay="";
-    this.state.testSuite.name="";
-    this.setState(this.state);
+    Backend.get(match.params.project + "/testsuite")
+      .then(response => {
+        const names = response.map(ts => ts.name);
+        const duplicate = names.some(n => n.toLowerCase() === suiteToSave.name.toLowerCase());
+        if (duplicate) {
+          setErrorMessage("Duplicate Suite Name");
+          setTestSuiteNameToDisplay("");
+        } else {
+          Backend.post(match.params.project + "/testsuite/", suiteToSave)
+            .then(response => {
+              setTestSuite(response);
+              setTestSuiteNameToDisplay(response.name);
+              $("#suite-modal").modal("toggle");
+              history.push("/" + match.params.project + "/testcases?testSuite=" + response.id);
+            })
+            .catch(error => setErrorMessage("Couldn't save testsuite: " + error));
+        }
+      })
+      .catch(error => setErrorMessage("Couldn't get testsuites: " + error));
     event.preventDefault();
   }
 
-  handleLockAllTestCases(){
-    const start = performance.now();
-    console.log("Entered in handleLockAllTestCases : " + start)
-    let result =  this.props.handleLockAllTestCases(this.state.testSuite.filter.filters);
-    console.log(`Execution time of Lock All Testcases operation : ${performance.now() - start} ms  with value ${result}`);
+  async function handleBulkAdd() {
+    await handleBulkAddAttributes(testSuite.filter.filters);
   }
 
-  handleUnLockAllTestCases(){
-    const start = performance.now();
-    console.log("Entered in handleUnLockAllTestCases : " + start)
-    let result =  this.props.handleUnLockAllTestCases(this.state.testSuite.filter.filters);
-    console.log(`Execution time of Unlock All Testcases operation : ${performance.now() - start} ms  with value ${result}`);
-    
+  async function handleBulkRemove() {
+    await handleBulkRemoveAttributes(testSuite.filter.filters);
   }
 
-  render() {
-    return (
+  function handleLock() {
+    handleLockAllTestCases(testSuite.filter.filters);
+  }
+
+  function handleUnlock() {
+    handleUnLockAllTestCases(testSuite.filter.filters);
+  }
+
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <h2>{testSuiteNameToDisplay}</h2>
       <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <h2>{this.state.testSuiteNameToDisplay}</h2>
-        <div>
-          <div className="row filter-control-row">
-            <div className="col-1">Grouping</div>
-            <div className="col-5">
-              <Select
-                value={this.state.groupsToDisplay}
-                isMulti
-                onChange={this.changeGrouping}
-                options={this.getProjectAttributesSelect().filter(attr => attr.value != "broken")}
-              />
-            </div>
-            <div className="col-2"></div>
-            <div className="col-4 btn-group" role="group">
-              <button type="button" className="btn btn-primary" title="Filter Tescases" onClick={this.handleFilter}>
-                <FontAwesomeIcon icon={faFilter} />
-              </button>
-              <button type="button" className="btn btn-warning" title="Save Test Suite" onClick={this.showSuiteModal}>
-                <FontAwesomeIcon icon={faSave} />
-              </button>
-              <button type="button" className="btn btn-success" title="Launch Tescases" onClick={this.createLaunchModal}>
-                <FontAwesomeIcon icon={faPlay} />
-              </button>
-              <button type="button" className="btn btn-primary" title="Add Testcase" data-toggle="modal" data-target="#editTestcase">
-                <FontAwesomeIcon icon={faPlus} />
-              </button>
-            </div>
-                      </div>
-
-            <div>
-            {this.state.testSuite.filter.filters.map(
-              function (filter, i) {
-                return (
-                <div className="row filter-control-row" key={i}>
-                  <div className="col-1">
-                      {i == 0 ? "Filter" : ""}
-
-                  </div>
-           
-                  <Select
-                    className="col-2 filter-attribute-id-select"
-                    value={{ value: filter.id, label: filter.name }}
-                    onChange={e => this.changeFilterAttributeId(i, e)}
-                    options={this.getProjectAttributesSelect()}
-                  />
-                  <Select
-                    className="col-3 filter-attribute-val-select"
-                    value={(filter.attrValues || []).map(function (attrValue) {
-                      return { value: attrValue.value, label: attrValue.value };
-                    })}
-                    isMulti
-                    onChange={e => this.changeFilterAttributeValues(i, e)}
-                    options={this.getValuesByAttributeId(filter.id).map(function (attrValue) {
-                      return { value: attrValue.value, label: attrValue.value };
-                    })}
-                  />
-                  {filter.id && (
-                    <span
-                      className="col-1 remove-filter-icon clickable red"
-                      index={i}
-                      onClick={e => this.removeFilter(i, e)}
-                    >
-                      <FontAwesomeIcon icon={faMinusCircle} />
-                    </span>
-                  )}
-          
-
-                </div>
-                );
-              }.bind(this),
-            )}
-          
-
-            </div>
-
-
-          <div className="row filter-control-row">
-              <div className="col-1">Search</div>
-              <div className="col-5">
-                  <div className="row">
-                      <div className="col-12">
-                          <input
-                              type="text"
-                              className="form-control"
-                              name="fulltext"
-                              value={this.state.testSuite.filter.fulltext || ""}
-                              onChange={e => this.changeFulltext(e)}
-                            />
-                      </div>
-                  </div>
-              </div>
-          <div className="col-2"></div>
-        
-          {Utils.isAdmin(this.state.session) &&
-          <div className="col-4 btn-group" role="group">
-            <button type="button" className="btn btn-primary" title="Add Attributes" data-toggle="modal" onClick={this.handleBulkAddAttributes}>
-              Add Attributes
-              </button>
-              <button type="button" className="btn btn-danger" title="Remove Attributes" data-toggle="modal" onClick={this.handleBulkRemoveAttributes}>
-                Remove Attributes
-              </button>
-              <button type="button" className="btn btn-warning" title="Lock All Testcases" data-toggle="modal" onClick={this.handleLockAllTestCases}>
-                Lock All TestCases
-              </button>
-              <button type="button" className="btn btn-success" title="Unlock All Testcases" data-toggle="modal" onClick={this.handleUnLockAllTestCases}>
-               Unlock All TestCases
-              </button>
-            </div>
-          }
+        <div className="row filter-control-row">
+          <div className="col-1">Grouping</div>
+          <div className="col-5">
+            <Select value={groupsToDisplay} isMulti onChange={changeGrouping}
+              options={getProjectAttributesSelect().filter(attr => attr.value != "broken")} />
           </div>
-         
-
-
+          <div className="col-2"></div>
+          <div className="col-4 btn-group" role="group">
+            <button type="button" className="btn btn-primary" title="Filter Testcases" onClick={handleFilter}>
+              <FontAwesomeIcon icon={faFilter} />
+            </button>
+            <button type="button" className="btn btn-warning" title="Save Test Suite" onClick={showSuiteModal}>
+              <FontAwesomeIcon icon={faSave} />
+            </button>
+            <button type="button" className="btn btn-success" title="Launch Testcases" onClick={createLaunchModal}>
+              <FontAwesomeIcon icon={faPlay} />
+            </button>
+            <button type="button" className="btn btn-primary" title="Add Testcase" data-toggle="modal" data-target="#editTestcase">
+              <FontAwesomeIcon icon={faPlus} />
+            </button>
+          </div>
         </div>
 
-        <div
-          className="modal fade"
-          id="launch-modal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="launchLabel"
-          aria-hidden="true"
-        >
-          <LaunchForm launch={this.state.createdLaunch} testSuite={this.state.testSuite} modalName="launch-modal"/>
+        <div>
+          {testSuite.filter.filters.map((filter, i) => (
+            <div className="row filter-control-row" key={i}>
+              <div className="col-1">{i === 0 ? "Filter" : ""}</div>
+              <Select className="col-2 filter-attribute-id-select"
+                value={{ value: filter.id, label: filter.name }}
+                onChange={e => changeFilterAttributeId(i, e)}
+                options={getProjectAttributesSelect()} />
+              <Select className="col-3 filter-attribute-val-select"
+                value={(filter.attrValues || []).map(av => ({ value: av.value, label: av.value }))}
+                isMulti
+                onChange={e => changeFilterAttributeValues(i, e)}
+                options={getValuesByAttributeId(filter.id).map(av => ({ value: av.value, label: av.value }))} />
+              {filter.id && (
+                <span className="col-1 remove-filter-icon clickable red" onClick={() => removeFilter(i)}>
+                  <FontAwesomeIcon icon={faMinusCircle} />
+                </span>
+              )}
+            </div>
+          ))}
         </div>
 
-        <div
-          className="modal fade"
-          id="suite-modal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="suiteLabel"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog" role="document">
-          <ControlledPopup popupMessage={this.state.errorMessage}/>
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title" id="editAttributeLabel">
-                  Test Suite
-                </h5>
-                <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.handleClose}>
-                  <span aria-hidden="true">&times;</span>
-                </button>
+        <div className="row filter-control-row">
+          <div className="col-1">Search</div>
+          <div className="col-5">
+            <div className="row">
+              <div className="col-12">
+                <input type="text" className="form-control" name="fulltext" value={testSuite.filter.fulltext || ""} onChange={changeFulltext} />
               </div>
+            </div>
+          </div>
+          <div className="col-2"></div>
+          {Utils.isAdmin(session) && (
+            <div className="col-4 btn-group" role="group">
+              <button type="button" className="btn btn-primary" onClick={handleBulkAdd}>Add Attributes</button>
+              <button type="button" className="btn btn-danger" onClick={handleBulkRemove}>Remove Attributes</button>
+              <button type="button" className="btn btn-warning" onClick={handleLock}>Lock All TestCases</button>
+              <button type="button" className="btn btn-success" onClick={handleUnlock}>Unlock All TestCases</button>
+            </div>
+          )}
+        </div>
+      </div>
 
-              <div>
-                <div className="modal-body" id="suite-save-form">
-                  <form>
-                    <div className="form-group row">
-                      <label className="col-sm-3 col-form-label">Name</label>
-                      <div className="col-sm-9">
-                        <input
-                          type="text"
-                          name="name"
-                          className="form-control"
-                          onChange={this.suiteAttrChanged}
-                          defaultValue={this.state.testSuiteNameToDisplay}
-                        />
-                      </div>
+      <div className="modal fade" id="launch-modal" tabIndex="-1" role="dialog" aria-hidden="true">
+        <LaunchForm launch={createdLaunch} testSuite={testSuite} modalName="launch-modal" />
+      </div>
+
+      <div className="modal fade" id="suite-modal" tabIndex="-1" role="dialog" aria-hidden="true">
+        <div className="modal-dialog" role="document">
+          <ControlledPopup popupMessage={errorMessage} />
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="editAttributeLabel">Test Suite</h5>
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={handleClose}>
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div>
+              <div className="modal-body" id="suite-save-form">
+                <form>
+                  <div className="form-group row">
+                    <label className="col-sm-3 col-form-label">Name</label>
+                    <div className="col-sm-9">
+                      <input type="text" name="name" className="form-control" onChange={suiteAttrChanged} defaultValue={testSuiteNameToDisplay} />
                     </div>
-                  </form>
-                </div>
+                  </div>
+                </form>
               </div>
-
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.handleClose}>
-                  Close
-                </button>
-                <button type="button" className="btn btn-primary" onClick={this.saveSuite}>
-                  Save
-                </button>
-              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={handleClose}>Close</button>
+              <button type="button" className="btn btn-primary" onClick={saveSuite}>Save</button>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default withRouter(TestCasesFilter);

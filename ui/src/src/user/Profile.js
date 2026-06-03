@@ -1,94 +1,48 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { withRouter } from "../common/withRouter";
-import SubComponent from "../common/SubComponent";
 import { Link } from "react-router-dom";
-import ControlledPopup from '../common/ControlledPopup';
+import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 import "../App.css";
 
-class Profile extends SubComponent {
-  state = {
-    profile: {},
-    session: {person:{}},
-    message: "",
-  };
+function Profile({ match }) {
+  const profileId = match?.params?.profileId;
+  const [profile, setProfile] = useState({});
+  const [message, setMessage] = useState("");
 
-  constructor(props) {
-    super(props);
-    this.getUser = this.getUser.bind(this);
-    this.getSession = this.getSession.bind(this);
-  }
+  useEffect(() => {
+    if (!profileId) return;
+    Backend.get("user/" + profileId)
+      .then(response => setProfile(response))
+      .catch(error => setMessage("Couldn't get user: " + error));
+  }, [profileId]);
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.state.profile.id = this.props.match.params.profileId;
-    this.getSession();
-    this.getUser();
-  }
-
-  getUser() {
-    Backend.get("user/" + this.state.profile.id)
-      .then(response => {
-        this.state.profile = response;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({message: "Couldn't get user: " + error});
-      });
-  }
-
-  getSession() {
-    Backend.get("user/session")
-          .then(response => {
-                this.state.session = response;
-          })
-          .catch(() => {
-            this.setState({message: "Unable to fetch session"});
-          });
-  }
-
-  render() {
-    return (
-      <div>
-        <h3>
-          <span className="text-muted">User: {this.state.profile.login}</span>{" "}
-        </h3>
-        <table className="tableUserProfile">
+  return (
+    <div>
+      <ControlledPopup popupMessage={message} />
+      <h3><span className="text-muted">User: {profile.login}</span></h3>
+      <table className="tableUserProfile">
+        <thead>
           <tr>
             <th className="headerUserProfile">Attribute</th>
             <th className="headerUserProfile">Value</th>
           </tr>
-          <tr>
-            <td className="cellUserProfile">Login</td>
-            <td className="cellUserProfile">{this.state.profile.login}</td>
-          </tr>
-          <tr>
-            <td className="cellUserProfile">First Name</td>
-            <td className="cellUserProfile">{this.state.profile.firstName}</td>
-	  </tr>
-          <tr>
-            <td className="cellUserProfile">Last Name</td>
-            <td className="cellUserProfile">{this.state.profile.lastName}</td>
-          </tr>
-          <tr>
-            <td className="cellUserProfile">Email</td>
-            <td className="cellUserProfile">{this.state.profile.email}</td>
-          </tr>
-          <tr>
-            <td className="cellUserProfile">Role</td>
-            <td className="cellUserProfile">{this.state.profile.role}</td>
-          </tr>
-        </table>
-        <div>
-          <div className="row">
-            <div className="col-12">
-              <Link to={"/user/change-profile-redirect/" + this.state.profile.id}>Change Profile</Link>
-            </div>
-          </div>
+        </thead>
+        <tbody>
+          <tr><td className="cellUserProfile">Login</td><td className="cellUserProfile">{profile.login}</td></tr>
+          <tr><td className="cellUserProfile">First Name</td><td className="cellUserProfile">{profile.firstName}</td></tr>
+          <tr><td className="cellUserProfile">Last Name</td><td className="cellUserProfile">{profile.lastName}</td></tr>
+          <tr><td className="cellUserProfile">Email</td><td className="cellUserProfile">{profile.email}</td></tr>
+          <tr><td className="cellUserProfile">Role</td><td className="cellUserProfile">{profile.role}</td></tr>
+        </tbody>
+      </table>
+      <div className="row">
+        <div className="col-12">
+          <Link to={"/user/change-profile-redirect/" + profile.id}>Change Profile</Link>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default withRouter(Profile);

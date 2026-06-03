@@ -1,126 +1,91 @@
-import React from "react";
+/* eslint-disable eqeqeq */
+import React, { useState, useEffect } from "react";
 import { withRouter } from "../common/withRouter";
-import SubComponent from "../common/SubComponent";
 import AttributeForm from "../attributes/AttributeForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 import $ from "jquery";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
-class Attributes extends SubComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      attributes: [],
-      attributeToEdit: {
-        id: null,
-        name: "",
-        type: "TESTCASE",
-        attrValues: [],
-      },
-      loading: true,
-      edit:false,
-    };
-    this.onAttributeAdded = this.onAttributeAdded.bind(this);
-    this.onAttributeRemoved = this.onAttributeRemoved.bind(this);
-  }
 
-  onAttributeAdded(attribute) {
-    var attributeToUpdate = this.state.attributes.find(function (attr) {
-      return attr.id === attribute.id;
-    });
-    if (!attributeToUpdate) {
-      this.state.attributes.push(attribute);
-    } else {
-      this.state.attributes[this.state.attributes.indexOf(attributeToUpdate)] = attribute;
-    }
-    this.state.attributeToEdit = {
-      id: null,
-      name: "",
-      attrValues: [],
-    };
-    $("#editAttribute").modal("hide");
-    const newState = Object.assign({}, this.state);
-    this.setState(newState);
-  }
+const emptyAttribute = () => ({ id: null, name: "", type: "TESTCASE", attrValues: [] });
 
-  onAttributeRemoved(attribute) {
-    this.state.attributes = this.state.attributes.filter(attr => attr.id !== attribute.id);
-    $("#editAttribute").modal("hide");
-    const newState = Object.assign({}, this.state);
-    this.setState(newState);
-  }
+function Attributes({ match }) {
+  const project = match?.params?.project;
+  const [attributes, setAttributes] = useState([]);
+  const [attributeToEdit, setAttributeToEdit] = useState(emptyAttribute());
+  const [edit, setEdit] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  editAttribute(i, event) {
-    this.state.attributeToEdit = this.state.attributes[i];
-    this.state.edit = true;
-    this.setState(this.state);
+  useEffect(() => {
+    if (!project) return;
+    Backend.get(project + "/attribute")
+      .then(response => {
+        setAttributes(response);
+        setLoading(false);
+      })
+      .catch(error => console.log(error));
+  }, [project]);
+
+  function editAttribute(i) {
+    setAttributeToEdit(attributes[i]);
+    setEdit(true);
     $("#editAttribute").modal("show");
   }
 
-  componentDidMount() {
-    super.componentDidMount();
-    Backend.get(this.props.match.params.project + "/attribute")
-      .then(response => {
-        this.state.loading = false;
-        const newState = Object.assign({}, this.state, {
-          attributes: response,
-        });
-        this.setState(newState);
-      })
-      .catch(error => console.log(error));
+  function onAttributeAdded(attribute) {
+    setAttributes(prev => {
+      const idx = prev.findIndex(a => a.id === attribute.id);
+      const updated = idx >= 0
+        ? prev.map((a, i) => i === idx ? attribute : a)
+        : [...prev, attribute];
+      return updated;
+    });
+    setAttributeToEdit(emptyAttribute());
+    setEdit(false);
+    $("#editAttribute").modal("hide");
   }
 
-  render() {
-    return (
-      <div>
-        <div className="sweet-loading">
-          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
-        {this.state.attributes.map(
-          function (attribute, i) {
-            return (
-              <div key={i} className="alert" role="alert">
-                <h5 className="alert-heading">
-                  <b>{attribute.name}</b>
-                  <span className="edit clickable edit-icon" index={i} onClick={e => this.editAttribute(i, e)}>
-                    <FontAwesomeIcon icon={faPencilAlt} />
-                  </span>
-                </h5>
-                <p>Type: {attribute.type == "LAUNCH" ? "LAUNCH" : "TESTCASE"}</p>
-                <p>{attribute.description}</p>
-                <hr />
-                <p className="mb-0">{attribute.attrValues.map(val => val.value).join(", ")}</p>
-              </div>
-            );
-          }.bind(this),
-        )}
+  function onAttributeRemoved(attribute) {
+    setAttributes(prev => prev.filter(a => a.id !== attribute.id));
+    setAttributeToEdit(emptyAttribute());
+    $("#editAttribute").modal("hide");
+  }
 
-        <div className="attributes-controls">
-          <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#editAttribute">
-            Add
-          </button>
-        </div>
-        <div
-          className="modal fade"
-          id="editAttribute"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="editAttributeLabel"
-          aria-hidden="true"
-        >
-          <AttributeForm
-            project={this.props.match.params.project}
-            projectAttributes={this.state.attributes}
-            attribute={this.state.attributeToEdit}
-            onAttributeRemoved={this.onAttributeRemoved}
-            onAttributeAdded={this.onAttributeAdded}
-            edit={this.state.edit}
-          />
-        </div>
+  return (
+    <div>
+      <div className="sweet-loading">
+        <FadeLoader size={100} color={"#135f38"} loading={loading} />
       </div>
-    );
-  }
+      {attributes.map((attribute, i) => (
+        <div key={i} className="alert" role="alert">
+          <h5 className="alert-heading">
+            <b>{attribute.name}</b>
+            <span className="edit clickable edit-icon" onClick={() => editAttribute(i)}>
+              <FontAwesomeIcon icon={faPencilAlt} />
+            </span>
+          </h5>
+          <p>Type: {attribute.type == "LAUNCH" ? "LAUNCH" : "TESTCASE"}</p>
+          <p>{attribute.description}</p>
+          <hr />
+          <p className="mb-0">{attribute.attrValues.map(val => val.value).join(", ")}</p>
+        </div>
+      ))}
+      <div className="attributes-controls">
+        <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#editAttribute">Add</button>
+      </div>
+      <div className="modal fade" id="editAttribute" tabIndex="-1" role="dialog" aria-labelledby="editAttributeLabel" aria-hidden="true">
+        <AttributeForm
+          project={project}
+          projectAttributes={attributes}
+          attribute={attributeToEdit}
+          edit={edit}
+          onAttributeAdded={onAttributeAdded}
+          onAttributeRemoved={onAttributeRemoved}
+        />
+      </div>
+    </div>
+  );
 }
 
 export default withRouter(Attributes);

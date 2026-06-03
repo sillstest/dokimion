@@ -1,77 +1,37 @@
-/* eslint-disable eqeqeq */
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCogs } from "@fortawesome/free-solid-svg-icons";
-import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
-class Organization extends SubComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      organization: {
-        id: null,
-        name: "",
-        description: "",
-        allowedGroups: [],
-        allowedUsers: [],
-        admins: [],
-      },
-      errorMessage: "",
-    };
-    this.getOrganization = this.getOrganization.bind(this);
-    this.onOrganizationChange = props.onOrganizationChange;
-  }
+function Organization({ match }) {
+  const orgId = match?.params?.organization;
+  const [organization, setOrganization] = useState({ id: null, name: "", description: "", allowedGroups: [], allowedUsers: [], admins: [] });
+  const [errorMessage, setErrorMessage] = useState("");
 
-  componentDidMount() {
-    super.componentDidMount();
-    this.state.organization.id = this.props.match.params.organization;
-    this.getOrganization();
-  }
+  useEffect(() => {
+    if (!orgId) return;
+    Backend.get("organization/" + orgId)
+      .then(response => setOrganization(response))
+      .catch(error => setErrorMessage("Couldn't get organization: " + error));
+  }, [orgId]);
 
-  componentDidUpdate(prevProps) {
-    var nextOrganizationId = this.props.match.params.organization;
-    if (nextOrganizationId && nextOrganizationId !== prevProps.match.params.organization) {
-      this.state.organization.id = nextOrganizationId;
-      this.onOrganizationChange(this.state.organization.id);
-      this.getOrganization();
-    }
-  }
-
-  getOrganization() {
-    Backend.get("organization/" + this.state.organization.id)
-      .then(response => {
-        this.state.organization = response;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getOrganization::Couldn't get organization, error: " + error});
-      });
-  }
-
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="organization-header">
-          <h1>
-            {this.state.organization.name}
-            <span className="float-right">
-              <Link
-                to={"/organizations/" + this.state.organization.id + "/settings"}
-                className="organization-title-settings-link"
-              >
-                <FontAwesomeIcon icon={faCogs} />
-              </Link>
-            </span>
-          </h1>
-        </div>
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div className="organization-header">
+        <h1>
+          {organization.name}
+          <span className="float-right">
+            <Link to={"/organizations/" + organization.id + "/settings"} className="organization-title-settings-link">
+              <FontAwesomeIcon icon={faCogs} />
+            </Link>
+          </span>
+        </h1>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default Organization;

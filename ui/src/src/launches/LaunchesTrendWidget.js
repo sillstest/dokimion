@@ -1,145 +1,55 @@
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect } from "react";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Highcharts from "highcharts";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
-class LaunchesTrendWidget extends SubComponent {
-  state = {
-    launches: [],
-    filter: {
-      skip: 0,
-      limit: 20,
-      orderby: "id",
-      orderdir: "DESC",
-      includedFields: "launchStats,createdTime",
-    },
-    loading: true,
-    errorMessage: "",
-  };
+const defaultFilter = { skip: 0, limit: 20, orderby: "id", orderdir: "DESC", includedFields: "launchStats,createdTime" };
 
-  constructor(props) {
-    super(props);
-    this.getLaunches = this.getLaunches.bind(this);
-    this.renderChart = this.renderChart.bind(this);
-    this.getSeries = this.getSeries.bind(this);
-  }
+function LaunchesTrendWidget({ projectId, filter: filterProp }) {
+  const filter = filterProp || defaultFilter;
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.projectId !== this.props.projectId || prevProps.filter !== this.props.filter) {
-      if (this.props.projectId) this.state.projectId = this.props.projectId;
-      if (this.props.filter) this.state.filter = this.props.filter;
-      this.getLaunches();
-    }
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.getLaunches();
-  }
-
-  getLaunches() {
-    if (!this.state.projectId) {
-      return [];
-    }
-    Backend.get(this.state.projectId + "/launch?" + Utils.filterToQuery(this.state.filter))
+  useEffect(() => {
+    if (!projectId) return;
+    Backend.get(projectId + "/launch?" + Utils.filterToQuery(filter))
       .then(response => {
-        this.state.launches = response.reverse();
-        this.state.loading = false;
-        this.renderChart();
-        this.setState(this.state);
+        const launches = response.reverse();
+        setLoading(false);
+        const totalStats = {
+          PASSED: { name: "Passed", color: "#28a745", data: [] },
+          FAILED: { name: "Failed", color: "#dc3545", data: [] },
+          BROKEN: { name: "Broken", color: "#ffc107", data: [] },
+          TOTAL: { name: "Total", color: "#007bff", data: [] },
+        };
+        launches.forEach(launch => {
+          Object.keys(launch.launchStats.statusCounters).forEach(key => {
+            if (totalStats[key]) totalStats[key].data.push(launch.launchStats.statusCounters[key]);
+          });
+          totalStats.TOTAL.data.push(launch.launchStats.total);
+        });
+        Highcharts.chart("trend", {
+          title: { text: "Launches Statuses Trend" },
+          yAxis: { title: { text: "TestCases" } },
+          xAxis: { categories: launches.map(l => Utils.timeToDateNoTime(l.createdTime)) },
+          legend: { layout: "vertical", align: "right", verticalAlign: "middle" },
+          plotOptions: { series: { label: { connectorAllowed: false } } },
+          series: Object.keys(totalStats).map(key => totalStats[key]),
+          responsive: { rules: [{ condition: { maxWidth: 500 }, chartOptions: { legend: { layout: "horizontal", align: "center", verticalAlign: "bottom" } } }] },
+        });
       })
-      .catch(error => {
-        this.setState({errorMessage: "getLaunches::Couldn't get launches, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
+      .catch(error => { setErrorMessage("Couldn't get launches: " + error); setLoading(false); });
+  }, [projectId, filter]);
 
-  renderChart() {
-    if (typeof(this.state.launches) != 'undefined') {
-    Highcharts.chart("trend", {
-      title: {
-        text: "Launches Statuses Trend",
-      },
-
-      yAxis: {
-        title: {
-          text: "TestCases",
-        },
-      },
-
-      xAxis: {
-        categories: this.state.launches.map(launch => Utils.timeToDateNoTime(launch.createdTime)),
-      },
-
-      legend: {
-        layout: "vertical",
-        align: "right",
-        verticalAlign: "middle",
-      },
-
-      plotOptions: {
-        series: {
-          label: {
-            connectorAllowed: false,
-          },
-        },
-      },
-      series: this.getSeries(),
-      responsive: {
-        rules: [
-          {
-            condition: {
-              maxWidth: 500,
-            },
-            chartOptions: {
-              legend: {
-                layout: "horizontal",
-                align: "center",
-                verticalAlign: "bottom",
-              },
-            },
-          },
-        ],
-      },
-    });
-    }
-  }
-
-  getSeries() {
-    var totalStats = {
-      PASSED: { name: "Passed", color: "#28a745", data: [] },
-      FAILED: { name: "Failed", color: "#dc3545", data: [] },
-      BROKEN: { name: "Broken", color: "#ffc107", data: [] },
-      TOTAL: { name: "Total", color: "#007bff", data: [] },
-    };
-
-    typeof(this.state.launches) != 'undefined' && this.state.launches.forEach(launch => {
-      Object.keys(launch.launchStats.statusCounters).forEach(key => {
-        if (totalStats[key]) {
-          totalStats[key].data.push(launch.launchStats.statusCounters[key]);
-        }
-      });
-      totalStats["TOTAL"].data.push(launch.launchStats.total);
-    });
-
-    return Object.keys(totalStats).map(key => totalStats[key]);
-  }
-
-  render() {
-    return (
-      <div>
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div id="trend"></div>
-        <div id="sweet-loading">
-          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
-      </div>
-    );
-  }
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div id="trend"></div>
+      <div id="sweet-loading"><FadeLoader size={100} color={"#135f38"} loading={loading} /></div>
+    </div>
+  );
 }
 
 export default LaunchesTrendWidget;

@@ -1,119 +1,55 @@
-import React from "react";
-import SubComponent from "../common/SubComponent";
+/* eslint-disable eqeqeq */
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
-class LaunchesWidget extends SubComponent {
-  state = {
-    launches: [],
-    loading: true,
-    errorMessage: "",
-  };
+function LaunchesWidget({ projectId, limit: limitProp }) {
+  const limit = limitProp || 5;
+  const [launches, setLaunches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  constructor(props) {
-    super(props);
-    this.limit = props.limit || 5;
-    this.state.projectId = props.projectId;
-    this.getLaunches = this.getLaunches.bind(this);
-  }
+  useEffect(() => {
+    if (!projectId) return;
+    Backend.get(projectId + "/launch?includedFields=name,id,launchStats&orderby=id&orderdir=DESC&limit=" + limit)
+      .then(response => { setLaunches(response); setLoading(false); })
+      .catch(error => { setErrorMessage("Couldn't get launches: " + error); setLoading(false); });
+  }, [projectId]);
 
-  componentDidMount() {
-    super.componentDidMount();
-    if (this.state.projectId) {
-      this.getLaunches();
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    // eslint-disable-next-line eqeqeq
-    if (this.props.projectId && this.props.projectId != prevProps.projectId) {
-      this.state.projectId = this.props.projectId;
-      this.getLaunches();
-    }
-  }
-
-  getLaunches() {
-    Backend.get(
-      this.state.projectId + "/launch?includedFields=name,id,launchStats&orderby=id&orderdir=DESC&limit=" + this.limit,
-    )
-      .then(response => {
-        this.state.launches = response;
-        this.state.loading = false;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "getLaunches::Couldn't get launch, error: " + error});
-        this.state.loading = false;
-        this.setState(this.state);
-      });
-  }
-
-  getProgressBar(launch) {
-    return (
-      <div className="progress">
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div
-          className="progress-bar progress-bar-striped"
-          role="progressbar"
-          style={this.getProgressStyle(launch.launchStats.statusCounters.RUNNING, launch.launchStats.total)}
-        ></div>
-        <div
-          className="progress-bar bg-success"
-          role="progressbar"
-          style={this.getProgressStyle(launch.launchStats.statusCounters.PASSED, launch.launchStats.total)}
-        ></div>
-        <div
-          className="progress-bar bg-danger"
-          role="progressbar"
-          style={this.getProgressStyle(launch.launchStats.statusCounters.FAILED, launch.launchStats.total)}
-        ></div>
-        <div
-          className="progress-bar bg-warning"
-          role="progressbar"
-          style={this.getProgressStyle(launch.launchStats.statusCounters.BROKEN, launch.launchStats.total)}
-        ></div>
-      </div>
-    );
-  }
-
-  getProgressStyle(value, total) {
+  function getProgressStyle(value, total) {
     return { width: (value * 100) / total + "%" };
   }
 
-  render() {
-    return (
-      <div>
-        <div className="sweet-loading">
-          <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
-        </div>
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th scope="col">Title</th>
-              <th scope="col">Progress</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.launches.map(
-              function (launch, index) {
-                return (
-                  <tr key={index}>
-                    <td>
-                      <Link key={index} to={"/" + this.state.projectId + "/launch/" + launch.id}>{launch.name}</Link>
-                    </td>
-                    <td>{this.getProgressBar(launch)}</td>
-                  </tr>
-                );
-              }.bind(this),
-            )}
-          </tbody>
-        </table>
+  return (
+    <div>
+      <ControlledPopup popupMessage={errorMessage} />
+      <div className="sweet-loading">
+        <FadeLoader size={100} color={"#135f38"} loading={loading} />
       </div>
-    );
-  }
+      <table className="table table-striped">
+        <thead>
+          <tr><th scope="col">Title</th><th scope="col">Progress</th></tr>
+        </thead>
+        <tbody>
+          {launches.map((launch, index) => (
+            <tr key={index}>
+              <td><Link to={"/" + projectId + "/launch/" + launch.id}>{launch.name}</Link></td>
+              <td>
+                <div className="progress">
+                  <div className="progress-bar progress-bar-striped" role="progressbar" style={getProgressStyle(launch.launchStats.statusCounters.RUNNING, launch.launchStats.total)} />
+                  <div className="progress-bar bg-success" role="progressbar" style={getProgressStyle(launch.launchStats.statusCounters.PASSED, launch.launchStats.total)} />
+                  <div className="progress-bar bg-danger" role="progressbar" style={getProgressStyle(launch.launchStats.statusCounters.FAILED, launch.launchStats.total)} />
+                  <div className="progress-bar bg-warning" role="progressbar" style={getProgressStyle(launch.launchStats.statusCounters.BROKEN, launch.launchStats.total)} />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export default LaunchesWidget;

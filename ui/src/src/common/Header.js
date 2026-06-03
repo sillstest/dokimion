@@ -2,8 +2,7 @@
 /* eslint-disable jsx-a11y/role-supports-aria-props */
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable eqeqeq */
-/* eslint-disable react/no-direct-mutation-state */
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { withRouter } from "./withRouter";
 import * as UserSession from "../user/UserSession";
@@ -11,301 +10,204 @@ import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
-import {Helmet} from "react-helmet-async";
+import { Helmet } from "react-helmet-async";
 
-class Header extends Component {
-  constructor(props) {
-    super(props);
-    this.emptyState = {
-        session: {
-            person: { firstName: "Guest"},
-            metainfo: {analyticsEnabled: false}
-        }
-    };
-    this.state = Object.assign({}, { session: this.props.session, projects: [] });
-    this.logOut = this.logOut.bind(this);
+const emptySession = { person: { firstName: "Guest" }, metainfo: { analyticsEnabled: false } };
+
+function Header({ session: sessionProp, project, onSessionChange, history }) {
+  const [session, setSession] = useState(sessionProp || emptySession);
+  const [projects, setProjects] = useState([]);
+  const [projectName, setProjectName] = useState("");
+  const [projectId, setProjectId] = useState(null);
+
+  function handleSessionChange(s) {
+    if (s && s.person) {
+      UserSession.getSession().login = s.person.id;
+      UserSession.getSession().name = s.person.name;
+      UserSession.getSession().isAdmin = s.isAdmin;
+      UserSession.getSession().roles = s.person.roles;
+      UserSession.getSession().groups = s.person.groups;
+      UserSession.getSession().permissions = s.person.permissions;
+    }
+    if (onSessionChange) onSessionChange(s);
   }
 
-  componentDidMount() {
+  useEffect(() => {
     Backend.postPlain("user/init")
-      .then(response => {
-	console.log("Initialized UserResource");
-      })
-      .catch(error => {
-        console.log("Unable to initialize UserResource: " + error);
-      });
+      .then(() => console.log("Initialized UserResource"))
+      .catch(error => console.log("Unable to initialize UserResource: " + error));
 
     Backend.get("user/session")
       .then(response => {
-        if (this.state.session.id !== response.id) {
-          this.state.session = response;
-          this.setState(this.state);
-          this.onSessionChange(this.state.session);
-          if (
-            this.state.session.person.defaultPassword &&
-            !window.location.pathname.includes("/user/change-profile-redirect") &&
-            !window.location.pathname.includes("/user/changepass") // legacy dependence in base package
-          ) {
-            this.props.history.push("/user/change-profile-redirect/" + this.state.session.person.login);
-          } else if (
-            this.state.session.metainfo.organizationsEnabled &&
-            !this.state.session.metainfo.currentOrganization &&
-            window.location.pathname != "/orgselect" &&
-            window.location.pathname != "/organizations/new"
-          ) {
-            this.props.history.push("/orgselect");
+        setSession(prev => {
+          if (prev.id !== response.id) {
+            handleSessionChange(response);
+            if (response.person.defaultPassword &&
+                !window.location.pathname.includes("/user/change-profile-redirect") &&
+                !window.location.pathname.includes("/user/changepass")) {
+              history.push("/user/change-profile-redirect/" + response.person.login);
+            } else if (response.metainfo.organizationsEnabled &&
+                       !response.metainfo.currentOrganization &&
+                       window.location.pathname != "/orgselect" &&
+                       window.location.pathname != "/organizations/new") {
+              history.push("/orgselect");
+            }
           }
-        }
-      })
-      .catch(() => {
-        console.log("Unable to fetch session");
-      });
-    Backend.get("project?includedFields=name,description,id,readWriteUsers")
-      .then(response => {
-        this.state.projects = response;
-        this.setState(this.state);
-      })
-      .catch(() => {});
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.session && this.props.session !== prevProps.session) {
-      this.state.session = this.props.session;
-      this.setState(this.state);
-    }
-    if (this.props.project && this.props.project !== prevProps.project) {
-      this.state.projectId = this.props.project;
-      this.getProject();
-    }
-  }
-
-  onSessionChange(session) {
-    if (session && session.person) {
-      UserSession.getSession().login = session.person.id;
-      UserSession.getSession().name = session.person.name;
-      UserSession.getSession().isAdmin = session.isAdmin;
-      UserSession.getSession().roles = session.person.roles;
-      UserSession.getSession().groups = session.person.groups;
-      UserSession.getSession().permissions = session.person.permissions;
-    }
-    this.props.onSessionChange(session);
-  }
-
-  changeOrganization(organizationId){
-      Backend.post("user/changeorg/" + organizationId)
-        .then(response => {
-          this.onSessionChange(response);
-          window.location = "/";
-        })
-        .catch(error => {
-          console.log("Unable to change organization");
+          return response;
         });
-  }
-
-  getProject() {
-    Backend.get("project/" + this.state.projectId)
-      .then(response => {
-        this.state.projectName = response.name;
-        this.state.projectId = response.id;
-        this.setState(this.state);
       })
-      .catch(error => {
-        console.log("Couldn't get project: " + error);
-      });
+      .catch(() => console.log("Unable to fetch session"));
+
+    Backend.get("project?includedFields=name,description,id,readWriteUsers")
+      .then(response => setProjects(response))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (sessionProp) setSession(sessionProp);
+  }, [sessionProp]);
+
+  useEffect(() => {
+    if (!project) return;
+    setProjectId(project);
+    Backend.get("project/" + project)
+      .then(response => { setProjectName(response.name); setProjectId(response.id); })
+      .catch(error => console.log("Couldn't get project: " + error));
+  }, [project]);
+
+  function changeOrganization(organizationId) {
+    Backend.post("user/changeorg/" + organizationId)
+      .then(response => { handleSessionChange(response); window.location = "/"; })
+      .catch(() => console.log("Unable to change organization"));
   }
 
-  logOut() {
+  function logOut() {
     Backend.delete("user/logout")
-      .then(() => {
-        const newState = Object.assign({}, this.emptyState);
-        this.setState(newState);
-        this.onSessionChange(this.state.session);
-        this.props.history.push("/auth");
-      })
+      .then(() => { setSession(emptySession); handleSessionChange(emptySession); history.push("/auth"); })
       .catch(error => console.log(error));
   }
 
-  renderProjects() {
-    return (
-      <ul className="navbar-nav">
-        <li className="nav-item dropdown">
-          <a
-            className="nav-item nav-link dropdown-toggle mr-md-2"
-            href="#"
-            id="bd-projects"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-          >
-            {this.state.projectName || "Projects"}
-          </a>
-          <div className="dropdown-menu dropdown-menu-left" aria-labelledby="bd-projects">
-            <Link className="dropdown-item " to="/projects">
-              All
-            </Link>
-            {this.state.projects.map(function (project) {
-              return (
-                <Link to={"/projects/" + project.id} key={project.id} className="dropdown-item">
-                  {project.name}
-                </Link>
-              );
-            })}
-            {Utils.isUserOwnerOrAdmin(this.state.session) && (
-              <div>
-                <hr />
-                <Link to={"/projects/new"} className="dropdown-item">
-                  Create Project
-                </Link>
-              </div>
-            )}
-          </div>
-        </li>
-      </ul>
-    );
-  }
-
-  render() {
-    let profileContext;
-    if (this.state.session.id) {
-      profileContext = (
-        <span>
-        {!this.state.session.metainfo || !this.state.session.metainfo.organizationsEnabled && (
+  let profileContext;
+  if (session.id) {
+    profileContext = (
+      <span>
+        {(!session.metainfo || !session.metainfo.organizationsEnabled) && (
           <div>
-            <a className="dropdown-item" href={"/user/profile/" + this.state.session.person.login}>
-                Profile
-            </a>
+            <a className="dropdown-item" href={"/user/profile/" + session.person.login}>Profile</a>
           </div>
-         )}
-
-          {this.state.session.metainfo && this.state.session.metainfo.organizationsEnabled && (
-            <div>
-                {this.state.session.metainfo.organizations.map(function (organization, index) {
-                  return (
-                    <div index={index}  className='clickable dropdown-item' onClick={e => this.changeOrganization(organization.id, e)}>
-                        {organization.name}
-                        {this.state.session.metainfo.currentOrganization === organization.id && (<span> <FontAwesomeIcon icon={faCheck} /></span>)}
-                    </div>
-                  )
-                }.bind(this))}
-                <div className="dropdown-divider"></div>
-                <Link className="dropdown-item " to="/organizations/edit">
-                    Edit Current Organization
-                </Link>
-                <Link className="dropdown-item " to="/organizations/new">
-                    Create New Organization
-                </Link>
-
-            </div>
-          )}
-
-          {Utils.isUserOwnerOrAdmin(this.state.session) && (!this.state.session.metainfo || !this.state.session.metainfo.organizationsEnabled) && (
-            <div>
-              <div className="dropdown-divider"></div>
-              <a className="dropdown-item" href={"/user/all-users-redirect"}>
-                All Users
-              </a>
-              <a className="dropdown-item" href={"/user/create-redirect"}>
-                Create User
-              </a>
-              <a className="dropdown-item" href={"/user/delete"}>
-                Delete User
-              </a>
-            </div>
-          )}
-
-          <div className="dropdown-divider"></div>
-          <a className="dropdown-item" href="#" onClick={this.logOut}>
-            Log out
-          </a>
-        </span>
-      );
-    } else {
-      profileContext = (
-        <a className="dropdown-item active" href="/auth">
-          Login
-        </a>
-      );
-    }
-    return (
-      <>
-      {this.state.session.person !== undefined && this.state.session.person.firstName !== "Guest" ? (
-      /* only display banner when user is logged in */
-      <nav className="navbar navbar-expand-md navbar-dark bg-green">
-
-      {/* Google analytics*/}
-      { this.state.session.metainfo && this.state.session.metainfo.analyticsEnabled && (
-            <Helmet>
-                <script async src="https://www.googletagmanager.com/gtag/js?id=G-4CEVX7JVR7"></script>
-            </Helmet>
         )}
-        { this.state.session.metainfo && this.state.session.metainfo.analyticsEnabled && (
-            <Helmet
-              script={[{
-                type: 'text/javascript',
-                innerHTML: "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-4CEVX7JVR7');"
-              }]}
-            />
-        )}
-
-        <button type="button" className="navbar-toggler" data-toggle="collapse" data-target="#navbarNav">
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          {this.renderProjects()}
-          {!this.props.project && <ul className="navbar-nav mr-auto"></ul>}
-          {this.props.project && (
-            <ul className="navbar-nav mr-auto">
-              <li className="nav-item">
-                <Link className="nav-link" to={"/" + this.props.project + "/testcases"}>
-                  TestCases
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={"/" + this.props.project + "/launches"}>
-                  Launches
-                </Link>
-              </li>
-              {(this.state.session.person.roles != null && this.state.session.person.roles[0] != "OBSERVERONLY") &&
-              <li className="nav-item">
-                <Link className="nav-link" to={"/" + this.props.project + "/testsuites"}>
-                  Suites
-                </Link>
-                  </li>
-               } 
-               {Utils.isAdmin(this.state.session) &&
-                    <li className="nav-item">
-                      <Link className="nav-link" to={"/" + this.props.project + "/attributes"}>
-                        Attributes
-                      </Link>
-                    </li>
-               } 
-            </ul>
-          )}
-          <ul className="navbar-nav">
-            <li className="nav-item dropdown">
-              <a
-                className="nav-item nav-link dropdown-toggle mr-md-2"
-                href="#"
-                id="bd-login"
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-              >
-                {this.state.session.person.firstName || ""} {this.state.session.person.lastName || ""}
-              </a>
-              <div className="dropdown-menu dropdown-menu-right" aria-labelledby="bd-login">
-                {profileContext}
+        {session.metainfo && session.metainfo.organizationsEnabled && (
+          <div>
+            {(session.metainfo.organizations || []).map((organization, index) => (
+              <div key={index} className="clickable dropdown-item" onClick={() => changeOrganization(organization.id)}>
+                {organization.name}
+                {session.metainfo.currentOrganization === organization.id && (
+                  <span> <FontAwesomeIcon icon={faCheck} /></span>
+                )}
               </div>
-            </li>
-          </ul>
-        </div>
-      </nav>
-      ) : (
-        <nav style={{height: 60}} className="navbar navbar-expand-md navbar-dark bg-green"/>
-      )}
-      </>
+            ))}
+            <div className="dropdown-divider"></div>
+            <Link className="dropdown-item" to="/organizations/edit">Edit Current Organization</Link>
+            <Link className="dropdown-item" to="/organizations/new">Create New Organization</Link>
+          </div>
+        )}
+        {Utils.isUserOwnerOrAdmin(session) && (!session.metainfo || !session.metainfo.organizationsEnabled) && (
+          <div>
+            <div className="dropdown-divider"></div>
+            <a className="dropdown-item" href="/user/all-users-redirect">All Users</a>
+            <a className="dropdown-item" href="/user/create-redirect">Create User</a>
+            <a className="dropdown-item" href="/user/delete">Delete User</a>
+          </div>
+        )}
+        <div className="dropdown-divider"></div>
+        <a className="dropdown-item" href="#" onClick={logOut}>Log out</a>
+      </span>
     );
+  } else {
+    profileContext = <a className="dropdown-item active" href="/auth">Login</a>;
   }
+
+  const isLoggedIn = session.person !== undefined && session.person.firstName !== "Guest";
+
+  return (
+    <>
+      {isLoggedIn ? (
+        <nav className="navbar navbar-expand-md navbar-dark bg-green">
+          {session.metainfo && session.metainfo.analyticsEnabled && (
+            <Helmet>
+              <script async src="https://www.googletagmanager.com/gtag/js?id=G-4CEVX7JVR7"></script>
+            </Helmet>
+          )}
+          {session.metainfo && session.metainfo.analyticsEnabled && (
+            <Helmet script={[{ type: "text/javascript", innerHTML: "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-4CEVX7JVR7');" }]} />
+          )}
+
+          <button type="button" className="navbar-toggler" data-toggle="collapse" data-target="#navbarNav">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse" id="navbarNav">
+            {/* Projects dropdown */}
+            <ul className="navbar-nav">
+              <li className="nav-item dropdown">
+                <a className="nav-item nav-link dropdown-toggle mr-md-2" href="#" id="bd-projects" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  {projectName || "Projects"}
+                </a>
+                <div className="dropdown-menu dropdown-menu-left" aria-labelledby="bd-projects">
+                  <Link className="dropdown-item" to="/projects">All</Link>
+                  {projects.map(p => (
+                    <Link to={"/projects/" + p.id} key={p.id} className="dropdown-item">{p.name}</Link>
+                  ))}
+                  {Utils.isUserOwnerOrAdmin(session) && (
+                    <div>
+                      <hr />
+                      <Link to="/projects/new" className="dropdown-item">Create Project</Link>
+                    </div>
+                  )}
+                </div>
+              </li>
+            </ul>
+
+            {/* Project nav links */}
+            {!project && <ul className="navbar-nav mr-auto"></ul>}
+            {project && (
+              <ul className="navbar-nav mr-auto">
+                <li className="nav-item">
+                  <Link className="nav-link" to={"/" + project + "/testcases"}>TestCases</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to={"/" + project + "/launches"}>Launches</Link>
+                </li>
+                {session.person.roles != null && session.person.roles[0] != "OBSERVERONLY" && (
+                  <li className="nav-item">
+                    <Link className="nav-link" to={"/" + project + "/testsuites"}>Suites</Link>
+                  </li>
+                )}
+                {Utils.isAdmin(session) && (
+                  <li className="nav-item">
+                    <Link className="nav-link" to={"/" + project + "/attributes"}>Attributes</Link>
+                  </li>
+                )}
+              </ul>
+            )}
+
+            {/* User dropdown */}
+            <ul className="navbar-nav">
+              <li className="nav-item dropdown">
+                <a className="nav-item nav-link dropdown-toggle mr-md-2" href="#" id="bd-login" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  {session.person.firstName || ""} {session.person.lastName || ""}
+                </a>
+                <div className="dropdown-menu dropdown-menu-right" aria-labelledby="bd-login">
+                  {profileContext}
+                </div>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      ) : (
+        <nav style={{ height: 60 }} className="navbar navbar-expand-md navbar-dark bg-green" />
+      )}
+    </>
+  );
 }
 
 export default withRouter(Header);

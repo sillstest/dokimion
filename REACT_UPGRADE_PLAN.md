@@ -120,33 +120,23 @@
 
 ---
 
-## Phase 5 — Convert Class Components to Functions (bottom-up)
+## Phase 5 — Convert Class Components to Functions ✅ COMPLETED 2026-06-01
 
-Convert leaf components first (no sub-components), work upward to root.
+**Step 5.1** ✅ — `Footer.js`, `Pager.js`, `ConfirmButton.js` converted. `user/components/` already function components.
 
-### Step 5.1 — Leaf/presentational components
-- `ui/src/src/pager/Pager.js`
-- `ui/src/src/common/uicomponents/ConfirmButton.js`
-- `ui/src/src/common/Footer.js`
-- `ui/src/src/user/components/` (all files in this directory)
+**Step 5.2** ✅ — `Comments.js`, `AttributeForm.js`, `OrganizationForm.js`, `ProjectForm.js`, `LaunchForm.js`, `TestCaseForm.js` converted.
 
-### Step 5.2 — Stateful leaf components (single concern)
-- `ui/src/src/comments/Comments.js`
-- Form components: `AttributeForm.js`, `OrganizationForm.js`, `ProjectForm.js`, `LaunchForm.js`, `TestCaseForm.js`
+**Step 5.3** ✅ — All 10 user/auth components converted: `Auth`, `IdpAuth`, `Login`, `ForgotPassword`, `OrgSelect`, `Profile`, `ChangeProfile`, `DeleteUser`, `CreateUser`, `Users`.
 
-### Step 5.3 — User/auth module (self-contained)
-- `Login.js`, `ForgotPassword.js`, `CreateUser.js`, `DeleteUser.js`
-- `ChangeProfile.js`, `Profile.js`, `OrgSelect.js`
-- `Auth.js`, `IdpAuth.js`, `Users.js`
+**Step 5.4** ✅ — All 7 domain modules converted (56 files total):
+1. Attributes (2), Audit (2), Organizations (3), TestSuites (2), Projects (5), TestCases (6 + TestCase.js 1388→function), Launches (14)
 
-### Step 5.4 — Domain modules (convert all files in each module, test before moving on)
-1. Attributes module (2 files)
-2. Audit module (2 files)
-3. Organizations module (3 files)
-4. TestSuites module (2 files)
-5. Projects module (6 files)
-6. TestCases module (7 files)
-7. Launches module (14 files — largest, do last)
+**Step 5.5** ✅ — `Header.js`, `Main.js`, `Redirect.js` converted to functions. `SubComponent.js` retained as empty class shell (no longer extended by anything).
+
+**Step 5.6** ✅ — `App.js` converted: two `useState` calls replace the class state; `setProject`/`setSession` passed directly as callbacks.
+
+Only `ErrorBoundary.js` remains as a class (permanent — no hooks equivalent for error boundaries).
+`yarn build` succeeded: `Compiled with warnings` — all pre-existing formatting warnings, no new errors.
 
 ### Step 5.5 — Shell components
 - `ui/src/src/common/Header.js`

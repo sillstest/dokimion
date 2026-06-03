@@ -1,26 +1,16 @@
-import React, { Component } from "react";
+import React, { useEffect } from "react";
 import { withRouter } from "./withRouter";
-
 import backend from "../services/backend";
 
-class Redirect extends Component {
-  constructor(props) {
-    super(props);
-    this.requestUrl = this.props.requestUrl;
-  }
-
-  render() {
-    return <div></div>;
-  }
-
-  componentDidMount() {
+function Redirect({ requestUrl }) {
+  useEffect(() => {
     backend
-      .get(this.requestUrl)
-      .then(response => {
-        window.location = response.url;
-      })
+      .get(requestUrl)
+      .then(response => { window.location = response.url; })
       .catch(error => console.log(error));
-  }
+  }, [requestUrl]);
+
+  return <div></div>;
 }
 
 export default withRouter(Redirect);

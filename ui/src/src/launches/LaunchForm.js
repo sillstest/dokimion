@@ -1,6 +1,5 @@
 /* eslint-disable eqeqeq */
-import React from "react";
-import SubComponent from "../common/SubComponent";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { withRouter } from "../common/withRouter";
 import CreatableSelect from "react-select/creatable";
@@ -11,404 +10,277 @@ import { FadeLoader } from "react-spinners";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
-class LaunchForm extends SubComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      launch: {
-        name: "",
-        testSuite: { filter: {} },
-        properties: [],
-        launcherConfig: { properties: {} },
-        configAttributePairs: [],
-      },
-      noAttributes: 0,
-      projectAttributeNames: [],
-      projectAttributes: [{ name: "", values: [] }],
-      displayAttributeIndex: {},
-      displayAttributeName: {},
-      displayAttributeValues: {},
-      project: {
-        id: null,
-        name: "",
-        description: "",
-        allowedGroups: [],
-        launcherConfigs: [],
-      },
-      launcherDescriptors: [],
-      restart: props.restart || false,
-      failedOnly: props.failedOnly || false,
-      loading: false,
-      errorMessage: "",
-      modalName : props.modalName,
-      configurationAttributes: [],
-      configAttributesFilter: {
-        skip: 0,
-        limit: 20,
-        orderby: "project",
-        orderdir: "ASC",
-        includedFields: "project, names",
-      },
+const defaultLaunch = () => ({
+  name: "", testSuite: { filter: {} }, properties: [],
+  launcherConfig: { properties: {} }, configAttributePairs: [],
+});
 
-    };
+function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuite: testSuiteProp,
+                      launch: launchProp, modalName: modalNameProp, match }) {
+  const [launch, setLaunch] = useState(defaultLaunch());
+  const [restart, setRestart] = useState(restartProp || false);
+  const [failedOnly, setFailedOnly] = useState(failedOnlyProp || false);
+  const [modalName, setModalName] = useState(modalNameProp);
+  const [project, setProject] = useState({ id: null, name: "", description: "", allowedGroups: [], launcherConfigs: [] });
+  const [projectAttributes, setProjectAttributes] = useState([{ name: "", values: [] }]);
+  const [projectAttributeNames, setProjectAttributeNames] = useState([]);
+  const [launcherDescriptors, setLauncherDescriptors] = useState([]);
+  const [noAttributes, setNoAttributes] = useState(0);
+  const [displayAttributeIndex, setDisplayAttributeIndex] = useState({ top: 0, bottom: 0 });
+  const [displayAttributeName, setDisplayAttributeName] = useState({ top: "", bottom: "" });
+  const [displayAttributeValues, setDisplayAttributeValues] = useState({ top: [], bottom: [] });
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-    this.state.displayAttributeIndex["top"] = 0;
-    this.state.displayAttributeIndex["bottom"] = 0;
-    this.state.displayAttributeName["top"] = "";
-    this.state.displayAttributeName["bottom"] = "";
-    this.state.displayAttributeValues["top"] = [];
-    this.state.displayAttributeValues["bottom"] = [];
-    this.handleAddAttribute = this.handleAddAttribute.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.getAttributes = this.getAttributes.bind(this);
-    this.changeLaunchConfigAttribute = this.changeLaunchConfigAttribute.bind(this);
-    this.changeLaunchConfigAttributeValues = this.changeLaunchConfigAttributeValues.bind(this);
-    this.handleLauncherChange = this.handleLauncherChange.bind(this);
-  }
+  useEffect(() => {
+    const projectId = match?.params?.project;
+    if (!projectId) return;
 
-  getAttributes() {
-    Backend.get(this.props.match.params.project + "/attribute")
+    Backend.get(projectId + "/attribute")
       .then(response => {
-
-        this.state.projectAttributes = []
-        response.forEach(
-          function(response) {
-            if (response.type == "LAUNCH") {
-                var tempAttrib = {name: "", values: []};
-                tempAttrib.name = response.name;
-                this.state.projectAttributeNames.push(tempAttrib.name);
-                var tempValues = [];
-                for (let j = 0; j < response.attrValues.length; j++) {
-                     tempValues.push(response.attrValues[j].value);
-                }
-                tempAttrib.values = tempValues;
-                this.state.projectAttributes.push(tempAttrib);
-	    }
-          }.bind(this),
-        );
-        this.setState(this.state);
+        const attrs = [];
+        const names = [];
+        response.forEach(r => {
+          if (r.type == "LAUNCH") {
+            const values = r.attrValues.map(v => v.value);
+            attrs.push({ name: r.name, values });
+            names.push(r.name);
+          }
+        });
+        setProjectAttributes(attrs);
+        setProjectAttributeNames(names);
       })
       .catch(error => console.log(error));
+
+    Backend.get("project/" + projectId)
+      .then(response => setProject(response))
+      .catch(error => setErrorMessage("Couldn't get project: " + error));
+
+    Backend.get("launcher/descriptors")
+      .then(response => setLauncherDescriptors(response))
+      .catch(error => setErrorMessage("Couldn't get launcher descriptors: " + error));
+  }, [match?.params?.project]);
+
+  useEffect(() => {
+    if (restartProp !== undefined) setRestart(restartProp || false);
+    if (failedOnlyProp !== undefined) setFailedOnly(failedOnlyProp || false);
+    if (testSuiteProp) setLaunch(prev => ({ ...prev, testSuite: testSuiteProp }));
+    if (launchProp && launchProp.id) setLaunch(launchProp);
+    if (modalNameProp) setModalName(modalNameProp);
+  }, [restartProp, failedOnlyProp, testSuiteProp, launchProp, modalNameProp]);
+
+  function handleChange(event) {
+    setLaunch(prev => ({ ...prev, [event.target.name]: event.target.value }));
   }
 
-  handleAddAttribute() {
-
-     if (this.state.noAttributes <= 1) {
-        if (this.state.projectAttributes.length >= 1) {
-           this.state.noAttributes += 1;
-           this.setState(this.state);
-        } else {
-           this.setState({errorMessage: "handleAddAttribute::Invalid number of LAUNCH attributes"});
-        }
-     } else {
-        this.setState({errorMessage: "handleAddAttribute::Maximum number LAUNCH attributes = 2"});
-     }
-
+  function handleAddAttribute() {
+    if (noAttributes <= 1) {
+      if (projectAttributes.length >= 1) {
+        setNoAttributes(n => n + 1);
+      } else {
+        setErrorMessage("Invalid number of LAUNCH attributes");
+      }
+    } else {
+      setErrorMessage("Maximum number LAUNCH attributes = 2");
+    }
   }
 
-  handleChange(event) {
-    this.state.launch[event.target.name] = event.target.value;
-    this.setState(this.state);
-  }
-
-  handleSubmit(event) {
-    this.state.loading = true;
-    this.setState(this.state);
-    this.state.launch.testSuite.filter.filters = (this.state.launch.testSuite.filter.filters || []).filter(function (
-      filter,
-    ) {
-      return filter.id !== undefined && filter.id !== null;
-    });
-    this.state.launch.testSuite.filter.filters.forEach(function (filter) {
-      delete filter.title;
-    });
-    var url = this.props.match.params.project + "/launch/";
-    if (this.state.restart) {
-      url = this.props.match.params.project + "/launch/" + this.state.launch.id + "/restart";
-      if (this.state.failedOnly) {
-        url += "?failedOnly=true";
+  function changeLaunchConfigAttribute(values, position) {
+    for (let i = 0; i < projectAttributes.length; i++) {
+      if (projectAttributes[i].name == values.value) {
+        setDisplayAttributeName(prev => ({ ...prev, [position]: values.value }));
+        setDisplayAttributeIndex(prev => ({ ...prev, [position]: i }));
+        break;
       }
     }
-    // copy display attributes  (name, values) to launch.configurationAttributes
-    if (this.state.displayAttributeName["top"] !== "") {
-       this.state.launch.configAttributePairs.push(
-                  {name: this.state.displayAttributeName["top"],
-                   value: this.state.displayAttributeValues["top"]});
+  }
+
+  function changeLaunchConfigAttributeValues(values, position) {
+    const val = values.length > 0 ? values[values.length - 1].value : [];
+    setDisplayAttributeValues(prev => ({ ...prev, [position]: val }));
+  }
+
+  function handleLauncherChange(event, index, propertyKey) {
+    if (propertyKey == "uuid") {
+      const config = project.launcherConfigs.find(c => c.uuid == event.target.value) || {};
+      setLaunch(prev => ({ ...prev, launcherConfig: config }));
+    } else {
+      setLaunch(prev => ({
+        ...prev,
+        launcherConfig: { ...prev.launcherConfig, properties: { ...prev.launcherConfig.properties, [propertyKey]: event.target.value } },
+      }));
+    }
+  }
+
+  function launchModalDismiss() {
+    if (typeof modalName === "string" && modalName.length > 0 && modalName === "launch-modal") {
+      $("#launch-modal").modal("hide");
+    } else {
+      $("#restart-launch-modal").modal("hide");
+    }
+  }
+
+  function handleSubmit(event) {
+    setLoading(true);
+    const filters = (launch.testSuite.filter.filters || []).filter(f => f.id !== undefined && f.id !== null);
+    filters.forEach(f => delete f.title);
+
+    const configAttributePairs = [...launch.configAttributePairs];
+    if (displayAttributeName.top !== "") configAttributePairs.push({ name: displayAttributeName.top, value: displayAttributeValues.top });
+    if (displayAttributeName.bottom !== "") configAttributePairs.push({ name: displayAttributeName.bottom, value: displayAttributeValues.bottom });
+
+    const launchToPost = { ...launch, testSuite: { ...launch.testSuite, filter: { ...launch.testSuite.filter, filters } }, configAttributePairs };
+
+    let url = match.params.project + "/launch/";
+    if (restart) {
+      url = match.params.project + "/launch/" + launch.id + "/restart";
+      if (failedOnly) url += "?failedOnly=true";
     }
 
-    if (this.state.displayAttributeName["bottom"] !== "") {
-       this.state.launch.configAttributePairs.push(
-                  {name: this.state.displayAttributeName["bottom"],
-                   value: this.state.displayAttributeValues["bottom"]});
-    }
-
-    Backend.post(url, this.state.launch)
+    Backend.post(url, launchToPost)
       .then(response => {
-        this.state.launch = response;
-        if (!this.state.launch.id) {
-          this.state.launch.triggeredByLauncher = true;
-        }
-        this.state.restart = false;
-        this.state.loading = false;
-        this.setState(this.state);
+        const updated = { ...response };
+        if (!updated.id) updated.triggeredByLauncher = true;
+        setLaunch(updated);
+        setRestart(false);
+        setLoading(false);
       })
       .catch(error => {
-        this.state.loading = false;
-        this.setState(this.state);
-        this.setState({errorMessage: "handleSubmit::Couldn't save launch: " + error});
+        setLoading(false);
+        setErrorMessage("Couldn't save launch: " + error);
       });
     event.preventDefault();
   }
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.restart !== this.props.restart ||
-        prevProps.failedOnly !== this.props.failedOnly ||
-        prevProps.testSuite !== this.props.testSuite ||
-        prevProps.launch !== this.props.launch ||
-        prevProps.modalName !== this.props.modalName) {
-      this.state.restart = this.props.restart || false;
-      this.state.failedOnly = this.props.failedOnly || false;
-      if (this.props.testSuite) this.state.launch.testSuite = this.props.testSuite;
-      if (this.props.launch && this.props.launch.id) this.state.launch = this.props.launch;
-      if (this.props.modalName) this.state.modalName = this.props.modalName;
-      this.setState(this.state);
-    }
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.getAttributes();
-
-    Backend.get("project/" + this.props.match.params.project)
-      .then(response => {
-        this.state.project = response;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "componentDidMount::Couldn't get project, error: " + error});
-      });
-
-    Backend.get("launcher/descriptors")
-      .then(response => {
-        this.state.launcherDescriptors = response;
-        this.setState(this.state);
-      })
-      .catch(error => {
-        this.setState({errorMessage: "componentDidMount::Couldn't get launcher descriptors, error: " + error});
-      });
-  }
-
-  handleLauncherChange(event, index, propertyKey) {
-    if (propertyKey == "uuid") {
-      this.state.launch.launcherConfig =
-        this.state.project.launcherConfigs.find(config => config.uuid == event.target.value) || {};
-    } else {
-      this.state.launch.launcherConfig.properties[propertyKey] = event.target.value;
-    }
-    this.setState(this.state);
-  }
-
-  changeLaunchConfigAttribute = (values, position) => {
-
-    for (let i = 0; i < this.state.projectAttributes.length; i++) {
-       if (this.state.projectAttributes[i].name == values.value) {
-          this.state.displayAttributeName[position] = values.value;
-          this.state.displayAttributeIndex[position] = i;
-          break;
-       }
-    }
-    this.setState(this.state);
-  }
-
-  changeLaunchConfigAttributeValues = (values, position) => {
-
-     for (let i = 0; i < values.length; i++) {
-        this.state.displayAttributeValues[position] = values[i].value;
-     }
-     this.setState(this.state);
-  }
-
-  launchModalDismiss() {
-     //Updated Issue 92
-     if(typeof this.state.modalName === 'string' && this.state.modalName.length > 0 && this.state.modalName ==='launch-modal'){
-       $("#launch-modal").modal("hide");
-     }else{
-     $("#restart-launch-modal").modal("hide");
-    }
-  }
-
-  render() {
-    let modalBody;
-    if (this.state.launch.id && !this.state.restart && !this.state.launch.launchGroup) {
-      modalBody = (
-        <div className="modal-body" id="launch-created">
-          <Link
-            onClick={this.launchModalDismiss}
-            to={"/" + this.props.match.params.project + "/launch/" + this.state.launch.id}
-            className="dropdown-item"
-          >
-            Go To Launch
-          </Link>
-        </div>
-      );
-    } else if (this.state.launch.id && !this.state.restart && this.state.launch.launchGroup) {
-      modalBody = (
-        <div className="modal-body" id="launch-created">
-          <Link
-            onClick={this.launchModalDismiss}
-            to={"/" + this.props.match.params.project + "/launches?launchGroup=" + this.state.launch.launchGroup}
-            className="dropdown-item"
-          >
-            Go To Launch Group
-          </Link>
-        </div>
-      );
-    } else if (this.state.launch.triggeredByLauncher && !this.state.restart) {
-      modalBody = (
-        <div className="modal-body" id="launch-created">
-          Launch was triggered using {this.state.launch.launcherConfig.name}
-        </div>
-      );
-    } else {
-      modalBody = (
-        <div className="modal-body" id="launch-creation-form">
-          <form>
-            <div className="form-group row">
-              <label className="col-4 col-form-label">Name</label>
-              <div className="col-8">
-                <input
-                  type="text"
-                  className="form-control"
-                  name="name"
-                  value={this.state.launch.name || ""}
-                  onChange={this.handleChange}
-                />
-              </div>
+  let modalBody;
+  if (launch.id && !restart && !launch.launchGroup) {
+    modalBody = (
+      <div className="modal-body" id="launch-created">
+        <Link onClick={launchModalDismiss} to={"/" + match.params.project + "/launch/" + launch.id} className="dropdown-item">
+          Go To Launch
+        </Link>
+      </div>
+    );
+  } else if (launch.id && !restart && launch.launchGroup) {
+    modalBody = (
+      <div className="modal-body" id="launch-created">
+        <Link onClick={launchModalDismiss} to={"/" + match.params.project + "/launches?launchGroup=" + launch.launchGroup} className="dropdown-item">
+          Go To Launch Group
+        </Link>
+      </div>
+    );
+  } else if (launch.triggeredByLauncher && !restart) {
+    modalBody = (
+      <div className="modal-body" id="launch-created">
+        Launch was triggered using {launch.launcherConfig.name}
+      </div>
+    );
+  } else {
+    modalBody = (
+      <div className="modal-body" id="launch-creation-form">
+        <form>
+          <div className="form-group row">
+            <label className="col-4 col-form-label">Name</label>
+            <div className="col-8">
+              <input type="text" className="form-control" name="name" value={launch.name || ""} onChange={handleChange} />
             </div>
-
-            <div className="form-group row">
-             <div className="col-sm-4">
-               <button type="button" className="btn btn-primary" onClick={this.handleAddAttribute}>
-               Add Attribute
-               </button>
-             </div>
-            </div>
-
-            {(this.state.noAttributes >= 1) ? (
-            <>
-            <div className="form-group row">
-              <label className="col-4 col-form-label">Launch Configuration Attribute #1</label>
-              <div className="col-8">
-                <CreatableSelect
-                  onChange={(value) => this.changeLaunchConfigAttribute(value, "top")}
-                  options={(this.state.projectAttributeNames || []).map(function (val) {
-                    return { value: val, label: val};
-                  })}
-                />
-              </div>
-            </div>
-
-            <div className="form-group row">
-              <label className="col-4 col-form-label">Launch Configuration Attribute Values #1</label>
-              <div className="col-8">
-                <CreatableSelect
-                  isMulti
-                  onChange={(value) => this.changeLaunchConfigAttributeValues(value, "top")}
-                  options={(this.state.projectAttributes[this.state.displayAttributeIndex["top"]].values || []).map(function (val) {
-                    return { value: val, label: val};
-                  })}
-                />
-              </div>
-            </div>
-            </>
-            ) : (
-            <></>
-            )}
-            {(this.state.noAttributes === 2) ? (
-            <>
-            <div className="form-group row">
-              <label className="col-4 col-form-label">Launch Configuration Attribute #2</label>
-              <div className="col-8">
-                <CreatableSelect
-                  onChange={(value) => this.changeLaunchConfigAttribute(value, "bottom")}
-                  options={(this.state.projectAttributeNames || []).map(function (val) {
-                    return { value: val, label: val};
-                  })}
-                />
-              </div>
-            </div>
-
-            <div className="form-group row">
-              <label className="col-4 col-form-label">Launch Configuration Attribute Values #2</label>
-              <div className="col-8">
-                <CreatableSelect
-                  isMulti
-                  onChange={(values) => this.changeLaunchConfigAttributeValues(values, "bottom")}
-                  options={(this.state.projectAttributes[this.state.displayAttributeIndex["bottom"]].values || []).map(function (val) {
-                    return { value: val, label: val};
-                  })}
-                />
-              </div>
-            </div>
-            </>
-            ) : (
-            // nop
-            <></>
-            )}
-          </form>
-          <div>
-            {this.state.launch.launcherConfig && this.state.launch.launcherConfig.uuid && (
-              <LauncherForm
-                launcherConfig={this.state.launch.launcherConfig}
-                configIndex={0}
-                selectableType={false}
-                handleLauncherChange={this.handleLauncherChange}
-                launcherDescriptors={this.state.launcherDescriptors}
-              />
-            )}
           </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="modal-dialog" role="document">
-        <ControlledPopup popupMessage={this.state.errorMessage}/>
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Create Launch</h5>
-            <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-
-          {this.state.loading && (
-            <div className="sweet-loading launch-form-spinner">
-              <FadeLoader size={100} color={"#135f38"} loading={this.state.loading} />
+          <div className="form-group row">
+            <div className="col-sm-4">
+              <button type="button" className="btn btn-primary" onClick={handleAddAttribute}>Add Attribute</button>
             </div>
+          </div>
+          {noAttributes >= 1 && (
+            <>
+              <div className="form-group row">
+                <label className="col-4 col-form-label">Launch Configuration Attribute #1</label>
+                <div className="col-8">
+                  <CreatableSelect
+                    onChange={value => changeLaunchConfigAttribute(value, "top")}
+                    options={projectAttributeNames.map(val => ({ value: val, label: val }))}
+                  />
+                </div>
+              </div>
+              <div className="form-group row">
+                <label className="col-4 col-form-label">Launch Configuration Attribute Values #1</label>
+                <div className="col-8">
+                  <CreatableSelect
+                    isMulti
+                    onChange={values => changeLaunchConfigAttributeValues(values, "top")}
+                    options={(projectAttributes[displayAttributeIndex.top]?.values || []).map(val => ({ value: val, label: val }))}
+                  />
+                </div>
+              </div>
+            </>
           )}
-
-          {!this.state.loading && (
-            <div>
-              <div>{modalBody}</div>
-
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-dismiss="modal">
-                  Close
-                </button>
-                {(!this.state.launch.id || this.state.restart) && (
-                  <button type="button" className="btn btn-primary" onClick={this.handleSubmit}>
-                    Create Launch
-                  </button>
-                )}
+          {noAttributes === 2 && (
+            <>
+              <div className="form-group row">
+                <label className="col-4 col-form-label">Launch Configuration Attribute #2</label>
+                <div className="col-8">
+                  <CreatableSelect
+                    onChange={value => changeLaunchConfigAttribute(value, "bottom")}
+                    options={projectAttributeNames.map(val => ({ value: val, label: val }))}
+                  />
+                </div>
               </div>
-            </div>
+              <div className="form-group row">
+                <label className="col-4 col-form-label">Launch Configuration Attribute Values #2</label>
+                <div className="col-8">
+                  <CreatableSelect
+                    isMulti
+                    onChange={values => changeLaunchConfigAttributeValues(values, "bottom")}
+                    options={(projectAttributes[displayAttributeIndex.bottom]?.values || []).map(val => ({ value: val, label: val }))}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </form>
+        <div>
+          {launch.launcherConfig && launch.launcherConfig.uuid && (
+            <LauncherForm
+              launcherConfig={launch.launcherConfig}
+              configIndex={0}
+              selectableType={false}
+              handleLauncherChange={handleLauncherChange}
+              launcherDescriptors={launcherDescriptors}
+            />
           )}
         </div>
       </div>
     );
   }
+
+  return (
+    <div className="modal-dialog" role="document">
+      <ControlledPopup popupMessage={errorMessage} />
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">Create Launch</h5>
+          <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        {loading && (
+          <div className="sweet-loading launch-form-spinner">
+            <FadeLoader size={100} color={"#135f38"} loading={loading} />
+          </div>
+        )}
+        {!loading && (
+          <div>
+            <div>{modalBody}</div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
+              {(!launch.id || restart) && (
+                <button type="button" className="btn btn-primary" onClick={handleSubmit}>Create Launch</button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default withRouter(LaunchForm);
