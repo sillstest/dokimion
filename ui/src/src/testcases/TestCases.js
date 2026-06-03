@@ -181,6 +181,13 @@ function TestCases({ match, history, location }) {
           .catch(error => { setErrorMessage("Couldn't fetch testcases: " + error); setLoading(false); });
       })
       .catch(error => setErrorMessage("Couldn't fetch attributes: " + error));
+
+    return () => {
+      if (treeRef.current) {
+        treeRef.current.destroy();
+        treeRef.current = null;
+      }
+    };
   }, []);
 
   function onFilter(newFilter, callback) {

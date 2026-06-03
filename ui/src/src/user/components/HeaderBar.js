@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -10,7 +9,7 @@ const headerStyle = {
   color: "white",
 };
 
-const HeaderBar = ({ title }) => (
+const HeaderBar = ({ title = { pageTitle: "Page Title Placeholder" } }) => (
   <div className="header">
     <AppBar position="static" color="default" style={headerStyle}>
       <Toolbar>
@@ -21,17 +20,5 @@ const HeaderBar = ({ title }) => (
     </AppBar>
   </div>
 );
-
-HeaderBar.propTypes = {
-  title: PropTypes.shape({
-    pageTitle: PropTypes.string.isRequired,
-  }),
-};
-
-HeaderBar.defaultProps = {
-  title: {
-    pageTitle: "Page Title Placeholder",
-  },
-};
 
 export default HeaderBar;

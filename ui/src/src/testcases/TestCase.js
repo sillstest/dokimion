@@ -218,7 +218,27 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
 
   function handleSubmit(fieldName, event, index, ignoreToggleEdit) {
     const pid = projectIdRef.current;
-    Backend.put(pid + "/testcase/", testcase)
+    // Read latest content from TinyMCE editor instances before saving
+    let tcToSave = { ...testcase };
+    if (index != undefined) {
+      // Step editor — read action and expectation from their instances
+      const actionEditor = editorInstances.current["step-action-" + index];
+      const expEditor = editorInstances.current["step-exp-" + index];
+      if (actionEditor || expEditor) {
+        const steps = [...(testcase.steps || [])];
+        steps[index] = {
+          ...steps[index],
+          ...(actionEditor ? { action: actionEditor.getContent() } : {}),
+          ...(expEditor ? { expectation: expEditor.getContent() } : {}),
+          _new: undefined,
+        };
+        tcToSave = { ...tcToSave, steps };
+      }
+    } else if (editorInstances.current[fieldName]) {
+      // Description or preconditions editor
+      tcToSave = { ...tcToSave, [fieldName]: editorInstances.current[fieldName].getContent() };
+    }
+    Backend.put(pid + "/testcase/", tcToSave)
       .then(response => {
         setTestcase(response);
         setOriginalTestcase(JSON.parse(JSON.stringify(response)));
@@ -488,7 +508,7 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
                   <Editor key={testcase.id + "-description"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={testcase.description}
                     onInit={(evt, editor) => { editorInstances.current["description"] = editor; }}
                     init={{ height: 500, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                    onEditorChange={val => handleChange("description", { target: { value: val } }, null, null, true)} />
+                    onEditorChange={() => {}} />
                   <form>
                     <div className="testcase-inplace-buttons-down">
                       <button type="button" className="btn btn-light" onClick={e => cancelEdit("description", e)}>Cancel</button>
@@ -518,7 +538,7 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
                   <Editor key={testcase.id + "-preconditions"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={testcase.preconditions}
                     onInit={(evt, editor) => { editorInstances.current["preconditions"] = editor; }}
                     init={{ height: 500, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                    onEditorChange={val => handleChange("preconditions", { target: { value: val } }, null, null, true)} />
+                    onEditorChange={() => {}} />
                   <form>
                     <div className="testcase-inplace-buttons-down">
                       <button type="button" className="btn btn-light" onClick={e => cancelEdit("preconditions", e)}>Cancel</button>
@@ -545,14 +565,14 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
                           <Editor key={testcase.id + "-step-" + i + "-action"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={step.action}
                             onInit={(evt, editor) => { editorInstances.current["step-action-" + i] = editor; }}
                             init={{ height: 300, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                            onEditorChange={val => handleStepActionChange(i, val)} />
+                            onEditorChange={() => {}} />
                         </p>
                         <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                         <p className="card-text">
                           <Editor key={testcase.id + "-step-" + i + "-exp"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={step.expectation}
                             onInit={(evt, editor) => { editorInstances.current["step-exp-" + i] = editor; }}
                             init={{ height: 300, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                            onEditorChange={val => handleStepExpectationChange(i, val)} />
+                            onEditorChange={() => {}} />
                         </p>
                         <button type="button" className="btn btn-light" onClick={e => removeStep(e, i)}>Cancel</button>
                         <button type="button" className="btn btn-primary" onClick={e => handleSubmit("steps", e, i, true)}>Save</button>
@@ -603,14 +623,14 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
                             <Editor key={testcase.id + "-step-" + i + "-action-edit"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={step.action}
                               onInit={(evt, editor) => { editorInstances.current["step-action-" + i] = editor; }}
                               init={{ height: 300, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                              onEditorChange={val => handleStepActionChange(i, val)} />
+                              onEditorChange={() => {}} />
                           </p>
                           <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                           <p className="card-text">
                             <Editor key={testcase.id + "-step-" + i + "-exp-edit"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={step.expectation}
                               onInit={(evt, editor) => { editorInstances.current["step-exp-" + i] = editor; }}
                               init={{ height: 300, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                              onEditorChange={val => handleStepExpectationChange(i, val)} />
+                              onEditorChange={() => {}} />
                           </p>
                           <button type="button" className="btn btn-light" onClick={e => cancelEdit("steps", e, i)}>Cancel</button>
                           <button type="button" className="btn btn-primary" onClick={e => handleSubmit("steps", e, i)}>Save</button>

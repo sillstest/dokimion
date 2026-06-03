@@ -17,11 +17,13 @@ import App from "./App";
 
 const root = createRoot(document.getElementById("root"));
 root.render(
-  <HelmetProvider>
-    <BrowserRouter>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </BrowserRouter>
-  </HelmetProvider>,
+  <React.StrictMode>
+    <HelmetProvider>
+      <BrowserRouter>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </BrowserRouter>
+    </HelmetProvider>
+  </React.StrictMode>,
 );
