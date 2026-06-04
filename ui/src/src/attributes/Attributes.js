@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { withRouter } from "../common/withRouter";
 import AttributeForm from "../attributes/AttributeForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
+import { faPencilAlt } from "../common/icons";
 import $ from "jquery";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";

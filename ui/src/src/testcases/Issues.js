@@ -1,7 +1,7 @@
 /* eslint-disable eqeqeq */
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
+import { faMinusCircle } from "../common/icons";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
 import $ from "jquery";

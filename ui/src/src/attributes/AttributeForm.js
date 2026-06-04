@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
+import { faMinusCircle } from "../common/icons";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 import * as Utils from "../common/Utils";
@@ -118,7 +118,7 @@ function AttributeForm({ attribute: attrProp, projectAttributes: projectAttrsPro
               <div key={i} className="form-group row">
                 <label className="col-sm-2 col-form-label">Value</label>
                 <div className="col-sm-8">
-                  <input type="text" name="value" value={value.value} className="col-sm-12" onChange={e => handleValueChange(i, e)} />
+                  <input type="text" name="value" index={i} value={value.value} className="col-sm-12" onChange={e => handleValueChange(i, e)} />
                 </div>
                 <div className="col-sm-1">
                   <span className="clickable red" onClick={() => removeValue(i)}>

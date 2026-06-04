@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { withRouter } from "../common/withRouter";
 import CreatableSelect from "react-select/creatable";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
+import { faMinusCircle } from "../common/icons";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";

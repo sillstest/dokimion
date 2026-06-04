@@ -3,7 +3,7 @@ import { withRouter } from "../common/withRouter";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
+import { faMinusCircle } from "../common/icons";
 
 function normalizeId(id) {
   return id.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, "");

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
+import { faMinusCircle } from "../common/icons";
 import $ from "jquery";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend, { getApiBaseUrl } from "../services/backend";

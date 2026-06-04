@@ -3,7 +3,7 @@ import { withRouter } from "../common/withRouter";
 import { Link } from "react-router-dom";
 import ControlledPopup from "../common/ControlledPopup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinusCircle } from "@fortawesome/free-solid-svg-icons";
+import { faMinusCircle } from "../common/icons";
 import $ from "jquery";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";

@@ -3,7 +3,7 @@ import { withRouter } from "../common/withRouter";
 import React, { useState, useEffect, useRef } from "react";
 import AsyncSelect from "react-select/async";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
+import { faPencilAlt } from "../common/icons";
 import $ from "jquery";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
