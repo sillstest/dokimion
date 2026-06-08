@@ -21,6 +21,29 @@ require("gijgo/css/gijgo.min.css");
 
 const LAUNCH_STATUS = Object.freeze({ PASSED: 'PASSED', FAILED: 'FAILED', BROKEN: 'BROKEN', RUNNABLE: 'RUNNABLE', RUNNING: 'RUNNING' });
 
+// Structural fingerprint of a parsed tree (node uuids + nesting), independent of status.
+// Two fetches with the same structure differ only in icons, so we can refresh in place
+// instead of tearing the tree down and rebuilding it (which detaches DOM nodes mid-click).
+function treeStructureSignature(nodes) {
+  return (nodes || []).map(n => n.uuid + "(" + treeStructureSignature(n.children) + ")").join(",");
+}
+
+// Update each node's own status icon in place. gijgo renders a node's image inside
+// <li data-id=X> > div[data-role=wrapper] > span[data-role=image] > img; the direct-child
+// path avoids touching descendant nodes' icons. statusHtml is "<img src=...>" (possibly
+// prefixed), so we lift the src out of it rather than recomputing.
+function updateTreeNodeIcons(nodes) {
+  (nodes || []).forEach(function (n) {
+    if (n.uuid != null && n.uuid !== "" && n.statusHtml) {
+      const m = /src="([^"]*)"/.exec(n.statusHtml);
+      if (m) {
+        $("#tree li[data-id='" + n.uuid + "'] > div[data-role='wrapper'] > span[data-role='image'] img").attr("src", m[1]);
+      }
+    }
+    if (n.children) updateTreeNodeIcons(n.children);
+  });
+}
+
 function Launch({ match, history }) {
   const project = match?.params?.project;
   const launchId = match?.params?.launchId;
@@ -50,20 +73,38 @@ function Launch({ match, history }) {
   const configAttrPairsRef = useRef(configAttributePairs);
   const testCasesStateMap = useRef(null);
   const intervalRef = useRef(null);
+  const fetchIdRef = useRef(0);
+  const expandedNodesRef = useRef(new Set());
+  const lastTreeSignatureRef = useRef(null);
 
   useEffect(() => { launchRef.current = launch; }, [launch]);
+  // Reset tracked expansion when switching to a different launch — node ids from the
+  // previous launch must not leak in and auto-expand unrelated groups in the new one.
+  // Also clear the tree signature so the new launch always gets a full (re)build.
+  useEffect(() => { expandedNodesRef.current = new Set(); lastTreeSignatureRef.current = null; }, [launchId]);
   useEffect(() => { filterLaunchRef.current = filterLaunch; }, [filterLaunch]);
   useEffect(() => { selectedTestCaseRef.current = selectedTestCase; }, [selectedTestCase]);
   useEffect(() => { tcSizesRef.current = tcSizes; }, [tcSizes]);
   useEffect(() => { configAttrPairsRef.current = configAttributePairs; }, [configAttributePairs]);
 
   function buildTree(launchData, caps, sizes) {
+    const dataSource = Utils.parseTree(launchData.testCaseTree, [], sizes, caps);
+    const signature = treeStructureSignature(dataSource);
+    // Status-only update (same nodes, same nesting): refresh icons in place and keep the
+    // existing DOM. Destroying/recreating the tree here detaches nodes that Selenium — or a
+    // real user — may be mid-click on, surfacing as StaleElementReferenceException. Expansion
+    // and selection are preserved automatically since we don't tear the tree down.
+    if (treeRef.current && signature === lastTreeSignatureRef.current) {
+      updateTreeNodeIcons(dataSource);
+      return;
+    }
+    lastTreeSignatureRef.current = signature;
     if (treeRef.current) treeRef.current.destroy();
     treeRef.current = $("#tree").tree({
       primaryKey: "uuid",
       uiLibrary: "bootstrap4",
       imageHtmlField: "statusHtml",
-      dataSource: Utils.parseTree(launchData.testCaseTree, [], sizes, caps),
+      dataSource: dataSource,
     });
     treeRef.current.on("select", function (e, node, id) {
       const tc = Utils.getTestCaseFromTree(id, launchData.testCaseTree, (tc, id) => tc.uuid === id);
@@ -74,6 +115,15 @@ function Launch({ match, history }) {
       if (selectedTestCaseRef.current && selectedTestCaseRef.current.uuid === id) return;
       setSelectedTestCase(tc);
       history.push("/" + project + "/launch/" + launchData.id + "/" + id);
+    });
+    // Track which group nodes are expanded so we can restore them after a rebuild.
+    // gijgo's destroy()/recreate resets every node to collapsed, which otherwise
+    // makes a node the user (or Selenium) just expanded snap shut on the next fetch.
+    treeRef.current.on("expand", function (e, node, id) { expandedNodesRef.current.add(String(id)); });
+    treeRef.current.on("collapse", function (e, node, id) { expandedNodesRef.current.delete(String(id)); });
+    expandedNodesRef.current.forEach(function (id) {
+      const node = treeRef.current.getNodeById(id);
+      if (node && node.length) treeRef.current.expand(node);
     });
     const selTC = selectedTestCaseRef.current;
     if (selTC && selTC.id) {
@@ -118,8 +168,13 @@ function Launch({ match, history }) {
   }
 
   const fetchLaunch = useCallback((shouldBuildTree, flFilter) => {
+    const myFetchId = ++fetchIdRef.current;
     Backend.get(project + "/launch/" + launchId)
       .then(response => {
+        // Discard results from an earlier in-flight fetch that resolved after a newer one.
+        // Without this, a Start-fetch resolving after a Pass-fetch overwrites PASSED state
+        // with stale RUNNING data, causing Selenium to never see the status badge update.
+        if (fetchIdRef.current !== myFetchId) return;
         if (!response.testSuite || !response.testSuite.filter) response.testSuite = { filter: { groups: [] } };
         const caps = response.configAttributePairs;
         setConfigAttributePairs(caps);

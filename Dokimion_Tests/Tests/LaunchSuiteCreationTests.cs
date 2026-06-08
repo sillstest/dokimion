@@ -422,8 +422,7 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Verify : Failure message is for test");
                 //Need to open the Project to have access 
                 userActions.LogConsoleMessage("Click on the Project");
-                string locator3 = "//li[contains(@data-id,'Projects')]//i[contains(@class,'gj-icon')]";
-                driver.FindElement(By.XPath(locator3)).Click();
+                creationAndFilterHelpers.ExpandLaunchGroup(Actor, driver, "Projects");
 
                 userActions.LogConsoleMessage("Click on the Header Project List Validation TC");
                 Actor.WaitsUntil(Appearance.Of(TestCases.HeaderProjectListGroupTC), IsEqualTo.True(), timeout:45);
@@ -444,8 +443,7 @@ namespace Dokimion.Tests
                 Assert.That(Authentication_Priority, Is.EqualTo("Authentication"));
 
                 userActions.LogConsoleMessage("Click on the Authentication");
-                string locator4 = $"(//li[contains(@data-id,'Authentication')]//i[contains(@class,'gj-icon')])[1]";
-                driver.FindElement(By.XPath(locator4)).Click();
+                creationAndFilterHelpers.ExpandLaunchGroup(Actor, driver, "Authentication");
 
                 userActions.LogConsoleMessage("Click on the Validate login TC");
                 Actor.WaitsUntil(Appearance.Of(TestCases.ValidateLoginGroupTC), IsEqualTo.True(), timeout:45);

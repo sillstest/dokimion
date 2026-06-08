@@ -38,26 +38,22 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Complete the Launch by updating the Testcase status");
             userActions.LogConsoleMessage("Click on the Add testcase TC");
-            string locator1 = "//li[contains(@data-id,'TestCase')]//i[contains(@class,'gj-icon')]";
-            driver.FindElement(By.XPath(locator1)).Click();
+            ExpandLaunchGroup(Actor, driver, "TestCase");
             Actor.AttemptsTo(Click.On(TestCases.AddTestcaseLocator));
             UpdateLaunchStatusControl(Actor,TestCases.LaunchPassButton, "No Comments", driver);
 
             userActions.LogConsoleMessage("Click on the Launch creation TC");
-            string locator2 = "//li[contains(@data-id,'Launch')]//i[contains(@class,'gj-icon')]";
-            driver.FindElement(By.XPath(locator2)).Click();
+            ExpandLaunchGroup(Actor, driver, "Launch");
             Actor.AttemptsTo(Click.On(TestCases.LaunchCreationTC));
             UpdateLaunchStatusControl(Actor,TestCases.LaunchBrokenButton, "Broken",driver);
 
             userActions.LogConsoleMessage("Click on the Header Project List Validation TC");
-            string locator3 = "//li[contains(@data-id,'Projects')]//i[contains(@class,'gj-icon')]";
-            driver.FindElement(By.XPath(locator3)).Click();
+            ExpandLaunchGroup(Actor, driver, "Projects");
             Actor.AttemptsTo(Click.On(TestCases.HeaderProjectListGroupTC));
             UpdateLaunchStatusControl(Actor,TestCases.LaunchFailButton, "Something Went wrong", driver);
 
             userActions.LogConsoleMessage("Click on the Validate login TC");
-            string locator4 = $"(//li[contains(@data-id,'Authentication')]//i[contains(@class,'gj-icon')])[1]";
-            driver.FindElement(By.XPath(locator4)).Click();
+            ExpandLaunchGroup(Actor, driver, "Authentication");
             Actor.AttemptsTo(Click.On(TestCases.ValidateLoginGroupTC));
             UpdateLaunchStatusControl(Actor, TestCases.LaunchPassButton, "No Comments", driver);
 
@@ -225,6 +221,37 @@ namespace Dokimion.Tests
 
             }
 
+        }
+
+        // Expands a group node in the Launch tree, waiting for it to render first and
+        // clicking the expander only when the group is collapsed. gijgo renders the
+        // expander as <i class="gj-icon plus"> when collapsed and "...minus" when open.
+        // The Launch view now preserves expansion across tree rebuilds, so a blind
+        // re-click would COLLAPSE an already-open node — hence the plus-only guard.
+        //
+        // The app rebuilds the whole #tree (destroy + recreate) after each status update,
+        // so a node can be detached between FindElements and Click — which surfaces as
+        // StaleElementReferenceException. Re-find and retry rather than holding a ref.
+        public void ExpandLaunchGroup(IActor Actor, IWebDriver driver, string groupName, int index = 1)
+        {
+            string groupXpath = $"(//li[contains(@data-id,'{groupName}')])[{index}]";
+            Actor.WaitsUntil(Appearance.Of(new WebLocator(groupName + "Node", By.XPath(groupXpath))), IsEqualTo.True(), timeout: 45);
+
+            string plusXpath = $"(//li[contains(@data-id,'{groupName}')]//i[contains(@class,'gj-icon') and contains(@class,'plus')])[{index}]";
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                try
+                {
+                    var plusIcons = driver.FindElements(By.XPath(plusXpath));
+                    if (plusIcons.Count == 0) return; // already expanded
+                    plusIcons[0].Click();
+                    return;
+                }
+                catch (StaleElementReferenceException)
+                {
+                    // Tree was rebuilt between find and click; re-find on the next pass.
+                }
+            }
         }
 
         private void UpdateLaunchStatusControl(IActor Actor, IWebLocator Status, string comments, IWebDriver driver)
