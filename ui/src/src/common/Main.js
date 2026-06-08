@@ -129,11 +129,7 @@ function Main({ onProjectChange, onSessionChange }) {
             element={<LaunchTestcasesHeatmap onProjectChange={onProjectChange} />}
           />
           <Route
-            path="/:project/launch/:launchId"
-            element={<Launch onProjectChange={onProjectChange} />}
-          />
-          <Route
-            path="/:project/launch/:launchId/:testcaseUuid"
+            path="/:project/launch/:launchId/:testcaseUuid?"
             element={<Launch onProjectChange={onProjectChange} />}
           />
           <Route

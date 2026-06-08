@@ -67,7 +67,12 @@ function Launch({ match, history }) {
     });
     treeRef.current.on("select", function (e, node, id) {
       const tc = Utils.getTestCaseFromTree(id, launchData.testCaseTree, (tc, id) => tc.uuid === id);
-      setSelectedTestCase(tc || { uuid: null });
+      if (!tc) return; // Group node selected — don't navigate or change view
+      // Skip state update if this is a programmatic re-selection of the already-selected node.
+      // buildTree calls select() to restore the visual highlight; if we let it overwrite React
+      // state with capturedLaunch data (which may be stale), we lose in-flight status updates.
+      if (selectedTestCaseRef.current && selectedTestCaseRef.current.uuid === id) return;
+      setSelectedTestCase(tc);
       history.push("/" + project + "/launch/" + launchData.id + "/" + id);
     });
     const selTC = selectedTestCaseRef.current;
@@ -127,7 +132,15 @@ function Launch({ match, history }) {
         setLaunch(filtered);
         setLoading(false);
         updateCount(filtered);
-        if (shouldBuildTree) buildTree(filtered, caps, tcSizesRef.current);
+        if (shouldBuildTree) {
+          const capturedLaunch = filtered;
+          const capturedCaps = caps;
+          // Defer until after React has committed its re-render. Without this,
+          // React 18 batches the state updates above and flushes them AFTER
+          // buildTree runs, causing a re-render that makes Selenium's DOM
+          // references stale (StaleElementReferenceException on tree nodes).
+          requestAnimationFrame(() => buildTree(capturedLaunch, capturedCaps, tcSizesRef.current));
+        }
       })
       .catch(error => { setErrorMessage("Couldn't get launch: " + error); setLoading(false); });
   }, [project, launchId]);

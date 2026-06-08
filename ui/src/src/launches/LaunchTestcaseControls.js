@@ -59,8 +59,8 @@ function LaunchTestcaseControls({ testcase: testcaseProp, launchId: launchIdProp
         return (
           <div>
             <button type="button" className="btn btn-success" onClick={e => handleStatusSubmit("PASSED", e)}>Pass</button>
-            <button type="button" className="btn btn-danger" data-toggle="modal" data-target="#fail-dialog">Fail</button>
-            <button type="button" className="btn btn-warning" data-toggle="modal" data-target="#broken-dialog">Broken</button>
+            <button type="button" className="btn btn-danger" onClick={() => $("#fail-dialog").modal("show")}>Fail</button>
+            <button type="button" className="btn btn-warning" onClick={() => $("#broken-dialog").modal("show")}>Broken</button>
             <button type="button" className="btn btn-secondary" onClick={e => handleStatusSubmit("RUNNABLE", e)}>X</button>
           </div>
         );
@@ -87,14 +87,14 @@ function LaunchTestcaseControls({ testcase: testcaseProp, launchId: launchIdProp
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Fail Test Case</h5>
-              <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <button type="button" className="close" onClick={() => $("#fail-dialog").modal("hide")} aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
             <div className="modal-body">
               <textarea rows="7" id="failure-text" name="text" className="form-control" value={failureDetails.text}
                 placeholder="Reason of Failure" onChange={e => setFailureDetails(prev => ({ ...prev, text: e.target.value }))} />
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-dismiss="modal" aria-label="Cancel">Close</button>
+              <button type="button" className="btn btn-secondary" onClick={() => $("#fail-dialog").modal("hide")} aria-label="Cancel">Close</button>
               <button type="button" className="btn btn-danger" onClick={e => handleStatusSubmit("FAILED", e, "fail-dialog")}>Fail</button>
             </div>
           </div>
@@ -106,14 +106,14 @@ function LaunchTestcaseControls({ testcase: testcaseProp, launchId: launchIdProp
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Mark Test Case as Broken</h5>
-              <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <button type="button" className="close" onClick={() => $("#broken-dialog").modal("hide")} aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
             <div className="modal-body">
               <textarea rows="7" id="failure-text" name="text" className="form-control" value={failureDetails.text}
                 placeholder="Reason" onChange={e => setFailureDetails(prev => ({ ...prev, text: e.target.value }))} />
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-dismiss="modal" aria-label="Cancel">Close</button>
+              <button type="button" className="btn btn-secondary" onClick={() => $("#broken-dialog").modal("hide")} aria-label="Cancel">Close</button>
               <button type="button" className="btn btn-warning" onClick={e => handleStatusSubmit("BROKEN", e, "broken-dialog")}>Mark as Broken</button>
             </div>
           </div>

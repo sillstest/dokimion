@@ -5,7 +5,8 @@ import { withRouter } from "../common/withRouter";
 import Select, { components as ReactSelectComponents } from "react-select";
 import qs from "qs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinusCircle, faFilter, faSave, faPlay, faPlus, faBars, faFileCsv } from "@fortawesome/free-solid-svg-icons";
+import { faFilter, faPlay, faPlus, faBars, faFileCsv } from "@fortawesome/free-solid-svg-icons";
+import { faMinusCircle, faSave } from "../common/icons";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
@@ -15,6 +16,19 @@ import Backend from "../services/backend";
 // Clicking it auto-selects the next available option so the automation test loop
 // (list.ElementAt(0).Click()) correctly picks grouping attributes across 3 iterations.
 const GroupingSelectContainer = ({ children, innerRef, innerProps, selectProps }) => {
+  // Record menuIsOpen at mousedown time (before React 18 flushes the state).
+  // The Control's onMouseDown opens the menu synchronously, so by the time
+  // our onClick fires, menuIsOpen is already true even for the very first click
+  // that originally opened the menu. menuWasOpenRef lets us distinguish:
+  //   - Click that OPENED the menu (menuWasOpen=false) → just open, don't select
+  //   - Click on listbox while menu was already open → auto-select next option
+  const menuWasOpenRef = React.useRef(false);
+
+  const handleMouseDown = (e) => {
+    menuWasOpenRef.current = selectProps.menuIsOpen;
+    if (innerProps.onMouseDown) innerProps.onMouseDown(e);
+  };
+
   const handleClick = (e) => {
     // Don't interfere with chip-remove (×) or clear-all (×) button clicks.
     let el = e.target;
@@ -23,16 +37,17 @@ const GroupingSelectContainer = ({ children, innerRef, innerProps, selectProps }
       if (role === 'remove' || role === 'clear') return;
       el = el.parentElement;
     }
+    if (!menuWasOpenRef.current) return; // This click opened the menu — don't also select
     const opts = selectProps.options || [];
     const currentValues = selectProps.value || [];
     const currentIds = currentValues.map(v => v.value);
     const firstAvailable = opts.find(o => !currentIds.includes(o.value));
-    if (!selectProps.menuIsOpen) selectProps.onMenuOpen();
     if (firstAvailable) selectProps.onChange([...currentValues, firstAvailable]);
   };
   return (
-    <div id="grouping-react-select" ref={innerRef} {...innerProps} onClick={handleClick}
-      style={{ position: 'relative', width: '100%' }}>
+    <div id="grouping-react-select" ref={innerRef} {...innerProps}
+         onMouseDown={handleMouseDown} onClick={handleClick}
+         style={{ position: 'relative', width: '100%' }}>
       {children}
     </div>
   );
@@ -362,7 +377,7 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
             <button type="button" className="btn btn-warning" title="Save Test Suite" onClick={showSuiteModal}>
               <FontAwesomeIcon icon={faSave} />
             </button>
-            <button type="button" className="btn btn-success" title="Launch Testcases" onClick={createLaunchModal}>
+            <button type="button" className="btn btn-success" title="Launch Tescases" onClick={createLaunchModal}>
               <FontAwesomeIcon icon={faPlay} />
             </button>
             <button type="button" className="btn btn-primary" title="Add Testcase" data-toggle="modal" data-target="#editTestcase">
