@@ -16,14 +16,17 @@ import "react-calendar/dist/Calendar.css";
 import App from "./App";
 
 const root = createRoot(document.getElementById("root"));
+// NOTE: Do NOT wrap in <React.StrictMode>. In development it double-mounts every
+// component (mount → unmount → remount), which breaks TinyMCE's <Editor>: the first
+// editor's iframe isn't fully torn down, leaving orphaned/duplicate iframes and stale
+// editor instance refs. That shifts iframe ordering (WriteToIframe targets the wrong
+// frame, so step editors come up empty) and can make step saves silently fail.
 root.render(
-  <React.StrictMode>
-    <HelmetProvider>
-      <BrowserRouter>
-        <ErrorBoundary>
-          <App />
-        </ErrorBoundary>
-      </BrowserRouter>
-    </HelmetProvider>
-  </React.StrictMode>,
+  <HelmetProvider>
+    <BrowserRouter>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </BrowserRouter>
+  </HelmetProvider>,
 );

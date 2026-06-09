@@ -163,6 +163,12 @@ namespace Dokimion.Tests
                 Actor.AttemptsTo(Hover.Over(TestCases.SaveStep1));
                 Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
 
+                // Wait for step 1 to finish saving (its text renders in display mode) before
+                // adding step 2. The save is async and replaces the whole steps array with the
+                // server response; if we append step 2 before it resolves, the response
+                // overwrites it and the steps-1-form never renders.
+                Actor.WaitsUntil(Appearance.Of(TestCases.Step1Text), IsEqualTo.True(), timeout: 45);
+
                 //Add 2nd step
                 userActions.LogConsoleMessage("Click on the Add Steps Button to input step 2");
                 Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
