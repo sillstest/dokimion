@@ -219,32 +219,34 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Verify : First started is current date");
 
             Actor.WaitsUntil(Text.Of(Launches.OverviewRow2), ContainsSubstring.Text(currentDate), timeout: 60);
-            //Verify the Heat graphs with
-            Actor.WaitsUntil(Appearance.Of(Launches.OverviewCharts),IsEqualTo.True());
+            // Verify the chart titles. These are SVG <text> nodes: Selenium's Displayed check
+            // is unreliable for SVG, so use Existence (DOM presence) rather than Appearance.
+            Actor.WaitsUntil(Existence.Of(Launches.OverviewCharts), IsEqualTo.True(), timeout: 60);
             Actor.WaitsUntil(TextList.For(Launches.OverviewCharts), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(4)), timeout: 60);
             ReadOnlyCollection<IWebElement> chartNames = Launches.OverviewCharts.FindElements(driver);
 
             userActions.LogConsoleMessage("Verify : There are 4 graphs");
 
             userActions.LogConsoleMessage("Verify : There is Statuses graph");
-            
-            Actor.WaitsUntil(Appearance.Of(Launches.StatusesGraph), IsEqualTo.True(), timeout: 45);
-            string tempStat = Actor.AskingFor(Text.Of(Launches.StatusesGraph));
+
+            // Read textContent (not Text): Selenium's IWebElement.Text returns empty for SVG <text>.
+            Actor.WaitsUntil(Existence.Of(Launches.StatusesGraph), IsEqualTo.True(), timeout: 45);
+            string tempStat = Actor.AskingFor(HtmlAttribute.Of(Launches.StatusesGraph, "textContent"));
             StringAssert.Contains("Statuses", tempStat);
 
             userActions.LogConsoleMessage("Verify : There is Users graph");
-            Actor.WaitsUntil(Appearance.Of(Launches.UsersGraph), IsEqualTo.True(), timeout: 45);
-            string Users = Actor.AskingFor(Text.Of(Launches.UsersGraph));
+            Actor.WaitsUntil(Existence.Of(Launches.UsersGraph), IsEqualTo.True(), timeout: 45);
+            string Users = Actor.AskingFor(HtmlAttribute.Of(Launches.UsersGraph, "textContent"));
             StringAssert.Contains("Users", Users);
 
             userActions.LogConsoleMessage("Verify : Launches Statuses Trend");
-            Actor.WaitsUntil(Appearance.Of(Launches.LaunchTrendGraph), IsEqualTo.True(), timeout: 45);
-            string statusTrend = Actor.AskingFor(Text.Of(Launches.LaunchTrendGraph));
+            Actor.WaitsUntil(Existence.Of(Launches.LaunchTrendGraph), IsEqualTo.True(), timeout: 45);
+            string statusTrend = Actor.AskingFor(HtmlAttribute.Of(Launches.LaunchTrendGraph, "textContent"));
             StringAssert.Contains("Launches Statuses Trend", statusTrend);
 
             userActions.LogConsoleMessage("Verify : Launches Time Duration Trend");
-            Actor.WaitsUntil(Appearance.Of(Launches.LaunchUserExecTrendGraph), IsEqualTo.True(), timeout: 45);
-            string userExecTrend = Actor.AskingFor(Text.Of(Launches.LaunchUserExecTrendGraph));
+            Actor.WaitsUntil(Existence.Of(Launches.LaunchUserExecTrendGraph), IsEqualTo.True(), timeout: 45);
+            string userExecTrend = Actor.AskingFor(HtmlAttribute.Of(Launches.LaunchUserExecTrendGraph, "textContent"));
             StringAssert.Contains("Launches Time Duration Trend", userExecTrend);
 
             userActions.LogConsoleMessage("Clean up :");
