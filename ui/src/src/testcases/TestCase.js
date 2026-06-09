@@ -386,17 +386,17 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
     <div>
       <ControlledPopup popupMessage={errorMessage} />
       <ul className="nav nav-tabs" id="tcTabs" role="tablist">
-        <li className="nav-item">
-          <a className={`nav-link${activeTab === 'main' ? ' active' : ''}`} id="main-tab" href="#" role="tab" aria-controls="home" aria-selected={activeTab === 'main'} onClick={e => { e.preventDefault(); setActiveTab('main'); }}>Main</a>
+        <li className="nav-item" onClick={e => { e.preventDefault(); setActiveTab('main'); }}>
+          <a className={`nav-link${activeTab === 'main' ? ' active' : ''}`} id="main-tab" href="#" role="tab" aria-controls="home" aria-selected={activeTab === 'main'}>Main</a>
         </li>
         {testcase.failureDetails && Object.keys(testcase.failureDetails).length > 0 && (
-          <li className="nav-item">
-            <a className={`nav-link${activeTab === 'failure' ? ' active' : ''}`} id="failure-tab" href="#" role="tab" onClick={e => { e.preventDefault(); setActiveTab('failure'); }}>Failure</a>
+          <li className="nav-item" onClick={e => { e.preventDefault(); setActiveTab('failure'); }}>
+            <a className={`nav-link${activeTab === 'failure' ? ' active' : ''}`} id="failure-tab" href="#" role="tab">Failure</a>
           </li>
         )}
         {!launchId && (
-          <li className="nav-item">
-            <a className={`nav-link${activeTab === 'attachments' ? ' active' : ''}`} id="attachments-tab" href="#" role="tab" onClick={e => { e.preventDefault(); setActiveTab('attachments'); }}>
+          <li className="nav-item" onClick={e => { e.preventDefault(); setActiveTab('attachments'); }}>
+            <a className={`nav-link${activeTab === 'attachments' ? ' active' : ''}`} id="attachments-tab" href="#" role="tab">
               Attachments
               {testcase.attachments && testcase.attachments.length > 0 && (
                 <span className="badge badge-pill badge-secondary tab-badge">{testcase.attachments.length}</span>
@@ -405,8 +405,8 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
           </li>
         )}
         {launchId && (
-          <li className="nav-item">
-            <a className={`nav-link${activeTab === 'results' ? ' active' : ''}`} id="results-tab" href="#" role="tab" onClick={e => { e.preventDefault(); setActiveTab('results'); }}>
+          <li className="nav-item" onClick={e => { e.preventDefault(); setActiveTab('results'); }}>
+            <a className={`nav-link${activeTab === 'results' ? ' active' : ''}`} id="results-tab" href="#" role="tab">
               Results
               {testcase.results && testcase.results.length > 0 && (
                 <span className="badge badge-pill badge-secondary tab-badge">{testcase.results.length}</span>
@@ -415,20 +415,20 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
           </li>
         )}
         {launchId && (
-          <li className="nav-item">
-            <a className={`nav-link${activeTab === 'comments' ? ' active' : ''}`} id="comments-tab" href="#" role="tab" onClick={e => { e.preventDefault(); setActiveTab('comments'); }}>
+          <li className="nav-item" onClick={e => { e.preventDefault(); setActiveTab('comments'); }}>
+            <a className={`nav-link${activeTab === 'comments' ? ' active' : ''}`} id="comments-tab" href="#" role="tab">
               Comments
               {commentsCount > 0 && <span className="badge badge-pill badge-secondary tab-badge">{commentsCount}</span>}
             </a>
           </li>
         )}
         {testcase.metaData && Object.keys(testcase.metaData).length > 0 && (
-          <li className="nav-item">
-            <a className={`nav-link${activeTab === 'metadata' ? ' active' : ''}`} id="metadata-tab" href="#" role="tab" onClick={e => { e.preventDefault(); setActiveTab('metadata'); }}>Metadata</a>
+          <li className="nav-item" onClick={e => { e.preventDefault(); setActiveTab('metadata'); }}>
+            <a className={`nav-link${activeTab === 'metadata' ? ' active' : ''}`} id="metadata-tab" href="#" role="tab">Metadata</a>
           </li>
         )}
-        <li className="nav-item">
-          <a className={`nav-link${activeTab === 'history' ? ' active' : ''}`} id="history-tab" href="#" role="tab" onClick={e => { e.preventDefault(); setActiveTab('history'); }}>History</a>
+        <li className="nav-item" onClick={e => { e.preventDefault(); setActiveTab('history'); }}>
+          <a className={`nav-link${activeTab === 'history' ? ' active' : ''}`} id="history-tab" href="#" role="tab">History</a>
         </li>
       </ul>
 
