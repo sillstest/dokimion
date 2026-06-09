@@ -203,7 +203,16 @@ namespace Dokimion.Tests
 
             // Total Launches: 3
             Actor.WaitsUntil(Text.Of(Launches.OverviewRow1), ContainsSubstring.Text("3"), timeout: 60);
-           
+
+            // The Statistics page no longer has an Overview/Heatmap tab bar (removed in the
+            // React 18 rewrite), and the Highcharts charts don't render on the first
+            // navigation to the statistics route. Re-enter Statistics via the menu bar so the
+            // charts mount on the second load.
+            Actor.AttemptsTo(Click.On(Header.Launches));
+            Actor.WaitsUntil(Appearance.Of(Launches.StatisticsLink), IsEqualTo.True());
+            Actor.AttemptsTo(Click.On(Launches.StatisticsLink));
+            Actor.WaitsUntil(Text.Of(Launches.OverviewRow1), ContainsSubstring.Text("3"), timeout: 60);
+
             DateTime dateTime = DateTime.Now;
             string currentDate = dateTime.ToString("d MMMM yyyy");
             ////First Started: 26 October 2023 10:46
