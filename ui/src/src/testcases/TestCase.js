@@ -108,9 +108,16 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
     getAttributes();
   }, []);
 
-  // Load testcase whenever testcaseId or testcaseProp changes (also fires on initial mount)
+  // Reset to the Main tab only when navigating to a *different* testcase.
+  // Keyed on the stable id (not the object reference) so a refresh of the
+  // same testcase — e.g. after a launch status change — doesn't snap the
+  // active tab back to Main.
   useEffect(() => {
     setActiveTab('main');
+  }, [testcaseProp?.uuid ?? testcaseProp?.id ?? testcaseId ?? match?.params?.testcase]);
+
+  // Load testcase whenever testcaseId or testcaseProp changes (also fires on initial mount)
+  useEffect(() => {
     if (testcaseProp) {
       setTestcase(testcaseProp);
       setLoading(false);
