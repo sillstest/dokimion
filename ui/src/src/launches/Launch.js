@@ -107,7 +107,12 @@ function Launch({ match, history }) {
       dataSource: dataSource,
     });
     treeRef.current.on("select", function (e, node, id) {
-      const tc = Utils.getTestCaseFromTree(id, launchData.testCaseTree, (tc, id) => tc.uuid === id);
+      // Read from the current launch state (launchRef), NOT the captured launchData
+      // closure. buildTree's closure goes stale: the 30s poll refreshes launch state
+      // without rebuilding the tree, so the closure can lack fields (e.g. failureDetails)
+      // that the live state has — which hid the Failure tab until the next poll.
+      const currentTree = (launchRef.current && launchRef.current.testCaseTree) || launchData.testCaseTree;
+      const tc = Utils.getTestCaseFromTree(id, currentTree, (tc, id) => tc.uuid === id);
       if (!tc) return; // Group node selected — don't navigate or change view
       // Skip state update if this is a programmatic re-selection of the already-selected node.
       // buildTree calls select() to restore the visual highlight; if we let it overwrite React
