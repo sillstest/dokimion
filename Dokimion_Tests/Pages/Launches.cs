@@ -22,7 +22,11 @@ namespace Dokimion.Pages
 
         public static IWebLocator OverviewRow1 => L("OverviewRow1", By.XPath("(//div[@id='overview']//table//tbody//tr)[1]//td[1]"));
         public static IWebLocator OverviewRow2 => L("OverviewRow2", By.XPath("(//div[@id='overview']//table//tbody//tr)[2]//td[1]"));
-        public static IWebLocator OverviewCharts => L("OverviewCharts", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])"));
+        // Highcharts 12 no longer wraps single-line title text in a <tspan> (it stays a bare
+        // #text node), so the old svg/text/tspan path matched nothing. Target the title <text>
+        // by its highcharts-title class instead — one per chart (4 total), excluding the
+        // Highcharts.com credits and axis titles.
+        public static IWebLocator OverviewCharts => L("OverviewCharts", By.XPath("(//*[local-name()='svg']//*[local-name()='text'][contains(@class,'highcharts-title')])"));
 
         public static IWebLocator HeatMapLink => L("HeatMapLink", By.XPath("//*[@id='heatmap-tab']"));
 
@@ -30,11 +34,11 @@ namespace Dokimion.Pages
 
         public static IWebLocator ToggleLabel1 => L("ToggleInput1", By.XPath("(//div[@id='heatmap']//div[contains(@class, 'toggle checkbox')])[1]/label"));
 
-        public static IWebLocator StatusesGraph => L("StatusesGraph", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])[1]"));
-        public static IWebLocator UsersGraph => L("UsersGraph", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])[2]"));
-        public static IWebLocator LaunchTrendGraph => L("LaunchTrendGraph", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])[3]"));
+        public static IWebLocator StatusesGraph => L("StatusesGraph", By.XPath("(//*[local-name()='svg']//*[local-name()='text'][contains(@class,'highcharts-title')])[1]"));
+        public static IWebLocator UsersGraph => L("UsersGraph", By.XPath("(//*[local-name()='svg']//*[local-name()='text'][contains(@class,'highcharts-title')])[2]"));
+        public static IWebLocator LaunchTrendGraph => L("LaunchTrendGraph", By.XPath("(//*[local-name()='svg']//*[local-name()='text'][contains(@class,'highcharts-title')])[3]"));
 
-        public static IWebLocator LaunchUserExecTrendGraph => L("LaunchUserExecTrendGraph", By.XPath("(//*[local-name()='svg']/*[local-name()='text']/*[local-name()='tspan'])[4]"));
+        public static IWebLocator LaunchUserExecTrendGraph => L("LaunchUserExecTrendGraph", By.XPath("(//*[local-name()='svg']//*[local-name()='text'][contains(@class,'highcharts-title')])[4]"));
 
         public static IWebLocator LaunchDeleteDate => L("LaunchDeleteDate", By.XPath("(//*[local-name()='svg' and contains(@class,'react-date-picker__clear')])[1]"));
 
