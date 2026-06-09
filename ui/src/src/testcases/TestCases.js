@@ -157,10 +157,13 @@ function TestCases({ match, history, location }) {
   useEffect(() => {
     handleGetTCSizes();
     const params = qs.parse(location.search.substring(1));
-    let initialFilter = { ...filter };
     if (params.testcase) setSelectedTestCase({ id: params.testcase });
     if (params.testSuite) setTestSuite({ id: params.testSuite });
 
+    // Only fetch attributes here. The testcase tree itself is fetched and built
+    // by onFilter, which TestCasesFilter always invokes on mount. Fetching the
+    // tree here as well caused a second destroy()+rebuild of the gijgo tree that
+    // raced the first, detaching nodes mid-render (StaleElementReferenceException).
     Backend.get(project + "/attribute")
       .then(response => {
         const attrs = response
@@ -169,16 +172,6 @@ function TestCases({ match, history, location }) {
           .sort((a, b) => (a.name || "").localeCompare(b.name));
         attrs.unshift({ id: "broken", name: "Broken", values: ["True", "False"] });
         setProjectAttributes(attrs);
-
-        Backend.get(project + "/testcase/tree?" + getFilterApiRequestParams(initialFilter))
-          .then(response => {
-            setTestcasesTree(response);
-            setLoading(false);
-            getTotalNumberOfTestCases(initialFilter);
-            updateCount(initialFilter);
-            refreshTree(response, params.testcase ? { id: params.testcase } : {}, initialFilter, tcSizesRef.current);
-          })
-          .catch(error => { setErrorMessage("Couldn't fetch testcases: " + error); setLoading(false); });
       })
       .catch(error => setErrorMessage("Couldn't fetch attributes: " + error));
 
@@ -355,6 +348,7 @@ function TestCases({ match, history, location }) {
         <TestCasesFilter
           projectAttributes={projectAttributes}
           onFilter={onFilter}
+          notFields={filter.notFields}
           project={project}
           handleBulkAddAttributes={handleBulkAddAttributes}
           handleBulkRemoveAttributes={handleBulkRemoveAttributes}

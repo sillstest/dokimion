@@ -180,6 +180,7 @@ const defaultFilters = [{ title: "Select an attribute", attrValues: [] }];
 const defaultTestSuite = () => ({ name: "", filter: { groups: [], filters: [...defaultFilters] } });
 
 function TestCasesFilter({ projectAttributes, onFilter, project, match, history, location,
+                           notFields,
                            handleBulkAddAttributes, handleBulkRemoveAttributes,
                            handleLockAllTestCases, handleUnLockAllTestCases }) {
   const [testSuite, setTestSuite] = useState(defaultTestSuite());
@@ -432,7 +433,7 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
       </div>
 
       <div className="modal fade" id="launch-modal" tabIndex="-1" role="dialog" aria-hidden="true">
-        <LaunchForm launch={createdLaunch} testSuite={testSuite} modalName="launch-modal" />
+        <LaunchForm launch={createdLaunch} testSuite={{ ...testSuite, filter: { ...testSuite.filter, notFields: notFields || { id: [] } } }} modalName="launch-modal" />
       </div>
 
       <div className="modal fade" id="suite-modal" tabIndex="-1" role="dialog" aria-hidden="true">
