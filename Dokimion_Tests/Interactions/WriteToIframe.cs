@@ -27,26 +27,27 @@ namespace Dokimion.Interactions
         {
             UserActions userActions = new UserActions();
 
-            // Switch to the Nth TinyMCE editor iframe specifically (its content iframe has
-            // title='Rich Text Area'), not the Nth iframe overall. Indexing over all iframes
-            // is fragile: any other/extra iframe shifts the index, so the keystrokes miss the
-            // editor and bubble to the page — where the just-clicked, still-focused "Add Step"
-            // button gets activated once per Space in the text, adding a pile of blank steps.
+            // Set the content via TinyMCE's JS API rather than SendKeys. SendKeys into the
+            // editor iframe does not reliably enter text (confirmed: correct iframe + valid
+            // editor ref, yet getContent() reads back ""), so the step saved empty.
+            //
+            // Target the Nth editor by its content iframe (title='Rich Text Area'); TinyMCE
+            // names that iframe "<editorId>_ifr", and the `tinymce` global lives on the main
+            // window, so we resolve the editor and setContent() without switching frames.
+            // Give TinyMCE a moment to finish initialising (register the editor) — the editor
+            // form has just been added/rendered.
+            new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
             var editorFrames = driver.FindElements(By.XPath("//iframe[@title='Rich Text Area']"));
-            driver.SwitchTo().Frame(editorFrames[this.FrameNum]);
-            //Wait as its dynamic
-            Actions actions = new Actions(driver);
-            actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            string iframeId = editorFrames[this.FrameNum].GetAttribute("id");
+            string editorId = iframeId.EndsWith("_ifr")
+                ? iframeId.Substring(0, iframeId.Length - "_ifr".Length)
+                : iframeId;
 
-            // Type into the editor's <p>, not the contenteditable <body>: SendKeys to the
-            // body inserts loose text nodes that TinyMCE's getContent() does not serialize,
-            // so the step reads back empty (confirmed: ref valid, correct iframe, getContent="").
-            IWebElement expectationContent = driver.FindElement(By.TagName("p"));
-            userActions.LogConsoleMessage("Enter data in the editor");
-            expectationContent.SendKeys(Data);
-
-            driver.SwitchTo().DefaultContent();
-
+            userActions.LogConsoleMessage("Set data in the editor: " + Data);
+            ((IJavaScriptExecutor)driver).ExecuteScript(
+                "var ed = window.tinymce.get(arguments[0]); ed.setContent(arguments[1]); ed.fire('change');",
+                editorId, Data);
         }
 
     }
