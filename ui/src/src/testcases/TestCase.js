@@ -230,19 +230,12 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
     // Read latest content from TinyMCE editor instances before saving
     let tcToSave = { ...testcase };
     if (index != undefined) {
-      // Step editor — read action and expectation from their instances
-      const actionEditor = editorInstances.current["step-action-" + index];
-      const expEditor = editorInstances.current["step-exp-" + index];
-      if (actionEditor || expEditor) {
-        const steps = [...(testcase.steps || [])];
-        steps[index] = {
-          ...steps[index],
-          ...(actionEditor ? { action: actionEditor.getContent() } : {}),
-          ...(expEditor ? { expectation: expEditor.getContent() } : {}),
-          _new: undefined,
-        };
-        tcToSave = { ...tcToSave, steps };
-      }
+      // Step content is kept in state by the editors' onEditorChange handlers, so just
+      // clear the _new flag and persist. (Don't read editorInstances.getContent() here:
+      // a stale/destroyed editor ref returns undefined, which saved steps as "undefined".)
+      const steps = [...(testcase.steps || [])];
+      steps[index] = { ...steps[index], _new: undefined };
+      tcToSave = { ...tcToSave, steps };
     } else if (editorInstances.current[fieldName]) {
       // Description or preconditions editor
       tcToSave = { ...tcToSave, [fieldName]: editorInstances.current[fieldName].getContent() };
@@ -329,15 +322,22 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
   }
 
   function handleStepActionChange(index, value) {
-    setTestcase(prev => { const steps = [...prev.steps]; steps[index] = { ...steps[index], action: value }; return { ...prev, steps }; });
+    setTestcase(prev => { const steps = [...(prev.steps || [])]; steps[index] = { ...steps[index], action: value }; return { ...prev, steps }; });
   }
 
   function handleStepExpectationChange(index, value) {
-    setTestcase(prev => { const steps = [...prev.steps]; steps[index] = { ...steps[index], expectation: value }; return { ...prev, steps }; });
+    setTestcase(prev => { const steps = [...(prev.steps || [])]; steps[index] = { ...steps[index], expectation: value }; return { ...prev, steps }; });
   }
 
   function addStep() {
-    setTestcase(prev => ({ ...prev, steps: [...(prev.steps || []), { _new: true }] }));
+    setTestcase(prev => {
+      const steps = prev.steps || [];
+      // Ignore repeat activations while a blank/unsaved step is already open. Under
+      // automation, SendKeys text (which contains spaces) can land on the still-focused
+      // "Add Step" button and activate it once per Space, adding a pile of blank steps.
+      if (steps.length > 0 && steps[steps.length - 1] && steps[steps.length - 1]._new) return prev;
+      return { ...prev, steps: [...steps, { _new: true }] };
+    });
   }
 
   function removeStep(event, index) {
@@ -574,14 +574,14 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
                           <Editor key={testcase.id + "-step-" + i + "-action"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={step.action}
                             onInit={(evt, editor) => { editorInstances.current["step-action-" + i] = editor; }}
                             init={{ height: 300, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                            onEditorChange={() => {}} />
+                            onEditorChange={(content) => handleStepActionChange(i, content)} />
                         </p>
                         <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                         <p className="card-text">
                           <Editor key={testcase.id + "-step-" + i + "-exp"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={step.expectation}
                             onInit={(evt, editor) => { editorInstances.current["step-exp-" + i] = editor; }}
                             init={{ height: 300, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                            onEditorChange={() => {}} />
+                            onEditorChange={(content) => handleStepExpectationChange(i, content)} />
                         </p>
                         <button type="button" className="btn btn-light" onClick={e => removeStep(e, i)}>Cancel</button>
                         <button type="button" className="btn btn-primary" onClick={e => handleSubmit("steps", e, i, true)}>Save</button>
@@ -632,14 +632,14 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
                             <Editor key={testcase.id + "-step-" + i + "-action-edit"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={step.action}
                               onInit={(evt, editor) => { editorInstances.current["step-action-" + i] = editor; }}
                               init={{ height: 300, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                              onEditorChange={() => {}} />
+                              onEditorChange={(content) => handleStepActionChange(i, content)} />
                           </p>
                           <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                           <p className="card-text">
                             <Editor key={testcase.id + "-step-" + i + "-exp-edit"} tinymceScriptSrc='/tinymce/tinymce.min.js' initialValue={step.expectation}
                               onInit={(evt, editor) => { editorInstances.current["step-exp-" + i] = editor; }}
                               init={{ height: 300, menubar: false, plugins: tinymcePlugins, toolbar: tinymceToolbar, content_style: tinymceContentStyle }}
-                              onEditorChange={() => {}} />
+                              onEditorChange={(content) => handleStepExpectationChange(i, content)} />
                           </p>
                           <button type="button" className="btn btn-light" onClick={e => cancelEdit("steps", e, i)}>Cancel</button>
                           <button type="button" className="btn btn-primary" onClick={e => handleSubmit("steps", e, i)}>Save</button>
