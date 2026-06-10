@@ -38,7 +38,10 @@ namespace Dokimion.Interactions
             Actions actions = new Actions(driver);
             actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
-            IWebElement expectationContent = driver.FindElement(By.TagName("body"));
+            // Type into the editor's <p>, not the contenteditable <body>: SendKeys to the
+            // body inserts loose text nodes that TinyMCE's getContent() does not serialize,
+            // so the step reads back empty (confirmed: ref valid, correct iframe, getContent="").
+            IWebElement expectationContent = driver.FindElement(By.TagName("p"));
             userActions.LogConsoleMessage("Enter data in the editor");
             expectationContent.SendKeys(Data);
 

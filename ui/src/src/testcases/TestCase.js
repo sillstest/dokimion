@@ -230,11 +230,26 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
     // Read latest content from TinyMCE editor instances before saving
     let tcToSave = { ...testcase };
     if (index != undefined) {
-      // Step content is kept in state by the editors' onEditorChange handlers, so just
-      // clear the _new flag and persist. (Don't read editorInstances.getContent() here:
-      // a stale/destroyed editor ref returns undefined, which saved steps as "undefined".)
+      // Read the editor's live content via getContent(). This reflects programmatic input
+      // (Selenium SendKeys), which TinyMCE's onEditorChange does NOT fire for. Fall back to
+      // whatever is already in state, and never persist undefined (which rendered as the
+      // literal "Step undefined").
+      const actionEditor = editorInstances.current["step-action-" + index];
+      const expEditor = editorInstances.current["step-exp-" + index];
       const steps = [...(testcase.steps || [])];
-      steps[index] = { ...steps[index], _new: undefined };
+      // TODO TEMP DIAGNOSTIC — remove once TC08 is sorted.
+      console.log("[TC08 diag] saving step index=", index,
+        "| actionEditor ref exists=", !!actionEditor,
+        "| getContent=", JSON.stringify(actionEditor ? actionEditor.getContent() : "(no ref)"),
+        "| state.action=", JSON.stringify(steps?.[index]?.action),
+        "| registered editor keys=", Object.keys(editorInstances.current),
+        "| #RichTextArea iframes=", document.querySelectorAll("iframe[title='Rich Text Area']").length);
+      steps[index] = {
+        ...steps[index],
+        action: actionEditor ? actionEditor.getContent() : (steps[index]?.action || ""),
+        expectation: expEditor ? expEditor.getContent() : (steps[index]?.expectation || ""),
+        _new: undefined,
+      };
       tcToSave = { ...tcToSave, steps };
     } else if (editorInstances.current[fieldName]) {
       // Description or preconditions editor
