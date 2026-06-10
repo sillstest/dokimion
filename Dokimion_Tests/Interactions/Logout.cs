@@ -14,7 +14,7 @@ namespace Dokimion.Interactions
 
         public void PerformAs(IActor actor)
         {
-            IWebDriver driver = BrowseTheWeb.As(actor).WebDriver;
+            IWebDriver driver = actor.Using<BrowseTheWeb>().WebDriver;
 
             actor.WaitsUntil(Appearance.Of(Header.UserInfo), IsEqualTo.True(), timeout:60);
             actor.AttemptsTo(Click.On(Header.UserInfo));
