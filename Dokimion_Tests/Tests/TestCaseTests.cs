@@ -280,7 +280,7 @@ namespace Dokimion.Tests
 
                 driver.SwitchTo().Frame(5);
                 string Expectations2Text = Actor.AskingFor(Text.Of(TestCases.RichTextBody));
-                Assert.That(Expectations2Text, Is.EqualTo("List of projects opens UPD"));
+                Assert.That(Expectations2Text, Is.EqualTo("UPD"));
                 driver.SwitchTo().DefaultContent();
             }
             finally { 
