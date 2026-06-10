@@ -237,13 +237,6 @@ function TestCase({ testcase: testcaseProp, testcaseId, projectId: projectIdProp
       const actionEditor = editorInstances.current["step-action-" + index];
       const expEditor = editorInstances.current["step-exp-" + index];
       const steps = [...(testcase.steps || [])];
-      // TODO TEMP DIAGNOSTIC — remove once TC08 is sorted.
-      console.log("[TC08 diag] saving step index=", index,
-        "| actionEditor ref exists=", !!actionEditor,
-        "| getContent=", JSON.stringify(actionEditor ? actionEditor.getContent() : "(no ref)"),
-        "| state.action=", JSON.stringify(steps?.[index]?.action),
-        "| registered editor keys=", Object.keys(editorInstances.current),
-        "| #RichTextArea iframes=", document.querySelectorAll("iframe[title='Rich Text Area']").length);
       steps[index] = {
         ...steps[index],
         action: actionEditor ? actionEditor.getContent() : (steps[index]?.action || ""),
