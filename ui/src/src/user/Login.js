@@ -25,11 +25,10 @@ class Login extends Component {
   }
 
   handleRecaptcha(token, boundTurnstile) {
-    if (token) {
-      this.state.recaptcha = token;
-    }
     // keep a handle to the widget so we can issue a fresh token on retry
     this.turnstile = boundTurnstile;
+    // store the token in state so render() can enable the button only once it's ready
+    this.setState({ recaptcha: token || "" });
   }
 
   onSessionChange(session) {
@@ -48,11 +47,6 @@ class Login extends Component {
       if (process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) {
         // no automated test - send reacaptcha string to back end
         recaptcha = this.state.recaptcha;
-
-        if (this.state.recaptcha === "") {
-          alert("Enter recaptcha");
-	  return;
-        }
 
       } else {
         // automated test - send recaptcha string = "" to back end
@@ -118,13 +112,11 @@ class Login extends Component {
             required=""
             onChange={this.handleChange}
           />
-	  {(process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) && (
 	  <Turnstile
 	   sitekey={process.env.REACT_APP_SITE_KEY}
 	   onVerify={this.handleRecaptcha}
 	  />
-	  )}
-          <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
+          <button className="btn btn-lg btn-primary btn-block" disabled={!this.state.recaptcha} onClick={this.handleSubmit}>
             Sign in
           </button>
         </form>

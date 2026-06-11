@@ -28,6 +28,10 @@ namespace Dokimion.Interactions
             actor.AttemptsTo(Clear.On(LoginPage.PasswordInput));
             actor.AttemptsTo(SendKeys.To(LoginPage.PasswordInput,Password));
 
+            // The Sign in button stays disabled until Cloudflare Turnstile issues a token.
+            // Wait for it to become enabled (token ready) before clicking, otherwise the
+            // click lands on a disabled button and is a no-op.
+            actor.WaitsUntil(EnabledState.Of(LoginPage.SingInButton), IsEqualTo.True(), timeout: 30);
             actor.AttemptsTo(Click.On(LoginPage.SingInButton));
         }
 
