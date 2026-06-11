@@ -22,6 +22,12 @@ namespace Dokimion
         public readonly string Headless = "--headless=new";
         public readonly string WindowSize = "--window-size=1920,1080";
 
+        // Tests now drive the UI with real Selenium interactions (clicks/hover/typing) rather
+        // than JS shortcuts, so they run headed by default — a real viewport is needed for the
+        // interactions to behave like a manual user. Set the "Headless" .runsettings parameter
+        // to "true" to opt back into headless (e.g. on a CI box with Xvfb).
+        public bool RunHeadless =>
+            bool.TryParse(TestContext.Parameters.Get("Headless", "false"), out var h) && h;
 
         public ChromeOptions GetChromeOptions()
         {
@@ -29,9 +35,12 @@ namespace Dokimion
             var options = new ChromeOptions();
             options.PageLoadStrategy = PageLoadStrategy.Normal;
 
-            options.AddArgument(Headless);
+            if (RunHeadless)
+            {
+                options.AddArgument(Headless);
+                options.AddArgument("--disable-gpu"); //helps with headless
+            }
             options.AddArgument(WindowSize);
-            options.AddArgument("--disable-gpu"); //helps with headless 
             options.AddArgument("--disable-site-isolation-trials");
             return options;
         }

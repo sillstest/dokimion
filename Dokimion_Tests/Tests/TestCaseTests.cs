@@ -116,11 +116,10 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Click.On(TestCases.SaveTestCaseButton));
             try
             {
-                IWebElement TestCase = GetTestCaseElement("Validate login");
-                TestCase.Click();
+                string tcName = SelectTestCase("Validate login");
 
                 userActions.LogConsoleMessage("Verify : Testcase is created");
-                StringAssert.Contains("Validate login", TestCase.Text);
+                StringAssert.Contains("Validate login", tcName);
             }
             finally { 
             userActions.LogConsoleMessage("Clean up:");
@@ -143,8 +142,7 @@ namespace Dokimion.Tests
             try
             {
                 Actions actions = new Actions(driver);
-                IWebElement TestCase = GetTestCaseElement("Add2StepsToTestCase");
-                TestCase.Click();
+                SelectTestCase("Add2StepsToTestCase");
 
                 userActions.LogConsoleMessage("Click on the Add Steps Button to input step 1");
                 Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
@@ -218,8 +216,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Click on the UpdateExpectation2 TestcaseName");
             try
             {
-                IWebElement TestCase = GetTestCaseElement("UpdateExpectation2");
-                TestCase.Click();
+                SelectTestCase("UpdateExpectation2");
 
                 userActions.LogConsoleMessage("Click on the Add Steps Button to input step 1");
                 Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
@@ -311,8 +308,7 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Click on the PreconditionTestCase TestcaseName");
             try
             {
-                IWebElement TestCase = GetTestCaseElement("PreconditionTestCase");
-                TestCase.Click();
+                SelectTestCase("PreconditionTestCase");
 
                 userActions.LogConsoleMessage("Click on the Preconditions edit icon");
 
@@ -375,20 +371,35 @@ namespace Dokimion.Tests
             
         }
     
-        private IWebElement GetTestCaseElement(string testcasename)
+        // Select a test case in the tree and return its name text. Waits for the SPECIFIC test
+        // case to appear (after a create/reload it may not be listed immediately), re-queries on
+        // stale re-renders, then moves to the node (scrolling it into view, like a user) and
+        // clicks it.
+        private string SelectTestCase(string testcasename)
         {
-
             Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
 
-            ReadOnlyCollection<IWebElement> TCNamesList = TestCases.GetTestCaseNameList.FindElements(driver);
-
-            IEnumerable<IWebElement> TCNames = TCNamesList.Where(name => name.Text.Contains(testcasename));
-            Assert.IsNotNull(TCNames);
-
-            IWebElement TestCase = TCNames.Last();
-            userActions.LogConsoleMessage("Clicked on Testcase : " + TestCase.Text);
-            return TestCase;  
-
+            for (int attempt = 0; attempt < 60; attempt++)
+            {
+                try
+                {
+                    IWebElement match = TestCases.GetTestCaseNameList.FindElements(driver)
+                        .LastOrDefault(name => name.Text.Contains(testcasename));
+                    if (match != null)
+                    {
+                        string text = match.Text;
+                        new Actions(driver).MoveToElement(match).Click().Build().Perform();
+                        userActions.LogConsoleMessage("Selected Testcase : " + text);
+                        return text;
+                    }
+                }
+                catch (StaleElementReferenceException)
+                {
+                    // Tree re-rendered between query and use; re-query on the next pass.
+                }
+                new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            }
+            throw new NoSuchElementException("Test case not found in tree: " + testcasename);
         }
 
 
