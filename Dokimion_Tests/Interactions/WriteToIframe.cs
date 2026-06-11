@@ -37,10 +37,13 @@ namespace Dokimion.Interactions
             var editorFrames = driver.FindElements(By.XPath("//iframe[@title='Rich Text Area']"));
             driver.SwitchTo().Frame(editorFrames[this.FrameNum]);
 
+            // Click into the editable body to focus it / place the caret, then type with the
+            // keyboard. Actions.SendKeys dispatches real key events to the focused editor, which
+            // TinyMCE captures — a plain element.SendKeys on the contenteditable body did not
+            // register, so the step saved empty.
             IWebElement editorBody = driver.FindElement(By.TagName("body"));
-            editorBody.Click();
             userActions.LogConsoleMessage("Enter data in the editor: " + Data);
-            editorBody.SendKeys(Data);
+            new Actions(driver).MoveToElement(editorBody).Click().SendKeys(Data).Build().Perform();
 
             driver.SwitchTo().DefaultContent();
         }
