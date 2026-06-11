@@ -30,22 +30,23 @@ namespace Dokimion.Interactions
             // Give TinyMCE a moment to finish initialising the just-rendered editor.
             new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
-            // Switch to the Nth TinyMCE editor — its content iframe is the one titled
-            // 'Rich Text Area' (indexing over all iframes is fragile). Then click the editable
-            // body to place the caret and type, simulating a user entering text. The click to
-            // focus is what makes SendKeys land in the editor.
+            // Enter editor text via TinyMCE's own setContent API. This is the one place we
+            // can't drive as a user: real keyboard input (element.SendKeys / Actions.SendKeys)
+            // into the contenteditable iframe body does not register with TinyMCE through
+            // WebDriver, so the step saved empty. Everything else in these tests is still driven
+            // by real clicks/hover/menus. Target the Nth editor by its content iframe
+            // (title='Rich Text Area'); TinyMCE names that iframe "<editorId>_ifr" and the
+            // `tinymce` global lives on the main window, so no frame switch is needed.
             var editorFrames = driver.FindElements(By.XPath("//iframe[@title='Rich Text Area']"));
-            driver.SwitchTo().Frame(editorFrames[this.FrameNum]);
+            string iframeId = editorFrames[this.FrameNum].GetAttribute("id");
+            string editorId = iframeId.EndsWith("_ifr")
+                ? iframeId.Substring(0, iframeId.Length - "_ifr".Length)
+                : iframeId;
 
-            // Click into the editable body to focus it / place the caret, then type with the
-            // keyboard. Actions.SendKeys dispatches real key events to the focused editor, which
-            // TinyMCE captures — a plain element.SendKeys on the contenteditable body did not
-            // register, so the step saved empty.
-            IWebElement editorBody = driver.FindElement(By.TagName("body"));
-            userActions.LogConsoleMessage("Enter data in the editor: " + Data);
-            new Actions(driver).MoveToElement(editorBody).Click().SendKeys(Data).Build().Perform();
-
-            driver.SwitchTo().DefaultContent();
+            userActions.LogConsoleMessage("Set data in the editor: " + Data);
+            ((IJavaScriptExecutor)driver).ExecuteScript(
+                "var ed = window.tinymce.get(arguments[0]); ed.setContent(arguments[1]); ed.fire('change');",
+                editorId, Data);
         }
 
     }
