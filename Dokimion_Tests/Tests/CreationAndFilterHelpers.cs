@@ -254,35 +254,40 @@ namespace Dokimion.Tests
             }
         }
 
+        // Wait for an element to exist, then click it via JavaScript (fires its React onClick
+        // directly). Reliable in headless, where a Selenium click can land on a partially
+        // obscured element without registering.
+        private void JsClick(IActor Actor, IWebDriver driver, IWebLocator locator)
+        {
+            Actor.WaitsUntil(Existence.Of(locator), IsEqualTo.True(), timeout: 45);
+            IWebElement element = locator.FindElement(driver);
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", element);
+        }
+
         private void UpdateLaunchStatusControl(IActor Actor, IWebLocator Status, string comments, IWebDriver driver)
         {
 
-            // Bring the selected test-case view into the viewport via JS so its launch-status
-            // controls (the Start button) render where they can be clicked. The previous
-            // sequence used Actions hover + driver.SwitchTo().ActiveElement().Click() to
-            // "activate" the div, but clicking the active element is non-deterministic and in
-            // headless lands on empty space — deselecting the test case so the Start button
-            // (only rendered for the selected, RUNNABLE test case) never appears. Boa's
-            // Click.On below scrolls the button into view before clicking.
-            IWebElement TestcaseDiv = driver.FindElement(By.XPath("//div[@id='testCase']"));
-            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(false);", TestcaseDiv);
-
+            // Click the launch-status buttons via JS to reliably fire their React onClick. In
+            // headless a Selenium click can land without registering (the button is partially
+            // obscured), so the status never advances: Start leaves the test case RUNNABLE and
+            // the Pass/Fail/Broken controls never render. JsClick waits for the element and
+            // dispatches a real click via the element's onClick.
             userActions.LogConsoleMessage("Click on the Start Button");
-            Actor.AttemptsTo(Click.On(TestCases.LaunchStartButton));
+            JsClick(Actor, driver, TestCases.LaunchStartButton);
 
             string description = Status.Description;
             if (description.Contains("Pass"))
             {
                 userActions.LogConsoleMessage("Click on the Pass Button");
                 //Pass no need for comments
-                Actor.AttemptsTo(Click.On(Status));
+                JsClick(Actor, driver, Status);
                 Actor.WaitsUntil(Appearance.Of(TestCases.LaunchPassStatusButton), IsEqualTo.True(), timeout: 45);
 
             }
             else if (description.Contains("Fail"))
             {
                 userActions.LogConsoleMessage("Click on the Fail Button");
-                Actor.AttemptsTo(Click.On(Status));
+                JsClick(Actor, driver, Status);
                 Actor.WaitsUntil(Appearance.Of(TestCases.LaunchFailMessage), IsEqualTo.True(), timeout: 45);
 
                 userActions.LogConsoleMessage("Enter the Reason for Fail " + comments);
@@ -292,9 +297,7 @@ namespace Dokimion.Tests
                 Actor.WaitsUntil(Text.Of(TestCases.LaunchFailMessage), ContainsSubstring.Text(comments), timeout: 45);
 
                 userActions.LogConsoleMessage("Click on the Fail Button");
-                Actor.AttemptsTo(Hover.Over(TestCases.LaunchFailMsgButton));
-
-                Actor.AttemptsTo(Click.On(TestCases.LaunchFailMsgButton));
+                JsClick(Actor, driver, TestCases.LaunchFailMsgButton);
                 Actor.WaitsUntil(Appearance.Of(TestCases.LaunchFailStatusButton), IsEqualTo.True(), timeout: 45);
 
 
@@ -302,7 +305,7 @@ namespace Dokimion.Tests
             else if (description.Contains("Broken"))
             {
                 userActions.LogConsoleMessage("Click on the Broken Button");
-                Actor.AttemptsTo(Click.On(Status));
+                JsClick(Actor, driver, Status);
 
                 userActions.LogConsoleMessage("Enter the Reason for Broken " + comments);
                 Actor.AttemptsTo(Clear.On(TestCases.LaunchBrokenMessage));
@@ -310,9 +313,7 @@ namespace Dokimion.Tests
                 Actor.WaitsUntil(Text.Of(TestCases.LaunchBrokenMessage), ContainsSubstring.Text(comments), timeout: 45);
 
                 userActions.LogConsoleMessage("Click on the Broken Button");
-                Actor.AttemptsTo(Hover.Over(TestCases.LaunchBrokenMsgButton));
-
-                Actor.AttemptsTo(Click.On(TestCases.LaunchBrokenMsgButton));
+                JsClick(Actor, driver, TestCases.LaunchBrokenMsgButton);
                 Actor.WaitsUntil(Appearance.Of(TestCases.LaunchBrokenStatusButton), IsEqualTo.True(), timeout: 45);
 
             }
