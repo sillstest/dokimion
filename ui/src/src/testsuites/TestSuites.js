@@ -8,8 +8,16 @@ import $ from "jquery";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 
-function TestSuites({ match }) {
+function TestSuites({ match, onProjectChange }) {
   const project = match?.params?.project;
+
+  // Restore the project context in App/Header whenever this page loads. App.project resets
+  // to "" on a full reload, and only the Project page otherwise sets it — without this the
+  // header loses its project nav.
+  useEffect(() => {
+    if (onProjectChange && project) onProjectChange(project);
+  }, [onProjectChange, project]);
+
   const [testSuites, setTestSuites] = useState([]);
   const [testSuitesToDisplay, setTestSuitesToDisplay] = useState([]);
   const [loading, setLoading] = useState(true);

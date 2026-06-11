@@ -14,8 +14,15 @@ import ControlledPopup from "../common/ControlledPopup";
 const ITEMS_ON_PAGE = 20;
 const MAX_VISIBLE_PAGES = 7;
 
-function Launches({ match, history, location }) {
+function Launches({ match, history, location, onProjectChange }) {
   const project = match?.params?.project;
+
+  // Restore the project context in App/Header whenever this page loads. App.project resets
+  // to "" on a full reload, and only the Project page otherwise sets it — without this the
+  // header loses its project nav.
+  useEffect(() => {
+    if (onProjectChange && project) onProjectChange(project);
+  }, [onProjectChange, project]);
 
   const [launches, setLaunches] = useState([]);
   const [filter, setFilter] = useState(() => ({

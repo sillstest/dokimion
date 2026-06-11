@@ -37,6 +37,14 @@ namespace Dokimion.Interactions
             Actor.AttemptsTo(Hover.Over(TestCases.RemoveTestCaseButton));
             Actor.AttemptsTo(Click.On(TestCases.RemoveTestCaseButton));
 
+            // Deleting a test case triggers a full page reload to the test-case list (the detail
+            // view, and its Remove button, disappear). Wait for that reload to fully land before
+            // returning — otherwise it bleeds into the next test, where the project nav re-renders
+            // mid-step and a click on it races a NoSuchElement. After the detail is gone, wait for
+            // the project nav (restored by TestCases' onProjectChange) so the next test is stable.
+            userActions.LogConsoleMessage("Wait for the delete reload to settle");
+            Actor.WaitsUntil(Appearance.Of(TestCases.RemoveTestCase), IsEqualTo.False(), timeout: 60);
+            Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 60);
         }
 
     }

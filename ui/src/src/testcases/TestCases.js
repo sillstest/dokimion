@@ -25,9 +25,16 @@ require("gijgo/css/gijgo.min.css");
 const defaultTestcase = { id: null, name: "", description: "", steps: [], attributes: {} };
 const TC_FETCH_LIMIT = 50;
 
-function TestCases({ match, history, location }) {
+function TestCases({ match, history, location, onProjectChange }) {
   const project = match?.params?.project;
   const treeRef = useRef(null);
+
+  // Restore the project context in App/Header whenever this page loads. App.project resets
+  // to "" on a full reload (e.g. after deleting a test case via window.location), and only
+  // the Project page otherwise sets it — without this the header loses its project nav.
+  useEffect(() => {
+    if (onProjectChange && project) onProjectChange(project);
+  }, [onProjectChange, project]);
 
   const [testcasesTree, setTestcasesTree] = useState({ children: [] });
   const [testcaseToEdit, setTestcaseToEdit] = useState({ ...defaultTestcase, attributes: {}, steps: [] });
