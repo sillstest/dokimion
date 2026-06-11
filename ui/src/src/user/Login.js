@@ -4,6 +4,7 @@ import qs from "qs";
 import * as Utils from "../common/Utils";
 import Backend from "../services/backend";
 import TextField from '@material-ui/core/TextField';
+import Turnstile from "react-turnstile";
 import { LinkButtons, forgotButton } from './components';
 import ControlledPopup from '../common/ControlledPopup';
 
@@ -14,11 +15,21 @@ class Login extends Component {
       login: "",
       password: "",
       errorMessage:"",
+      recaptcha: "",
     };
 
     this.handleChange = this.handleChange.bind(this);
+    this.handleRecaptcha = this.handleRecaptcha.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onSessionChange = this.onSessionChange.bind(this);
+  }
+
+  handleRecaptcha(token, boundTurnstile) {
+    if (token) {
+      this.state.recaptcha = token;
+    }
+    // keep a handle to the widget so we can issue a fresh token on retry
+    this.turnstile = boundTurnstile;
   }
 
   onSessionChange(session) {
@@ -33,7 +44,30 @@ class Login extends Component {
 
   handleSubmit(event) {
 
-      Backend.postPlain("user/login?login=" + this.state.login + "&password=" + this.state.password)
+      let recaptcha = "";
+      if (process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) {
+        // no automated test - send reacaptcha string to back end
+        recaptcha = this.state.recaptcha;
+
+        if (this.state.recaptcha === "") {
+          alert("Enter recaptcha");
+	  return;
+        }
+
+      } else {
+        // automated test - send recaptcha string = "" to back end
+        recaptcha = "";
+      }
+
+      this.state.recaptcha = "";
+      this.setState(this.state);
+
+      // token is single-use; reset the (invisible) widget so a fresh token is issued for any retry
+      if (this.turnstile) {
+        this.turnstile.reset();
+      }
+
+      Backend.postPlain("user/login?login=" + this.state.login + "&password=" + this.state.password + "&recaptcha=" + recaptcha)
         .then(response => {
           this.onSessionChange(response);
 	  if (response.ok == false) {
@@ -84,6 +118,12 @@ class Login extends Component {
             required=""
             onChange={this.handleChange}
           />
+	  {(process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) && (
+	  <Turnstile
+	   sitekey={process.env.REACT_APP_SITE_KEY}
+	   onVerify={this.handleRecaptcha}
+	  />
+	  )}
           <button className="btn btn-lg btn-primary btn-block" onClick={this.handleSubmit}>
             Sign in
           </button>
