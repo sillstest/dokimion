@@ -257,16 +257,15 @@ namespace Dokimion.Tests
         private void UpdateLaunchStatusControl(IActor Actor, IWebLocator Status, string comments, IWebDriver driver)
         {
 
-            Actions actions = new Actions(driver);
-            //Scroll the main div
-            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-            //Activate the div
+            // Bring the selected test-case view into the viewport via JS so its launch-status
+            // controls (the Start button) render where they can be clicked. The previous
+            // sequence used Actions hover + driver.SwitchTo().ActiveElement().Click() to
+            // "activate" the div, but clicking the active element is non-deterministic and in
+            // headless lands on empty space — deselecting the test case so the Start button
+            // (only rendered for the selected, RUNNABLE test case) never appears. Boa's
+            // Click.On below scrolls the button into view before clicking.
             IWebElement TestcaseDiv = driver.FindElement(By.XPath("//div[@id='testCase']"));
-            actions.MoveToElement(TestcaseDiv).Build().Perform();
-            driver.SwitchTo().ActiveElement().Click();
-            //This will scroll to the bottom in inside test case
-            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
-            actions.Release().Build().Perform();
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(false);", TestcaseDiv);
 
             userActions.LogConsoleMessage("Click on the Start Button");
             Actor.AttemptsTo(Click.On(TestCases.LaunchStartButton));
