@@ -57,7 +57,12 @@ then
 fi
 cp ~1/config/common/startup_dokimion_ui.sh ../bin/.
 cp ~1/config/common/run_jstatd.sh ../bin/.
-cp ~1/config/common/.env src/.env
+if [ $2 == "prod" ]
+then
+   cp ~1/config/common/.env_prod src/.env
+else
+   cp ~1/config/common/.env_test src/.env
+fi
 chown dokimion:dokimion .
 chown dokimion:dokimion -R *
 chmod -R a+w *

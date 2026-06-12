@@ -35,15 +35,8 @@ class ForgotPassword extends Component {
 
 	handleSubmit(event) {
 
-          let recaptcha = "";
-          if (process.env.REACT_APP_SITE_KEY !== process.env.REACT_APP_TEST_SITE_KEY) {
-            // no automated test - send reacaptcha string to back end
-            recaptcha = this.state.recaptcha;
-
-          } else {
-            // automated test - send recaptcha string = "" to back end
-            recaptcha = "";
-          }
+          // the submit button is disabled until Turnstile issues a token, so it's always set here
+          let recaptcha = this.state.recaptcha;
 
           this.state.recaptcha = "";
           this.setState(this.state);

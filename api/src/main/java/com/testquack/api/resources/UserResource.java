@@ -52,9 +52,6 @@ import java.security.NoSuchAlgorithmException;
 public class UserResource extends BaseResource<User> {
 
     public static final String url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-    //public static final String secret = "1x0000000000000000000000000000000AA";
-    public static final String secret = "0x4AAAAAADiztz-CZxfqc5w3yaxc7opKYCM";
-;
     private final static String USER_AGENT = "Mozilla/5.0";
 
     @Autowired
@@ -68,6 +65,13 @@ public class UserResource extends BaseResource<User> {
 
     @Value("${quack.ui.url}")
     private String baseUiUrl;
+
+    // Cloudflare Turnstile secret key. Defaults to the production secret, so prod needs no
+    // config change. A test/CI deployment can override it with Cloudflare's always-pass test
+    // secret (1x0000000000000000000000000000000AA) by setting quack.turnstile.secret in that
+    // deployment's quack.properties, which lets the Selenium suite log in.
+    @Value("${quack.turnstile.secret:0x4AAAAAADiztz-CZxfqc5w3yaxc7opKYCM}")
+    private String secret;
 
     private static MongoDBInterface s_mongoDBInterface;
 

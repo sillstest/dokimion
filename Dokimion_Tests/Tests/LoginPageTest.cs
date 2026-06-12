@@ -97,6 +97,11 @@ namespace Dokimion.Tests
             Actor.AttemptsTo(Clear.On(LoginPage.PasswordInput));
             Actor.AttemptsTo(SendKeys.To(LoginPage.PasswordInput, userActions.Password));
 
+            // The Sign in button stays disabled until Cloudflare Turnstile issues a token.
+            // Wait for it to become enabled, otherwise the click lands on a disabled button.
+            userActions.LogConsoleMessage("Wait for Sign in button to be enabled (Turnstile token ready)");
+            Actor.WaitsUntil(EnabledState.Of(LoginPage.SingInButton), IsEqualTo.True(), timeout: 30);
+
             userActions.LogConsoleMessage("Click Sign in button");
             LoginPage.SingInButton.FindElement(driver).Click();
             userActions.LogConsoleMessage("Submit clicked");
