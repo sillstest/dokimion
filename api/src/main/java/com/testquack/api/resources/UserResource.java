@@ -51,8 +51,7 @@ import java.security.NoSuchAlgorithmException;
 @Path("/user")
 public class UserResource extends BaseResource<User> {
 
-    public static final String url = "https://www.google.com/recaptcha/api/siteverify";
-    public static final String secret = "6Lf6e6wqAAAAALQWlmjZhCLEE9Oy4O9q7sO1dg6Z";
+    public static final String url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
     private final static String USER_AGENT = "Mozilla/5.0";
 
     @Autowired
@@ -66,6 +65,13 @@ public class UserResource extends BaseResource<User> {
 
     @Value("${quack.ui.url}")
     private String baseUiUrl;
+
+    // Cloudflare Turnstile secret key. Defaults to the production secret, so prod needs no
+    // config change. A test/CI deployment can override it with Cloudflare's always-pass test
+    // secret (1x0000000000000000000000000000000AA) by setting quack.turnstile.secret in that
+    // deployment's quack.properties, which lets the Selenium suite log in.
+    @Value("${quack.turnstile.secret:0x4AAAAAADiztz-CZxfqc5w3yaxc7opKYCM}")
+    private String secret;
 
     private static MongoDBInterface s_mongoDBInterface;
 
@@ -149,9 +155,11 @@ System.out.println("UserResource::delete - rc: " + rc);
 
     @POST
     @Path("/forgot_password")
-    public Response sendEmail(@QueryParam("login") String login) {
+    public Response sendEmail(@QueryParam("login") String login,
+                              @QueryParam("recaptcha") String recaptcha) {
 
-       System.out.println("sendEmail - login: " + login);
+       System.out.println("UserResource::sendEmail - login: " + login);
+       System.out.println("UserResource::sendEmail - recaptcha: " + recaptcha);
        System.out.flush();
 
        if (APIValidation.checkLoginId(getService().getMongoReplicaSet(),
@@ -166,6 +174,11 @@ System.out.println("UserResource::delete - rc: " + rc);
             return Response.serverError().entity("sendEmail - APIValidation error").build();
        }
        
+
+       if (sendVerifyRecaptchaMessage(recaptcha) == false) {
+            return Response.serverError().entity("UserResource::sendEmail - Invalid ReCaptcha").build();
+       }
+
 
        Duration deltaTime = Duration.ZERO;
        Instant beginTime = Instant.now();
@@ -205,8 +218,8 @@ System.out.println("UserResource::delete - rc: " + rc);
        beginTime = Instant.now();
        if (service.changeProfile(login, newPassword,
 			         "", "", "", "") == false) {
-System.out.println("UserResource::sendEmail - fail in service.changeProfile");
-System.out.flush();
+          System.out.println("UserResource::sendEmail - fail in service.changeProfile");
+          System.out.flush();
           return Response.serverError().entity("ChangeProfile Failed").build();
        }
 
@@ -309,9 +322,11 @@ System.out.flush();
     @POST
     @Path("/login")
     public Session login(@QueryParam("login") String login,
-                         @QueryParam("password") String password) {
+                         @QueryParam("password") String password,
+                         @QueryParam("recaptcha") String recaptcha) {
 System.out.println("UserResource::login - login: " + login);
 System.out.println("UserResource::login - password: " + password);
+System.out.println("UserResource::login - recaptcha: " + recaptcha);
 System.out.flush();
     Session session = authProvider.doAuth(request, response);
 
@@ -322,6 +337,10 @@ System.out.flush();
 	}
 System.out.println("session ok returned from doAuth");
 System.out.flush();
+
+    if (sendVerifyRecaptchaMessage(recaptcha) == false) {
+        return null;
+    }
 
 
 System.out.println("UserResource::login - session: " + session);
@@ -537,18 +556,38 @@ System.out.flush();
             System.out.println("Post parameters : " + postParams);
             System.out.println("Response Code : " + responseCode);
 
-            if (responseCode != 200) {
-                System.out.println("Recaptcha Verification Failed");
+	    if (responseCode != 200) {
+		System.out.println("Turnstile Verification Failed - HTTP " + responseCode);
+		return false;
+	    }
+
+            // Turnstile returns HTTP 200 even for a failed/invalid token, carrying the
+            // outcome in the JSON body's "success" field, so we must parse it here.
+            StringBuilder responseBody = new StringBuilder();
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    responseBody.append(line);
+                }
+            }
+
+            System.out.println("Turnstile response body : " + responseBody);
+
+            JSONObject json = new JSONObject(responseBody.toString());
+            boolean success = json.optBoolean("success", false);
+
+            if (success == false) {
+                System.out.println("Turnstile Verification Failed - success=false, error-codes: " + json.optJSONArray("error-codes"));
                 return false;
             }
 
+	    System.out.println("Turnstile Verification Succeeded");
+            return true;
 
-            
         }catch(Exception e){
             e.printStackTrace();
+            return false;
         }
-
-        return true;
     }
 
 }
