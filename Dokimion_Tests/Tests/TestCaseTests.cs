@@ -195,11 +195,17 @@ namespace Dokimion.Tests
                 string step2Text = Actor.AskingFor(Text.Of(TestCases.Step2Text));
                 Assert.That(step2Text, Is.EqualTo("Login as admin"));
             }
-            finally { 
+            finally {
             userActions.LogConsoleMessage("Clean up :");
             userActions.LogConsoleMessage("Removed 2nd step");
-            RemoveStep();
-     
+            // RemoveStep() must not block deletion: if it throws, DeleteTestCase is skipped and
+            // the "Add2StepsToTestCase" test case leaks. Leaked test cases make SelectTestCase
+            // (LastOrDefault) pick a non-fresh case that already has a step at index 0, which
+            // shifts every WriteToIframe index and makes SaveStep1 resolve to the hidden
+            // saved-step edit form -> 45s timeout. Always run DeleteTestCase.
+            try { RemoveStep(); }
+            catch (Exception ex) { userActions.LogConsoleMessage("RemoveStep cleanup failed (ignored): " + ex); }
+
             Actor.AttemptsTo(DeleteTestCase.For(driver));
             }
         }
