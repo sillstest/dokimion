@@ -323,7 +323,7 @@ namespace Dokimion.Tests
         {
             "Validate login",
             "Projects list page validation",
-            "Projects dashboard validation"
+            "Project dashboard validation"
         };
 
         // The two attributes to add to those test cases.
@@ -380,7 +380,62 @@ namespace Dokimion.Tests
             }
         }
 
-        // ----- helpers for TC21 -----
+        // Exercises the bulk "Remove Attributes" action (handleBulkRemoveAttributes in TestCases.js,
+        // driven by the Remove Attributes button in TestCasesFilter.js). Arranges by adding the two
+        // attributes to the three test cases, removes them via Remove Attributes, then verifies both
+        // attributes are gone from each of the three.
+        [Test]
+        public void TC22RemoveBulkAttributes()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            userActions.LogConsoleMessage("Set Up : switch to the Dokimion_LS project and open TestCases");
+            OpenProjectLSTestCases();
+
+            try
+            {
+                // Arrange: ensure the three test cases have both attributes so there is something to remove.
+                userActions.LogConsoleMessage("Arrange : add the two attributes to the three test cases");
+                SelectTargetsAndBuildBlock();
+                Actor.WaitsUntil(Appearance.Of(TestCases.AddAttributesButton), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Click.On(TestCases.AddAttributesButton));
+                Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Added Attributes in selected Testcases"), timeout: 60);
+
+                // Act: remove the same two attributes from the same three test cases.
+                userActions.LogConsoleMessage("Action steps : remove the two attributes from the three test cases");
+                SelectTargetsAndBuildBlock();
+                Actor.WaitsUntil(Appearance.Of(TestCases.RemoveAttributesButton), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Click.On(TestCases.RemoveAttributesButton));
+
+                userActions.LogConsoleMessage("Verify : confirmation popup is displayed");
+                Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Removed Attributes in selected Testcases"), timeout: 60);
+
+                userActions.LogConsoleMessage("Verify : each of the three test cases no longer has the two attributes");
+                foreach (string tcName in BulkTargets)
+                {
+                    Actor.AttemptsTo(Click.On(Header.TestCases));
+                    OpenTestCase(tcName);
+                    AssertTestCaseDoesNotHaveAttribute(tcName, Attribute1);
+                    AssertTestCaseDoesNotHaveAttribute(tcName, Attribute2);
+                }
+            }
+            finally
+            {
+                // Best-effort: if the test bailed after Add but before Remove, strip the attributes so
+                // the project is left clean. Never fail the test from cleanup.
+                userActions.LogConsoleMessage("Clean up : ensure the two attributes are removed");
+                try
+                {
+                    SelectTargetsAndBuildBlock();
+                    Actor.WaitsUntil(Appearance.Of(TestCases.RemoveAttributesButton), IsEqualTo.True(), timeout: 60);
+                    Actor.AttemptsTo(Click.On(TestCases.RemoveAttributesButton));
+                    Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Removed Attributes in selected Testcases"), timeout: 60);
+                }
+                catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Remove Attributes) failed (ignored): " + ex); }
+            }
+        }
+
+        // ----- helpers for TC21 / TC22 -----
 
         // Lower-cases an XPath string() so element matching is case-insensitive.
         private static string Lower(string xpathExpr) =>
@@ -486,6 +541,15 @@ namespace Dokimion.Tests
             IWebLocator attr = new WebLocator($"{testcaseName} attribute {attributeName}", By.XPath(xpath));
             Actor.WaitsUntil(Appearance.Of(attr), IsEqualTo.True(), timeout: 45);
             userActions.LogConsoleMessage($"Verified '{testcaseName}' has attribute '{attributeName}'");
+        }
+
+        // Assert the open test case's Attributes section has NO attribute card with the given name.
+        private void AssertTestCaseDoesNotHaveAttribute(string testcaseName, string attributeName)
+        {
+            string xpath = $"//div[@id='attributes']//div[@class='card-header']//b[contains({Lower("normalize-space()")},'{attributeName.ToLower()}')]";
+            IWebLocator attr = new WebLocator($"{testcaseName} attribute {attributeName}", By.XPath(xpath));
+            Actor.WaitsUntil(Appearance.Of(attr), IsEqualTo.False(), timeout: 45);
+            userActions.LogConsoleMessage($"Verified '{testcaseName}' no longer has attribute '{attributeName}'");
         }
     }
 
