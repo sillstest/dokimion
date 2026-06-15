@@ -107,6 +107,11 @@ namespace Dokimion.Pages
 
         public static IWebLocator Filter2AttribValue => L("Filter2AttribValue", By.XPath("//div[contains(@class,'filter-attribute-val-select')]//div[contains(@id,'react-select')][1]"));
 
+        // Placeholder of the CURRENT filter row's value select, scoped to the value control so it
+        // never collides with the Grouping "Select..." placeholder (unlike Filter1Selector). After
+        // a row's value is chosen its placeholder disappears, so [1] advances to the next row.
+        public static IWebLocator FilterValuePlaceholder => L("FilterValuePlaceholder", By.XPath("(//div[contains(@class,'filter-attribute-val-select')]//div[contains(@class,'placeholder')])[1]"));
+
         // Full-text Search box in the filter panel (used to scope the tree to one test case).
         public static IWebLocator SearchInput => L("SearchInput", By.XPath("//input[@name='fulltext']"));
 

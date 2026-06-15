@@ -327,8 +327,8 @@ namespace Dokimion.Tests
         };
 
         // The two attributes to add to those test cases.
-        private const string Attribute1 = "test case";
-        private const string Attribute2 = "placement";
+        private const string Attribute1 = "Functionality";
+        private const string Attribute2 = "Placement";
 
         // Exercises the bulk "Add Attributes" action (handleBulkAddAttributes in TestCases.js,
         // driven by the Add Attributes button in TestCasesFilter.js). Logs in as admin (done in
@@ -398,19 +398,27 @@ namespace Dokimion.Tests
             SelectOnlyTestCases(BulkTargets);
 
             userActions.LogConsoleMessage("Put 2 attributes in the filter box and pick the 1st value of each");
-            // Row 1: attribute "test case" + its first value.
+            // NOTE: do NOT use Filter1Selector/Filter2Selector here. Those locate the first
+            // "Select..." placeholder on the page, which works only when a Grouping value was
+            // chosen first (as CreateSmokeTestFilter does). This test does not set Grouping, so
+            // that placeholder is the empty Grouping select -> clicking it opens the wrong menu
+            // and the value option never appears (the hang). FilterValuePlaceholder is scoped to
+            // the value control and always points at the current row's value select.
+
+            // Row 1: attribute "Functionality" + its first value.
             Actor.AttemptsTo(Hover.Over(TestCases.Filter1Locator));
             Actor.AttemptsTo(Click.On(TestCases.Filter1Locator));
             ClickReactSelectOption(Attribute1);
-            Actor.AttemptsTo(Click.On(TestCases.Filter1Selector));
+            Actor.AttemptsTo(Click.On(TestCases.FilterValuePlaceholder));
             Actor.AttemptsTo(Click.On(TestCases.Filter1AttribValue));
 
             // Selecting an attribute in row 1 appends an empty row 2.
-            // Row 2: attribute "placement" + its first value.
+            // Row 2: attribute "Placement" + its first value. Once row 1's value is set its
+            // placeholder is gone, so FilterValuePlaceholder now points at row 2's value select.
             Actor.AttemptsTo(Hover.Over(TestCases.Filter2Locator));
             Actor.AttemptsTo(Click.On(TestCases.Filter2Locator));
             ClickReactSelectOption(Attribute2);
-            Actor.AttemptsTo(Click.On(TestCases.Filter2Selector));
+            Actor.AttemptsTo(Click.On(TestCases.FilterValuePlaceholder));
             Actor.AttemptsTo(Click.On(TestCases.Filter2AttribValue));
         }
 
