@@ -5,6 +5,7 @@ using Dokimion.Pages;
 using FluentAssertions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Interactions;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 using WebDriverManager.Helpers;
@@ -315,6 +316,168 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Clean up: Delete the attribute ");
             Actor.AttemptsTo(DeleteAttribute.For("Placement"));
+        }
+
+        // The three test cases (in project Dokimion_LS) the bulk operation should target.
+        private static readonly List<string> BulkTargets = new List<string>
+        {
+            "Validate login",
+            "Projects list page validation",
+            "Projects dashboard validation"
+        };
+
+        // The two attributes to add to those test cases.
+        private const string Attribute1 = "test case";
+        private const string Attribute2 = "placement";
+
+        // Exercises the bulk "Add Attributes" action (handleBulkAddAttributes in TestCases.js,
+        // driven by the Add Attributes button in TestCasesFilter.js). Logs in as admin (done in
+        // Setup), switches to Dokimion_LS, selects exactly three test cases, builds a two-attribute
+        // block in the Filter rows (each with its first value), clicks Add Attributes, then opens
+        // each of the three test cases and verifies both attributes are present.
+        [Test]
+        public void TC21AddBulkAttributes()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            userActions.LogConsoleMessage("Set Up : switch to the Dokimion_LS project and open TestCases");
+            OpenProjectLSTestCases();
+
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : select the 3 target test cases and build the 2-attribute block");
+                SelectTargetsAndBuildBlock();
+
+                userActions.LogConsoleMessage("Click the Add Attributes button");
+                Actor.WaitsUntil(Appearance.Of(TestCases.AddAttributesButton), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Click.On(TestCases.AddAttributesButton));
+
+                userActions.LogConsoleMessage("Verify : confirmation popup is displayed");
+                Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Added Attributes in selected Testcases"), timeout: 60);
+
+                userActions.LogConsoleMessage("Verify : each of the three test cases now has both attributes");
+                foreach (string tcName in BulkTargets)
+                {
+                    Actor.AttemptsTo(Click.On(Header.TestCases));
+                    OpenTestCase(tcName);
+                    AssertTestCaseHasAttribute(tcName, Attribute1);
+                    AssertTestCaseHasAttribute(tcName, Attribute2);
+                }
+            }
+            finally
+            {
+                // Revert: remove the same two attribute values from the same three test cases via
+                // the Remove Attributes bulk action. Best-effort, so cleanup never fails the test.
+                userActions.LogConsoleMessage("Clean up : remove the two attributes from the same three test cases");
+                try
+                {
+                    SelectTargetsAndBuildBlock();
+                    Actor.WaitsUntil(Appearance.Of(TestCases.RemoveAttributesButton), IsEqualTo.True(), timeout: 60);
+                    Actor.AttemptsTo(Click.On(TestCases.RemoveAttributesButton));
+                    Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Removed Attributes in selected Testcases"), timeout: 60);
+                }
+                catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Remove Attributes) failed (ignored): " + ex); }
+            }
+        }
+
+        // ----- helpers for TC21 -----
+
+        // Lower-cases an XPath string() so element matching is case-insensitive.
+        private static string Lower(string xpathExpr) =>
+            $"translate({xpathExpr},'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')";
+
+        // Open the TestCases list (resetting any prior filter/selection), select exactly the three
+        // target test cases, and build the two-attribute filter block (each with its first value).
+        // Shared by the Add step and the Remove cleanup so both operate on the same selection + block.
+        private void SelectTargetsAndBuildBlock()
+        {
+            Actor.AttemptsTo(Click.On(Header.TestCases));
+            Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+
+            userActions.LogConsoleMessage("Select exactly the three target test cases (uncheck everything else)");
+            SelectOnlyTestCases(BulkTargets);
+
+            userActions.LogConsoleMessage("Put 2 attributes in the filter box and pick the 1st value of each");
+            // Row 1: attribute "test case" + its first value.
+            Actor.AttemptsTo(Hover.Over(TestCases.Filter1Locator));
+            Actor.AttemptsTo(Click.On(TestCases.Filter1Locator));
+            ClickReactSelectOption(Attribute1);
+            Actor.AttemptsTo(Click.On(TestCases.Filter1Selector));
+            Actor.AttemptsTo(Click.On(TestCases.Filter1AttribValue));
+
+            // Selecting an attribute in row 1 appends an empty row 2.
+            // Row 2: attribute "placement" + its first value.
+            Actor.AttemptsTo(Hover.Over(TestCases.Filter2Locator));
+            Actor.AttemptsTo(Click.On(TestCases.Filter2Locator));
+            ClickReactSelectOption(Attribute2);
+            Actor.AttemptsTo(Click.On(TestCases.Filter2Selector));
+            Actor.AttemptsTo(Click.On(TestCases.Filter2AttribValue));
+        }
+
+        // Switch from the current project to Dokimion_LS and open its TestCases page.
+        private void OpenProjectLSTestCases()
+        {
+            Actor.AttemptsTo(Click.On(Header.ProjectsLink));
+            Actor.WaitsUntil(Appearance.Of(Header.AllLink), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(Header.AllLink));
+
+            Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
+
+            Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(Header.TestCases));
+
+            Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+        }
+
+        // All test cases are checked by default; uncheck every row whose name is not a target so
+        // the bulk operation (which targets the checked, displayed test cases) applies only to them.
+        private void SelectOnlyTestCases(List<string> keep)
+        {
+            Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+            var rows = TestCases.TestCaseTreeListMain.FindElements(driver);
+            Actions actions = new Actions(driver);
+            foreach (var row in rows)
+            {
+                string name = row.Text ?? "";
+                bool isTarget = keep.Any(t => name.ToLower().Contains(t.ToLower()));
+                if (!isTarget)
+                {
+                    try
+                    {
+                        var checkbox = row.FindElement(By.XPath("descendant::span[@data-role='checkbox']"));
+                        actions.MoveToElement(checkbox).Click(checkbox).Build().Perform();
+                    }
+                    catch (NoSuchElementException) { /* group/non-checkbox row */ }
+                }
+            }
+        }
+
+        // Click an option in the currently-open filter react-select menu by its (case-insensitive) text.
+        private void ClickReactSelectOption(string optionText)
+        {
+            string xpath = $"//div[@class='css-11unzgr']//div[contains(@id,'react-select') and contains({Lower("normalize-space()")},'{optionText.ToLower()}')]";
+            IWebLocator option = new WebLocator("ReactSelectOption:" + optionText, By.XPath(xpath));
+            Actor.WaitsUntil(Appearance.Of(option), IsEqualTo.True(), timeout: 45);
+            Actor.AttemptsTo(Click.On(option));
+        }
+
+        // Open a test case from the tree by (case-insensitive) name.
+        private void OpenTestCase(string testcaseName)
+        {
+            string xpath = $"//span[@data-role='display' and contains({Lower("normalize-space()")},'{testcaseName.ToLower()}')]";
+            IWebLocator tc = new WebLocator("TestCase:" + testcaseName, By.XPath(xpath));
+            Actor.WaitsUntil(Appearance.Of(tc), IsEqualTo.True(), timeout: 60);
+            new Actions(driver).MoveToElement(tc.FindElement(driver)).Click().Build().Perform();
+        }
+
+        // Assert the open test case's Attributes section shows an attribute card with the given name.
+        private void AssertTestCaseHasAttribute(string testcaseName, string attributeName)
+        {
+            string xpath = $"//div[@id='attributes']//div[@class='card-header']//b[contains({Lower("normalize-space()")},'{attributeName.ToLower()}')]";
+            IWebLocator attr = new WebLocator($"{testcaseName} attribute {attributeName}", By.XPath(xpath));
+            Actor.WaitsUntil(Appearance.Of(attr), IsEqualTo.True(), timeout: 45);
+            userActions.LogConsoleMessage($"Verified '{testcaseName}' has attribute '{attributeName}'");
         }
     }
 
