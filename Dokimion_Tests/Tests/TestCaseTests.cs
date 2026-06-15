@@ -355,6 +355,66 @@ namespace Dokimion.Tests
         }
 
 
+        // Exercises the bulk "Add Attributes" action implemented by handleBulkAddAttributes
+        // (TestCases.js), which is driven from the Add Attributes button in TestCasesFilter.js.
+        // The "block" of attributes is the set of Filter rows; the operation targets every
+        // test case currently shown in the tree (minus any unchecked ones). To keep the test
+        // isolated, we create a dedicated test case and narrow the tree to just it (full-text
+        // Search) before adding, then delete that test case in cleanup.
+        [Test]
+        public void TC21AddBulkAttributes()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+            userActions.LogConsoleMessage("Set Up : create a test case to receive the bulk attribute");
+            Actor.AttemptsTo(CreatTestCase.For("BulkAddAttrTC", "Testcase for bulk Add Attributes"));
+
+            try
+            {
+                userActions.LogConsoleMessage("Action steps :");
+                userActions.LogConsoleMessage("Go to the TestCases page");
+                Actor.AttemptsTo(Click.On(Header.TestCases));
+
+                // Scope the bulk operation: filter the tree to just BulkAddAttrTC via the
+                // Search box, then click Filter. handleBulkAddAttributes targets the displayed
+                // tree, so only this test case is affected.
+                userActions.LogConsoleMessage("Filter the tree down to BulkAddAttrTC via Search");
+                Actor.WaitsUntil(Appearance.Of(TestCases.SearchInput), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Clear.On(TestCases.SearchInput));
+                Actor.AttemptsTo(SendKeys.To(TestCases.SearchInput, "BulkAddAttrTC"));
+                Actor.AttemptsTo(Click.On(TestCases.FilterLocator));
+                Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+
+                // Build the attribute "block" = one Filter row (attribute + value). Same
+                // react-select sequence the smoke-test filter uses. We do NOT click Filter
+                // again, so the targeted tree stays as the BulkAddAttrTC result.
+                userActions.LogConsoleMessage("Build the attribute block: pick attribute + value in Filter row 1");
+                Actor.AttemptsTo(Hover.Over(TestCases.Filter1Locator));
+                Actor.AttemptsTo(Click.On(TestCases.Filter1Locator));
+                Actor.AttemptsTo(Click.On(TestCases.Filter1AttributeLocator));
+                Actor.AttemptsTo(Click.On(TestCases.Filter1Selector));
+                Actor.AttemptsTo(Click.On(TestCases.Filter1AttribValue));
+
+                userActions.LogConsoleMessage("Click the Add Attributes button (admin-only bulk action)");
+                Actor.WaitsUntil(Appearance.Of(TestCases.AddAttributesButton), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Click.On(TestCases.AddAttributesButton));
+
+                userActions.LogConsoleMessage("Verify : confirmation popup is displayed");
+                Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Added Attributes in selected Testcases"), timeout: 60);
+            }
+            finally
+            {
+                userActions.LogConsoleMessage("Clean up : delete BulkAddAttrTC (also removes the attribute that was added)");
+                try
+                {
+                    Actor.AttemptsTo(Click.On(Header.TestCases));
+                    SelectTestCase("BulkAddAttrTC");
+                    Actor.AttemptsTo(DeleteTestCase.For(driver));
+                }
+                catch (Exception ex) { userActions.LogConsoleMessage("Cleanup failed (ignored): " + ex); }
+            }
+        }
+
+
         public void RemoveStep()
         {
 

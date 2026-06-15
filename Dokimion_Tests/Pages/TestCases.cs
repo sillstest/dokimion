@@ -107,6 +107,17 @@ namespace Dokimion.Pages
 
         public static IWebLocator Filter2AttribValue => L("Filter2AttribValue", By.XPath("//div[contains(@class,'filter-attribute-val-select')]//div[contains(@id,'react-select')][1]"));
 
+        // Full-text Search box in the filter panel (used to scope the tree to one test case).
+        public static IWebLocator SearchInput => L("SearchInput", By.XPath("//input[@name='fulltext']"));
+
+        // Admin-only bulk attribute actions in the Search row of the filter panel.
+        public static IWebLocator AddAttributesButton => L("AddAttributesButton", By.XPath("//button[text()='Add Attributes']"));
+
+        public static IWebLocator RemoveAttributesButton => L("RemoveAttributesButton", By.XPath("//button[text()='Remove Attributes']"));
+
+        // Confirmation popup shown after a bulk attribute operation (e.g. "Added Attributes in selected Testcases").
+        public static IWebLocator BulkAttributeMessage => L("BulkAttributeMessage", By.XPath("//div[@class='popup-content']"));
+
 
         public static IWebLocator TestCaseTreeListMain => L("TestCaseTreeListMain", By.XPath("//ul[@class='gj-list gj-list-bootstrap']/*"));
 
