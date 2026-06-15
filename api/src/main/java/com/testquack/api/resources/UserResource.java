@@ -1,5 +1,6 @@
 package com.testquack.api.resources;
 
+import com.testquack.api.utils.TurnstileProperties;
 import com.testquack.api.utils.APIValidation;
 import com.testquack.api.utils.PasswordGeneration;
 import com.testquack.api.utils.MongoDBInterface;
@@ -66,12 +67,7 @@ public class UserResource extends BaseResource<User> {
     @Value("${quack.ui.url}")
     private String baseUiUrl;
 
-    // Cloudflare Turnstile secret key. Defaults to the production secret, so prod needs no
-    // config change. A test/CI deployment can override it with Cloudflare's always-pass test
-    // secret (1x0000000000000000000000000000000AA) by setting quack.turnstile.secret in that
-    // deployment's quack.properties, which lets the Selenium suite log in.
-    @Value("${quack.turnstile.secret:0x4AAAAAADiztz-CZxfqc5w3yaxc7opKYCM}")
-    private String secret;
+    private String cloudflareSecret = TurnstileProperties.get("app.secret");
 
     private static MongoDBInterface s_mongoDBInterface;
 
@@ -542,7 +538,7 @@ System.out.flush();
             con.setRequestProperty("User-Agent", USER_AGENT);
             con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
 
-            String postParams = "secret=" + secret + "&response=" + recaptcha;
+            String postParams = "secret=" + cloudflareSecret + "&response=" + recaptcha;
 
             // Send post request
             con.setDoOutput(true);
