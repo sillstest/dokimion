@@ -468,6 +468,13 @@ namespace Dokimion.Tests
                     Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
                     Actor.WaitsUntil(Appearance.Of(TestCases.UnlockAllTestCasesButton), IsEqualTo.False(), timeout: 15);
                     userActions.LogConsoleMessage("Verified: normal user does not see Unlock All TestCases button");
+
+                    userActions.LogConsoleMessage("Verify : normal user does not see Lock Testcase button on individual test case");
+                    OpenTestCaseInLS("Validate login");
+                    // LockTestcaseButton is guarded by !readonly && Utils.isAdmin(session). Both
+                    // conditions depend on the async getSession() call settling — allow 30s.
+                    Actor.WaitsUntil(Appearance.Of(TestCases.LockTestcaseButton), IsEqualTo.False(), timeout: 30);
+                    userActions.LogConsoleMessage("Verified: normal user does not see Lock Testcase button");
                 }
                 finally
                 {
@@ -519,7 +526,7 @@ namespace Dokimion.Tests
         {
             Actor.AttemptsTo(Logout.For());
             Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
-            Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+            Actor.AttemptsTo(LoginUser.For(userActions.NormalTester!, userActions.NormalTesterPasswd!));
             Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 15);
         }
 

@@ -19,6 +19,9 @@ namespace Dokimion
         public string? AdminUser = TestContext.Parameters["AdminUser"];
         public string? AdminPass = TestContext.Parameters.Get("AdminPass");
 
+        public string? NormalTester = TestContext.Parameters.Get("NormalTester");
+        public string? NormalTesterPasswd = TestContext.Parameters.Get("NormalTesterPasswd");
+
         public readonly string Headless = "--headless=new";
         public readonly string WindowSize = "--window-size=1920,1080";
 
