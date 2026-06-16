@@ -97,6 +97,25 @@ namespace Dokimion.Tests
             userActions.TearDownAfterTestcase();
         }
 
+        // Click the "Add" button to open the new-attribute editor, retrying the click until the
+        // name field actually appears. The very first Add click on a freshly loaded Attributes page
+        // can be swallowed while the attribute list is still loading (this is the failure behind
+        // TC11's flaky "AttributeName did not appear" timeout, since TC11 runs first); a re-click
+        // once the page settles opens the editor. Shared by TC11-TC15 and CreateTempAttribute.
+        private void OpenNewAttributeForm()
+        {
+            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
+
+            for (int attempt = 0; attempt < 4; attempt++)
+            {
+                Attributes.AddAttributes.FindElement(driver).Click();
+                new Actions(driver).Pause(TimeSpan.FromSeconds(2)).Build().Perform();
+                if (Actor.AskingFor(Appearance.Of(Attributes.AttributeName))) break;
+            }
+
+            Actor.WaitsUntil(Appearance.Of(Attributes.AttributeName), IsEqualTo.True(), timeout: 60);
+        }
+
         [Test]
         public void TC11AddFunctionalityAttribute()
         {
@@ -106,8 +125,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on the Add button");
-            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
-            Attributes.AddAttributes.FindElement(driver).Click();
+            OpenNewAttributeForm();
 
             userActions.LogConsoleMessage("Enter Name: Functionality ");
             userActions.LogConsoleMessage("Enter Values: Authentication,TestCase, TestSuites,Projects, Launch");
@@ -138,8 +156,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on the Add button");
-            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
-            Attributes.AddAttributes.FindElement(driver).Click();
+            OpenNewAttributeForm();
 
             userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
                 "TestSuites, Projects, Launch");
@@ -200,8 +217,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on the Add button");
-            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
-            Attributes.AddAttributes.FindElement(driver).Click();
+            OpenNewAttributeForm();
 
             userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
                 "TestSuites, Projects, Launch , Faulty");
@@ -256,9 +272,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on the Add button");
-            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
-
-            Attributes.AddAttributes.FindElement(driver).Click();
+            OpenNewAttributeForm();
 
             userActions.LogConsoleMessage("Enter Name: ");
             userActions.LogConsoleMessage("Enter Values: ");
@@ -291,9 +305,7 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Action steps : ");
             userActions.LogConsoleMessage("Click on the Add button");
-            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
-
-            Attributes.AddAttributes.FindElement(driver).Click();
+            OpenNewAttributeForm();
 
             userActions.LogConsoleMessage("Enter Name: ");
             userActions.LogConsoleMessage("Enter Values: ");
@@ -326,26 +338,50 @@ namespace Dokimion.Tests
             "Project dashboard validation"
         };
 
-        // The two attributes to add to those test cases.
-        private const string Attribute1 = "Functionality";
-        private const string Attribute2 = "Placement";
+        // A throwaway TESTCASE attribute created fresh for each bulk test and deleted in cleanup.
+        // Because the seed test cases never carry it, bulk Add then bulk Remove is an exact,
+        // non-destructive round trip: Add gives each target the attribute, Remove (of its only
+        // value) empties it so the whole attribute is deleted -> the "no longer has attribute"
+        // assertion holds. Reusing a real seed attribute (e.g. Functionality, whose first value
+        // is "Authentication") instead would (a) leave the seed's other values behind so Remove
+        // never clears the card, and (b) strip the grouping values that TC16-TC19 depend on.
+        // See handleBulkRemoveAttributes in TestCases.js.
+        private const string TempAttribute = "BulkTestAttr";
+        private const string TempAttributeValue = "BulkTestVal";
+
+        // The exact set of TESTCASE attributes Dokimion_LS must contain for the bulk tests (and the
+        // grouping tests TC16-TC19) to behave. TC16-TC19 group by the first three attributes in the
+        // dropdown and assert exactly three groups, so ANY extra attribute (e.g. a leftover
+        // BulkTestAttr) or a missing seed attribute silently corrupts them. AssertSeedAttributesIntact
+        // checks this before each bulk test creates its throwaway attribute.
+        private static readonly List<string> ExpectedLSAttributes = new List<string>
+        {
+            "Functionality", "Placement", "Priority"
+        };
 
         // Exercises the bulk "Add Attributes" action (handleBulkAddAttributes in TestCases.js,
         // driven by the Add Attributes button in TestCasesFilter.js). Logs in as admin (done in
-        // Setup), switches to Dokimion_LS, selects exactly three test cases, builds a two-attribute
-        // block in the Filter rows (each with its first value), clicks Add Attributes, then opens
-        // each of the three test cases and verifies both attributes are present.
+        // Setup), creates a throwaway attribute in Dokimion_LS, selects exactly three test cases,
+        // builds a one-attribute block in the Filter rows, clicks Add Attributes, then opens each
+        // of the three test cases and verifies the attribute is present. Cleanup reverts the add
+        // and deletes the throwaway attribute so the project is left exactly as it started.
         [Test]
         public void TC21AddBulkAttributes()
         {
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
 
-            userActions.LogConsoleMessage("Set Up : switch to the Dokimion_LS project and open TestCases");
-            OpenProjectLSTestCases();
-
             try
             {
-                userActions.LogConsoleMessage("Action steps : select the 3 target test cases and build the 2-attribute block");
+                // Create the throwaway attribute INSIDE the try so the finally below always runs and
+                // BulkTestAttr is deleted at the end of TC21 - even if CreateTempAttribute (or its
+                // AssertSeedAttributesIntact precondition) throws, or any later step fails.
+                userActions.LogConsoleMessage("Set Up : create a throwaway TESTCASE attribute in Dokimion_LS");
+                CreateTempAttribute();
+
+                userActions.LogConsoleMessage("Set Up : switch to the Dokimion_LS project and open TestCases");
+                OpenProjectLSTestCases();
+
+                userActions.LogConsoleMessage("Action steps : select the 3 target test cases and build the temp-attribute block");
                 SelectTargetsAndBuildBlock();
 
                 userActions.LogConsoleMessage("Click the Add Attributes button");
@@ -355,20 +391,23 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Verify : confirmation popup is displayed");
                 Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Added Attributes in selected Testcases"), timeout: 60);
 
-                userActions.LogConsoleMessage("Verify : each of the three test cases now has both attributes");
+                // Navigate via Projects first so the TestCases component mounts fresh before verifying.
+                // Same reason as TC22's Act step: a same-URL SPA navigation (Click.On(Header.TestCases))
+                // does not remount the component, leaving the filter rows from the Add step in place.
+                userActions.LogConsoleMessage("Verify : open each test case from a fresh mount and confirm it now has the temp attribute");
+                OpenProjectLSTestCases();
                 foreach (string tcName in BulkTargets)
                 {
                     Actor.AttemptsTo(Click.On(Header.TestCases));
                     OpenTestCase(tcName);
-                    AssertTestCaseHasAttribute(tcName, Attribute1);
-                    AssertTestCaseHasAttribute(tcName, Attribute2);
+                    AssertTestCaseHasAttribute(tcName, TempAttribute);
                 }
             }
             finally
             {
-                // Revert: remove the same two attribute values from the same three test cases via
-                // the Remove Attributes bulk action. Best-effort, so cleanup never fails the test.
-                userActions.LogConsoleMessage("Clean up : remove the two attributes from the same three test cases");
+                // Revert: strip the temp attribute value from the three test cases, then delete the
+                // attribute definition. Both steps are best-effort so cleanup never fails the test.
+                userActions.LogConsoleMessage("Clean up : remove the temp attribute from the three test cases, then delete it");
                 try
                 {
                     // Navigate via the Projects page so the TestCases component mounts fresh.
@@ -382,34 +421,43 @@ namespace Dokimion.Tests
                     Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Removed Attributes in selected Testcases"), timeout: 60);
                 }
                 catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Remove Attributes) failed (ignored): " + ex); }
+
+                try { DeleteTempAttribute(); }
+                catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Delete temp attribute) failed (ignored): " + ex); }
             }
         }
 
         // Exercises the bulk "Remove Attributes" action (handleBulkRemoveAttributes in TestCases.js,
-        // driven by the Remove Attributes button in TestCasesFilter.js). Arranges by adding the two
-        // attributes to the three test cases, removes them via Remove Attributes, then verifies both
-        // attributes are gone from each of the three.
+        // driven by the Remove Attributes button in TestCasesFilter.js). Creates a throwaway
+        // attribute, arranges by adding it to the three test cases, removes it via Remove Attributes,
+        // then verifies it is gone from each of the three. Cleanup deletes the throwaway attribute.
         [Test]
         public void TC22RemoveBulkAttributes()
         {
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
 
-            userActions.LogConsoleMessage("Set Up : switch to the Dokimion_LS project and open TestCases");
-            OpenProjectLSTestCases();
-
             try
             {
-                // Arrange: ensure the three test cases have both attributes so there is something to remove.
-                userActions.LogConsoleMessage("Arrange : add the two attributes to the three test cases");
+                // Create the throwaway attribute INSIDE the try so the finally below always runs and
+                // BulkTestAttr is deleted at the end of TC22 - even if CreateTempAttribute (or its
+                // AssertSeedAttributesIntact precondition) throws, or any later step fails.
+                userActions.LogConsoleMessage("Set Up : create a throwaway TESTCASE attribute in Dokimion_LS");
+                CreateTempAttribute();
+
+                userActions.LogConsoleMessage("Set Up : switch to the Dokimion_LS project and open TestCases");
+                OpenProjectLSTestCases();
+
+                // Arrange: add the temp attribute to the three test cases so there is something to remove.
+                userActions.LogConsoleMessage("Arrange : add the temp attribute to the three test cases");
                 SelectTargetsAndBuildBlock();
                 Actor.WaitsUntil(Appearance.Of(TestCases.AddAttributesButton), IsEqualTo.True(), timeout: 60);
                 Actor.AttemptsTo(Click.On(TestCases.AddAttributesButton));
                 Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Added Attributes in selected Testcases"), timeout: 60);
 
-                // Act: remove the same two attributes from the same three test cases.
+                // Act: remove the temp attribute from the same three test cases.
                 // Navigate via Projects first so the TestCases component mounts fresh —
                 // same-URL SPA navigation leaves the filter rows from the Arrange step in place.
-                userActions.LogConsoleMessage("Action steps : remove the two attributes from the three test cases");
+                userActions.LogConsoleMessage("Action steps : remove the temp attribute from the three test cases");
                 OpenProjectLSTestCases();
                 SelectTargetsAndBuildBlock();
                 Actor.WaitsUntil(Appearance.Of(TestCases.RemoveAttributesButton), IsEqualTo.True(), timeout: 60);
@@ -418,20 +466,19 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Verify : confirmation popup is displayed");
                 Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Removed Attributes in selected Testcases"), timeout: 60);
 
-                userActions.LogConsoleMessage("Verify : each of the three test cases no longer has the two attributes");
+                userActions.LogConsoleMessage("Verify : each of the three test cases no longer has the temp attribute");
                 foreach (string tcName in BulkTargets)
                 {
                     Actor.AttemptsTo(Click.On(Header.TestCases));
                     OpenTestCase(tcName);
-                    AssertTestCaseDoesNotHaveAttribute(tcName, Attribute1);
-                    AssertTestCaseDoesNotHaveAttribute(tcName, Attribute2);
+                    AssertTestCaseDoesNotHaveAttribute(tcName, TempAttribute);
                 }
             }
             finally
             {
-                // Best-effort: if the test bailed after Add but before Remove, strip the attributes so
-                // the project is left clean. Never fail the test from cleanup.
-                userActions.LogConsoleMessage("Clean up : ensure the two attributes are removed");
+                // Best-effort: if the test bailed after Add but before Remove, strip the attribute so
+                // the targets are left clean, then delete the attribute definition. Never fail from cleanup.
+                userActions.LogConsoleMessage("Clean up : ensure the temp attribute is removed from the targets, then delete it");
                 try
                 {
                     // Same reason as TC21: navigate via Projects to get a fresh TestCases mount.
@@ -442,6 +489,9 @@ namespace Dokimion.Tests
                     Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Removed Attributes in selected Testcases"), timeout: 60);
                 }
                 catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Remove Attributes) failed (ignored): " + ex); }
+
+                try { DeleteTempAttribute(); }
+                catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Delete temp attribute) failed (ignored): " + ex); }
             }
         }
 
@@ -452,8 +502,11 @@ namespace Dokimion.Tests
             $"translate({xpathExpr},'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')";
 
         // Open the TestCases list (resetting any prior filter/selection), select exactly the three
-        // target test cases, and build the two-attribute filter block (each with its first value).
-        // Shared by the Add step and the Remove cleanup so both operate on the same selection + block.
+        // target test cases, and build the one-attribute filter block (the temp attribute + its only
+        // value). Shared by the Add step and the Remove cleanup so both operate on the same
+        // selection + block. The block tells handleBulkAdd/RemoveAttributes WHICH attribute/value to
+        // apply; the checked-and-displayed test cases are the targets. (The block is NOT applied as a
+        // filter, so the tree still lists every test case — SelectOnlyTestCases unchecks non-targets.)
         private void SelectTargetsAndBuildBlock()
         {
             Actor.AttemptsTo(Click.On(Header.TestCases));
@@ -462,40 +515,159 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Select exactly the three target test cases (uncheck everything else)");
             SelectOnlyTestCases(BulkTargets);
 
-            userActions.LogConsoleMessage("Put 2 attributes in the filter box and pick the 1st value of each");
-            // NOTE: do NOT use Filter1Selector/Filter2Selector here. Those locate the first
-            // "Select..." placeholder on the page, which works only when a Grouping value was
-            // chosen first (as CreateSmokeTestFilter does). This test does not set Grouping, so
-            // that placeholder is the empty Grouping select -> clicking it opens the wrong menu
-            // and the value option never appears (the hang). FilterValuePlaceholder is scoped to
-            // the value control and always points at the current row's value select.
-
-            // Row 1: attribute "Functionality" + its first value.
+            userActions.LogConsoleMessage("Put the temp attribute in the filter box and pick its only value");
+            // NOTE: do NOT use Filter1Selector here. It locates the first "Select..." placeholder on
+            // the page, which works only when a Grouping value was chosen first (as
+            // CreateSmokeTestFilter does). This test does not set Grouping, so that placeholder is the
+            // empty Grouping select -> clicking it opens the wrong menu and the value option never
+            // appears (the hang). FilterValuePlaceholder is scoped to the value control and always
+            // points at the current row's value select. A single row also avoids the
+            // FilterValuePlaceholder row-shifting that a second filter row would introduce.
             Actor.AttemptsTo(Hover.Over(TestCases.Filter1Locator));
             Actor.AttemptsTo(Click.On(TestCases.Filter1Locator));
-            ClickReactSelectOption(Attribute1);
+            ClickReactSelectOption(TempAttribute);
             Actor.AttemptsTo(Click.On(TestCases.FilterValuePlaceholder));
             Actor.AttemptsTo(Click.On(TestCases.Filter1AttribValue));
-
-            // Selecting an attribute in row 1 appends an empty row 2.
-            // Row 2: attribute "Placement" + its first value. Once row 1's value is set its
-            // placeholder is gone, so FilterValuePlaceholder now points at row 2's value select.
-            Actor.AttemptsTo(Hover.Over(TestCases.Filter2Locator));
-            Actor.AttemptsTo(Click.On(TestCases.Filter2Locator));
-            ClickReactSelectOption(Attribute2);
-            Actor.AttemptsTo(Click.On(TestCases.FilterValuePlaceholder));
-            Actor.AttemptsTo(Click.On(TestCases.Filter2AttribValue));
         }
 
-        // Switch from the current project to Dokimion_LS and open its TestCases page.
-        private void OpenProjectLSTestCases()
+        // Create the throwaway single-value attribute (TempAttribute = its only value) in
+        // Dokimion_LS. Called at the start of TC21/TC22 so the bulk Add/Remove has an attribute the
+        // seed test cases never carry. Navigates to Dokimion_LS's Attributes page, clicks Add, and
+        // reuses CreateAttributes; then waits for the new attribute card to confirm it was saved.
+        private void CreateTempAttribute()
         {
-            Actor.AttemptsTo(Click.On(Header.ProjectsLink));
+            OpenProjectLSAttributes();
+
+            // Self-heal: drop any leftover BulkTestAttr from a previous aborted run BEFORE the seed
+            // check, so our own throwaway artifact never fails the test. (A stray BulkTestAttr is
+            // harmless and removable; only genuine corruption should fail fast.)
+            RemoveTempAttributeCardIfPresent();
+
+            // Fail fast if Dokimion_LS is still not in its expected clean state (a missing seed
+            // attribute, or some unexpected attribute we did not create). Doing this here turns real
+            // corruption into a clear, actionable failure on TC21/TC22 instead of a confusing
+            // TC16-TC19 grouping bug.
+            AssertSeedAttributesIntact();
+
+            OpenNewAttributeForm();
+
+            Actor.AttemptsTo(CreateAttributes.For(TempAttribute, new List<string>() { TempAttributeValue }, driver));
+
+            IWebLocator tempAttrHeading = new WebLocator("TempAttrHeading", By.XPath($"//b[text()='{TempAttribute}']"));
+            Actor.WaitsUntil(Appearance.Of(tempAttrHeading), IsEqualTo.True(), timeout: 60);
+        }
+
+        // Delete the throwaway attribute from Dokimion_LS. Used in cleanup (best-effort), so it
+        // navigates to the Attributes page itself rather than assuming where the test left off.
+        private void DeleteTempAttribute()
+        {
+            OpenProjectLSAttributes();
+            RemoveTempAttributeCardIfPresent();
+        }
+
+        // Delete ONLY the BulkTestAttr card if it is present; no-op otherwise. Assumes the Dokimion_LS
+        // Attributes page is already open. Shared by CreateTempAttribute (self-heal before the seed
+        // check) and DeleteTempAttribute (cleanup).
+        //
+        // DeleteAttribute is deliberately NOT reused here: it clicks the first pencil on the page
+        // ((//svg[@data-icon='pencil-alt'])[1]), which is correct in TC11-TC15 (one attribute card at a
+        // time) but WRONG on Dokimion_LS, which has several seed attribute cards
+        // (Functionality/Priority/Placement that TC16-TC19 depend on) - there it would open and Remove
+        // the first/seed card and leave BulkTestAttr behind. Each attribute renders as
+        // <div class="alert"><h5 class="alert-heading"><b>name</b><span class="edit-icon">pencil</span>
+        // </h5>...</div> (see attributes/Attributes.js), so we target the pencil inside the heading
+        // whose <b> text is exactly BulkTestAttr.
+        private void RemoveTempAttributeCardIfPresent()
+        {
+            // Wait for the attribute list to finish loading so a not-yet-rendered card is not mistaken
+            // for an absent one.
+            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
+            new Actions(driver).Pause(TimeSpan.FromSeconds(2)).Build().Perform();
+
+            IWebLocator heading = new WebLocator("TempAttrHeading", By.XPath($"//b[text()='{TempAttribute}']"));
+            if (!Actor.AskingFor(Appearance.Of(heading))) return; // not present — nothing to delete
+
+            // The pencil is visibility:hidden until its h5 heading is hovered (see App.css:
+            // "h5:hover .edit-icon { visibility: visible }"), and Selenium treats a visibility:hidden
+            // element as not displayed - so hover the heading first to reveal the pencil, then click it.
+            // Same pattern as DeleteAttribute.
+            Actor.AttemptsTo(Hover.Over(heading));
+
+            IWebLocator editPencil = new WebLocator("TempAttrEditPencil",
+                By.XPath($"//h5[contains(@class,'alert-heading')][b[text()='{TempAttribute}']]//span[contains(@class,'edit-icon')]"));
+            Actor.AttemptsTo(Hover.Over(editPencil));
+            Actor.AttemptsTo(Click.On(editPencil));
+
+            Actor.WaitsUntil(Appearance.Of(Attributes.RemoveAttribButton), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Hover.Over(Attributes.RemoveAttribButton));
+            Actor.AttemptsTo(Click.On(Attributes.RemoveAttribButton));
+
+            // Confirm the BulkTestAttr card is actually gone before returning.
+            Actor.WaitsUntil(Appearance.Of(heading), IsEqualTo.False(), timeout: 60);
+        }
+
+        // Assert that the Dokimion_LS Attributes page shows EXACTLY the expected seed attributes and
+        // nothing else. Must be called while on the Dokimion_LS Attributes page. Each attribute renders
+        // as <h5 class="alert-heading"><b>name</b>...</h5> (see attributes/Attributes.js), so the card
+        // names are the <b> texts under those headings. The Add button is always present once the page
+        // is loaded; we wait for it, then give the attribute list a moment to render before reading.
+        private void AssertSeedAttributesIntact()
+        {
+            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
+            new Actions(driver).Pause(TimeSpan.FromSeconds(2)).Build().Perform();
+
+            IWebLocator attrNames = new WebLocator("AttributeCardNames", By.XPath("//h5[contains(@class,'alert-heading')]/b"));
+            List<string> actual = attrNames.FindElements(driver)
+                .Select(e => (e.Text ?? "").Trim())
+                .OrderBy(n => n)
+                .ToList();
+            List<string> expected = ExpectedLSAttributes.OrderBy(n => n).ToList();
+
+            Assert.That(actual, Is.EqualTo(expected),
+                $"Dokimion_LS must contain exactly these attributes before running this test: " +
+                $"[{string.Join(", ", expected)}], but found: [{string.Join(", ", actual)}]. " +
+                $"A leftover '{TempAttribute}' or a missing/renamed seed attribute will break TC16-TC19. " +
+                $"Restore the Dokimion_LS attributes to the expected set and re-run.");
+        }
+
+        // Open the Projects dropdown and click into the Dokimion_LS project landing page. The
+        // "Projects" link is a dropdown toggle, and a single click is occasionally swallowed when
+        // the page is still re-rendering right after a save or navigation (this is the failure
+        // mode behind TC21's flaky "All Link did not appear" timeout: the menu never opened). Retry
+        // the toggle until the "All" item is actually visible, then proceed. Shared by both
+        // OpenProjectLS* helpers so the fix applies wherever we switch into Dokimion_LS.
+        private void SwitchToDokimionLS()
+        {
+            Actor.WaitsUntil(Appearance.Of(Header.ProjectsLink), IsEqualTo.True(), timeout: 30);
+
+            for (int attempt = 0; attempt < 4; attempt++)
+            {
+                Actor.AttemptsTo(Click.On(Header.ProjectsLink));
+                new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                if (Actor.AskingFor(Appearance.Of(Header.AllLink))) break;
+            }
+
             Actor.WaitsUntil(Appearance.Of(Header.AllLink), IsEqualTo.True(), timeout: 30);
             Actor.AttemptsTo(Click.On(Header.AllLink));
 
             Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
             Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
+        }
+
+        // Switch from the current project to Dokimion_LS and open its Attributes page.
+        // Mirrors OpenProjectLSTestCases but lands on Attributes instead of TestCases.
+        private void OpenProjectLSAttributes()
+        {
+            SwitchToDokimionLS();
+
+            Actor.WaitsUntil(Appearance.Of(Header.Attributes), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(Header.Attributes));
+        }
+
+        // Switch from the current project to Dokimion_LS and open its TestCases page.
+        private void OpenProjectLSTestCases()
+        {
+            SwitchToDokimionLS();
 
             Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 30);
             Actor.AttemptsTo(Click.On(Header.TestCases));
