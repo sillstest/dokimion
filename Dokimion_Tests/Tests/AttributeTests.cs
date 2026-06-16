@@ -371,6 +371,11 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Clean up : remove the two attributes from the same three test cases");
                 try
                 {
+                    // Navigate via the Projects page so the TestCases component mounts fresh.
+                    // A same-URL SPA navigation (Click.On(Header.TestCases) from within
+                    // SelectTargetsAndBuildBlock) does not remount the component, leaving the
+                    // filter rows from the Add step in place and breaking FilterValuePlaceholder.
+                    OpenProjectLSTestCases();
                     SelectTargetsAndBuildBlock();
                     Actor.WaitsUntil(Appearance.Of(TestCases.RemoveAttributesButton), IsEqualTo.True(), timeout: 60);
                     Actor.AttemptsTo(Click.On(TestCases.RemoveAttributesButton));
@@ -402,7 +407,10 @@ namespace Dokimion.Tests
                 Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Added Attributes in selected Testcases"), timeout: 60);
 
                 // Act: remove the same two attributes from the same three test cases.
+                // Navigate via Projects first so the TestCases component mounts fresh —
+                // same-URL SPA navigation leaves the filter rows from the Arrange step in place.
                 userActions.LogConsoleMessage("Action steps : remove the two attributes from the three test cases");
+                OpenProjectLSTestCases();
                 SelectTargetsAndBuildBlock();
                 Actor.WaitsUntil(Appearance.Of(TestCases.RemoveAttributesButton), IsEqualTo.True(), timeout: 60);
                 Actor.AttemptsTo(Click.On(TestCases.RemoveAttributesButton));
@@ -426,6 +434,8 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage("Clean up : ensure the two attributes are removed");
                 try
                 {
+                    // Same reason as TC21: navigate via Projects to get a fresh TestCases mount.
+                    OpenProjectLSTestCases();
                     SelectTargetsAndBuildBlock();
                     Actor.WaitsUntil(Appearance.Of(TestCases.RemoveAttributesButton), IsEqualTo.True(), timeout: 60);
                     Actor.AttemptsTo(Click.On(TestCases.RemoveAttributesButton));
