@@ -120,7 +120,19 @@ namespace Dokimion.Pages
 
         public static IWebLocator RemoveAttributesButton => L("RemoveAttributesButton", By.XPath("//button[text()='Remove Attributes']"));
 
-        // Confirmation popup shown after a bulk attribute operation (e.g. "Added Attributes in selected Testcases").
+        // Admin-only bulk lock/unlock buttons (same btn-group as Add/Remove Attributes).
+        public static IWebLocator LockAllTestCasesButton => L("LockAllTestCasesButton", By.XPath("//button[text()='Lock All TestCases']"));
+
+        public static IWebLocator UnlockAllTestCasesButton => L("UnlockAllTestCasesButton", By.XPath("//button[text()='Unlock All TestCases']"));
+
+        // Per-test-case lock/unlock buttons inside the individual test case panel (admin-only).
+        // ConfirmButton renders an <a> trigger — the id prop is used only as a modal-ID suffix,
+        // never as a DOM attribute. Match by visible button text instead.
+        public static IWebLocator LockTestcaseButton => L("LockTestcaseButton", By.XPath("//a[normalize-space()='Lock Testcase']"));
+
+        public static IWebLocator UnlockTestcaseButton => L("UnlockTestcaseButton", By.XPath("//a[normalize-space()='Unlock Testcase']"));
+
+        // Confirmation popup shown after any bulk operation (attributes or lock/unlock).
         public static IWebLocator BulkAttributeMessage => L("BulkAttributeMessage", By.XPath("//div[@class='popup-content']"));
 
 

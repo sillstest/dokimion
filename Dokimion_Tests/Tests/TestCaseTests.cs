@@ -355,6 +355,184 @@ namespace Dokimion.Tests
         }
 
 
+        // Verifies that an admin can bulk-lock all test cases in Dokimion_LS and that a standard
+        // user cannot see the "Lock All TestCases" button (admin-only via Utils.isAdmin check).
+        [Test]
+        public void TC23LockAllTestCases()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            userActions.LogConsoleMessage("Set Up : switch to Dokimion_LS TestCases");
+            OpenProjectLSTestCases();
+
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : admin clicks Lock All TestCases");
+                Actor.WaitsUntil(Appearance.Of(TestCases.LockAllTestCasesButton), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Click.On(TestCases.LockAllTestCasesButton));
+
+                userActions.LogConsoleMessage("Verify : confirmation popup appears");
+                Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Locked All Testcases"), timeout: 60);
+
+                userActions.LogConsoleMessage("Switch to Tester to verify locked-state restrictions");
+                try
+                {
+                    SwitchToNormalUser();
+                    // Tester is already on the projects list with Dokimion_LS visible — click it then TestCases.
+                    Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
+                    Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 30);
+                    Actor.AttemptsTo(Click.On(Header.TestCases));
+                    Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+                    Actor.WaitsUntil(Appearance.Of(TestCases.LockAllTestCasesButton), IsEqualTo.False(), timeout: 15);
+                    userActions.LogConsoleMessage("Verified: normal user does not see Lock All TestCases button");
+
+                    userActions.LogConsoleMessage("Attempt : open 'Validate login' and try to add 'lock dummy' text to description");
+                    OpenTestCaseInLS("Validate login");
+
+                    // Hover over the Description card header to trigger the same hover state a real
+                    // user would use — the pencil edit icon is CSS-hidden until hover. For Tester
+                    // the span is never rendered (!readonly guard in React), so it stays absent
+                    // even after the hover that would reveal it for an admin.
+                    IWebLocator descriptionHeader = new WebLocator("DescriptionHeader",
+                        By.XPath("//div[@id='description']//h5"));
+                    Actor.WaitsUntil(Appearance.Of(descriptionHeader), IsEqualTo.True(), timeout: 30);
+                    Actor.AttemptsTo(Hover.Over(descriptionHeader));
+
+                    IWebLocator descriptionEditPencil = new WebLocator("DescriptionEditPencil",
+                        By.XPath("//div[@id='description']//span[contains(@class,'edit-icon')]"));
+                    Actor.WaitsUntil(Appearance.Of(descriptionEditPencil), IsEqualTo.False(), timeout: 5);
+                    userActions.LogConsoleMessage("Observe : description edit pencil absent after hover — cannot enter edit mode");
+
+                    IWebLocator descriptionSaveButton = new WebLocator("DescriptionSaveButton",
+                        By.XPath("//div[@id='description-form']//button[text()='Save']"));
+                    Actor.WaitsUntil(Appearance.Of(descriptionSaveButton), IsEqualTo.False(), timeout: 5);
+                    userActions.LogConsoleMessage("Verified: 'lock dummy' text cannot be added — description Save button is absent on locked test case");
+                }
+                finally
+                {
+                    RestoreAdminSession();
+                }
+            }
+            finally
+            {
+                userActions.LogConsoleMessage("Clean up : unlock all test cases");
+                try
+                {
+                    OpenProjectLSTestCases();
+                    Actor.AttemptsTo(Click.On(TestCases.UnlockAllTestCasesButton));
+                    Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Unlocked All Testcases"), timeout: 60);
+                }
+                catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Unlock All) failed (ignored): " + ex); }
+            }
+        }
+
+        // Verifies that an admin can bulk-unlock all test cases in Dokimion_LS and that a standard
+        // user cannot see the "Unlock All TestCases" button (admin-only via Utils.isAdmin check).
+        [Test]
+        public void TC24UnlockAllTestCases()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            userActions.LogConsoleMessage("Set Up : switch to Dokimion_LS TestCases");
+            OpenProjectLSTestCases();
+
+            try
+            {
+                userActions.LogConsoleMessage("Arrange : lock all test cases so there is something to unlock");
+                Actor.WaitsUntil(Appearance.Of(TestCases.LockAllTestCasesButton), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Click.On(TestCases.LockAllTestCasesButton));
+                Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Locked All Testcases"), timeout: 60);
+
+                userActions.LogConsoleMessage("Action steps : admin clicks Unlock All TestCases");
+                OpenProjectLSTestCases();
+                Actor.WaitsUntil(Appearance.Of(TestCases.UnlockAllTestCasesButton), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Click.On(TestCases.UnlockAllTestCasesButton));
+
+                userActions.LogConsoleMessage("Verify : confirmation popup appears");
+                Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Unlocked All Testcases"), timeout: 60);
+
+                userActions.LogConsoleMessage("Verify : individual test case shows Lock Testcase button (unlocked state)");
+                OpenProjectLSTestCases();
+                OpenTestCaseInLS("Validate login");
+                Actor.WaitsUntil(Appearance.Of(TestCases.LockTestcaseButton), IsEqualTo.True(), timeout: 30);
+                userActions.LogConsoleMessage("Verified: 'Validate login' shows Lock Testcase button — test case is unlocked");
+
+                userActions.LogConsoleMessage("Verify : normal user cannot see Unlock All TestCases button");
+                try
+                {
+                    SwitchToNormalUser();
+                    // Tester is already on the projects list with Dokimion_LS visible — click it then TestCases.
+                    Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
+                    Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 30);
+                    Actor.AttemptsTo(Click.On(Header.TestCases));
+                    Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+                    Actor.WaitsUntil(Appearance.Of(TestCases.UnlockAllTestCasesButton), IsEqualTo.False(), timeout: 15);
+                    userActions.LogConsoleMessage("Verified: normal user does not see Unlock All TestCases button");
+                }
+                finally
+                {
+                    RestoreAdminSession();
+                }
+            }
+            finally
+            {
+                userActions.LogConsoleMessage("Clean up : ensure all test cases are unlocked");
+                try
+                {
+                    OpenProjectLSTestCases();
+                    Actor.AttemptsTo(Click.On(TestCases.UnlockAllTestCasesButton));
+                    Actor.WaitsUntil(Text.Of(TestCases.BulkAttributeMessage), ContainsSubstring.Text("Unlocked All Testcases"), timeout: 60);
+                }
+                catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Unlock All) failed (ignored): " + ex); }
+            }
+        }
+
+        // ----- helpers for TC23 / TC24 -----
+
+        // Navigate from the current project to Dokimion_LS and open its TestCases page.
+        private void OpenProjectLSTestCases()
+        {
+            Actor.AttemptsTo(Click.On(Header.ProjectsLink));
+            Actor.WaitsUntil(Appearance.Of(Header.AllLink), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(Header.AllLink));
+            Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
+            Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(Header.TestCases));
+            Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+        }
+
+        // Open a test case by name in the currently displayed Dokimion_LS tree.
+        private void OpenTestCaseInLS(string testcaseName)
+        {
+            string xpath = $"//span[@data-role='display' and contains(translate(normalize-space(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'{testcaseName.ToLower()}')]";
+            IWebLocator tc = new WebLocator("TestCase:" + testcaseName, By.XPath(xpath));
+            Actor.WaitsUntil(Appearance.Of(tc), IsEqualTo.True(), timeout: 60);
+            new Actions(driver).MoveToElement(tc.FindElement(driver)).Click().Build().Perform();
+        }
+
+        // Log out the current user and log in as the standard (non-admin) test user.
+        // After login Tester lands on the projects list showing only Dokimion_LS —
+        // the Dokimion project is not accessible to Tester so Header.DokimionProject
+        // is never present. Navigation into the project is the caller's responsibility.
+        private void SwitchToNormalUser()
+        {
+            Actor.AttemptsTo(Logout.For());
+            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(LoginUser.For(userActions.Username!, userActions.Password!));
+            Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 15);
+        }
+
+        // Log out whoever is logged in and restore the admin session used by the rest of the class.
+        private void RestoreAdminSession()
+        {
+            try { Actor.AttemptsTo(Logout.For()); } catch { /* may already be on login page */ }
+            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
+            Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 15);
+            Actor.AttemptsTo(Click.On(Header.DokimionProject));
+        }
+
         public void RemoveStep()
         {
 
