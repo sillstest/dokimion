@@ -650,7 +650,13 @@ namespace Dokimion.Tests
                 userActions.LogConsoleMessage($"Verified: searching 'Temp' displays only '{launch1}'");
 
                 userActions.LogConsoleMessage("Clear the Search box and click Filter so both launches list again");
-                Actor.AttemptsTo(Clear.On(launchTitleSearch));
+                // Clear via select-all + Delete (real key events) rather than Clear.On: the launch
+                // title box is a React controlled input, and Selenium's clear() does not reliably fire
+                // the onChange that resets the like_name filter - leaving the "Temp" filter in place so
+                // Pmet1 never reappears (the line-655 timeout).
+                IWebElement searchBox = launchTitleSearch.FindElement(driver);
+                searchBox.SendKeys(Keys.Control + "a");
+                searchBox.SendKeys(Keys.Delete);
                 Actor.AttemptsTo(Click.On(Launches.LaunchFilterButton));
                 Actor.WaitsUntil(Appearance.Of(pmet1Link), IsEqualTo.True(), timeout: 60);
 
@@ -681,13 +687,33 @@ namespace Dokimion.Tests
 
         // Delete the named launch from the Launches window by clicking the trash icon in its row.
         // Scoped to the matching row so other launches are untouched. There is no confirmation dialog
-        // (clicking the trash icon deletes immediately - see DeleteLaunch.cs).
+        // (clicking the trash icon deletes immediately - see DeleteLaunch.cs), and a swallowed click
+        // would otherwise leave the launch behind silently - so click, confirm the row disappears, and
+        // re-click if it did not. The loop also clears any duplicate of the same name (a leftover from
+        // an earlier swallowed delete) since it repeats until no matching launch link remains.
         private void DeleteLaunchByName(string launchName)
         {
+            IWebLocator launchLink = new WebLocator("LaunchLink:" + launchName,
+                By.XPath($"//table//tr//a[text()='{launchName}']"));
             IWebLocator trashIcon = new WebLocator("LaunchTrash:" + launchName,
                 By.XPath($"//table//tr[.//a[text()='{launchName}']]//button//i[@class='bi-trash']"));
-            Actor.WaitsUntil(Appearance.Of(trashIcon), IsEqualTo.True(), timeout: 60);
-            new Actions(driver).MoveToElement(trashIcon.FindElement(driver)).Click().Build().Perform();
+
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                if (!Actor.AskingFor(Appearance.Of(launchLink))) return; // gone
+
+                Actor.WaitsUntil(Appearance.Of(trashIcon), IsEqualTo.True(), timeout: 60);
+                new Actions(driver).MoveToElement(trashIcon.FindElement(driver)).Click().Build().Perform();
+
+                for (int i = 0; i < 10; i++)
+                {
+                    if (!Actor.AskingFor(Appearance.Of(launchLink))) return; // deleted
+                    new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                }
+            }
+
+            // Surface a genuine failure clearly if it never got deleted.
+            Actor.WaitsUntil(Appearance.Of(launchLink), IsEqualTo.False(), timeout: 30);
         }
 
         // Verifies the Launches list title search does a case-insensitive partial match. The launch is

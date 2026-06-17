@@ -109,9 +109,23 @@ namespace Dokimion.Tests
 
             userActions.LogConsoleMessage("Click on the Restart Failed");
             Actions actions = new Actions(driver);
-            IWebElement RestartFailButton = TestCases.LaunchRestartFailButton.FindElement(driver);
-            actions.MoveToElement(RestartFailButton).Click(RestartFailButton).
-                Build().Perform();
+            // "Restart Failed" TOGGLES the restart modal (onLaunchRestart -> modal('toggle') in
+            // Launch.js). A swallowed click leaves it closed, but a blind re-click would toggle an
+            // already-open modal shut - so click, poll for the name input, and only re-click (to
+            // toggle it back open) if the modal did not appear.
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                IWebElement RestartFailButton = TestCases.LaunchRestartFailButton.FindElement(driver);
+                actions.MoveToElement(RestartFailButton).Click(RestartFailButton).Build().Perform();
+
+                bool opened = false;
+                for (int i = 0; i < 10; i++)
+                {
+                    if (Actor.AskingFor(Appearance.Of(TestCases.LaunchRestartNameInput))) { opened = true; break; }
+                    actions.Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                }
+                if (opened) break;
+            }
 
             userActions.LogConsoleMessage("Enter Smoke Test Launch Re-Run on Name Input");
 
