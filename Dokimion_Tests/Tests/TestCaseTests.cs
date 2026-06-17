@@ -568,6 +568,133 @@ namespace Dokimion.Tests
             }
         }
 
+        // Verifies locking an individual test case. As admin, locks the first test case in
+        // Dokimion_LS and confirms the admin then sees the "Unlock Testcase" button on it (the lock
+        // toggled, so the Lock button is replaced by Unlock). Then logs in as Tester and NormalTester
+        // and confirms neither can see the "Unlock Testcase" button on that same locked test case -
+        // both lock/unlock buttons are admin-only (!readonly && Utils.isAdmin && testcase.locked in
+        // TestCase.js). The test case is unlocked again in cleanup so the project is left as it started.
+        [Test]
+        public void TC27LockUnlockIndividualTestCase()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            string firstTestCase = null;
+            bool locked = false;
+            try
+            {
+                userActions.LogConsoleMessage("Set Up : open Dokimion_LS TestCases as admin");
+                OpenProjectLSTestCases();
+
+                firstTestCase = FirstTestCaseNameInLS();
+                userActions.LogConsoleMessage($"Action steps : admin opens the 1st test case '{firstTestCase}' and locks it");
+                OpenTestCaseInLS(firstTestCase);
+                LockOpenTestCase();
+                locked = true;
+
+                // Locking navigates back to the list, so re-open the now-locked test case to inspect it.
+                userActions.LogConsoleMessage("Verify : admin sees the Unlock Testcase button on the locked test case");
+                Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+                OpenTestCaseInLS(firstTestCase);
+                new Actions(driver).SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                Actor.WaitsUntil(Appearance.Of(TestCases.UnlockTestcaseButton), IsEqualTo.True(), timeout: 30);
+                userActions.LogConsoleMessage("Verified: admin sees the Unlock Testcase button");
+
+                AssertUnlockButtonHiddenAs("Tester", userActions.Username!, userActions.Password!, firstTestCase);
+                AssertUnlockButtonHiddenAs("NormalTester", userActions.NormalTester!, userActions.NormalTesterPasswd!, firstTestCase);
+            }
+            finally
+            {
+                userActions.LogConsoleMessage("Clean up : restore admin and unlock the test case");
+                RestoreAdminSession();
+                if (locked && firstTestCase != null)
+                {
+                    try
+                    {
+                        OpenProjectLSTestCases();
+                        OpenTestCaseInLS(firstTestCase);
+                        UnlockOpenTestCase();
+                    }
+                    catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Unlock test case) failed (ignored): " + ex); }
+                }
+            }
+        }
+
+        // Return the name of the first test case in the currently displayed Dokimion_LS tree.
+        private string FirstTestCaseNameInLS()
+        {
+            Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+            string name = TestCases.GetTestCaseNameList.FindElements(driver).First().Text.Trim();
+            userActions.LogConsoleMessage("First test case in Dokimion_LS: " + name);
+            return name;
+        }
+
+        // Lock the currently-open test case via its admin-only "Lock Testcase" ConfirmButton. The
+        // button renders two <a>Lock Testcase</a> elements (the trigger and the modal-footer confirm,
+        // see ConfirmButton.js), so click the trigger first, then the confirm in the modal footer.
+        // lockTestcase() navigates back to the test-case list, so wait for that before returning.
+        private void LockOpenTestCase()
+        {
+            new Actions(driver).SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
+            // Already locked (e.g. left over from an aborted run)? Then there is nothing to lock.
+            if (Actor.AskingFor(Appearance.Of(TestCases.UnlockTestcaseButton))) return;
+
+            Actor.WaitsUntil(Appearance.Of(TestCases.LockTestcaseButton), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(TestCases.LockTestcaseButton));
+
+            IWebLocator confirmLock = new WebLocator("ConfirmLockTestcase",
+                By.XPath("//div[@class='modal-footer']//a[normalize-space()='Lock Testcase']"));
+            Actor.WaitsUntil(Appearance.Of(confirmLock), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Hover.Over(confirmLock));
+            Actor.AttemptsTo(Click.On(confirmLock));
+
+            Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 60);
+        }
+
+        // Unlock the currently-open test case via its admin-only "Unlock Testcase" ConfirmButton
+        // (same two-<a> trigger/confirm shape as LockOpenTestCase). unlockTestcase() navigates back
+        // to the test-case list, so wait for that before returning.
+        private void UnlockOpenTestCase()
+        {
+            new Actions(driver).SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            Actor.WaitsUntil(Appearance.Of(TestCases.UnlockTestcaseButton), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(TestCases.UnlockTestcaseButton));
+
+            IWebLocator confirmUnlock = new WebLocator("ConfirmUnlockTestcase",
+                By.XPath("//div[@class='modal-footer']//a[normalize-space()='Unlock Testcase']"));
+            Actor.WaitsUntil(Appearance.Of(confirmUnlock), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Hover.Over(confirmUnlock));
+            Actor.AttemptsTo(Click.On(confirmUnlock));
+
+            Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 60);
+        }
+
+        // Log in as the given non-admin user, open the named (locked) test case in Dokimion_LS, and
+        // assert the "Unlock Testcase" button is NOT shown (lock/unlock is admin-only).
+        private void AssertUnlockButtonHiddenAs(string label, string username, string password, string testcaseName)
+        {
+            userActions.LogConsoleMessage($"Log in as {label} and open the locked test case '{testcaseName}'");
+            LoginAsNonAdmin(username, password);
+
+            Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
+            Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(Header.TestCases));
+            Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+
+            OpenTestCaseInLS(testcaseName);
+
+            // Confirm the test-case detail loaded (Description renders for every role) so the absence
+            // check below is meaningful and not just an unrendered page.
+            IWebLocator descriptionHeader = new WebLocator("DescriptionHeader", By.XPath("//div[@id='description']//h5"));
+            Actor.WaitsUntil(Appearance.Of(descriptionHeader), IsEqualTo.True(), timeout: 30);
+            new Actions(driver).SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
+            userActions.LogConsoleMessage($"Verify : Unlock Testcase button is NOT visible for {label}");
+            Actor.WaitsUntil(Appearance.Of(TestCases.UnlockTestcaseButton), IsEqualTo.False(), timeout: 30);
+            userActions.LogConsoleMessage($"Verified: {label} cannot see the Unlock Testcase button on the locked test case");
+        }
+
         // Log in as the given non-admin user, open the "Validate login" test case in Dokimion_LS, and
         // assert whether the "Remove Testcase" button is shown (expectVisible) — i.e. whether the user
         // is allowed to delete a test case.
