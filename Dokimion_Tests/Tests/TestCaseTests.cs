@@ -497,7 +497,7 @@ namespace Dokimion.Tests
         // Creates a temporary test case and then deletes it, verifying it no longer appears in the
         // test-case tree. The create/delete round trip leaves the project exactly as it started.
         [Test]
-        public void TC25DeleteTestCase()
+        public void TC25RemoveTestCase()
         {
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
 
@@ -541,6 +541,79 @@ namespace Dokimion.Tests
                     catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Delete temp test case) failed (ignored): " + ex); }
                 }
             }
+        }
+
+        // Verifies that the "Remove Testcase" button is gated by role for non-admin users. React
+        // renders it only when !readonly (TestCase.js), and the session role decides readonly:
+        //   - Tester (Username/Password) is a write-capable developer role -> readonly = false -> the
+        //     Remove Testcase button IS shown (Tester creates suites/launches in TC16-20).
+        //   - NormalTester is a read-only TESTER/OBSERVERONLY role -> readonly = true -> the button is
+        //     NOT shown, so this user cannot delete a test case.
+        // Admin delete is covered by TC25. The admin session is restored at the end so later tests
+        // are unaffected.
+        [Test]
+        public void TC26RemoveTestCaseHiddenButton()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            try
+            {
+                AssertRemoveTestCaseButtonVisibilityAs("Tester", userActions.Username!, userActions.Password!, expectVisible: true);
+                AssertRemoveTestCaseButtonVisibilityAs("NormalTester", userActions.NormalTester!, userActions.NormalTesterPasswd!, expectVisible: false);
+            }
+            finally
+            {
+                userActions.LogConsoleMessage("Clean up : restore the admin session");
+                RestoreAdminSession();
+            }
+        }
+
+        // Log in as the given non-admin user, open the "Validate login" test case in Dokimion_LS, and
+        // assert whether the "Remove Testcase" button is shown (expectVisible) — i.e. whether the user
+        // is allowed to delete a test case.
+        private void AssertRemoveTestCaseButtonVisibilityAs(string label, string username, string password, bool expectVisible)
+        {
+            userActions.LogConsoleMessage($"Log in as {label} and open Dokimion_LS TestCases");
+            LoginAsNonAdmin(username, password);
+
+            Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
+            Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Click.On(Header.TestCases));
+            Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+
+            userActions.LogConsoleMessage($"Select a test case as {label}");
+            OpenTestCaseInLS("Validate login");
+
+            // Confirm the test-case detail actually loaded (the Description section renders for every
+            // role) so the visibility check below is meaningful and not just an unrendered page.
+            IWebLocator descriptionHeader = new WebLocator("DescriptionHeader", By.XPath("//div[@id='description']//h5"));
+            Actor.WaitsUntil(Appearance.Of(descriptionHeader), IsEqualTo.True(), timeout: 30);
+
+            // readonly is applied asynchronously once the session loads, so the button can flash on/off
+            // during settle; WaitsUntil polls until it reaches the expected state and holds there.
+            if (expectVisible)
+            {
+                userActions.LogConsoleMessage($"Verify : Remove Testcase button IS present for {label} (can delete)");
+                Actor.WaitsUntil(Appearance.Of(TestCases.RemoveTestCase), IsEqualTo.True(), timeout: 30);
+                userActions.LogConsoleMessage($"Verified: {label} sees the Remove Testcase button");
+            }
+            else
+            {
+                userActions.LogConsoleMessage($"Verify : Remove Testcase button is NOT present for {label} (cannot delete)");
+                Actor.WaitsUntil(Appearance.Of(TestCases.RemoveTestCase), IsEqualTo.False(), timeout: 30);
+                userActions.LogConsoleMessage($"Verified: {label} cannot delete the test case (Remove Testcase button absent)");
+            }
+        }
+
+        // Log out whoever is logged in and log in as the given non-admin user. After login the user
+        // lands on the projects list with Dokimion_LS visible (non-admins cannot see the Dokimion
+        // project, so navigation into a project is the caller's responsibility).
+        private void LoginAsNonAdmin(string username, string password)
+        {
+            try { Actor.AttemptsTo(Logout.For()); } catch { /* may already be on login page */ }
+            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(LoginUser.For(username, password));
+            Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 15);
         }
 
         // ----- helpers for TC23 / TC24 -----
