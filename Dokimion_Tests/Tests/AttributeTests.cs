@@ -97,23 +97,38 @@ namespace Dokimion.Tests
             userActions.TearDownAfterTestcase();
         }
 
-        // Click the "Add" button to open the new-attribute editor, retrying the click until the
-        // name field actually appears. The very first Add click on a freshly loaded Attributes page
-        // can be swallowed while the attribute list is still loading (this is the failure behind
-        // TC11's flaky "AttributeName did not appear" timeout, since TC11 runs first); a re-click
-        // once the page settles opens the editor. Shared by TC11-TC15 and CreateTempAttribute.
+        // Click the "Add" button to open the new-attribute editor and wait until the form is FULLY
+        // rendered - both the name input AND the "Add value" button (always in the same modal form,
+        // see attributes/AttributeForm.js). Two flaky failures this guards against:
+        //   - TC11 (runs first): the very first Add click on a freshly loaded page can be swallowed
+        //     while the attribute list is still loading, so the editor never opens.
+        //   - TC15 (runs last/slowest): a rapid second click on the Bootstrap "Add" trigger - fired
+        //     by an over-eager retry while the modal was still opening - interrupts the modal and
+        //     leaves the form half-rendered (name input present but "Add value" never appearing,
+        //     which timed out CreateAttributes' value loop).
+        // So: click ONCE, then poll (without re-clicking) for the whole form; only re-click if the
+        // modal genuinely did not open within the polling window. Shared by TC11-TC15 and
+        // CreateTempAttribute.
         private void OpenNewAttributeForm()
         {
             Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
 
-            for (int attempt = 0; attempt < 4; attempt++)
+            for (int attempt = 0; attempt < 3; attempt++)
             {
                 Attributes.AddAttributes.FindElement(driver).Click();
-                new Actions(driver).Pause(TimeSpan.FromSeconds(2)).Build().Perform();
-                if (Actor.AskingFor(Appearance.Of(Attributes.AttributeName))) break;
+
+                for (int i = 0; i < 10; i++)
+                {
+                    if (Actor.AskingFor(Appearance.Of(Attributes.AttributeName))
+                        && Actor.AskingFor(Appearance.Of(Attributes.AddAttributeValueButton)))
+                        return;
+                    new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                }
             }
 
-            Actor.WaitsUntil(Appearance.Of(Attributes.AttributeName), IsEqualTo.True(), timeout: 60);
+            // Surface a genuine failure clearly if the form never fully rendered after the retries.
+            Actor.WaitsUntil(Appearance.Of(Attributes.AttributeName), IsEqualTo.True(), timeout: 30);
+            Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributeValueButton), IsEqualTo.True(), timeout: 30);
         }
 
         [Test]
