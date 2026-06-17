@@ -494,6 +494,55 @@ namespace Dokimion.Tests
             }
         }
 
+        // Creates a temporary test case and then deletes it, verifying it no longer appears in the
+        // test-case tree. The create/delete round trip leaves the project exactly as it started.
+        [Test]
+        public void TC25DeleteTestCase()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            userActions.LogConsoleMessage("Set Up : create a temporary test case to delete");
+            Actor.AttemptsTo(CreatTestCase.For("TempDeleteTestCase", "Temporary test case created to verify deletion"));
+
+            userActions.LogConsoleMessage("Action steps : ");
+            bool deleted = false;
+            try
+            {
+                userActions.LogConsoleMessage("Select the temporary test case and confirm it was created");
+                string tcName = SelectTestCase("TempDeleteTestCase");
+                StringAssert.Contains("TempDeleteTestCase", tcName);
+
+                userActions.LogConsoleMessage("Click on the Remove Testcase button to delete it");
+                Actor.AttemptsTo(DeleteTestCase.For(driver));
+                deleted = true;
+
+                userActions.LogConsoleMessage("Verify : the temporary test case is no longer listed");
+                Actor.AttemptsTo(Click.On(Header.TestCases));
+                Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+
+                IWebLocator deletedTestCase = new WebLocator("DeletedTestCase",
+                    By.XPath("//span[@data-role='display' and normalize-space()='TempDeleteTestCase']"));
+                Actor.WaitsUntil(Appearance.Of(deletedTestCase), IsEqualTo.False(), timeout: 60);
+                userActions.LogConsoleMessage("Verified: TempDeleteTestCase has been deleted");
+            }
+            finally
+            {
+                // The delete IS the action under test, so only clean up if it never ran (the test
+                // failed earlier) - otherwise the temp case would leak and pollute later runs.
+                // Best-effort; never fail the test from cleanup.
+                if (!deleted)
+                {
+                    userActions.LogConsoleMessage("Clean up : remove the leaked temporary test case");
+                    try
+                    {
+                        SelectTestCase("TempDeleteTestCase");
+                        Actor.AttemptsTo(DeleteTestCase.For(driver));
+                    }
+                    catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Delete temp test case) failed (ignored): " + ex); }
+                }
+            }
+        }
+
         // ----- helpers for TC23 / TC24 -----
 
         // Navigate from the current project to Dokimion_LS and open its TestCases page.
