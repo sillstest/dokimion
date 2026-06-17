@@ -530,6 +530,86 @@ namespace Dokimion.Tests
             }
         }
 
+        // Creates a test suite from ALL test cases (no filter applied), using the same save flow as
+        // TC17 (the save icon -> name input -> Save in #suite-modal), then deletes it and verifies the
+        // suite no longer appears in the Suites window. The create/delete round trip leaves the project
+        // exactly as it started.
+        [Test]
+        public void TC29CreateDeleteTestSuite()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            const string suiteName = "TempTestSuite";
+            IWebLocator suiteCard = SuiteCardByName(suiteName);
+            bool created = false;
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : open TestCases with all test cases (no grouping/filter)");
+                Actor.AttemptsTo(Click.On(Header.TestCases));
+                Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+
+                userActions.LogConsoleMessage($"Create the '{suiteName}' suite from all test cases (same save method as TC17)");
+                Actor.AttemptsTo(Click.On(TestCases.SaveSuiteLocator));
+                Actor.WaitsUntil(Appearance.Of(TestCases.SuiteNameInput), IsEqualTo.True(), timeout: 45);
+                Actor.AttemptsTo(Clear.On(TestCases.SuiteNameInput));
+                Actor.AttemptsTo(SendKeys.To(TestCases.SuiteNameInput, suiteName));
+                Actor.AttemptsTo(Click.On(TestCases.SuiteSaveButton));
+
+                userActions.LogConsoleMessage("Verify : the suite was created");
+                Actor.WaitsUntil(Appearance.Of(TestCases.TestSuiteNameOnTC), IsEqualTo.True(), timeout: 45);
+                created = true;
+
+                userActions.LogConsoleMessage($"Verify : '{suiteName}' is listed in the Suites window");
+                Actor.AttemptsTo(Click.On(Header.Suites));
+                Actor.WaitsUntil(Appearance.Of(suiteCard), IsEqualTo.True(), timeout: 60);
+
+                userActions.LogConsoleMessage("Action steps : delete the temp test suite");
+                DeleteSuiteByName(suiteName);
+                created = false;
+
+                userActions.LogConsoleMessage("Verify : the temp test suite no longer displays in the Suites window");
+                Actor.AttemptsTo(Click.On(Header.Suites));
+                Actor.WaitsUntil(Appearance.Of(suiteCard), IsEqualTo.False(), timeout: 60);
+                userActions.LogConsoleMessage($"Verified: '{suiteName}' is no longer displayed");
+            }
+            finally
+            {
+                // The delete IS the action under test, so only clean up if it never ran (the test
+                // failed earlier) - otherwise the suite would leak. Best-effort; never fail from cleanup.
+                if (created)
+                {
+                    userActions.LogConsoleMessage("Clean up : remove the leaked temp test suite");
+                    try
+                    {
+                        Actor.AttemptsTo(Click.On(Header.Suites));
+                        DeleteSuiteByName(suiteName);
+                    }
+                    catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Delete temp suite) failed (ignored): " + ex); }
+                }
+            }
+        }
+
+        // Locator for a test-suite card on the Suites window by its (exact) name. SuiteNameHeading is
+        // not reused because it is hard-coded to "Smoke Test".
+        private IWebLocator SuiteCardByName(string suiteName) =>
+            new WebLocator("SuiteCard:" + suiteName,
+                By.XPath($"//div[contains(@class,'testsuite-card')][.//h5[text()='{suiteName}']]"));
+
+        // Delete the named test suite from the Suites window, then confirm the removal dialog. The
+        // remove icon is scoped to the matching suite's card (rather than the first minus-circle on the
+        // page) so other suites are never deleted by mistake.
+        private void DeleteSuiteByName(string suiteName)
+        {
+            IWebLocator removeIcon = new WebLocator("SuiteRemoveIcon:" + suiteName,
+                By.XPath($"//div[contains(@class,'testsuite-card')][.//h5[text()='{suiteName}']]//*[local-name()='svg' and @data-icon='minus-circle']"));
+            Actor.WaitsUntil(Appearance.Of(removeIcon), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Click.On(removeIcon));
+
+            Actor.WaitsUntil(Appearance.Of(TestCases.SuiteRemoveConfirmButton), IsEqualTo.True(), timeout: 60);
+            IWebElement element = TestCases.SuiteRemoveConfirmButton.FindElement(driver);
+            new Actions(driver).MoveToElement(element).Click(element).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+        }
+
      //   [Test]
         public void DeleteTestSuite()
         {
