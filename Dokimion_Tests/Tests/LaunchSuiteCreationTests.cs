@@ -627,6 +627,9 @@ namespace Dokimion.Tests
             bool launchesMayExist = false;
             try
             {
+                userActions.LogConsoleMessage("Set Up : remove any leftover temp launches from a prior run (idempotent start)");
+                PurgeLaunchesByName(launch1, launch2);
+
                 userActions.LogConsoleMessage($"Set Up : create two temp launches '{launch1}' and '{launch2}' from all test cases");
                 launchesMayExist = true;
                 CreateLaunchFromAllTestCases(launch1);
@@ -673,13 +676,20 @@ namespace Dokimion.Tests
             }
             finally
             {
-                // Safety net: if launches may still exist (a create failed midway, or a trash-icon delete
-                // failed), remove any remaining launches. Skipped after a clean delete so we don't hit
-                // DeleteLaunch's 60s wait for trash icons that are no longer there.
+                // Safety net: if a launch may still exist (a create failed midway, or a trash-icon
+                // delete failed), remove our OWN launches by name. Do NOT use DeleteLaunch.For(driver)
+                // here: it deletes EVERY launch in Dokimion_LS, including the seed launches that
+                // LSFunctionalityTests (TC22/TC23) depend on. DeleteLaunchByName no-ops if the launch
+                // is already gone. Skipped after a clean delete.
                 if (launchesMayExist)
                 {
-                    userActions.LogConsoleMessage("Clean up : remove any leaked temp launches");
-                    try { Actor.AttemptsTo(DeleteLaunch.For(driver)); }
+                    userActions.LogConsoleMessage("Clean up : remove the temp launches if still present");
+                    try
+                    {
+                        Actor.AttemptsTo(Click.On(Header.Launches));
+                        DeleteLaunchByName(launch1);
+                        DeleteLaunchByName(launch2);
+                    }
                     catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Delete launches) failed (ignored): " + ex); }
                 }
             }
@@ -716,6 +726,33 @@ namespace Dokimion.Tests
             Actor.WaitsUntil(Appearance.Of(launchLink), IsEqualTo.False(), timeout: 30);
         }
 
+        // Idempotent setup: open the Launches window and delete any pre-existing launches with the
+        // given names (leftovers from an aborted prior run). This keeps a stray launch from
+        // accumulating across runs and breaking the seed launch-count assertions in
+        // LSFunctionalityTests (TC22/TC23). DeleteLaunchByName no-ops if a name is not present.
+        private void PurgeLaunchesByName(params string[] launchNames)
+        {
+            Actor.AttemptsTo(Click.On(Header.Launches));
+            Actor.WaitsUntil(Appearance.Of(Launches.LaunchFilterButton), IsEqualTo.True(), timeout: 60);
+
+            // Wait for the async launch fetch to finish before checking for leftovers. Dokimion_LS
+            // legitimately has ZERO launches when this suite runs - the 3 launches TC22/TC23 use are
+            // created in LSFunctionalityTests' OWN setup and deleted in its teardown, they are not
+            // persistent seed - so we must NOT wait for a row (that would time out on an empty list).
+            // Instead wait for the loading spinner to clear: the FadeLoader inside .sweet-loading is
+            // rendered only while loading and nothing once the fetch completes. A brief settle then
+            // lets the (possibly empty) table render before we look for a named leftover.
+            IWebLocator launchesLoading = new WebLocator("LaunchesLoadingSpinner",
+                By.XPath("//div[contains(@class,'sweet-loading')]//span"));
+            Actor.WaitsUntil(Appearance.Of(launchesLoading), IsEqualTo.False(), timeout: 60);
+            new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
+            foreach (string name in launchNames)
+            {
+                DeleteLaunchByName(name);
+            }
+        }
+
         // Verifies the Launches list title search does a case-insensitive partial match. The launch is
         // named "Temp Launch" (rather than CreateSmokeTest's hard-coded "Smoke Test Launch") so that the
         // requested search term "Temp" has something to match; it is created with the same launch-save
@@ -733,6 +770,9 @@ namespace Dokimion.Tests
             bool launchMayExist = false;
             try
             {
+                userActions.LogConsoleMessage($"Set Up : remove any leftover '{launchName}' from a prior run (idempotent start)");
+                PurgeLaunchesByName(launchName);
+
                 userActions.LogConsoleMessage($"Set Up : create the temp launch '{launchName}' (TC18/TC30 launch-save flow)");
                 launchMayExist = true;
                 CreateLaunchFromAllTestCases(launchName);
@@ -753,19 +793,40 @@ namespace Dokimion.Tests
                 Actor.WaitsUntil(Appearance.Of(tempLaunchLink), IsEqualTo.True(), timeout: 60);
                 userActions.LogConsoleMessage($"Verified: searching 'temp' selected '{launchName}' (case-insensitive match)");
 
+                // Clear the search so the delete runs against the FULL launch list, then verify the
+                // launch is gone via a FRESH navigation - the same pattern TC30 uses and that works.
+                // Deleting from the filtered view was unreliable: the row could vanish from the filtered
+                // results without the launch actually being removed, so the in-place check passed while
+                // "Temp Launch" survived. A fresh re-fetch confirms it is truly deleted on the server.
+                userActions.LogConsoleMessage("Clear the Search box so the delete runs against the full launch list");
+                IWebElement searchBox = launchTitleSearch.FindElement(driver);
+                searchBox.SendKeys(Keys.Control + "a");
+                searchBox.SendKeys(Keys.Delete);
+                Actor.AttemptsTo(Click.On(Launches.LaunchFilterButton));
+                Actor.WaitsUntil(Appearance.Of(tempLaunchLink), IsEqualTo.True(), timeout: 60);
+
                 userActions.LogConsoleMessage("Clean up : delete the temp launch via its trash icon");
                 DeleteLaunchByName(launchName);
+
+                userActions.LogConsoleMessage("Verify : the temp launch is gone from the list (fresh navigation)");
+                Actor.AttemptsTo(Click.On(Header.Launches));
+                Actor.WaitsUntil(Appearance.Of(tempLaunchLink), IsEqualTo.False(), timeout: 60);
                 launchMayExist = false;
             }
             finally
             {
                 // Safety net: if the launch may still exist (create failed midway, or the trash-icon
-                // delete failed), remove any remaining launches. Skipped after a clean delete so we
-                // don't hit DeleteLaunch's 60s wait for a trash icon that is no longer there.
+                // delete failed), remove our OWN launch by name. Do NOT use DeleteLaunch.For(driver)
+                // here: it deletes EVERY launch in Dokimion_LS, including the seed launches that
+                // LSFunctionalityTests (TC22/TC23) depend on. DeleteLaunchByName no-ops if already gone.
                 if (launchMayExist)
                 {
-                    userActions.LogConsoleMessage("Clean up : remove the leaked temp launch");
-                    try { Actor.AttemptsTo(DeleteLaunch.For(driver)); }
+                    userActions.LogConsoleMessage("Clean up : remove the temp launch if still present");
+                    try
+                    {
+                        Actor.AttemptsTo(Click.On(Header.Launches));
+                        DeleteLaunchByName(launchName);
+                    }
                     catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Delete launch) failed (ignored): " + ex); }
                 }
             }

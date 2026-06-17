@@ -579,40 +579,44 @@ namespace Dokimion.Tests
         {
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
 
-            string firstTestCase = null;
+            // Lock a known, stable test case rather than "whatever is first in the tree". Capturing
+            // the first node's full text was unreliable: it can include a count/badge (e.g. "(1)") or
+            // a group prefix that then fails to round-trip through OpenTestCaseInLS. OpenTestCaseInLS
+            // does a case-insensitive CONTAINS match, so "Validate login" reliably opens the node -
+            // the same test case TC23/TC24 drive the lock UI against.
+            const string testCaseName = "Validate login";
             bool locked = false;
             try
             {
                 userActions.LogConsoleMessage("Set Up : open Dokimion_LS TestCases as admin");
                 OpenProjectLSTestCases();
 
-                firstTestCase = FirstTestCaseNameInLS();
-                userActions.LogConsoleMessage($"Action steps : admin opens the 1st test case '{firstTestCase}' and locks it");
-                OpenTestCaseInLS(firstTestCase);
+                userActions.LogConsoleMessage($"Action steps : admin opens '{testCaseName}' and locks it");
+                OpenTestCaseInLS(testCaseName);
                 LockOpenTestCase();
                 locked = true;
 
                 // Locking navigates back to the list, so re-open the now-locked test case to inspect it.
                 userActions.LogConsoleMessage("Verify : admin sees the Unlock Testcase button on the locked test case");
                 Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
-                OpenTestCaseInLS(firstTestCase);
+                OpenTestCaseInLS(testCaseName);
                 new Actions(driver).SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
                 Actor.WaitsUntil(Appearance.Of(TestCases.UnlockTestcaseButton), IsEqualTo.True(), timeout: 30);
                 userActions.LogConsoleMessage("Verified: admin sees the Unlock Testcase button");
 
-                AssertUnlockButtonHiddenAs("Tester", userActions.Username!, userActions.Password!, firstTestCase);
-                AssertUnlockButtonHiddenAs("NormalTester", userActions.NormalTester!, userActions.NormalTesterPasswd!, firstTestCase);
+                AssertUnlockButtonHiddenAs("Tester", userActions.Username!, userActions.Password!, testCaseName);
+                AssertUnlockButtonHiddenAs("NormalTester", userActions.NormalTester!, userActions.NormalTesterPasswd!, testCaseName);
             }
             finally
             {
                 userActions.LogConsoleMessage("Clean up : restore admin and unlock the test case");
                 RestoreAdminSession();
-                if (locked && firstTestCase != null)
+                if (locked)
                 {
                     try
                     {
                         OpenProjectLSTestCases();
-                        OpenTestCaseInLS(firstTestCase);
+                        OpenTestCaseInLS(testCaseName);
                         UnlockOpenTestCase();
                     }
                     catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Unlock test case) failed (ignored): " + ex); }
@@ -662,15 +666,6 @@ namespace Dokimion.Tests
                 }
                 catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (reset search) failed (ignored): " + ex); }
             }
-        }
-
-        // Return the name of the first test case in the currently displayed Dokimion_LS tree.
-        private string FirstTestCaseNameInLS()
-        {
-            Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
-            string name = TestCases.GetTestCaseNameList.FindElements(driver).First().Text.Trim();
-            userActions.LogConsoleMessage("First test case in Dokimion_LS: " + name);
-            return name;
         }
 
         // Lock the currently-open test case via its admin-only "Lock Testcase" ConfirmButton. The
