@@ -610,6 +610,158 @@ namespace Dokimion.Tests
             new Actions(driver).MoveToElement(element).Click(element).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
         }
 
+        // Creates two temp launches from all test cases (TC18/TC30 launch-save flow), named "Temp1" and
+        // "Pmet1" (chosen so a "Temp" search matches only "Temp1" - "Pmet1" has no "temp" substring).
+        // Searches the Launches window for "Temp" and verifies only "Temp1" is shown, then clears the
+        // Search box and clicks Filter so both launches list again, deletes both via their trash icons,
+        // and verifies both are gone. The round trip leaves the project as it started.
+        [Test]
+        public void TC30CreateDeleteLaunch()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            const string launch1 = "Temp1";
+            const string launch2 = "Pmet1";
+            // True once a launch may exist on the server; set before creation so a partial failure still
+            // triggers cleanup, and cleared once both trash-icon deletes succeed.
+            bool launchesMayExist = false;
+            try
+            {
+                userActions.LogConsoleMessage($"Set Up : create two temp launches '{launch1}' and '{launch2}' from all test cases");
+                launchesMayExist = true;
+                CreateLaunchFromAllTestCases(launch1);
+                CreateLaunchFromAllTestCases(launch2);
+
+                userActions.LogConsoleMessage("Action steps : open the Launches window and search 'Temp'");
+                Actor.AttemptsTo(Click.On(Header.Launches));
+                IWebLocator launchTitleSearch = new WebLocator("LaunchTitleSearch",
+                    By.XPath("//div[contains(@class,'launch-filter')]//input[@id='name']"));
+                Actor.WaitsUntil(Appearance.Of(launchTitleSearch), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Clear.On(launchTitleSearch));
+                Actor.AttemptsTo(SendKeys.To(launchTitleSearch, "Temp"));
+                Actor.AttemptsTo(Click.On(Launches.LaunchFilterButton));
+
+                IWebLocator temp1Link = new WebLocator("Temp1Link", By.XPath($"//table//tr//a[text()='{launch1}']"));
+                IWebLocator pmet1Link = new WebLocator("Pmet1Link", By.XPath($"//table//tr//a[text()='{launch2}']"));
+
+                userActions.LogConsoleMessage($"Verify : only '{launch1}' is displayed (not '{launch2}')");
+                Actor.WaitsUntil(Appearance.Of(temp1Link), IsEqualTo.True(), timeout: 60);
+                Actor.WaitsUntil(Appearance.Of(pmet1Link), IsEqualTo.False(), timeout: 30);
+                userActions.LogConsoleMessage($"Verified: searching 'Temp' displays only '{launch1}'");
+
+                userActions.LogConsoleMessage("Clear the Search box and click Filter so both launches list again");
+                Actor.AttemptsTo(Clear.On(launchTitleSearch));
+                Actor.AttemptsTo(Click.On(Launches.LaunchFilterButton));
+                Actor.WaitsUntil(Appearance.Of(pmet1Link), IsEqualTo.True(), timeout: 60);
+
+                userActions.LogConsoleMessage("Action steps : delete both temp launches via their trash icons");
+                DeleteLaunchByName(launch1);
+                DeleteLaunchByName(launch2);
+                launchesMayExist = false;
+
+                userActions.LogConsoleMessage("Verify : both temp launches are gone from the list");
+                Actor.AttemptsTo(Click.On(Header.Launches));
+                Actor.WaitsUntil(Appearance.Of(temp1Link), IsEqualTo.False(), timeout: 60);
+                Actor.WaitsUntil(Appearance.Of(pmet1Link), IsEqualTo.False(), timeout: 60);
+                userActions.LogConsoleMessage("Verified: both temp launches are no longer displayed");
+            }
+            finally
+            {
+                // Safety net: if launches may still exist (a create failed midway, or a trash-icon delete
+                // failed), remove any remaining launches. Skipped after a clean delete so we don't hit
+                // DeleteLaunch's 60s wait for trash icons that are no longer there.
+                if (launchesMayExist)
+                {
+                    userActions.LogConsoleMessage("Clean up : remove any leaked temp launches");
+                    try { Actor.AttemptsTo(DeleteLaunch.For(driver)); }
+                    catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Delete launches) failed (ignored): " + ex); }
+                }
+            }
+        }
+
+        // Delete the named launch from the Launches window by clicking the trash icon in its row.
+        // Scoped to the matching row so other launches are untouched. There is no confirmation dialog
+        // (clicking the trash icon deletes immediately - see DeleteLaunch.cs).
+        private void DeleteLaunchByName(string launchName)
+        {
+            IWebLocator trashIcon = new WebLocator("LaunchTrash:" + launchName,
+                By.XPath($"//table//tr[.//a[text()='{launchName}']]//button//i[@class='bi-trash']"));
+            Actor.WaitsUntil(Appearance.Of(trashIcon), IsEqualTo.True(), timeout: 60);
+            new Actions(driver).MoveToElement(trashIcon.FindElement(driver)).Click().Build().Perform();
+        }
+
+        // Verifies the Launches list title search does a case-insensitive partial match. The launch is
+        // named "Temp Launch" (rather than CreateSmokeTest's hard-coded "Smoke Test Launch") so that the
+        // requested search term "Temp" has something to match; it is created with the same launch-save
+        // flow as TC18/TC30. On the Launches window, types the LOWER-case partial "temp" and clicks
+        // Filter, then confirms "Temp Launch" is still selected - proving the match ignores case. The
+        // launch is deleted in cleanup so the project is left as it started.
+        [Test]
+        public void TC31SearchLaunchByTitle()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            const string launchName = "Temp Launch";
+            // True once the launch may exist on the server; set before creation so a partial failure
+            // still triggers cleanup, and cleared once the trash-icon delete succeeds.
+            bool launchMayExist = false;
+            try
+            {
+                userActions.LogConsoleMessage($"Set Up : create the temp launch '{launchName}' (TC18/TC30 launch-save flow)");
+                launchMayExist = true;
+                CreateLaunchFromAllTestCases(launchName);
+
+                userActions.LogConsoleMessage("Action steps : open the Launches window and search the lower-case partial 'temp'");
+                Actor.AttemptsTo(Click.On(Header.Launches));
+
+                IWebLocator launchTitleSearch = new WebLocator("LaunchTitleSearch",
+                    By.XPath("//div[contains(@class,'launch-filter')]//input[@id='name']"));
+                Actor.WaitsUntil(Appearance.Of(launchTitleSearch), IsEqualTo.True(), timeout: 60);
+                Actor.AttemptsTo(Clear.On(launchTitleSearch));
+                Actor.AttemptsTo(SendKeys.To(launchTitleSearch, "temp"));
+                Actor.AttemptsTo(Click.On(Launches.LaunchFilterButton));
+
+                userActions.LogConsoleMessage($"Verify : the case-insensitive search selects '{launchName}'");
+                IWebLocator tempLaunchLink = new WebLocator("TempLaunchLink",
+                    By.XPath($"//table//tr//a[text()='{launchName}']"));
+                Actor.WaitsUntil(Appearance.Of(tempLaunchLink), IsEqualTo.True(), timeout: 60);
+                userActions.LogConsoleMessage($"Verified: searching 'temp' selected '{launchName}' (case-insensitive match)");
+
+                userActions.LogConsoleMessage("Clean up : delete the temp launch via its trash icon");
+                DeleteLaunchByName(launchName);
+                launchMayExist = false;
+            }
+            finally
+            {
+                // Safety net: if the launch may still exist (create failed midway, or the trash-icon
+                // delete failed), remove any remaining launches. Skipped after a clean delete so we
+                // don't hit DeleteLaunch's 60s wait for a trash icon that is no longer there.
+                if (launchMayExist)
+                {
+                    userActions.LogConsoleMessage("Clean up : remove the leaked temp launch");
+                    try { Actor.AttemptsTo(DeleteLaunch.For(driver)); }
+                    catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (Delete launch) failed (ignored): " + ex); }
+                }
+            }
+        }
+
+        // Create a launch from all test cases with the given name, using the same launch-save flow as
+        // CreateSmokeTest (save icon -> name input -> Create -> Go To Launch), minus the filter and the
+        // per-test-case status updates - TC31 only needs the launch to exist so its title can be searched.
+        private void CreateLaunchFromAllTestCases(string launchName)
+        {
+            Actor.AttemptsTo(Click.On(Header.TestCases));
+            Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+
+            Actor.AttemptsTo(Click.On(TestCases.LaunchSaveButton));
+            Actor.WaitsUntil(Appearance.Of(TestCases.LaunchNameInput), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Clear.On(TestCases.LaunchNameInput));
+            Actor.AttemptsTo(SendKeys.To(TestCases.LaunchNameInput, launchName));
+            Actor.AttemptsTo(Click.On(TestCases.LaunchCreateButton));
+            Actor.WaitsUntil(Appearance.Of(TestCases.GoToLaunchLink), IsEqualTo.True(), timeout: 60);
+            Actor.AttemptsTo(Click.On(TestCases.GoToLaunchLink));
+        }
+
      //   [Test]
         public void DeleteTestSuite()
         {
