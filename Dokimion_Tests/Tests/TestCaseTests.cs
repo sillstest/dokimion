@@ -620,6 +620,50 @@ namespace Dokimion.Tests
             }
         }
 
+        // Verifies the test-case full-text Search. Opens Dokimion_LS (admin session from Setup), types
+        // "Filter" in the Search box, clicks the funnel (Filter) button, and confirms the "Filter
+        // testcase" test case is shown in the filtered tree. Cleanup clears the Search filter so the
+        // Dokimion_LS tree is left unfiltered, exactly as it started.
+        [Test]
+        public void TC28SearchTestCase()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            userActions.LogConsoleMessage("Set Up : select the Dokimion_LS project and open TestCases");
+            OpenProjectLSTestCases();
+
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : type 'Filter' in the Search box");
+                Actor.WaitsUntil(Appearance.Of(TestCases.SearchInput), IsEqualTo.True(), timeout: 30);
+                Actor.AttemptsTo(Clear.On(TestCases.SearchInput));
+                Actor.AttemptsTo(SendKeys.To(TestCases.SearchInput, "Filter"));
+
+                userActions.LogConsoleMessage("Click the funnel (Filter) button");
+                Actor.AttemptsTo(Hover.Over(TestCases.FilterLocator));
+                Actor.AttemptsTo(Click.On(TestCases.FilterLocator));
+
+                userActions.LogConsoleMessage("Verify : the 'Filter testcase' test case is displayed");
+                IWebLocator filterTestCase = new WebLocator("FilterTestCase",
+                    By.XPath("//span[@data-role='display' and contains(translate(normalize-space(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'filter testcase')]"));
+                Actor.WaitsUntil(Appearance.Of(filterTestCase), IsEqualTo.True(), timeout: 60);
+                userActions.LogConsoleMessage("Verified: 'Filter testcase' is displayed in the search results");
+            }
+            finally
+            {
+                // Clean up : clear the Search box and re-run the filter so the tree shows all test
+                // cases again. Best-effort - never fail the test from cleanup.
+                userActions.LogConsoleMessage("Clean up : clear the Search filter");
+                try
+                {
+                    Actor.AttemptsTo(Clear.On(TestCases.SearchInput));
+                    Actor.AttemptsTo(Hover.Over(TestCases.FilterLocator));
+                    Actor.AttemptsTo(Click.On(TestCases.FilterLocator));
+                }
+                catch (Exception ex) { userActions.LogConsoleMessage("Cleanup (reset search) failed (ignored): " + ex); }
+            }
+        }
+
         // Return the name of the first test case in the currently displayed Dokimion_LS tree.
         private string FirstTestCaseNameInLS()
         {
