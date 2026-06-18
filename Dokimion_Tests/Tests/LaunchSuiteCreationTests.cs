@@ -837,7 +837,23 @@ namespace Dokimion.Tests
         // per-test-case status updates - TC31 only needs the launch to exist so its title can be searched.
         private void CreateLaunchFromAllTestCases(string launchName)
         {
-            Actor.AttemptsTo(Click.On(Header.TestCases));
+            // Open the test-case tree and wait until it is populated, retrying the navigation if it
+            // comes up empty. When this runs right after the launch purge (which leaves us on the
+            // Launches page), a click on Header.TestCases can land before the SPA restores the project
+            // context, so the tree fetches with no project and stays empty. On retry, bounce via the
+            // Launches tab so the next Header.TestCases click forces a fresh remount once context is back.
+            IWebLocator treeLoading = new WebLocator("TestCaseTreeLoading",
+                By.XPath("//div[contains(@class,'sweet-loading')]//span"));
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                if (attempt > 0) Actor.AttemptsTo(Click.On(Header.Launches));
+                Actor.AttemptsTo(Click.On(Header.TestCases));
+                Actor.WaitsUntil(Appearance.Of(treeLoading), IsEqualTo.False(), timeout: 60);
+                new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                try { if (TestCases.TestCaseTreeListMain.FindElements(driver).Count >= 1) break; }
+                catch (StaleElementReferenceException) { /* tree re-rendered; retry */ }
+            }
+            // Surface a genuine failure clearly if the tree never populated after the retries.
             Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
 
             Actor.AttemptsTo(Click.On(TestCases.LaunchSaveButton));
