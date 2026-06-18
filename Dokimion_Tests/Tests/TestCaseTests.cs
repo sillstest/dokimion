@@ -133,6 +133,8 @@ namespace Dokimion.Tests
         {
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
+            userActions.LogConsoleMessage("Remove any leftover 'Add2StepsToTestCase' from a prior run (idempotent start)");
+            PurgeTestCasesByName("Add2StepsToTestCase");
             Actor.AttemptsTo(CreatTestCase.For("Add2StepsToTestCase", "Testcase for adding 2 Steps"));
 
             
@@ -215,6 +217,8 @@ namespace Dokimion.Tests
         {
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
+            userActions.LogConsoleMessage("Remove any leftover 'UpdateExpectation2' from a prior run (idempotent start)");
+            PurgeTestCasesByName("UpdateExpectation2");
             Actor.AttemptsTo(CreatTestCase.For("UpdateExpectation2", "Testcase for adding 2 Steps and update"));
             
             userActions.LogConsoleMessage("Action steps : ");
@@ -307,6 +311,8 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
             userActions.LogConsoleMessage("Create a Testcase");
+            userActions.LogConsoleMessage("Remove any leftover 'PreconditionTestCase' from a prior run (idempotent start)");
+            PurgeTestCasesByName("PreconditionTestCase");
             Actor.AttemptsTo(CreatTestCase.For("PreconditionTestCase", "Testcase for adding precondition"));
 
             userActions.LogConsoleMessage("Action steps : ");
@@ -850,6 +856,51 @@ namespace Dokimion.Tests
             
         }
     
+        // Idempotent setup: delete any pre-existing test cases whose name contains the given text
+        // (leftovers from an aborted prior run). TC08-TC10 create same-named test cases and
+        // SelectTestCase picks the LAST match, so a leftover that already has a step shifts the
+        // WriteToIframe indices and hides SaveStep1 (the 45s timeout documented on TC08). Purging
+        // first guarantees only the fresh test case exists. Runs in the current project's TestCases.
+        private void PurgeTestCasesByName(string testcaseName)
+        {
+            // FadeLoader inside .sweet-loading renders only while the tree is loading (see TestCases.js).
+            IWebLocator treeLoading = new WebLocator("TestCaseTreeLoading",
+                By.XPath("//div[contains(@class,'sweet-loading')]//span"));
+
+            for (int attempt = 0; attempt < 10; attempt++)
+            {
+                // (Re)load the list each pass so a fresh, non-stale set of nodes is queried. The delete
+                // reload (or any tree re-render) otherwise leaves stale element references, which
+                // surface as "Node with given id does not belong to the document". Wait for the fetch
+                // to finish via the spinner - the project may legitimately have no matching test cases.
+                Actor.AttemptsTo(Click.On(Header.TestCases));
+                Actor.WaitsUntil(Appearance.Of(treeLoading), IsEqualTo.False(), timeout: 60);
+                new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
+                IWebElement match;
+                try
+                {
+                    match = TestCases.GetTestCaseNameList.FindElements(driver)
+                        .FirstOrDefault(e => e.Text.Contains(testcaseName));
+                }
+                catch (StaleElementReferenceException) { continue; }
+
+                if (match == null) return; // none left
+
+                try
+                {
+                    new Actions(driver).MoveToElement(match).Click().Build().Perform();
+                    Actor.AttemptsTo(DeleteTestCase.For(driver));
+                }
+                catch (Exception ex)
+                {
+                    // The delete (Remove + confirm) may have succeeded even if the post-delete reload
+                    // wait threw a transient stale-node error; the next pass reloads and re-checks.
+                    userActions.LogConsoleMessage("Purge delete hit a transient error (will re-check): " + ex.Message);
+                }
+            }
+        }
+
         // Select a test case in the tree and return its name text. Waits for the SPECIFIC test
         // case to appear (after a create/reload it may not be listed immediately), re-queries on
         // stale re-renders, then moves to the node (scrolling it into view, like a user) and
