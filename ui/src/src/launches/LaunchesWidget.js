@@ -14,8 +14,14 @@ function LaunchesWidget({ projectId, limit: limitProp }) {
   useEffect(() => {
     if (!projectId) return;
     Backend.get(projectId + "/launch?includedFields=name,id,launchStats&orderby=id&orderdir=DESC&limit=" + limit)
-      .then(response => { setLaunches(response); setLoading(false); })
-      .catch(error => { setErrorMessage("Couldn't get launches: " + error); setLoading(false); });
+      .then(response => {
+        setLaunches(response);
+        setLoading(false);
+      })
+      .catch(error => {
+        setErrorMessage("Couldn't get launches: " + error);
+        setLoading(false);
+      });
   }, [projectId]);
 
   function getProgressStyle(value, total) {
@@ -30,18 +36,39 @@ function LaunchesWidget({ projectId, limit: limitProp }) {
       </div>
       <table className="table table-striped">
         <thead>
-          <tr><th scope="col">Title</th><th scope="col">Progress</th></tr>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Progress</th>
+          </tr>
         </thead>
         <tbody>
           {launches.map((launch, index) => (
             <tr key={index}>
-              <td><Link to={"/" + projectId + "/launch/" + launch.id}>{launch.name}</Link></td>
+              <td>
+                <Link to={"/" + projectId + "/launch/" + launch.id}>{launch.name}</Link>
+              </td>
               <td>
                 <div className="progress">
-                  <div className="progress-bar progress-bar-striped" role="progressbar" style={getProgressStyle(launch.launchStats.statusCounters.RUNNING, launch.launchStats.total)} />
-                  <div className="progress-bar bg-success" role="progressbar" style={getProgressStyle(launch.launchStats.statusCounters.PASSED, launch.launchStats.total)} />
-                  <div className="progress-bar bg-danger" role="progressbar" style={getProgressStyle(launch.launchStats.statusCounters.FAILED, launch.launchStats.total)} />
-                  <div className="progress-bar bg-warning" role="progressbar" style={getProgressStyle(launch.launchStats.statusCounters.BROKEN, launch.launchStats.total)} />
+                  <div
+                    className="progress-bar progress-bar-striped"
+                    role="progressbar"
+                    style={getProgressStyle(launch.launchStats.statusCounters.RUNNING, launch.launchStats.total)}
+                  />
+                  <div
+                    className="progress-bar bg-success"
+                    role="progressbar"
+                    style={getProgressStyle(launch.launchStats.statusCounters.PASSED, launch.launchStats.total)}
+                  />
+                  <div
+                    className="progress-bar bg-danger"
+                    role="progressbar"
+                    style={getProgressStyle(launch.launchStats.statusCounters.FAILED, launch.launchStats.total)}
+                  />
+                  <div
+                    className="progress-bar bg-warning"
+                    role="progressbar"
+                    style={getProgressStyle(launch.launchStats.statusCounters.BROKEN, launch.launchStats.total)}
+                  />
                 </div>
               </td>
             </tr>

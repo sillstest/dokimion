@@ -4,12 +4,19 @@ import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
 function normalizeId(id) {
-  return id.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, "");
+  return id
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9]/g, "");
 }
 
 function ProjectForm({ id, history }) {
   const [project, setProject] = useState({
-    id: null, name: "", description: "", allowedGroups: [], scratchpad: "text",
+    id: null,
+    name: "",
+    description: "",
+    allowedGroups: [],
+    scratchpad: "text",
   });
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -56,7 +63,13 @@ function ProjectForm({ id, history }) {
         <div className="form-group row">
           <label className="col-sm-3 col-form-label">Description</label>
           <div className="col-sm-9">
-            <input type="text" name="description" className="form-control" value={project.description} onChange={handleChange} />
+            <input
+              type="text"
+              name="description"
+              className="form-control"
+              value={project.description}
+              onChange={handleChange}
+            />
           </div>
         </div>
         <div className="project-form-block">

@@ -24,7 +24,14 @@ function Comments({ projectId, entityId, entityType, forceFetch, hideForm, onCom
 
   useEffect(() => {
     if (projectId && entityId && entityType) {
-      Backend.get(projectId + "/comment?entityType=" + entityType + "&entityId=" + entityId + "&orderby=createdTime&orderdir=DESC")
+      Backend.get(
+        projectId +
+          "/comment?entityType=" +
+          entityType +
+          "&entityId=" +
+          entityId +
+          "&orderby=createdTime&orderdir=DESC",
+      )
         .then(response => {
           setComments(response);
           if (onCommentsNumberChanged) onCommentsNumberChanged(response.length);
@@ -65,7 +72,11 @@ function Comments({ projectId, entityId, entityType, forceFetch, hideForm, onCom
   function handleUpdateSubmit(index, event) {
     Backend.post(projectId + "/comment/", comments[index])
       .then(response => {
-        setComments(prev => { const u = [...prev]; u[index] = response; return u; });
+        setComments(prev => {
+          const u = [...prev];
+          u[index] = response;
+          return u;
+        });
         cancelEdit(index);
       })
       .catch(error => setErrorMessage("Couldn't update comment: " + error));
@@ -119,7 +130,10 @@ function Comments({ projectId, entityId, entityType, forceFetch, hideForm, onCom
                   <span className="clickable edit-icon-visible" onClick={() => toggleEdit(i)}>
                     <FontAwesomeIcon icon={faPencilAlt} />
                   </span>
-                  <span className="clickable edit-icon-visible red" onClick={() => removeCommentConfirmation(comment.id)}>
+                  <span
+                    className="clickable edit-icon-visible red"
+                    onClick={() => removeCommentConfirmation(comment.id)}
+                  >
                     <FontAwesomeIcon icon={faMinusCircle} />
                   </span>
                 </div>
@@ -131,10 +145,20 @@ function Comments({ projectId, entityId, entityType, forceFetch, hideForm, onCom
               </div>
               <div id={"comment-" + i + "-form"} className="inplace-form" style={{ display: "none" }}>
                 <form>
-                  <textarea rows="7" cols="70" name="text" onChange={e => handleUpdateChange(i, e)} value={comment.text} />
+                  <textarea
+                    rows="7"
+                    cols="70"
+                    name="text"
+                    onChange={e => handleUpdateChange(i, e)}
+                    value={comment.text}
+                  />
                   <div>
-                    <button type="button" className="btn btn-light" onClick={() => cancelEdit(i)}>Cancel</button>
-                    <button type="button" className="btn btn-primary" onClick={e => handleUpdateSubmit(i, e)}>Save</button>
+                    <button type="button" className="btn btn-light" onClick={() => cancelEdit(i)}>
+                      Cancel
+                    </button>
+                    <button type="button" className="btn btn-primary" onClick={e => handleUpdateSubmit(i, e)}>
+                      Save
+                    </button>
                   </div>
                 </form>
               </div>
@@ -146,9 +170,17 @@ function Comments({ projectId, entityId, entityType, forceFetch, hideForm, onCom
       {!hideForm && (
         <div id="comment-form">
           <form>
-            <textarea rows="7" cols="70" name="text" onChange={e => handleChange("text", e)} value={commentToEdit.text} />
+            <textarea
+              rows="7"
+              cols="70"
+              name="text"
+              onChange={e => handleChange("text", e)}
+              value={commentToEdit.text}
+            />
             <div>
-              <button type="button" className="btn btn-primary" onClick={handleSubmit}>Save</button>
+              <button type="button" className="btn btn-primary" onClick={handleSubmit}>
+                Save
+              </button>
             </div>
           </form>
         </div>
@@ -165,8 +197,12 @@ function Comments({ projectId, entityId, entityType, forceFetch, hideForm, onCom
             </div>
             <div className="modal-body">Are you sure you want to remove comment?</div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={cancelRemoveCommentConfirmation}>Close</button>
-              <button type="button" className="btn btn-danger" onClick={removeComment}>Remove Comment</button>
+              <button type="button" className="btn btn-secondary" onClick={cancelRemoveCommentConfirmation}>
+                Close
+              </button>
+              <button type="button" className="btn btn-danger" onClick={removeComment}>
+                Remove Comment
+              </button>
             </div>
           </div>
         </div>

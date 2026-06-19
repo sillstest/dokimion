@@ -23,12 +23,26 @@ function LaunchAttributeStatsChart({ stats, attrKey }) {
       title: { text: stats.name },
       xAxis: { categories: Object.keys(stats.values) },
       yAxis: { title: { text: "Testcases" } },
-      plotOptions: { column: { stacking: "normal", dataLabels: { enabled: true, formatter: function () { if (this.y > 0) return this.y; } } } },
+      plotOptions: {
+        column: {
+          stacking: "normal",
+          dataLabels: {
+            enabled: true,
+            formatter: function () {
+              if (this.y > 0) return this.y;
+            },
+          },
+        },
+      },
       series: statusSeries,
     });
   }, [stats, attrKey]);
 
-  return <div id={chartContainerId} className="launch-attr-stats-chart">Chart here</div>;
+  return (
+    <div id={chartContainerId} className="launch-attr-stats-chart">
+      Chart here
+    </div>
+  );
 }
 
 export default withRouter(LaunchAttributeStatsChart);

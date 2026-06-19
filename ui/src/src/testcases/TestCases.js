@@ -40,7 +40,10 @@ function TestCases({ match, history, location, onProjectChange }) {
   const [testcaseToEdit, setTestcaseToEdit] = useState({ ...defaultTestcase, attributes: {}, steps: [] });
   const [projectAttributes, setProjectAttributes] = useState([]);
   const [selectedTestCase, setSelectedTestCase] = useState({});
-  const [filter, setFilter] = useState({ includedFields: "id,name,attributes,importedName,automated", notFields: { id: [] } });
+  const [filter, setFilter] = useState({
+    includedFields: "id,name,attributes,importedName,automated",
+    notFields: { id: [] },
+  });
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [tcSizes, setTcSizes] = useState({});
@@ -54,10 +57,18 @@ function TestCases({ match, history, location, onProjectChange }) {
   const tcSizesRef = useRef(tcSizes);
   const selectedTestCaseRef = useRef(selectedTestCase);
 
-  useEffect(() => { filterRef.current = filter; }, [filter]);
-  useEffect(() => { testcasesTreeRef.current = testcasesTree; }, [testcasesTree]);
-  useEffect(() => { tcSizesRef.current = tcSizes; }, [tcSizes]);
-  useEffect(() => { selectedTestCaseRef.current = selectedTestCase; }, [selectedTestCase]);
+  useEffect(() => {
+    filterRef.current = filter;
+  }, [filter]);
+  useEffect(() => {
+    testcasesTreeRef.current = testcasesTree;
+  }, [testcasesTree]);
+  useEffect(() => {
+    tcSizesRef.current = tcSizes;
+  }, [tcSizes]);
+  useEffect(() => {
+    selectedTestCaseRef.current = selectedTestCase;
+  }, [selectedTestCase]);
 
   function getFilterApiRequestParams(f) {
     var tokens = (f.groups || []).map(g => "groups=" + g);
@@ -70,7 +81,10 @@ function TestCases({ match, history, location, onProjectChange }) {
         }
       });
     });
-    if ((f.groups || []).length > 0) { f.skip = 0; f.limit = 0; }
+    if ((f.groups || []).length > 0) {
+      f.skip = 0;
+      f.limit = 0;
+    }
     if (f.skip) tokens.push("skip=" + f.skip);
     if (f.limit) tokens.push("limit=" + f.limit);
     if (f.fulltext && f.fulltext != "") tokens.push("fulltext=" + f.fulltext);
@@ -96,7 +110,7 @@ function TestCases({ match, history, location, onProjectChange }) {
   }
 
   function getQueryParams(f, selTC, ts) {
-    var testcaseIdAttr = (selTC && selTC.id) ? "testcase=" + selTC.id : "";
+    var testcaseIdAttr = selTC && selTC.id ? "testcase=" + selTC.id : "";
     var parts = [getFilterQParams(f), getGroupingQParams(f), testcaseIdAttr, getFulltextQParams(f)];
     if (ts) parts.push("testSuite=" + ts.id);
     return parts.filter(v => v !== "").join("&");
@@ -114,31 +128,42 @@ function TestCases({ match, history, location, onProjectChange }) {
     return currentFilter;
   }
 
-  const refreshTree = useCallback((tree, selTC, f, sizes) => {
-    if (treeRef.current) { treeRef.current.destroy(); }
-    treeRef.current = $("#tree").tree({
-      primaryKey: "id",
-      uiLibrary: "bootstrap4",
-      checkboxes: true,
-      checkedField: "checked",
-      dataSource: Utils.parseTree(tree, (f.notFields || {}).id, sizes),
-    });
-    treeRef.current.on("select", function (e, node, id) {
-      const tc = Utils.getTestCaseFromTree(id, tree, (tc, id) => tc.id === id);
-      setSelectedTestCase(tc || {});
-      history.push("/" + project + "/testcases?" + getQueryParams(f, tc, testSuite));
-    });
-    treeRef.current.on("checkboxChange", function (e, $node, record, state) {
-      if (state === "indeterminate") return;
-      const updatedFilter = processElementChecked(record, state === "checked", { ...filterRef.current, notFields: { ...(filterRef.current.notFields || {}), id: [...((filterRef.current.notFields || {}).id || [])] } });
-      setFilter(updatedFilter);
-    });
-    if (selTC && selTC.id) {
-      var node = treeRef.current.getNodeById(selTC.id);
-      if (!node) return;
-      treeRef.current.select(node);
-    }
-  }, [project, history, testSuite]);
+  const refreshTree = useCallback(
+    (tree, selTC, f, sizes) => {
+      if (treeRef.current) {
+        treeRef.current.destroy();
+      }
+      treeRef.current = $("#tree").tree({
+        primaryKey: "id",
+        uiLibrary: "bootstrap4",
+        checkboxes: true,
+        checkedField: "checked",
+        dataSource: Utils.parseTree(tree, (f.notFields || {}).id, sizes),
+      });
+      treeRef.current.on("select", function (e, node, id) {
+        const tc = Utils.getTestCaseFromTree(id, tree, (tc, id) => tc.id === id);
+        setSelectedTestCase(tc || {});
+        history.push("/" + project + "/testcases?" + getQueryParams(f, tc, testSuite));
+      });
+      treeRef.current.on("checkboxChange", function (e, $node, record, state) {
+        if (state === "indeterminate") return;
+        const updatedFilter = processElementChecked(record, state === "checked", {
+          ...filterRef.current,
+          notFields: {
+            ...(filterRef.current.notFields || {}),
+            id: [...((filterRef.current.notFields || {}).id || [])],
+          },
+        });
+        setFilter(updatedFilter);
+      });
+      if (selTC && selTC.id) {
+        var node = treeRef.current.getNodeById(selTC.id);
+        if (!node) return;
+        treeRef.current.select(node);
+      }
+    },
+    [project, history, testSuite],
+  );
 
   function updateCount(f) {
     Backend.get(project + "/testcase/count?" + getFilterApiRequestParams({ ...f }))
@@ -156,7 +181,16 @@ function TestCases({ match, history, location, onProjectChange }) {
   }
 
   function handleGetTCSizes() {
-    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery({ skip: 0, limit: 20, orderby: "name", orderdir: "ASC", includedFields: "name,minLines,maxLines" }))
+    Backend.get(
+      "/testcasesizes/getalltcsizes?" +
+        Utils.filterToQuery({
+          skip: 0,
+          limit: 20,
+          orderby: "name",
+          orderdir: "ASC",
+          includedFields: "name,minLines,maxLines",
+        }),
+    )
       .then(response => setTcSizes(response))
       .catch(() => console.log("Error in handleGetTCSizes"));
   }
@@ -174,8 +208,8 @@ function TestCases({ match, history, location, onProjectChange }) {
     Backend.get(project + "/attribute")
       .then(response => {
         const attrs = response
-          .filter(p => p.type != 'undefined')
-          .filter(p => p.type != 'LAUNCH')
+          .filter(p => p.type != "undefined")
+          .filter(p => p.type != "LAUNCH")
           .sort((a, b) => (a.name || "").localeCompare(b.name));
         attrs.unshift({ id: "broken", name: "Broken", values: ["True", "False"] });
         setProjectAttributes(attrs);
@@ -195,8 +229,11 @@ function TestCases({ match, history, location, onProjectChange }) {
     if (params.testcase) setSelectedTestCase({ id: params.testcase });
 
     const f = { ...newFilter };
-    if ((f.groups || []).length === 0) { f.skip = f.skip || 0; f.limit = TC_FETCH_LIMIT; }
-    f.includedFields = (f.includedFields || []);
+    if ((f.groups || []).length === 0) {
+      f.skip = f.skip || 0;
+      f.limit = TC_FETCH_LIMIT;
+    }
+    f.includedFields = f.includedFields || [];
     if (!f.includedFields.includes("name")) f.includedFields.push("name");
     if (!f.includedFields.includes("id")) f.includedFields.push("id");
     if (!f.includedFields.includes("attributes")) f.includedFields.push("attributes");
@@ -219,7 +256,10 @@ function TestCases({ match, history, location, onProjectChange }) {
         refreshTree(response, selectedTestCaseRef.current, f, tcSizesRef.current);
         if (callback) callback();
       })
-      .catch(error => { setErrorMessage("Couldn't fetch testcases: " + error); setLoading(false); });
+      .catch(error => {
+        setErrorMessage("Couldn't fetch testcases: " + error);
+        setLoading(false);
+      });
   }
 
   function onTestCaseAdded(testcase) {
@@ -236,7 +276,7 @@ function TestCases({ match, history, location, onProjectChange }) {
   }
 
   function loadMoreTestCases(event) {
-    const f = { ...filterRef.current, skip: ((filterRef.current.skip || 0) + TC_FETCH_LIMIT), limit: TC_FETCH_LIMIT };
+    const f = { ...filterRef.current, skip: (filterRef.current.skip || 0) + TC_FETCH_LIMIT, limit: TC_FETCH_LIMIT };
     Backend.get(project + "/testcase?" + getFilterApiRequestParams(f))
       .then(response => {
         setTestcasesTree(prev => ({ ...prev, testCases: (prev.testCases || []).concat(response) }));
@@ -251,47 +291,53 @@ function TestCases({ match, history, location, onProjectChange }) {
   }
 
   function handleSubmit(testcase) {
-    Backend.put(project + "/testcase/", testcase)
-      .catch(error => setErrorMessage("Couldn't save testcase: " + error));
+    Backend.put(project + "/testcase/", testcase).catch(error => setErrorMessage("Couldn't save testcase: " + error));
   }
 
   function handleBulkAddAttributes(filterAttribs) {
     const Tcs = (testcasesTreeRef.current.testCases || []).map(tc => tc.id);
     const NotSelected = filterRef.current.notFields.id;
     const selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId === id));
-    const newValidAttribs = filterAttribs.filter(id => !((id.id === null) || (id.id === 'broken')));
+    const newValidAttribs = filterAttribs.filter(id => !(id.id === null || id.id === "broken"));
     if (newValidAttribs.length === 0 || (newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0)) {
-      setErrorMessage("Select an Attribute to Add"); return;
+      setErrorMessage("Select an Attribute to Add");
+      return;
     }
     setErrorMessage(" ");
     const selectedAttribIds = newValidAttribs.map(val => val.id);
     selectedTCS.forEach(item => {
-      Backend.get(project + "/testcase/" + item).then(response => {
-        const testcase = response;
-        const originalTC = JSON.parse(JSON.stringify(testcase));
-        if (Object.keys(testcase.attributes).length === 0) {
-          newValidAttribs.forEach(elem => { testcase.attributes[elem.id] = elem.attrValues.map(val => val.value); });
-        } else {
-          const toAdd = selectedAttribIds.filter(id => !Object.keys(testcase.attributes).includes(id));
-          toAdd.forEach(elem => {
-            const fo = newValidAttribs.find(val => val.id.includes(elem));
-            if (fo) testcase.attributes[fo.id] = fo.attrValues.map(val => val.value);
-          });
-          Object.keys(testcase.attributes || {}).forEach(attributeId => {
-            if (attributeId && attributeId != "null") {
-              const attributeValues = testcase.attributes[attributeId] || [];
-              newValidAttribs.forEach(elem => {
-                if (elem.id === attributeId) {
-                  const selectedVals = elem.attrValues.map(v => v.value);
-                  const toAddVals = selectedVals.filter(v => !attributeValues.includes(v));
-                  testcase.attributes[attributeId] = attributeValues.concat(toAddVals);
-                }
-              });
-            }
-          });
-        }
-        if (!equal(originalTC, testcase)) { handleSubmit(testcase); }
-      }).catch(() => setErrorMessage("Couldn't fetch testcase"));
+      Backend.get(project + "/testcase/" + item)
+        .then(response => {
+          const testcase = response;
+          const originalTC = JSON.parse(JSON.stringify(testcase));
+          if (Object.keys(testcase.attributes).length === 0) {
+            newValidAttribs.forEach(elem => {
+              testcase.attributes[elem.id] = elem.attrValues.map(val => val.value);
+            });
+          } else {
+            const toAdd = selectedAttribIds.filter(id => !Object.keys(testcase.attributes).includes(id));
+            toAdd.forEach(elem => {
+              const fo = newValidAttribs.find(val => val.id.includes(elem));
+              if (fo) testcase.attributes[fo.id] = fo.attrValues.map(val => val.value);
+            });
+            Object.keys(testcase.attributes || {}).forEach(attributeId => {
+              if (attributeId && attributeId != "null") {
+                const attributeValues = testcase.attributes[attributeId] || [];
+                newValidAttribs.forEach(elem => {
+                  if (elem.id === attributeId) {
+                    const selectedVals = elem.attrValues.map(v => v.value);
+                    const toAddVals = selectedVals.filter(v => !attributeValues.includes(v));
+                    testcase.attributes[attributeId] = attributeValues.concat(toAddVals);
+                  }
+                });
+              }
+            });
+          }
+          if (!equal(originalTC, testcase)) {
+            handleSubmit(testcase);
+          }
+        })
+        .catch(() => setErrorMessage("Couldn't fetch testcase"));
     });
     setErrorMessage("Added Attributes in selected Testcases");
     history.push("/" + project + "/testcases");
@@ -302,32 +348,37 @@ function TestCases({ match, history, location, onProjectChange }) {
     const Tcs = (testcasesTreeRef.current.testCases || []).map(tc => tc.id);
     const NotSelected = filterRef.current.notFields.id;
     const selectedTCS = Tcs.filter(id => !NotSelected.some(notId => notId === id));
-    const newValidAttribs = filterAttribs.filter(id => !((id.id === null) || (id.id === 'broken')));
+    const newValidAttribs = filterAttribs.filter(id => !(id.id === null || id.id === "broken"));
     if (newValidAttribs.length === 0 || (newValidAttribs.length === 1 && newValidAttribs[0].attrValues.length === 0)) {
-      setErrorMessage("Select an Attribute to Remove"); return;
+      setErrorMessage("Select an Attribute to Remove");
+      return;
     }
     setErrorMessage(" ");
     selectedTCS.forEach(item => {
-      Backend.get(project + "/testcase/" + item).then(response => {
-        const testcase = response;
-        const originalTC = JSON.parse(JSON.stringify(testcase));
-        if (Object.keys(testcase.attributes).length > 0) {
-          Object.keys(testcase.attributes || {}).forEach(attributeId => {
-            if (attributeId && attributeId != "null") {
-              const attributeValues = testcase.attributes[attributeId] || [];
-              newValidAttribs.forEach(elem => {
-                if (elem.id === attributeId) {
-                  const selectedVals = elem.attrValues.map(v => v.value);
-                  const remaining = attributeValues.filter(v => !selectedVals.includes(v));
-                  if (remaining.length === 0) delete testcase.attributes[attributeId];
-                  else testcase.attributes[attributeId] = remaining;
-                }
-              });
-            }
-          });
-        }
-        if (!equal(originalTC, testcase)) { handleSubmit(testcase); }
-      }).catch(() => setErrorMessage("Couldn't fetch testcase"));
+      Backend.get(project + "/testcase/" + item)
+        .then(response => {
+          const testcase = response;
+          const originalTC = JSON.parse(JSON.stringify(testcase));
+          if (Object.keys(testcase.attributes).length > 0) {
+            Object.keys(testcase.attributes || {}).forEach(attributeId => {
+              if (attributeId && attributeId != "null") {
+                const attributeValues = testcase.attributes[attributeId] || [];
+                newValidAttribs.forEach(elem => {
+                  if (elem.id === attributeId) {
+                    const selectedVals = elem.attrValues.map(v => v.value);
+                    const remaining = attributeValues.filter(v => !selectedVals.includes(v));
+                    if (remaining.length === 0) delete testcase.attributes[attributeId];
+                    else testcase.attributes[attributeId] = remaining;
+                  }
+                });
+              }
+            });
+          }
+          if (!equal(originalTC, testcase)) {
+            handleSubmit(testcase);
+          }
+        })
+        .catch(() => setErrorMessage("Couldn't fetch testcase"));
     });
     setErrorMessage("Removed Attributes in selected Testcases");
     history.push("/" + project + "/testcases");
@@ -364,7 +415,14 @@ function TestCases({ match, history, location, onProjectChange }) {
         />
       </div>
       <div>
-        <div className="modal fade" id="editTestcase" tabIndex="-1" role="dialog" aria-labelledby="editTestcaseLabel" aria-hidden="true">
+        <div
+          className="modal fade"
+          id="editTestcase"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="editTestcaseLabel"
+          aria-hidden="true"
+        >
           <TestCaseForm
             project={project}
             testcase={testcaseToEdit}
@@ -374,7 +432,9 @@ function TestCases({ match, history, location, onProjectChange }) {
         </div>
       </div>
       <div className="row filter-control-row">
-        <div className="col-6">Number of Test Cases : <span style={{ fontWeight: "bold" }}>{totalNoofTestCase}</span></div>
+        <div className="col-6">
+          Number of Test Cases : <span style={{ fontWeight: "bold" }}>{totalNoofTestCase}</span>
+        </div>
       </div>
       <div className="sweet-loading">
         <FadeLoader size={100} color={"#135f38"} loading={loading} />
@@ -383,16 +443,16 @@ function TestCases({ match, history, location, onProjectChange }) {
         <div className="tree-side">
           <div id="tree"></div>
           {showLoadMore() && (
-            <div><a href="" onClick={loadMoreTestCases}>Load more</a></div>
+            <div>
+              <a href="" onClick={loadMoreTestCases}>
+                Load more
+              </a>
+            </div>
           )}
         </div>
         <div id="testCase" className="testcase-side">
           {selectedTestCase && selectedTestCase.id && (
-            <TestCase
-              projectId={project}
-              projectAttributes={projectAttributes}
-              testcaseId={selectedTestCase.id}
-            />
+            <TestCase projectId={project} projectAttributes={projectAttributes} testcaseId={selectedTestCase.id} />
           )}
         </div>
       </div>

@@ -5,9 +5,15 @@ import Backend from "../services/backend";
 import URLForm from "../projects/URLForm";
 
 function ProjectScratchpadWidget({ projectId }) {
-  const [project, setProject] = useState({ id: null, name: "", description: "", allowedGroups: [], scratchpadURLs: [] });
+  const [project, setProject] = useState({
+    id: null,
+    name: "",
+    description: "",
+    allowedGroups: [],
+    scratchpadURLs: [],
+  });
   const [session, setSession] = useState({ person: {} });
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -24,7 +30,7 @@ function ProjectScratchpadWidget({ projectId }) {
   }, [projectId]);
 
   function canEdit() {
-    const roles = (session.person.roles || []);
+    const roles = session.person.roles || [];
     return roles.includes("ADMIN") || roles.includes("TESTDEVELOPER");
   }
 
@@ -35,13 +41,19 @@ function ProjectScratchpadWidget({ projectId }) {
   }
 
   function onURLAdded(url) {
-    if (!canEdit()) { setErrorMessage("Unable to add url"); return; }
+    if (!canEdit()) {
+      setErrorMessage("Unable to add url");
+      return;
+    }
     const updated = { ...project, scratchpadURLs: [...(project.scratchpadURLs || []), url] };
     saveProject(updated);
   }
 
   function onURLRemoved(url) {
-    if (!canEdit()) { setErrorMessage("Unable to remove url"); return; }
+    if (!canEdit()) {
+      setErrorMessage("Unable to remove url");
+      return;
+    }
     const updated = { ...project, scratchpadURLs: (project.scratchpadURLs || []).filter(u => u !== url) };
     saveProject(updated);
   }
@@ -62,7 +74,9 @@ function ProjectScratchpadWidget({ projectId }) {
         <tbody>
           {(project.scratchpadURLs || []).map(url => (
             <tr key={url}>
-              <td><a href={url}>{url}</a></td>
+              <td>
+                <a href={url}>{url}</a>
+              </td>
               <td>
                 <button onClick={() => onURLRemoved(url)}>
                   <i className="bi-trash" aria-hidden="true"></i>
@@ -73,9 +87,18 @@ function ProjectScratchpadWidget({ projectId }) {
         </tbody>
       </table>
       <div className="attributes-controls">
-        <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#editURL">Add</button>
+        <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#editURL">
+          Add
+        </button>
       </div>
-      <div className="modal fade" id="editURL" tabIndex="-1" role="dialog" aria-labelledby="editURLLabel" aria-hidden="true">
+      <div
+        className="modal fade"
+        id="editURL"
+        tabIndex="-1"
+        role="dialog"
+        aria-labelledby="editURLLabel"
+        aria-hidden="true"
+      >
         <URLForm project={project} onURLAdded={onURLAdded} />
       </div>
     </div>

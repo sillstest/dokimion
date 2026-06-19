@@ -42,8 +42,18 @@ function ForgotPassword() {
       <ControlledPopup popupMessage={message} />
       <form className="form-signin">
         <h1 className="h3 mb-3 font-weight-normal">Forgot Password</h1>
-        <label htmlFor="login" className="sr-only">Login</label>
-        <input type="text" id="login" name="login" className="form-control" placeholder="Login" required onChange={e => setLogin(e.target.value)} />
+        <label htmlFor="login" className="sr-only">
+          Login
+        </label>
+        <input
+          type="text"
+          id="login"
+          name="login"
+          className="form-control"
+          placeholder="Login"
+          required
+          onChange={e => setLogin(e.target.value)}
+        />
         <Turnstile sitekey={process.env.REACT_APP_SITE_KEY} onVerify={handleRecaptcha} />
         <button className="btn btn-lg btn-primary btn-block" disabled={!recaptcha} onClick={handleSubmit}>
           Send Email with Temporary Password

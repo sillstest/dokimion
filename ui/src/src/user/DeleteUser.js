@@ -28,13 +28,24 @@ function DeleteUser() {
         <form>
           <div className="form-row">
             <div className="form-group col-md-6">
-              <div><label htmlFor="login">Login: </label></div>
+              <div>
+                <label htmlFor="login">Login: </label>
+              </div>
               <div className="mx-auto">
-                <input style={{ width: "300px" }} className="form-control" type="text" name="login" id="login" onChange={e => setLogin(e.target.value)} />
+                <input
+                  style={{ width: "300px" }}
+                  className="form-control"
+                  type="text"
+                  name="login"
+                  id="login"
+                  onChange={e => setLogin(e.target.value)}
+                />
               </div>
             </div>
           </div>
-          <button onClick={handleSubmit} className="btn btn-primary">Delete</button>
+          <button onClick={handleSubmit} className="btn btn-primary">
+            Delete
+          </button>
         </form>
       </div>
     </div>

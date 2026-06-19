@@ -13,8 +13,14 @@ function Organizations() {
 
   useEffect(() => {
     Backend.get("organization")
-      .then(response => { setOrganizations(response); setLoading(false); })
-      .catch(error => { setErrorMessage("Couldn't get organizations: " + error); setLoading(false); });
+      .then(response => {
+        setOrganizations(response);
+        setLoading(false);
+      })
+      .catch(error => {
+        setErrorMessage("Couldn't get organizations: " + error);
+        setLoading(false);
+      });
   }, []);
 
   return (
@@ -26,9 +32,13 @@ function Organizations() {
       {organizations.map(organization => (
         <div key={organization.id} className="card organization-card">
           <div className="card-header">
-            <span><Link to={"/organizations/" + organization.id}>{organization.name}</Link></span>
+            <span>
+              <Link to={"/organizations/" + organization.id}>{organization.name}</Link>
+            </span>
             <span className="float-right">
-              <Link to={"/organization/" + organization.id + "/settings"}><FontAwesomeIcon icon={faCogs} /></Link>
+              <Link to={"/organization/" + organization.id + "/settings"}>
+                <FontAwesomeIcon icon={faCogs} />
+              </Link>
             </span>
           </div>
           <div className="card-body">

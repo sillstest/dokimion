@@ -19,7 +19,10 @@ function TestSuitesWidget({ projectId, limit: limitProp }) {
         setTestSuitesToDisplay(response.slice(0, limit));
         setLoading(false);
       })
-      .catch(error => { setErrorMessage("Couldn't get testsuites: " + error); setLoading(false); });
+      .catch(error => {
+        setErrorMessage("Couldn't get testsuites: " + error);
+        setLoading(false);
+      });
   }, [projectId]);
 
   function onFilter(event) {

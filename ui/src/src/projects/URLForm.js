@@ -35,7 +35,9 @@ function URLForm({ project, urlToAdd, onURLAdded }) {
       <ControlledPopup popupMessage={errorMessage} />
       <div className="modal-content">
         <div className="modal-header">
-          <h5 className="modal-title" id="editAttributeLabel">URL</h5>
+          <h5 className="modal-title" id="editAttributeLabel">
+            URL
+          </h5>
           <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={handleClose}>
             <span aria-hidden="true">&times;</span>
           </button>
@@ -48,8 +50,12 @@ function URLForm({ project, urlToAdd, onURLAdded }) {
           </div>
         </div>
         <div className="modal-footer">
-          <button type="button" className="btn btn-primary" onClick={handleAddSave}>Save</button>
-          <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={handleClose}>Close</button>
+          <button type="button" className="btn btn-primary" onClick={handleAddSave}>
+            Save
+          </button>
+          <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={handleClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>

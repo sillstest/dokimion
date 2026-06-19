@@ -7,7 +7,14 @@ import Backend from "../services/backend";
 
 function Organization({ match }) {
   const orgId = match?.params?.organization;
-  const [organization, setOrganization] = useState({ id: null, name: "", description: "", allowedGroups: [], allowedUsers: [], admins: [] });
+  const [organization, setOrganization] = useState({
+    id: null,
+    name: "",
+    description: "",
+    allowedGroups: [],
+    allowedUsers: [],
+    admins: [],
+  });
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {

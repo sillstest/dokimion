@@ -7,21 +7,30 @@ import Backend from "../services/backend";
 
 const ITEMS_ON_PAGE = 20;
 const MAX_VISIBLE_PAGES = 7;
-const defaultFilter = { skip: 0, limit: ITEMS_ON_PAGE, orderby: "firstName", orderdir: "ASC", includedFields: "firstName,lastName,login,id,email,role" };
+const defaultFilter = {
+  skip: 0,
+  limit: ITEMS_ON_PAGE,
+  orderby: "firstName",
+  orderdir: "ASC",
+  includedFields: "firstName,lastName,login,id,email,role",
+};
 
 function Users({ location, history }) {
   const [users, setUsers] = useState([]);
-  const [filter, setFilter] = useState(() => ({ ...defaultFilter, ...Utils.queryToFilter(location.search.substring(1)) }));
+  const [filter, setFilter] = useState(() => ({
+    ...defaultFilter,
+    ...Utils.queryToFilter(location.search.substring(1)),
+  }));
   const [pagerTotal, setPagerTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
 
-  const fetchUsers = useCallback((f) => {
+  const fetchUsers = useCallback(f => {
     Backend.get("user?" + Utils.filterToQuery(f))
       .then(response => setUsers(response))
       .catch(error => console.log("Couldn't get users: " + error));
   }, []);
 
-  const fetchCount = useCallback((f) => {
+  const fetchCount = useCallback(f => {
     const countFilter = { ...f, skip: 0, limit: 0 };
     Backend.get("user/count?" + Utils.filterToQuery(countFilter))
       .then(response => setPagerTotal(response))
@@ -45,7 +54,9 @@ function Users({ location, history }) {
     <div>
       <table className="table table-striped">
         <thead>
-          <tr><th scope="col">User</th></tr>
+          <tr>
+            <th scope="col">User</th>
+          </tr>
         </thead>
         <tbody>
           {users.map((user, i) => (

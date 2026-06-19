@@ -21,7 +21,9 @@ function Attachments({ testcase, projectId, readonly, testDeveloper, onTestcaseU
       uploadUrl: getApiBaseUrl(projectId + "/testcase/" + testcase.id + "/attachment"),
       maxFileSize: 100000,
     });
-    $("#file-data").on("fileuploaded", () => { if (onTestcaseUpdated) onTestcaseUpdated(); });
+    $("#file-data").on("fileuploaded", () => {
+      if (onTestcaseUpdated) onTestcaseUpdated();
+    });
   }, [testcase, projectId]);
 
   function removeAttachmentConfirmation(attachmentId) {
@@ -51,13 +53,20 @@ function Attachments({ testcase, projectId, readonly, testDeveloper, onTestcaseU
         {(testcase?.attachments || []).map(attachment => (
           <div key={attachment.id} className="row">
             <div className="col-sm-11">
-              <a href={getApiBaseUrl("") + projectId + "/testcase/" + testcase.id + "/attachment/" + attachment.id} target="_blank" rel="noreferrer">
+              <a
+                href={getApiBaseUrl("") + projectId + "/testcase/" + testcase.id + "/attachment/" + attachment.id}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {attachment.title}
               </a>
             </div>
             {!(readonly || testDeveloper) && (
               <div className="col-sm-1">
-                <span className="clickable edit-icon-visible red" onClick={() => removeAttachmentConfirmation(attachment.id)}>
+                <span
+                  className="clickable edit-icon-visible red"
+                  onClick={() => removeAttachmentConfirmation(attachment.id)}
+                >
                   <FontAwesomeIcon icon={faMinusCircle} />
                 </span>
               </div>
@@ -69,7 +78,15 @@ function Attachments({ testcase, projectId, readonly, testDeveloper, onTestcaseU
         <div>
           <form id="file-form" encType="multipart/form-data">
             <div className="file-loading">
-              <input id="file-data" className="file" type="file" name="file" multiple data-min-file-count="0" data-theme="fas" />
+              <input
+                id="file-data"
+                className="file"
+                type="file"
+                name="file"
+                multiple
+                data-min-file-count="0"
+                data-theme="fas"
+              />
             </div>
             <br />
           </form>
@@ -86,8 +103,12 @@ function Attachments({ testcase, projectId, readonly, testDeveloper, onTestcaseU
             </div>
             <div className="modal-body">Are you sure you want to remove attachment?</div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={cancelRemoveAttachmentConfirmation}>Close</button>
-              <button type="button" className="btn btn-danger" onClick={removeAttachment}>Remove Attachment</button>
+              <button type="button" className="btn btn-secondary" onClick={cancelRemoveAttachmentConfirmation}>
+                Close
+              </button>
+              <button type="button" className="btn btn-danger" onClick={removeAttachment}>
+                Remove Attachment
+              </button>
             </div>
           </div>
         </div>

@@ -18,7 +18,7 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
   const [session, setSession] = useState(sessionProp || emptySession);
   const [projects, setProjects] = useState([]);
   const [projectName, setProjectName] = useState("");
-  const [projectId, setProjectId] = useState(null);
+  const [, setProjectId] = useState(null);
 
   function handleSessionChange(s) {
     if (s && s.person) {
@@ -42,14 +42,18 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
         setSession(prev => {
           if (prev.id !== response.id) {
             handleSessionChange(response);
-            if (response.person.defaultPassword &&
-                !window.location.pathname.includes("/user/change-profile-redirect") &&
-                !window.location.pathname.includes("/user/changepass")) {
+            if (
+              response.person.defaultPassword &&
+              !window.location.pathname.includes("/user/change-profile-redirect") &&
+              !window.location.pathname.includes("/user/changepass")
+            ) {
               history.push("/user/change-profile-redirect/" + response.person.login);
-            } else if (response.metainfo.organizationsEnabled &&
-                       !response.metainfo.currentOrganization &&
-                       window.location.pathname != "/orgselect" &&
-                       window.location.pathname != "/organizations/new") {
+            } else if (
+              response.metainfo.organizationsEnabled &&
+              !response.metainfo.currentOrganization &&
+              window.location.pathname != "/orgselect" &&
+              window.location.pathname != "/organizations/new"
+            ) {
               history.push("/orgselect");
             }
           }
@@ -71,19 +75,29 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
     if (!project) return;
     setProjectId(project);
     Backend.get("project/" + project)
-      .then(response => { setProjectName(response.name); setProjectId(response.id); })
+      .then(response => {
+        setProjectName(response.name);
+        setProjectId(response.id);
+      })
       .catch(error => console.log("Couldn't get project: " + error));
   }, [project]);
 
   function changeOrganization(organizationId) {
     Backend.post("user/changeorg/" + organizationId)
-      .then(response => { handleSessionChange(response); window.location = "/"; })
+      .then(response => {
+        handleSessionChange(response);
+        window.location = "/";
+      })
       .catch(() => console.log("Unable to change organization"));
   }
 
   function logOut() {
     Backend.delete("user/logout")
-      .then(() => { setSession(emptySession); handleSessionChange(emptySession); history.push("/auth"); })
+      .then(() => {
+        setSession(emptySession);
+        handleSessionChange(emptySession);
+        history.push("/auth");
+      })
       .catch(error => console.log(error));
   }
 
@@ -93,7 +107,9 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
       <span>
         {(!session.metainfo || !session.metainfo.organizationsEnabled) && (
           <div>
-            <a className="dropdown-item" href={"/user/profile/" + session.person.login}>Profile</a>
+            <a className="dropdown-item" href={"/user/profile/" + session.person.login}>
+              Profile
+            </a>
           </div>
         )}
         {session.metainfo && session.metainfo.organizationsEnabled && (
@@ -102,29 +118,48 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
               <div key={index} className="clickable dropdown-item" onClick={() => changeOrganization(organization.id)}>
                 {organization.name}
                 {session.metainfo.currentOrganization === organization.id && (
-                  <span> <FontAwesomeIcon icon={faCheck} /></span>
+                  <span>
+                    {" "}
+                    <FontAwesomeIcon icon={faCheck} />
+                  </span>
                 )}
               </div>
             ))}
             <div className="dropdown-divider"></div>
-            <Link className="dropdown-item" to="/organizations/edit">Edit Current Organization</Link>
-            <Link className="dropdown-item" to="/organizations/new">Create New Organization</Link>
+            <Link className="dropdown-item" to="/organizations/edit">
+              Edit Current Organization
+            </Link>
+            <Link className="dropdown-item" to="/organizations/new">
+              Create New Organization
+            </Link>
           </div>
         )}
         {Utils.isUserOwnerOrAdmin(session) && (!session.metainfo || !session.metainfo.organizationsEnabled) && (
           <div>
             <div className="dropdown-divider"></div>
-            <a className="dropdown-item" href="/user/all-users-redirect">All Users</a>
-            <a className="dropdown-item" href="/user/create-redirect">Create User</a>
-            <a className="dropdown-item" href="/user/delete">Delete User</a>
+            <a className="dropdown-item" href="/user/all-users-redirect">
+              All Users
+            </a>
+            <a className="dropdown-item" href="/user/create-redirect">
+              Create User
+            </a>
+            <a className="dropdown-item" href="/user/delete">
+              Delete User
+            </a>
           </div>
         )}
         <div className="dropdown-divider"></div>
-        <a className="dropdown-item" href="#" onClick={logOut}>Log out</a>
+        <a className="dropdown-item" href="#" onClick={logOut}>
+          Log out
+        </a>
       </span>
     );
   } else {
-    profileContext = <a className="dropdown-item active" href="/auth">Login</a>;
+    profileContext = (
+      <a className="dropdown-item active" href="/auth">
+        Login
+      </a>
+    );
   }
 
   const isLoggedIn = session.person !== undefined && session.person.firstName !== "Guest";
@@ -139,7 +174,15 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
             </Helmet>
           )}
           {session.metainfo && session.metainfo.analyticsEnabled && (
-            <Helmet script={[{ type: "text/javascript", innerHTML: "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-4CEVX7JVR7');" }]} />
+            <Helmet
+              script={[
+                {
+                  type: "text/javascript",
+                  innerHTML:
+                    "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-4CEVX7JVR7');",
+                },
+              ]}
+            />
           )}
 
           <button type="button" className="navbar-toggler" data-toggle="collapse" data-target="#navbarNav">
@@ -149,18 +192,31 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
             {/* Projects dropdown */}
             <ul className="navbar-nav">
               <li className="nav-item dropdown">
-                <a className="nav-item nav-link dropdown-toggle mr-md-2" href="#" id="bd-projects" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <a
+                  className="nav-item nav-link dropdown-toggle mr-md-2"
+                  href="#"
+                  id="bd-projects"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
                   {projectName || "Projects"}
                 </a>
                 <div className="dropdown-menu dropdown-menu-left" aria-labelledby="bd-projects">
-                  <Link className="dropdown-item" to="/projects">All</Link>
+                  <Link className="dropdown-item" to="/projects">
+                    All
+                  </Link>
                   {projects.map(p => (
-                    <Link to={"/projects/" + p.id} key={p.id} className="dropdown-item">{p.name}</Link>
+                    <Link to={"/projects/" + p.id} key={p.id} className="dropdown-item">
+                      {p.name}
+                    </Link>
                   ))}
                   {Utils.isUserOwnerOrAdmin(session) && (
                     <div>
                       <hr />
-                      <Link to="/projects/new" className="dropdown-item">Create Project</Link>
+                      <Link to="/projects/new" className="dropdown-item">
+                        Create Project
+                      </Link>
                     </div>
                   )}
                 </div>
@@ -172,19 +228,27 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
             {project && (
               <ul className="navbar-nav mr-auto">
                 <li className="nav-item">
-                  <Link className="nav-link" to={"/" + project + "/testcases"}>TestCases</Link>
+                  <Link className="nav-link" to={"/" + project + "/testcases"}>
+                    TestCases
+                  </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to={"/" + project + "/launches"}>Launches</Link>
+                  <Link className="nav-link" to={"/" + project + "/launches"}>
+                    Launches
+                  </Link>
                 </li>
                 {session.person.roles != null && session.person.roles[0] != "OBSERVERONLY" && (
                   <li className="nav-item">
-                    <Link className="nav-link" to={"/" + project + "/testsuites"}>Suites</Link>
+                    <Link className="nav-link" to={"/" + project + "/testsuites"}>
+                      Suites
+                    </Link>
                   </li>
                 )}
                 {Utils.isAdmin(session) && (
                   <li className="nav-item">
-                    <Link className="nav-link" to={"/" + project + "/attributes"}>Attributes</Link>
+                    <Link className="nav-link" to={"/" + project + "/attributes"}>
+                      Attributes
+                    </Link>
                   </li>
                 )}
               </ul>
@@ -193,7 +257,14 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
             {/* User dropdown */}
             <ul className="navbar-nav">
               <li className="nav-item dropdown">
-                <a className="nav-item nav-link dropdown-toggle mr-md-2" href="#" id="bd-login" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <a
+                  className="nav-item nav-link dropdown-toggle mr-md-2"
+                  href="#"
+                  id="bd-login"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
                   {session.person.firstName || ""} {session.person.lastName || ""}
                 </a>
                 <div className="dropdown-menu dropdown-menu-right" aria-labelledby="bd-login">

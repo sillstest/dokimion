@@ -21,8 +21,14 @@ function Project({ match, onProjectChange }) {
     if (!projectId) return;
     if (onProjectChange) onProjectChange(projectId);
     Backend.get("project/" + projectId)
-      .then(response => { setProject(response); setLoading(false); })
-      .catch(error => { setErrorMessage("Couldn't get project: " + error); setLoading(false); });
+      .then(response => {
+        setProject(response);
+        setLoading(false);
+      })
+      .catch(error => {
+        setErrorMessage("Couldn't get project: " + error);
+        setLoading(false);
+      });
   }, [projectId]);
 
   return (
@@ -44,28 +50,44 @@ function Project({ match, onProjectChange }) {
       <div className="row">
         <div className="col-sm-6">
           <div className="card project-card">
-            <div className="card-header"><Link to={"/" + project.id + "/launches"}>Launches</Link></div>
-            <div className="card-body"><LaunchesWidget limit={5} projectId={project.id} /></div>
+            <div className="card-header">
+              <Link to={"/" + project.id + "/launches"}>Launches</Link>
+            </div>
+            <div className="card-body">
+              <LaunchesWidget limit={5} projectId={project.id} />
+            </div>
           </div>
         </div>
         <div className="col-sm-6">
           <div className="card project-card">
-            <div className="card-header"><Link to={"/" + project.id + "/testsuites"}>Test Suites</Link></div>
-            <div className="card-body"><TestSuitesWidget limit={11} projectId={project.id} /></div>
+            <div className="card-header">
+              <Link to={"/" + project.id + "/testsuites"}>Test Suites</Link>
+            </div>
+            <div className="card-body">
+              <TestSuitesWidget limit={11} projectId={project.id} />
+            </div>
           </div>
         </div>
       </div>
       <div className="row">
         <div className="col-6">
           <div className="card project-card">
-            <div className="card-header"><Link to={"/" + project.id + "/launches"}>Last 20 Launches</Link></div>
-            <div className="card-body"><LaunchesTrendWidget projectId={project.id} /></div>
+            <div className="card-header">
+              <Link to={"/" + project.id + "/launches"}>Last 20 Launches</Link>
+            </div>
+            <div className="card-body">
+              <LaunchesTrendWidget projectId={project.id} />
+            </div>
           </div>
         </div>
         <div className="col-sm-6">
           <div className="card project-card">
-            <div className="card-header"><span /></div>
-            <div className="card-body"><ProjectScratchpadWidget limit={11} projectId={project.id} /></div>
+            <div className="card-header">
+              <span />
+            </div>
+            <div className="card-body">
+              <ProjectScratchpadWidget limit={11} projectId={project.id} />
+            </div>
           </div>
         </div>
       </div>

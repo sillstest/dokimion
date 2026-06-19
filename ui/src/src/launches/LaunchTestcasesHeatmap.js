@@ -17,8 +17,14 @@ function LaunchTestcasesHeatmap({ match, location }) {
   useEffect(() => {
     if (!projectId) return;
     Backend.get(projectId + "/launch/heatmap" + location.search)
-      .then(response => { setHeatmap(response); setLoading(false); })
-      .catch(() => { setErrorMessage("Couldn't get launch testcases heatmap"); setLoading(false); });
+      .then(response => {
+        setHeatmap(response);
+        setLoading(false);
+      })
+      .catch(() => {
+        setErrorMessage("Couldn't get launch testcases heatmap");
+        setLoading(false);
+      });
   }, [projectId, location.search]);
 
   function getPercentile(testcase) {
@@ -39,7 +45,7 @@ function LaunchTestcasesHeatmap({ match, location }) {
         const updated = { ...response, launchBroken: value };
         Backend.put(projectId + "/testcase/", updated)
           .then(saved => {
-            setHeatmap(prev => prev.map(tc => tc.id == id ? { ...tc, launchBroken: saved.launchBroken } : tc));
+            setHeatmap(prev => prev.map(tc => (tc.id == id ? { ...tc, launchBroken: saved.launchBroken } : tc)));
           })
           .catch(() => setErrorMessage("Couldn't update testcase status"));
       })
@@ -53,24 +59,34 @@ function LaunchTestcasesHeatmap({ match, location }) {
         <thead>
           <tr>
             <th scope="col">Title</th>
-            <th scope="col" className="center-text">Failures</th>
+            <th scope="col" className="center-text">
+              Failures
+            </th>
             <th scope="col">Active</th>
           </tr>
         </thead>
         <tbody>
           {heatmap.map(testcase => (
             <tr key={testcase.id}>
-              <td><Link to={"/" + projectId + "/testcase/" + testcase.id}>{testcase.name}</Link></td>
+              <td>
+                <Link to={"/" + projectId + "/testcase/" + testcase.id}>{testcase.name}</Link>
+              </td>
               <td className={getCellColorClass(testcase) + " center-text"}>{getPercentile(testcase)}%</td>
               <td>
-                <Checkbox toggle onClick={() => onBrokenToggle(testcase.id, !testcase.launchBroken)}
-                  checked={testcase.launchBroken} label={{ children: testcase.launchBroken ? "On" : "Off" }} />
+                <Checkbox
+                  toggle
+                  onClick={() => onBrokenToggle(testcase.id, !testcase.launchBroken)}
+                  checked={testcase.launchBroken}
+                  label={{ children: testcase.launchBroken ? "On" : "Off" }}
+                />
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div className="sweet-loading"><FadeLoader size={100} color={"#135f38"} loading={loading} /></div>
+      <div className="sweet-loading">
+        <FadeLoader size={100} color={"#135f38"} loading={loading} />
+      </div>
     </div>
   );
 }

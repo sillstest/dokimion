@@ -5,7 +5,13 @@ import Highcharts from "highcharts";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
-const defaultFilter = { skip: 0, limit: 20, orderby: "id", orderdir: "DESC", includedFields: "launchStats,createdTime" };
+const defaultFilter = {
+  skip: 0,
+  limit: 20,
+  orderby: "id",
+  orderdir: "DESC",
+  includedFields: "launchStats,createdTime",
+};
 
 function LaunchesTrendWidget({ projectId, filter: filterProp }) {
   const filter = filterProp || defaultFilter;
@@ -37,17 +43,29 @@ function LaunchesTrendWidget({ projectId, filter: filterProp }) {
           legend: { layout: "vertical", align: "right", verticalAlign: "middle" },
           plotOptions: { series: { label: { connectorAllowed: false } } },
           series: Object.keys(totalStats).map(key => totalStats[key]),
-          responsive: { rules: [{ condition: { maxWidth: 500 }, chartOptions: { legend: { layout: "horizontal", align: "center", verticalAlign: "bottom" } } }] },
+          responsive: {
+            rules: [
+              {
+                condition: { maxWidth: 500 },
+                chartOptions: { legend: { layout: "horizontal", align: "center", verticalAlign: "bottom" } },
+              },
+            ],
+          },
         });
       })
-      .catch(error => { setErrorMessage("Couldn't get launches: " + error); setLoading(false); });
+      .catch(error => {
+        setErrorMessage("Couldn't get launches: " + error);
+        setLoading(false);
+      });
   }, [projectId, filter]);
 
   return (
     <div>
       <ControlledPopup popupMessage={errorMessage} />
       <div id="trend"></div>
-      <div id="sweet-loading"><FadeLoader size={100} color={"#135f38"} loading={loading} /></div>
+      <div id="sweet-loading">
+        <FadeLoader size={100} color={"#135f38"} loading={loading} />
+      </div>
     </div>
   );
 }

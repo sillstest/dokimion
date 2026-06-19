@@ -21,7 +21,9 @@ function Results({ testcase, projectId, onTestcaseUpdated }) {
       uploadUrl: getApiBaseUrl(projectId + "/testcase/" + testcase.id + "/result"),
       maxFileSize: 100000,
     });
-    $("#file-data").on("fileuploaded", () => { if (onTestcaseUpdated) onTestcaseUpdated(); });
+    $("#file-data").on("fileuploaded", () => {
+      if (onTestcaseUpdated) onTestcaseUpdated();
+    });
   }, [testcase, projectId]);
 
   function removeResultConfirmation(resultId) {
@@ -51,7 +53,11 @@ function Results({ testcase, projectId, onTestcaseUpdated }) {
         {(testcase?.results || []).map(result => (
           <div key={result.id} className="row">
             <div className="col-sm-11">
-              <a href={getApiBaseUrl("") + projectId + "/testcase/" + testcase.id + "/result/" + result.id} target="_blank" rel="noreferrer">
+              <a
+                href={getApiBaseUrl("") + projectId + "/testcase/" + testcase.id + "/result/" + result.id}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {result.title}
               </a>
             </div>
@@ -66,7 +72,15 @@ function Results({ testcase, projectId, onTestcaseUpdated }) {
       <div>
         <form id="file-form" encType="multipart/form-data">
           <div className="file-loading">
-            <input id="file-data" className="file" type="file" name="file" multiple data-min-file-count="0" data-theme="fas" />
+            <input
+              id="file-data"
+              className="file"
+              type="file"
+              name="file"
+              multiple
+              data-min-file-count="0"
+              data-theme="fas"
+            />
           </div>
           <br />
         </form>
@@ -82,8 +96,12 @@ function Results({ testcase, projectId, onTestcaseUpdated }) {
             </div>
             <div className="modal-body">Are you sure you want to remove result?</div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={cancelRemoveResultConfirmation}>Close</button>
-              <button type="button" className="btn btn-danger" onClick={removeResult}>Remove Result</button>
+              <button type="button" className="btn btn-secondary" onClick={cancelRemoveResultConfirmation}>
+                Close
+              </button>
+              <button type="button" className="btn btn-danger" onClick={removeResult}>
+                Remove Result
+              </button>
             </div>
           </div>
         </div>

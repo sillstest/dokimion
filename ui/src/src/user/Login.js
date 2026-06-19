@@ -51,12 +51,34 @@ function Login({ location, onSessionChange }) {
       <ControlledPopup popupMessage={errorMessage} />
       <form className="form-signin">
         <h1 className="h3 mb-3 font-weight-normal">Please sign in</h1>
-        <label htmlFor="login" className="sr-only">Login</label>
-        <input type="text" id="login" name="login" className="form-control" placeholder="Login" required onChange={e => setLogin(e.target.value)} />
-        <label htmlFor="password" className="sr-only">Password</label>
-        <input type="password" id="password" name="password" className="form-control" placeholder="Password" required onChange={e => setPassword(e.target.value)} />
+        <label htmlFor="login" className="sr-only">
+          Login
+        </label>
+        <input
+          type="text"
+          id="login"
+          name="login"
+          className="form-control"
+          placeholder="Login"
+          required
+          onChange={e => setLogin(e.target.value)}
+        />
+        <label htmlFor="password" className="sr-only">
+          Password
+        </label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          className="form-control"
+          placeholder="Password"
+          required
+          onChange={e => setPassword(e.target.value)}
+        />
         <Turnstile sitekey={process.env.REACT_APP_SITE_KEY} onVerify={handleRecaptcha} />
-        <button className="btn btn-lg btn-primary btn-block" disabled={!recaptcha} onClick={handleSubmit}>Sign in</button>
+        <button className="btn btn-lg btn-primary btn-block" disabled={!recaptcha} onClick={handleSubmit}>
+          Sign in
+        </button>
       </form>
       <LinkButtons buttonStyle={forgotButton} buttonText="Forgot Password" link="/forgot_password" />
     </div>

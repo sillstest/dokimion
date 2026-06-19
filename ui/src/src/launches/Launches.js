@@ -5,9 +5,8 @@ import { Link } from "react-router-dom";
 import Pager from "../pager/Pager";
 import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
-import Button from "@mui/material/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faPlug } from "@fortawesome/free-solid-svg-icons";
+import { faPlug } from "@fortawesome/free-solid-svg-icons";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 
@@ -26,34 +25,51 @@ function Launches({ match, history, location, onProjectChange }) {
 
   const [launches, setLaunches] = useState([]);
   const [filter, setFilter] = useState(() => ({
-    skip: 0, limit: ITEMS_ON_PAGE, orderby: "id", orderdir: "DESC",
+    skip: 0,
+    limit: ITEMS_ON_PAGE,
+    orderby: "id",
+    orderdir: "DESC",
     includedFields: "name,launchStats,id,createdTime,startTime,finishTime,launcherConfig,duration,testCaseTree",
     ...Utils.queryToFilter(location.search.substring(1)),
   }));
   const [pagerTotal, setPagerTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
-  const [launcherDescriptors, setLauncherDescriptors] = useState([]);
+  const [, setLauncherDescriptors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const intervalRef = useRef(null);
   const filterRef = useRef(filter);
-  useEffect(() => { filterRef.current = filter; }, [filter]);
+  useEffect(() => {
+    filterRef.current = filter;
+  }, [filter]);
 
-  const fetchLaunches = useCallback((f) => {
-    Backend.get(project + "/launch?" + Utils.filterToQuery(f))
-      .then(response => { setLaunches(response); setLoading(false); })
-      .catch(error => { setErrorMessage("Couldn't get launches: " + error); setLoading(false); });
-  }, [project]);
+  const fetchLaunches = useCallback(
+    f => {
+      Backend.get(project + "/launch?" + Utils.filterToQuery(f))
+        .then(response => {
+          setLaunches(response);
+          setLoading(false);
+        })
+        .catch(error => {
+          setErrorMessage("Couldn't get launches: " + error);
+          setLoading(false);
+        });
+    },
+    [project],
+  );
 
-  const fetchCount = useCallback((f) => {
-    const countFilter = { ...f, skip: 0, limit: 0 };
-    Backend.get(project + "/launch/count?" + Utils.filterToQuery(countFilter))
-      .then(response => {
-        setPagerTotal(response);
-        setCurrentPage(f.skip / f.limit);
-      })
-      .catch(error => console.log(error));
-  }, [project]);
+  const fetchCount = useCallback(
+    f => {
+      const countFilter = { ...f, skip: 0, limit: 0 };
+      Backend.get(project + "/launch/count?" + Utils.filterToQuery(countFilter))
+        .then(response => {
+          setPagerTotal(response);
+          setCurrentPage(f.skip / f.limit);
+        })
+        .catch(error => console.log(error));
+    },
+    [project],
+  );
 
   useEffect(() => {
     fetchLaunches(filter);
@@ -71,14 +87,6 @@ function Launches({ match, history, location, onProjectChange }) {
       else updated[fieldName] = val;
       return updated;
     });
-  }
-
-  function handleFromDateFilterChange(value) {
-    setFilter(prev => { const u = { ...prev }; if (value == null) delete u.from_createdTime; else u.from_createdTime = value.getTime(); return u; });
-  }
-
-  function handleToDateFilterChange(value) {
-    setFilter(prev => { const u = { ...prev }; if (value == null) delete u.to_createdTime; else u.to_createdTime = value.getTime(); return u; });
   }
 
   function onFilter(event) {
@@ -109,10 +117,22 @@ function Launches({ match, history, location, onProjectChange }) {
     return (
       <div className="progress">
         <ControlledPopup popupMessage={errorMessage} />
-        <div className="progress-bar progress-bar-striped" role="progressbar" style={Utils.getProgressBarStyle(s.RUNNING, total)} />
-        <div className="progress-bar bg-success" role="progressbar" style={Utils.getProgressBarStyle(s.PASSED, total)} />
+        <div
+          className="progress-bar progress-bar-striped"
+          role="progressbar"
+          style={Utils.getProgressBarStyle(s.RUNNING, total)}
+        />
+        <div
+          className="progress-bar bg-success"
+          role="progressbar"
+          style={Utils.getProgressBarStyle(s.PASSED, total)}
+        />
         <div className="progress-bar bg-danger" role="progressbar" style={Utils.getProgressBarStyle(s.FAILED, total)} />
-        <div className="progress-bar bg-warning" role="progressbar" style={Utils.getProgressBarStyle(s.BROKEN, total)} />
+        <div
+          className="progress-bar bg-warning"
+          role="progressbar"
+          style={Utils.getProgressBarStyle(s.BROKEN, total)}
+        />
       </div>
     );
   }
@@ -125,41 +145,72 @@ function Launches({ match, history, location, onProjectChange }) {
             <span className="float-right">
               <Link to={"/" + project + "/launches/statistics?" + Utils.filterToQuery(filter)}>Statistics</Link>
             </span>
-            <label><h5>Launch Name</h5></label>
-            <input type="text" className="form-control" id="name" name="name" placeholder="Launch title"
-              value={filter.like_name || ""} onChange={e => handleFilterChange("like_name", e)} />
+            <label>
+              <h5>Launch Name</h5>
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="name"
+              name="name"
+              placeholder="Launch title"
+              value={filter.like_name || ""}
+              onChange={e => handleFilterChange("like_name", e)}
+            />
             <small className="form-text text-muted">Find by partly matching Launch title</small>
           </div>
-          <button type="submit" className="btn btn-primary" onClick={onFilter}>Filter</button>
+          <button type="submit" className="btn btn-primary" onClick={onFilter}>
+            Filter
+          </button>
         </form>
       </div>
       <div className="col-sm-9">
-        <div className="sweet-loading"><FadeLoader size={100} color={"#135f38"} loading={loading} /></div>
+        <div className="sweet-loading">
+          <FadeLoader size={100} color={"#135f38"} loading={loading} />
+        </div>
         <table className="table table-striped">
           <thead>
             <tr>
-              <th scope="col">Title</th><th scope="col">Progress</th>
-              <th scope="col">Created</th><th scope="col">Started</th>
-              <th scope="col">Finished</th><th scope="col">Duration</th>
-              <th scope="col">Remove</th><th></th>
+              <th scope="col">Title</th>
+              <th scope="col">Progress</th>
+              <th scope="col">Created</th>
+              <th scope="col">Started</th>
+              <th scope="col">Finished</th>
+              <th scope="col">Duration</th>
+              <th scope="col">Remove</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {launches.map((launch, i) => (
               <tr key={i}>
-                <td><Link to={"/" + project + "/launch/" + launch.id}>{launch.name}</Link></td>
+                <td>
+                  <Link to={"/" + project + "/launch/" + launch.id}>{launch.name}</Link>
+                </td>
                 <td>{getProgressBar(launch)}</td>
                 <td>{Utils.timeToDate(launch.createdTime)}</td>
                 <td>{Utils.timeToDate(launch.startTime)}</td>
                 <td>{Utils.timeToDate(launch.finishTime)}</td>
                 <td>{Utils.timePassed(launch.duration)}</td>
-                <td><button onClick={() => deleteLaunch(launch.id)}><i className="bi-trash" aria-hidden="true"></i></button></td>
-                <td>{launch.launcherConfig && launch.launcherConfig.launcherId && <FontAwesomeIcon icon={faPlug} />}</td>
+                <td>
+                  <button onClick={() => deleteLaunch(launch.id)}>
+                    <i className="bi-trash" aria-hidden="true"></i>
+                  </button>
+                </td>
+                <td>
+                  {launch.launcherConfig && launch.launcherConfig.launcherId && <FontAwesomeIcon icon={faPlug} />}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
-        <Pager totalItems={pagerTotal} currentPage={currentPage} visiblePages={MAX_VISIBLE_PAGES} itemsOnPage={ITEMS_ON_PAGE} onPageChanged={handlePageChanged} />
+        <Pager
+          totalItems={pagerTotal}
+          currentPage={currentPage}
+          visiblePages={MAX_VISIBLE_PAGES}
+          itemsOnPage={ITEMS_ON_PAGE}
+          onPageChanged={handlePageChanged}
+        />
       </div>
     </div>
   );

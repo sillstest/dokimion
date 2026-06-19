@@ -6,7 +6,9 @@ function Redirect({ requestUrl }) {
   useEffect(() => {
     backend
       .get(requestUrl)
-      .then(response => { window.location = response.url; })
+      .then(response => {
+        window.location = response.url;
+      })
       .catch(error => console.log(error));
   }, [requestUrl]);
 

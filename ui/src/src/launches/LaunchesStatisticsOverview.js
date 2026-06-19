@@ -20,8 +20,14 @@ function LaunchesStatisticsOverview({ match, location }) {
   useEffect(() => {
     if (!projectId) return;
     Backend.get(projectId + "/launch/statistics" + location.search)
-      .then(response => { setStats(response); setLoading(false); })
-      .catch(error => { setErrorMessage("Couldn't get launch statistics: " + error); setLoading(false); });
+      .then(response => {
+        setStats(response);
+        setLoading(false);
+      })
+      .catch(error => {
+        setErrorMessage("Couldn't get launch statistics: " + error);
+        setLoading(false);
+      });
   }, [projectId, location.search]);
 
   const all = stats.all;
@@ -34,7 +40,7 @@ function LaunchesStatisticsOverview({ match, location }) {
       </div>
       <div className="row">
         <div className="col-6">
-          {typeof all !== 'undefined' && all.launchCount !== undefined && (
+          {typeof all !== "undefined" && all.launchCount !== undefined && (
             <table className="table">
               <tbody>
                 <tr>
@@ -53,12 +59,20 @@ function LaunchesStatisticsOverview({ match, location }) {
         </div>
       </div>
       <div className="row">
-        <div className="col-6"><LaunchesByStatusesPieWidget projectId={projectId} filter={filter} /></div>
-        <div className="col-6"><LaunchesByUsersPieWidget projectId={projectId} filter={filter} /></div>
+        <div className="col-6">
+          <LaunchesByStatusesPieWidget projectId={projectId} filter={filter} />
+        </div>
+        <div className="col-6">
+          <LaunchesByUsersPieWidget projectId={projectId} filter={filter} />
+        </div>
       </div>
       <div className="row">
-        <div className="col-6"><LaunchesTrendWidget projectId={projectId} filter={filter} /></div>
-        <div className="col-6"><LaunchesByUserExecutionTrend projectId={projectId} filter={filter} /></div>
+        <div className="col-6">
+          <LaunchesTrendWidget projectId={projectId} filter={filter} />
+        </div>
+        <div className="col-6">
+          <LaunchesByUserExecutionTrend projectId={projectId} filter={filter} />
+        </div>
       </div>
     </div>
   );

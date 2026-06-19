@@ -14,7 +14,11 @@ function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsP
   const [errorMessage, setErrorMessage] = useState("");
 
   const defaultProjectAttributesFilter = {
-    skip: 0, limit: 20, orderby: "project", orderdir: "ASC", includedFields: "project,attributes",
+    skip: 0,
+    limit: 20,
+    orderby: "project",
+    orderdir: "ASC",
+    includedFields: "project,attributes",
   };
 
   useEffect(() => {
@@ -39,7 +43,12 @@ function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsP
   useEffect(() => {
     const project = match?.params?.project;
     if (project) {
-      Backend.get("defaultprojectattributes/getalldefaultprojattribs/" + project + "?" + Utils.filterToQuery(defaultProjectAttributesFilter))
+      Backend.get(
+        "defaultprojectattributes/getalldefaultprojattribs/" +
+          project +
+          "?" +
+          Utils.filterToQuery(defaultProjectAttributesFilter),
+      )
         .then(response => setDefaultProjectAttributes(response))
         .catch(error => console.log(error));
     }
@@ -49,8 +58,12 @@ function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsP
     return projectAttributes.find(a => a.id === id) || {};
   }
 
-  function getAttributeName(id) { return getAttribute(id).name || ""; }
-  function getAttributeValues(id) { return getAttribute(id).attrValues || []; }
+  function getAttributeName(id) {
+    return getAttribute(id).name || "";
+  }
+  function getAttributeValues(id) {
+    return getAttribute(id).attrValues || [];
+  }
 
   function getAttributeKeysToAdd() {
     const attribs = (projectAttributes || [])
@@ -100,7 +113,9 @@ function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsP
 
   function handleSubmit(event) {
     Backend.post(match.params.project + "/testcase/", testcase)
-      .then(response => { if (onTestCaseAdded) onTestCaseAdded(response); })
+      .then(response => {
+        if (onTestCaseAdded) onTestCaseAdded(response);
+      })
       .catch(error => setErrorMessage("Couldn't create testcase: " + error));
     event.preventDefault();
   }
@@ -110,7 +125,9 @@ function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsP
       <ControlledPopup popupMessage={errorMessage} />
       <div className="modal-content">
         <div className="modal-header">
-          <h5 className="modal-title" id="editAttributeLabel">Create Test Case</h5>
+          <h5 className="modal-title" id="editAttributeLabel">
+            Create Test Case
+          </h5>
           <button type="button" className="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -126,7 +143,13 @@ function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsP
             <div className="form-group row">
               <label className="col-sm-3 col-form-label">Description</label>
               <div className="col-sm-9">
-                <input type="text" className="form-control" name="description" value={testcase.description} onChange={handleChange} />
+                <input
+                  type="text"
+                  className="form-control"
+                  name="description"
+                  value={testcase.description}
+                  onChange={handleChange}
+                />
               </div>
             </div>
             {Object.keys(testcase.attributes || {}).map((attributeId, i) => {
@@ -152,7 +175,10 @@ function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsP
                   <div key={i} className="form-group row">
                     <label className="col-sm-3 col-form-label">Attribute</label>
                     <div className="col-sm-8">
-                      <CreatableSelect onChange={e => editAttributeKey(attributeId, e)} options={getAttributeKeysToAdd()} />
+                      <CreatableSelect
+                        onChange={e => editAttributeKey(attributeId, e)}
+                        options={getAttributeKeysToAdd()}
+                      />
                     </div>
                     <div className="col-sm-1">
                       <span className="clickable red" onClick={() => removeAttribute(attributeId)}>
@@ -166,8 +192,12 @@ function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsP
           </form>
         </div>
         <div className="modal-footer">
-          <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" className="btn btn-primary" onClick={handleSubmit}>Save changes</button>
+          <button type="button" className="btn btn-secondary" data-dismiss="modal">
+            Close
+          </button>
+          <button type="button" className="btn btn-primary" onClick={handleSubmit}>
+            Save changes
+          </button>
         </div>
       </div>
     </div>

@@ -36,9 +36,7 @@ function Attributes({ match }) {
   function onAttributeAdded(attribute) {
     setAttributes(prev => {
       const idx = prev.findIndex(a => a.id === attribute.id);
-      const updated = idx >= 0
-        ? prev.map((a, i) => i === idx ? attribute : a)
-        : [...prev, attribute];
+      const updated = idx >= 0 ? prev.map((a, i) => (i === idx ? attribute : a)) : [...prev, attribute];
       return updated;
     });
     setAttributeToEdit(emptyAttribute());
@@ -72,9 +70,18 @@ function Attributes({ match }) {
         </div>
       ))}
       <div className="attributes-controls">
-        <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#editAttribute">Add</button>
+        <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#editAttribute">
+          Add
+        </button>
       </div>
-      <div className="modal fade" id="editAttribute" tabIndex="-1" role="dialog" aria-labelledby="editAttributeLabel" aria-hidden="true">
+      <div
+        className="modal fade"
+        id="editAttribute"
+        tabIndex="-1"
+        role="dialog"
+        aria-labelledby="editAttributeLabel"
+        aria-hidden="true"
+      >
         <AttributeForm
           project={project}
           projectAttributes={attributes}

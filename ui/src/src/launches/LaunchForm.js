@@ -5,23 +5,37 @@ import { withRouter } from "../common/withRouter";
 import CreatableSelect from "react-select/creatable";
 import LauncherForm from "../launches/LauncherForm";
 import $ from "jquery";
-import * as Utils from "../common/Utils";
 import { FadeLoader } from "react-spinners";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
 const defaultLaunch = () => ({
-  name: "", testSuite: { filter: {} }, properties: [],
-  launcherConfig: { properties: {} }, configAttributePairs: [],
+  name: "",
+  testSuite: { filter: {} },
+  properties: [],
+  launcherConfig: { properties: {} },
+  configAttributePairs: [],
 });
 
-function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuite: testSuiteProp,
-                      launch: launchProp, modalName: modalNameProp, match }) {
+function LaunchForm({
+  restart: restartProp,
+  failedOnly: failedOnlyProp,
+  testSuite: testSuiteProp,
+  launch: launchProp,
+  modalName: modalNameProp,
+  match,
+}) {
   const [launch, setLaunch] = useState(defaultLaunch());
   const [restart, setRestart] = useState(restartProp || false);
   const [failedOnly, setFailedOnly] = useState(failedOnlyProp || false);
   const [modalName, setModalName] = useState(modalNameProp);
-  const [project, setProject] = useState({ id: null, name: "", description: "", allowedGroups: [], launcherConfigs: [] });
+  const [project, setProject] = useState({
+    id: null,
+    name: "",
+    description: "",
+    allowedGroups: [],
+    launcherConfigs: [],
+  });
   const [projectAttributes, setProjectAttributes] = useState([{ name: "", values: [] }]);
   const [projectAttributeNames, setProjectAttributeNames] = useState([]);
   const [launcherDescriptors, setLauncherDescriptors] = useState([]);
@@ -107,7 +121,10 @@ function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuit
     } else {
       setLaunch(prev => ({
         ...prev,
-        launcherConfig: { ...prev.launcherConfig, properties: { ...prev.launcherConfig.properties, [propertyKey]: event.target.value } },
+        launcherConfig: {
+          ...prev.launcherConfig,
+          properties: { ...prev.launcherConfig.properties, [propertyKey]: event.target.value },
+        },
       }));
     }
   }
@@ -126,10 +143,16 @@ function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuit
     filters.forEach(f => delete f.title);
 
     const configAttributePairs = [...launch.configAttributePairs];
-    if (displayAttributeName.top !== "") configAttributePairs.push({ name: displayAttributeName.top, value: displayAttributeValues.top });
-    if (displayAttributeName.bottom !== "") configAttributePairs.push({ name: displayAttributeName.bottom, value: displayAttributeValues.bottom });
+    if (displayAttributeName.top !== "")
+      configAttributePairs.push({ name: displayAttributeName.top, value: displayAttributeValues.top });
+    if (displayAttributeName.bottom !== "")
+      configAttributePairs.push({ name: displayAttributeName.bottom, value: displayAttributeValues.bottom });
 
-    const launchToPost = { ...launch, testSuite: { ...launch.testSuite, filter: { ...launch.testSuite.filter, filters } }, configAttributePairs };
+    const launchToPost = {
+      ...launch,
+      testSuite: { ...launch.testSuite, filter: { ...launch.testSuite.filter, filters } },
+      configAttributePairs,
+    };
 
     let url = match.params.project + "/launch/";
     if (restart) {
@@ -156,7 +179,11 @@ function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuit
   if (launch.id && !restart && !launch.launchGroup) {
     modalBody = (
       <div className="modal-body" id="launch-created">
-        <Link onClick={launchModalDismiss} to={"/" + match.params.project + "/launch/" + launch.id} className="dropdown-item">
+        <Link
+          onClick={launchModalDismiss}
+          to={"/" + match.params.project + "/launch/" + launch.id}
+          className="dropdown-item"
+        >
           Go To Launch
         </Link>
       </div>
@@ -164,7 +191,11 @@ function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuit
   } else if (launch.id && !restart && launch.launchGroup) {
     modalBody = (
       <div className="modal-body" id="launch-created">
-        <Link onClick={launchModalDismiss} to={"/" + match.params.project + "/launches?launchGroup=" + launch.launchGroup} className="dropdown-item">
+        <Link
+          onClick={launchModalDismiss}
+          to={"/" + match.params.project + "/launches?launchGroup=" + launch.launchGroup}
+          className="dropdown-item"
+        >
           Go To Launch Group
         </Link>
       </div>
@@ -182,12 +213,20 @@ function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuit
           <div className="form-group row">
             <label className="col-4 col-form-label">Name</label>
             <div className="col-8">
-              <input type="text" className="form-control" name="name" value={launch.name || ""} onChange={handleChange} />
+              <input
+                type="text"
+                className="form-control"
+                name="name"
+                value={launch.name || ""}
+                onChange={handleChange}
+              />
             </div>
           </div>
           <div className="form-group row">
             <div className="col-sm-4">
-              <button type="button" className="btn btn-primary" onClick={handleAddAttribute}>Add Attribute</button>
+              <button type="button" className="btn btn-primary" onClick={handleAddAttribute}>
+                Add Attribute
+              </button>
             </div>
           </div>
           {noAttributes >= 1 && (
@@ -207,7 +246,10 @@ function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuit
                   <CreatableSelect
                     isMulti
                     onChange={values => changeLaunchConfigAttributeValues(values, "top")}
-                    options={(projectAttributes[displayAttributeIndex.top]?.values || []).map(val => ({ value: val, label: val }))}
+                    options={(projectAttributes[displayAttributeIndex.top]?.values || []).map(val => ({
+                      value: val,
+                      label: val,
+                    }))}
                   />
                 </div>
               </div>
@@ -230,7 +272,10 @@ function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuit
                   <CreatableSelect
                     isMulti
                     onChange={values => changeLaunchConfigAttributeValues(values, "bottom")}
-                    options={(projectAttributes[displayAttributeIndex.bottom]?.values || []).map(val => ({ value: val, label: val }))}
+                    options={(projectAttributes[displayAttributeIndex.bottom]?.values || []).map(val => ({
+                      value: val,
+                      label: val,
+                    }))}
                   />
                 </div>
               </div>
@@ -271,9 +316,13 @@ function LaunchForm({ restart: restartProp, failedOnly: failedOnlyProp, testSuit
           <div>
             <div>{modalBody}</div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" className="btn btn-secondary" data-dismiss="modal">
+                Close
+              </button>
               {(!launch.id || restart) && (
-                <button type="button" className="btn btn-primary" onClick={handleSubmit}>Create Launch</button>
+                <button type="button" className="btn btn-primary" onClick={handleSubmit}>
+                  Create Launch
+                </button>
               )}
             </div>
           </div>

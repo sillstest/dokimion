@@ -8,8 +8,14 @@ import * as Utils from "../common/Utils";
 const ATTRIBUTE_TYPES = ["TESTCASE", "LAUNCH"];
 const emptyAttribute = () => ({ id: null, name: "", type: "", attrValues: [] });
 
-function AttributeForm({ attribute: attrProp, projectAttributes: projectAttrsProp, edit: editProp,
-                         project, onAttributeAdded, onAttributeRemoved }) {
+function AttributeForm({
+  attribute: attrProp,
+  projectAttributes: projectAttrsProp,
+  edit: editProp,
+  project,
+  onAttributeAdded,
+  onAttributeRemoved,
+}) {
   const [attribute, setAttribute] = useState(attrProp || emptyAttribute());
   const [projectAttributes, setProjectAttributes] = useState(projectAttrsProp || []);
   const [edit, setEdit] = useState(editProp || false);
@@ -57,9 +63,8 @@ function AttributeForm({ attribute: attrProp, projectAttributes: projectAttrsPro
   }
 
   function handleSubmit(event) {
-    const duplicate = projectAttributes.filter(
-      attr => attr.name.toLowerCase() === attribute.name.toLowerCase()
-    ).length > 0;
+    const duplicate =
+      projectAttributes.filter(attr => attr.name.toLowerCase() === attribute.name.toLowerCase()).length > 0;
 
     if (duplicate && !edit) {
       setErrorMessage("Duplicate Attribute");
@@ -91,7 +96,9 @@ function AttributeForm({ attribute: attrProp, projectAttributes: projectAttrsPro
       <ControlledPopup popupMessage={errorMessage} />
       <div className="modal-content">
         <div className="modal-header">
-          <h5 className="modal-title" id="editAttributeLabel">Attribute</h5>
+          <h5 className="modal-title" id="editAttributeLabel">
+            Attribute
+          </h5>
           <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={handleClose}>
             <span aria-hidden="true">&times;</span>
           </button>
@@ -108,8 +115,15 @@ function AttributeForm({ attribute: attrProp, projectAttributes: projectAttrsPro
               <div style={{ display: "flex", justifyContent: "left", alignItems: "center" }} className="form-group row">
                 <label className="col-sm-2 col-form-label">Type</label>
                 <div className="col-sm-8">
-                  <select name="Attribute Type" defaultValue={ATTRIBUTE_TYPES[0]} value={attribute.type} onChange={handleAttributeTypeChange}>
-                    {ATTRIBUTE_TYPES.map((type, i) => <option key={i}>{type}</option>)}
+                  <select
+                    name="Attribute Type"
+                    defaultValue={ATTRIBUTE_TYPES[0]}
+                    value={attribute.type}
+                    onChange={handleAttributeTypeChange}
+                  >
+                    {ATTRIBUTE_TYPES.map((type, i) => (
+                      <option key={i}>{type}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -118,7 +132,14 @@ function AttributeForm({ attribute: attrProp, projectAttributes: projectAttrsPro
               <div key={i} className="form-group row">
                 <label className="col-sm-2 col-form-label">Value</label>
                 <div className="col-sm-8">
-                  <input type="text" name="value" index={i} value={value.value} className="col-sm-12" onChange={e => handleValueChange(i, e)} />
+                  <input
+                    type="text"
+                    name="value"
+                    index={i}
+                    value={value.value}
+                    className="col-sm-12"
+                    onChange={e => handleValueChange(i, e)}
+                  />
                 </div>
                 <div className="col-sm-1">
                   <span className="clickable red" onClick={() => removeValue(i)}>
@@ -128,15 +149,23 @@ function AttributeForm({ attribute: attrProp, projectAttributes: projectAttrsPro
               </div>
             ))}
             <div className="form-group row">
-              <button type="button" className="btn" onClick={addValue}>Add value</button>
+              <button type="button" className="btn" onClick={addValue}>
+                Add value
+              </button>
             </div>
           </form>
         </div>
         <div className="modal-footer">
-          <button type="button" className="btn btn-primary" onClick={handleSubmit}>Save changes</button>
-          <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={handleClose}>Close</button>
+          <button type="button" className="btn btn-primary" onClick={handleSubmit}>
+            Save changes
+          </button>
+          <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={handleClose}>
+            Close
+          </button>
           {attribute.id && (
-            <button type="button" className="btn btn-danger float-right" onClick={handleRemove}>Remove</button>
+            <button type="button" className="btn btn-danger float-right" onClick={handleRemove}>
+              Remove
+            </button>
           )}
         </div>
       </div>

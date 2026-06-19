@@ -6,12 +6,20 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinusCircle } from "../common/icons";
 
 function normalizeId(id) {
-  return id.trim().toLowerCase().replace(/[^a-zA-Z0-9]/g, "");
+  return id
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9]/g, "");
 }
 
 function OrganizationForm({ editCurrent, history }) {
   const [organization, setOrganization] = useState({
-    id: null, name: "", description: "", allowedGroups: [], allowedUsers: [], admins: [],
+    id: null,
+    name: "",
+    description: "",
+    allowedGroups: [],
+    allowedUsers: [],
+    admins: [],
   });
   const [administratorsEdit, setAdministratorsEdit] = useState("");
   const [usersEdit, setUsersEdit] = useState("");
@@ -97,7 +105,11 @@ function OrganizationForm({ editCurrent, history }) {
           <div>
             <b>{organization.licenseCapacity}</b> parallel user sessions are currently available for organization.
             <br />
-            Please <a href="https://www.testquack.com/#contacts" target="_blanc">contact us</a> to purchase more.
+            Please{" "}
+            <a href="https://www.testquack.com/#contacts" target="_blanc">
+              contact us
+            </a>{" "}
+            to purchase more.
           </div>
         </div>
       ) : (
@@ -109,19 +121,40 @@ function OrganizationForm({ editCurrent, history }) {
           <div className="form-group row">
             <label className="col-sm-3 col-form-label">Name</label>
             <div className="col-sm-9">
-              <input type="text" name="name" value={organization.name} onChange={handleChange} className="form-control" disabled={readonly} />
+              <input
+                type="text"
+                name="name"
+                value={organization.name}
+                onChange={handleChange}
+                className="form-control"
+                disabled={readonly}
+              />
             </div>
           </div>
           <div className="form-group row">
             <label className="col-sm-3 col-form-label">Organization ID</label>
             <div className="col-sm-9">
-              <input type="text" name="id" value={organization.id || ""} onChange={handleChange} disabled={!!editCurrent} className="form-control" />
+              <input
+                type="text"
+                name="id"
+                value={organization.id || ""}
+                onChange={handleChange}
+                disabled={!!editCurrent}
+                className="form-control"
+              />
             </div>
           </div>
           <div className="form-group row">
             <label className="col-sm-3 col-form-label">Description</label>
             <div className="col-sm-9">
-              <input type="text" name="description" className="form-control" value={organization.description} onChange={handleChange} disabled={readonly} />
+              <input
+                type="text"
+                name="description"
+                className="form-control"
+                value={organization.description}
+                onChange={handleChange}
+                disabled={readonly}
+              />
             </div>
           </div>
         </div>
@@ -141,10 +174,18 @@ function OrganizationForm({ editCurrent, history }) {
           {!readonly && (
             <div className="row org-users-form">
               <div className="col-sm-8">
-                <input type="text" name="administrators" className="form-control" value={administratorsEdit} onChange={e => setAdministratorsEdit(e.target.value)} />
+                <input
+                  type="text"
+                  name="administrators"
+                  className="form-control"
+                  value={administratorsEdit}
+                  onChange={e => setAdministratorsEdit(e.target.value)}
+                />
               </div>
               <div className="col-sm-4">
-                <button type="button" className="btn btn-primary" onClick={handleAdminAdded}>Add Administrator</button>
+                <button type="button" className="btn btn-primary" onClick={handleAdminAdded}>
+                  Add Administrator
+                </button>
               </div>
             </div>
           )}
@@ -165,10 +206,18 @@ function OrganizationForm({ editCurrent, history }) {
           {!readonly && (
             <div className="row org-users-form">
               <div className="col-sm-8">
-                <input type="text" name="users" className="form-control" value={usersEdit} onChange={e => setUsersEdit(e.target.value)} />
+                <input
+                  type="text"
+                  name="users"
+                  className="form-control"
+                  value={usersEdit}
+                  onChange={e => setUsersEdit(e.target.value)}
+                />
               </div>
               <div className="col-sm-4">
-                <button type="button" className="btn btn-primary" onClick={handleUserAdded}>Add User</button>
+                <button type="button" className="btn btn-primary" onClick={handleUserAdded}>
+                  Add User
+                </button>
               </div>
             </div>
           )}
@@ -176,10 +225,14 @@ function OrganizationForm({ editCurrent, history }) {
 
         <div className="org-form-block">
           {editCurrent && !readonly && (
-            <button type="button" className="btn btn-primary" onClick={handleUpdate}>Update</button>
+            <button type="button" className="btn btn-primary" onClick={handleUpdate}>
+              Update
+            </button>
           )}
           {!editCurrent && (
-            <button type="button" className="btn btn-primary" onClick={handleCreate}>Create</button>
+            <button type="button" className="btn btn-primary" onClick={handleCreate}>
+              Create
+            </button>
           )}
         </div>
       </form>

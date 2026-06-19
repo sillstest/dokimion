@@ -53,13 +53,45 @@ function ChangeProfile({ match }) {
         <form className="dropdown_menu">
           <h1 className="h3 mb-3 font-weight-normal">Change User Profile</h1>
           <label>First Name</label>
-          <input type="text" id="firstName" name="firstName" className="form-control" value={profile.firstName || ""} required onChange={handleChange} />
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            className="form-control"
+            value={profile.firstName || ""}
+            required
+            onChange={handleChange}
+          />
           <label>Last Name</label>
-          <input type="text" id="lastName" name="lastName" className="form-control" value={profile.lastName || ""} required onChange={handleChange} />
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            className="form-control"
+            value={profile.lastName || ""}
+            required
+            onChange={handleChange}
+          />
           <label>Password</label>
-          <input type="password" id="password" name="password" className="form-control" placeholder="New Password" required onChange={handleChange} />
+          <input
+            type="password"
+            id="password"
+            name="password"
+            className="form-control"
+            placeholder="New Password"
+            required
+            onChange={handleChange}
+          />
           <label>Email</label>
-          <input type="email" id="email" name="email" className="form-control" value={profile.email || ""} required onChange={handleChange} />
+          <input
+            type="email"
+            id="email"
+            name="email"
+            className="form-control"
+            value={profile.email || ""}
+            required
+            onChange={handleChange}
+          />
           <label>User Role</label>
           <select name="role" value={profile.role || ""} onChange={handleChange}>
             <option value="TESTER">TESTER</option>
@@ -68,7 +100,9 @@ function ChangeProfile({ match }) {
             <option value="OBSERVERONLY">OBSERVERONLY</option>
           </select>
           <br />
-          <button className="btn btn-lg btn-primary btn-block" onClick={handleSubmit}>Submit</button>
+          <button className="btn btn-lg btn-primary btn-block" onClick={handleSubmit}>
+            Submit
+          </button>
         </form>
       )}
     </div>

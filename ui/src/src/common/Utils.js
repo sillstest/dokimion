@@ -1,64 +1,57 @@
 /* eslint-disable eqeqeq */
 import moment from "moment";
-import * as UserSession from "../user/UserSession";
 import $ from "jquery";
 import qs from "qs";
-import Backend from "../services/backend";
 export function intDiv(val, by) {
   return (val - (val % by)) / by;
 }
 
 export function parseTree(testcasesTree, uncheckedList, tcSizes, configAttributePairs) {
   sortTestcaseTree(testcasesTree);
-  return getTreeNode(testcasesTree, [], uncheckedList, tcSizes, configAttributePairs).
-         children || [];
+  return getTreeNode(testcasesTree, [], uncheckedList, tcSizes, configAttributePairs).children || [];
 }
 
-export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, 
-                            configAttributePairs) {
-
+export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes, configAttributePairs) {
   // double testCaseTree if 2 attributes
   var launchSuffixZero = "";
   var launchSuffixOne = "";
   if (configAttributePairs !== undefined) {
-     if (configAttributePairs.length === 2) {
-        // deep clone and concatenate - need to use specific fields
-        let clonedTestCases = [];
-        if (nodeObj.testCases && nodeObj.testCases.length > 0) {
-           let i = 0;
-           nodeObj.testCases.forEach(function (testCase) {
-              clonedTestCases[i] = JSON.parse(JSON.stringify(testCase));
-              clonedTestCases[i++].uuid = JSON.parse(JSON.stringify(testCase.uuid * 2));
-           });
-        }
-        let j = 0;
-        let origLength = nodeObj.testCases.length;
-        nodeObj.testCases.length *= 2;
-        nodeObj.count *= 2;
-        clonedTestCases.forEach(function (clonedTestCase) {
-           nodeObj.testCases[origLength + j++] = clonedTestCase;
+    if (configAttributePairs.length === 2) {
+      // deep clone and concatenate - need to use specific fields
+      let clonedTestCases = [];
+      if (nodeObj.testCases && nodeObj.testCases.length > 0) {
+        let i = 0;
+        nodeObj.testCases.forEach(function (testCase) {
+          clonedTestCases[i] = JSON.parse(JSON.stringify(testCase));
+          clonedTestCases[i++].uuid = JSON.parse(JSON.stringify(testCase.uuid * 2));
         });
-     }
+      }
+      let j = 0;
+      let origLength = nodeObj.testCases.length;
+      nodeObj.testCases.length *= 2;
+      nodeObj.count *= 2;
+      clonedTestCases.forEach(function (clonedTestCase) {
+        nodeObj.testCases[origLength + j++] = clonedTestCase;
+      });
+    }
 
-     for (let i = 0; i < configAttributePairs.length; i++) {
-         if (configAttributePairs[i].name !== "") {
-            if (i % 2 == 0) {
-               launchSuffixZero += ", " + configAttributePairs[i].name + ":" + 
-                            configAttributePairs[i].value;
-            } else {
-               launchSuffixOne += ", " + configAttributePairs[i].name + ":" + 
-                            configAttributePairs[i].value;
-            }
-         }
-     }
-   }
+    for (let i = 0; i < configAttributePairs.length; i++) {
+      if (configAttributePairs[i].name !== "") {
+        if (i % 2 == 0) {
+          launchSuffixZero += ", " + configAttributePairs[i].name + ":" + configAttributePairs[i].value;
+        } else {
+          launchSuffixOne += ", " + configAttributePairs[i].name + ":" + configAttributePairs[i].value;
+        }
+      }
+    }
+  }
 
   uncheckedList = uncheckedList || [];
   var resultNode = {
     text: "<b>" + nodeObj.title + "</b>",
     isLeaf: false,
     id: nodeObj.id,
-    uuid: nodeObj.uuid
+    uuid: nodeObj.uuid,
   };
   resultNode.TOTAL = 0;
   resultNode.PASSED = 0;
@@ -71,15 +64,21 @@ export function getTreeNode(nodeObj, parentsToUpdate, uncheckedList, tcSizes,
     resultNode.children = [];
     let i = 0;
     nodeObj.testCases.forEach(function (testCase) {
-
       var launchSuffix = launchSuffixZero;
-      if (i > (nodeObj.testCases.length/2 - 1)) {
-         launchSuffix = launchSuffixOne;
+      if (i > nodeObj.testCases.length / 2 - 1) {
+        launchSuffix = launchSuffixOne;
       }
       i += 1;
 
       resultNode.children.push({
-        text: getSizeOfTestcase(tcSizes, testCase.steps) + "&nbsp" + (testCase.name || testCase.importedName || "") + launchSuffix + "<span> (" + testCase.id + ")</span>",
+        text:
+          getSizeOfTestcase(tcSizes, testCase.steps) +
+          "&nbsp" +
+          (testCase.name || testCase.importedName || "") +
+          launchSuffix +
+          "<span> (" +
+          testCase.id +
+          ")</span>",
         id: testCase.id,
         uuid: testCase.uuid,
         isLeaf: true,
@@ -263,35 +262,29 @@ export function getDatepickerTime(timeMillis) {
 }
 
 export function isAdmin(userSession) {
+  if (userSession) {
+    if (userSession.isAdmin === undefined || userSession.person === undefined) {
+      return;
+    }
+    if (userSession.isAdmin == true || userSession.person.roles[0].toLowerCase() == "admin") {
+      return true;
+    }
+  }
 
-   if (userSession) {
-      if ((userSession.isAdmin === undefined) || 
-          (userSession.person === undefined)) {
-         return;
-      }
-      if (userSession.isAdmin == true || 
-          userSession.person.roles[0].toLowerCase() == 'admin') {
-         return (true);
-      }
-   }
-
-   return (false);
+  return false;
 }
 
 export function isUserOwnerOrAdmin(userSession, createdById) {
-    if (userSession)
-    {
-       if (userSession.isAdmin)
-       {
-          return (true);
-       } else  {
-          if ((userSession.person.login === createdById) || (userSession.person.roles[0].toLowerCase() == 'admin'))
-          {
-             return (true);
-          }
-       }
+  if (userSession) {
+    if (userSession.isAdmin) {
+      return true;
+    } else {
+      if (userSession.person.login === createdById || userSession.person.roles[0].toLowerCase() == "admin") {
+        return true;
+      }
     }
-    return (false);
+  }
+  return false;
 }
 
 export function onErrorMessage(message, error) {
@@ -434,65 +427,56 @@ export function getChartSeriesConfig() {
 }
 
 export function getSizeOfTestcase(tcSizes, steps) {
-  var html = '';
+  var html = "";
 
   if (tcSizes == null || tcSizes.length == 0) {
-     console.log("getSizeOfTestcase:: test case sizes not loaded yet");
-     return;
+    console.log("getSizeOfTestcase:: test case sizes not loaded yet");
+    return;
   }
 
-  if(steps && steps.length > 0 )
-  {
+  if (steps && steps.length > 0) {
     var actions = steps[0].action ? steps[0].action : "";
     actions += steps[0].expectation ? steps[0].expectation : "";
-    if (actions && tcSizes && tcSizes.length>0) {
-    
+    if (actions && tcSizes && tcSizes.length > 0) {
       var hasBreak = actions.includes("<br>");
-      var lines =[];
-      if(hasBreak){
+      var lines = [];
+      if (hasBreak) {
         lines = actions.split("<br>");
-      }else{
+      } else {
         lines = actions.split("\n");
       }
 
-      var noOfLines =   lines.length;
+      var noOfLines = lines.length;
       // console.log("No of lines" + noOfLines);
 
       const smallIndex = tcSizes.findIndex(e => e.name == "small");
       const mediumIndex = tcSizes.findIndex(e => e.name == "medium");
       const largeIndex = tcSizes.findIndex(e => e.name == "large");
       if (smallIndex == -1 || mediumIndex == -1 || largeIndex == -1) {
-         console.log("getSizeOfTestcase - tcSizes index invalid");
+        console.log("getSizeOfTestcase - tcSizes index invalid");
       }
 
       if (noOfLines <= tcSizes[smallIndex].maxLines) {
-        html = '<span class="badge badge-pill badge-success">SML</span>'
-      } else if(noOfLines > tcSizes[mediumIndex].minLines && noOfLines <= tcSizes[mediumIndex].maxLines){
-        html = '<span class="badge badge-pill badge-warning">MED</span>'
-      } else if (noOfLines > tcSizes[largeIndex].minLines)
-      {
-          html = '<span class="badge badge-pill badge-danger">LRG</span>' 
+        html = '<span class="badge badge-pill badge-success">SML</span>';
+      } else if (noOfLines > tcSizes[mediumIndex].minLines && noOfLines <= tcSizes[mediumIndex].maxLines) {
+        html = '<span class="badge badge-pill badge-warning">MED</span>';
+      } else if (noOfLines > tcSizes[largeIndex].minLines) {
+        html = '<span class="badge badge-pill badge-danger">LRG</span>';
       }
-
-    }else{
-      console.log("No Steps"  + actions);
+    } else {
+      console.log("No Steps" + actions);
     }
-  }else{
-    html = '<span class="badge badge-pill badge-success">SML</span>' 
+  } else {
+    html = '<span class="badge badge-pill badge-success">SML</span>';
   }
-  return html 
+  return html;
 }
 
-function sortTestcaseTree(objTestcasesTree){
-
-   //Add generic logic to sort the testcasesTree on Id Issue 28
-   if (objTestcasesTree.testCases && objTestcasesTree.testCases.length>0){
-
-    objTestcasesTree.testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
-
-  } else if (objTestcasesTree.children && objTestcasesTree.children.length >0){
-
-    objTestcasesTree.children[0].testCases.sort((tc1,tc2)=> parseInt(tc1.id)- parseInt(tc2.id));
+function sortTestcaseTree(objTestcasesTree) {
+  //Add generic logic to sort the testcasesTree on Id Issue 28
+  if (objTestcasesTree.testCases && objTestcasesTree.testCases.length > 0) {
+    objTestcasesTree.testCases.sort((tc1, tc2) => parseInt(tc1.id) - parseInt(tc2.id));
+  } else if (objTestcasesTree.children && objTestcasesTree.children.length > 0) {
+    objTestcasesTree.children[0].testCases.sort((tc1, tc2) => parseInt(tc1.id) - parseInt(tc2.id));
   }
-
 }

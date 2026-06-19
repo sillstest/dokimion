@@ -9,7 +9,6 @@ import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
 const defaultIssue = () => ({ name: "", type: {}, description: "", priority: {}, trackerProject: {} });
-const mapToView = (items, id, label) => (items || []).map(i => ({ value: i[id], label: i[label] }));
 
 function Issues({ testcase, projectId, onTestcaseUpdated }) {
   const [issue, setIssue] = useState(defaultIssue());
@@ -37,25 +36,30 @@ function Issues({ testcase, projectId, onTestcaseUpdated }) {
 
   function changeTrackerProject(value) {
     setIssue(prev => ({ ...prev, trackerProject: { name: value.label, id: value.value } }));
-    Backend.get(projectId + "/testcase/issue/types?project=" + value.value)
-      .then(response => setIssueTypes(response));
-    Backend.get(projectId + "/testcase/issue/priorities?project=" + value.value)
-      .then(response => setIssuePriorities(response));
+    Backend.get(projectId + "/testcase/issue/types?project=" + value.value).then(response => setIssueTypes(response));
+    Backend.get(projectId + "/testcase/issue/priorities?project=" + value.value).then(response =>
+      setIssuePriorities(response),
+    );
   }
 
   function createIssue(event) {
     Backend.post(projectId + "/testcase/" + testcase.id + "/issue", issue)
-      .then(() => { $("#issue-modal").modal("hide"); setIssue(defaultIssue()); if (onTestcaseUpdated) onTestcaseUpdated(); })
+      .then(() => {
+        $("#issue-modal").modal("hide");
+        setIssue(defaultIssue());
+        if (onTestcaseUpdated) onTestcaseUpdated();
+      })
       .catch(() => setErrorMessage("Couldn't create issue"));
     event.preventDefault();
   }
 
   function linkIssue(event) {
-    Backend.post(
-      projectId + "/testcase/" + testcase.id + "/issue/link/" + (linkIssueView.value || ""),
-      issue,
-    )
-      .then(() => { setLinkIssueView({}); $("#issue-modal").modal("hide"); if (onTestcaseUpdated) onTestcaseUpdated(); })
+    Backend.post(projectId + "/testcase/" + testcase.id + "/issue/link/" + (linkIssueView.value || ""), issue)
+      .then(() => {
+        setLinkIssueView({});
+        $("#issue-modal").modal("hide");
+        if (onTestcaseUpdated) onTestcaseUpdated();
+      })
       .catch(error => setErrorMessage("Couldn't link issue: " + error));
     event.preventDefault();
   }
@@ -72,7 +76,11 @@ function Issues({ testcase, projectId, onTestcaseUpdated }) {
 
   function unlinkIssue() {
     Backend.delete(projectId + "/testcase/" + testcase.id + "/issue/" + issueToRemove.current)
-      .then(() => { issueToRemove.current = null; $("#unlink-issue-confirmation").modal("hide"); if (onTestcaseUpdated) onTestcaseUpdated(); })
+      .then(() => {
+        issueToRemove.current = null;
+        $("#unlink-issue-confirmation").modal("hide");
+        if (onTestcaseUpdated) onTestcaseUpdated();
+      })
       .catch(() => setErrorMessage("Couldn't unlink issue"));
   }
 
@@ -90,9 +98,15 @@ function Issues({ testcase, projectId, onTestcaseUpdated }) {
               <tr key={iss.id}>
                 <td>
                   {iss.isClosed ? (
-                    <s><a href={iss.url || ""} target="_blank" rel="noreferrer">{iss.id} - {iss.name}</a></s>
+                    <s>
+                      <a href={iss.url || ""} target="_blank" rel="noreferrer">
+                        {iss.id} - {iss.name}
+                      </a>
+                    </s>
                   ) : (
-                    <a href={iss.url || ""} target="_blank" rel="noreferrer">{iss.id} - {iss.name}</a>
+                    <a href={iss.url || ""} target="_blank" rel="noreferrer">
+                      {iss.id} - {iss.name}
+                    </a>
                   )}
                 </td>
                 <td>{iss.type?.name}</td>
@@ -110,7 +124,9 @@ function Issues({ testcase, projectId, onTestcaseUpdated }) {
       </div>
 
       <div>
-        <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#issue-modal">Add Issue</button>
+        <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#issue-modal">
+          Add Issue
+        </button>
       </div>
 
       <div className="modal fade bd-example-modal-lg" tabIndex="-1" role="dialog" id="issue-modal">
@@ -119,7 +135,13 @@ function Issues({ testcase, projectId, onTestcaseUpdated }) {
             <div className="modal-header">
               <ul className="nav nav-tabs" id="issueTabs" role="tablist">
                 <li className="nav-item">
-                  <a className="nav-link active" id="create-issue-tab" data-toggle="tab" href="#create-issue" role="tab">
+                  <a
+                    className="nav-link active"
+                    id="create-issue-tab"
+                    data-toggle="tab"
+                    href="#create-issue"
+                    role="tab"
+                  >
                     <h5 className="modal-title">Create Issue</h5>
                   </a>
                 </li>
@@ -140,38 +162,68 @@ function Issues({ testcase, projectId, onTestcaseUpdated }) {
                     <div className="form-group row">
                       <label className="col-sm-3 col-form-label">Project</label>
                       <div className="col-sm-9">
-                        <Select value={{ value: issue.trackerProject.id, label: issue.trackerProject.name }} onChange={changeTrackerProject} options={trackerProjectOptions} />
+                        <Select
+                          value={{ value: issue.trackerProject.id, label: issue.trackerProject.name }}
+                          onChange={changeTrackerProject}
+                          options={trackerProjectOptions}
+                        />
                       </div>
                     </div>
                     <div className="form-group row">
                       <label className="col-sm-3 col-form-label">Name</label>
                       <div className="col-sm-9">
-                        <input type="text" className="form-control" name="name" onChange={e => setIssue(prev => ({ ...prev, name: e.target.value }))} value={issue.name} />
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="name"
+                          onChange={e => setIssue(prev => ({ ...prev, name: e.target.value }))}
+                          value={issue.name}
+                        />
                       </div>
                     </div>
                     <div className="form-group row">
                       <label className="col-sm-3 col-form-label">Type</label>
                       <div className="col-sm-9">
-                        <Select name="type" value={{ label: issue.type.name, value: issue.type.id }} onChange={v => setIssue(prev => ({ ...prev, type: { name: v.label, id: v.value } }))} options={issueTypeOptions} />
+                        <Select
+                          name="type"
+                          value={{ label: issue.type.name, value: issue.type.id }}
+                          onChange={v => setIssue(prev => ({ ...prev, type: { name: v.label, id: v.value } }))}
+                          options={issueTypeOptions}
+                        />
                       </div>
                     </div>
                     <div className="form-group row">
                       <label className="col-sm-3 col-form-label">Priority</label>
                       <div className="col-sm-9">
-                        <Select name="priority" value={{ label: issue.priority.name, value: issue.priority.id }} onChange={v => setIssue(prev => ({ ...prev, priority: { name: v.label, id: v.value } }))} options={issuePriorityOptions} />
+                        <Select
+                          name="priority"
+                          value={{ label: issue.priority.name, value: issue.priority.id }}
+                          onChange={v => setIssue(prev => ({ ...prev, priority: { name: v.label, id: v.value } }))}
+                          options={issuePriorityOptions}
+                        />
                       </div>
                     </div>
                     <div className="form-group row">
                       <label className="col-sm-3 col-form-label">Description</label>
                       <div className="col-sm-9">
-                        <textarea rows="7" name="description" className="form-control" onChange={e => setIssue(prev => ({ ...prev, description: e.target.value }))} value={issue.description} />
+                        <textarea
+                          rows="7"
+                          name="description"
+                          className="form-control"
+                          onChange={e => setIssue(prev => ({ ...prev, description: e.target.value }))}
+                          value={issue.description}
+                        />
                       </div>
                     </div>
                   </form>
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
-                  <button type="button" className="btn btn-primary" onClick={createIssue}>Create Issue</button>
+                  <button type="button" className="btn btn-secondary" data-dismiss="modal">
+                    Close
+                  </button>
+                  <button type="button" className="btn btn-primary" onClick={createIssue}>
+                    Create Issue
+                  </button>
                 </div>
               </div>
               <div className="tab-pane fade" id="link-issue" role="tabpanel">
@@ -186,8 +238,12 @@ function Issues({ testcase, projectId, onTestcaseUpdated }) {
                   </form>
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
-                  <button type="button" className="btn btn-primary" onClick={linkIssue}>Link Issue</button>
+                  <button type="button" className="btn btn-secondary" data-dismiss="modal">
+                    Close
+                  </button>
+                  <button type="button" className="btn btn-primary" onClick={linkIssue}>
+                    Link Issue
+                  </button>
                 </div>
               </div>
             </div>
@@ -206,8 +262,12 @@ function Issues({ testcase, projectId, onTestcaseUpdated }) {
             </div>
             <div className="modal-body">Are you sure you want to unlink issue?</div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={cancelUnlinkIssueConfirmation}>Close</button>
-              <button type="button" className="btn btn-danger" onClick={unlinkIssue}>Unlink Issue</button>
+              <button type="button" className="btn btn-secondary" onClick={cancelUnlinkIssueConfirmation}>
+                Close
+              </button>
+              <button type="button" className="btn btn-danger" onClick={unlinkIssue}>
+                Unlink Issue
+              </button>
             </div>
           </div>
         </div>

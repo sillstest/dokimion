@@ -19,8 +19,13 @@ function Events({ match, history, location }) {
 
   const [filter, setFilter] = useState(() => {
     const f = {
-      skip: 0, limit: ITEMS_ON_PAGE, orderby: "id", orderdir: "DESC",
-      entityType: "", entityId: "", eventType: [...ALL_EVENT_TYPES],
+      skip: 0,
+      limit: ITEMS_ON_PAGE,
+      orderby: "id",
+      orderdir: "DESC",
+      entityType: "",
+      entityId: "",
+      eventType: [...ALL_EVENT_TYPES],
     };
     const parsed = Utils.queryToFilter(location.search.substring(1));
     Object.assign(f, parsed);
@@ -33,19 +38,31 @@ function Events({ match, history, location }) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchEvents = useCallback((f) => {
-    setLoading(true);
-    Backend.get(project + "/audit?" + Utils.filterToQuery(f))
-      .then(response => { setEvents(response); setLoading(false); })
-      .catch(error => { setErrorMessage("Couldn't get events: " + error); setLoading(false); });
-  }, [project]);
+  const fetchEvents = useCallback(
+    f => {
+      setLoading(true);
+      Backend.get(project + "/audit?" + Utils.filterToQuery(f))
+        .then(response => {
+          setEvents(response);
+          setLoading(false);
+        })
+        .catch(error => {
+          setErrorMessage("Couldn't get events: " + error);
+          setLoading(false);
+        });
+    },
+    [project],
+  );
 
-  const fetchCount = useCallback((f) => {
-    const countFilter = { ...f, skip: 0, limit: 0 };
-    Backend.get(project + "/audit/count?" + Utils.filterToQuery(countFilter))
-      .then(response => setPagerTotal(response))
-      .catch(error => console.log(error));
-  }, [project]);
+  const fetchCount = useCallback(
+    f => {
+      const countFilter = { ...f, skip: 0, limit: 0 };
+      Backend.get(project + "/audit/count?" + Utils.filterToQuery(countFilter))
+        .then(response => setPagerTotal(response))
+        .catch(error => console.log(error));
+    },
+    [project],
+  );
 
   useEffect(() => {
     fetchEvents(filter);
@@ -109,14 +126,26 @@ function Events({ match, history, location }) {
       <div className="col-sm-3 events-filter">
         <form>
           <div className="form-group">
-            <label><h5>Event Time</h5></label>
+            <label>
+              <h5>Event Time</h5>
+            </label>
             <div className="input-group mb-2">
-              <DatePicker id="from_createdTime" value={Utils.getDatepickerTime(filter.from_createdTime)} onChange={handleFromDateFilterChange} />
-              <DatePicker id="to_createdTime" value={Utils.getDatepickerTime(filter.to_createdTime)} onChange={handleToDateFilterChange} />
+              <DatePicker
+                id="from_createdTime"
+                value={Utils.getDatepickerTime(filter.from_createdTime)}
+                onChange={handleFromDateFilterChange}
+              />
+              <DatePicker
+                id="to_createdTime"
+                value={Utils.getDatepickerTime(filter.to_createdTime)}
+                onChange={handleToDateFilterChange}
+              />
             </div>
           </div>
           <div className="form-group">
-            <label><h5>Event Type</h5></label>
+            <label>
+              <h5>Event Type</h5>
+            </label>
             <Select
               value={(filter.eventType || []).map(val => ({ value: val, label: val }))}
               isMulti
@@ -125,23 +154,37 @@ function Events({ match, history, location }) {
             />
           </div>
           <div className="form-group">
-            <label><h5>Entity Type</h5></label>
+            <label>
+              <h5>Entity Type</h5>
+            </label>
             <div className="input-group mb-2">
               <select id="launcher-select" className="form-control" onChange={e => handleFilterChange("entityType", e)}>
                 <option> </option>
                 {ENTITY_TYPES.map(entityType => (
-                  <option key={entityType} value={entityType} selected={filter.entityType == entityType}>{entityType}</option>
+                  <option key={entityType} value={entityType} selected={filter.entityType == entityType}>
+                    {entityType}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="form-group">
-            <label><h5>Entity Id</h5></label>
-            <input type="text" className="form-control" id="entityId" name="entityId"
-              aria-describedby="Event Entity Id" value={filter.entityId || ""}
-              onChange={e => handleFilterChange("entityId", e)} />
+            <label>
+              <h5>Entity Id</h5>
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="entityId"
+              name="entityId"
+              aria-describedby="Event Entity Id"
+              value={filter.entityId || ""}
+              onChange={e => handleFilterChange("entityId", e)}
+            />
           </div>
-          <button type="submit" className="btn btn-primary" onClick={onFilter}>Filter</button>
+          <button type="submit" className="btn btn-primary" onClick={onFilter}>
+            Filter
+          </button>
         </form>
       </div>
 

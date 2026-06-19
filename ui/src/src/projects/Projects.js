@@ -9,11 +9,14 @@ import ControlledPopup from "../common/ControlledPopup";
 function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage] = useState("");
 
   useEffect(() => {
     Backend.get("project")
-      .then(response => { setProjects(response); setLoading(false); })
+      .then(response => {
+        setProjects(response);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
@@ -32,9 +35,13 @@ function Projects() {
       {projects.map(project => (
         <div className="card project-card" key={project.id}>
           <div className="card-header">
-            <span><Link to={"/projects/" + project.id}>{project.name}</Link></span>
+            <span>
+              <Link to={"/projects/" + project.id}>{project.name}</Link>
+            </span>
             <span className="float-right">
-              <Link to={"/projects/" + project.id + "/settings"}><FontAwesomeIcon icon={faCogs} /></Link>
+              <Link to={"/projects/" + project.id + "/settings"}>
+                <FontAwesomeIcon icon={faCogs} />
+              </Link>
             </span>
           </div>
           <div className="card-body">

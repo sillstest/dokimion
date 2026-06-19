@@ -7,10 +7,7 @@ function buildPageObjects(totalItems, currentPage, visiblePages, itemsOnPage) {
   var totalPages = Utils.intDiv(totalItems, itemsOnPage);
   if (totalItems / itemsOnPage - totalPages > 0) totalPages++;
 
-  var startFromPage = Math.min(
-    currentPage - Utils.intDiv(visiblePages, 2) - 1,
-    totalPages - 1 - visiblePages,
-  );
+  var startFromPage = Math.min(currentPage - Utils.intDiv(visiblePages, 2) - 1, totalPages - 1 - visiblePages);
   startFromPage = Math.max(0, startFromPage);
   var endPage = Math.min(totalPages - 1, startFromPage + visiblePages);
   endPage = Math.max(0, endPage);

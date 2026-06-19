@@ -1,6 +1,6 @@
 /* eslint-disable eqeqeq */
 import { withRouter } from "../common/withRouter";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import AsyncSelect from "react-select/async";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt } from "../common/icons";
@@ -9,7 +9,14 @@ import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
 import * as Utils from "../common/Utils";
 
-const emptyProject = () => ({ id: null, name: "", description: "", readWriteUsers: [], launcherConfigs: [], environments: [] });
+const emptyProject = () => ({
+  id: null,
+  name: "",
+  description: "",
+  readWriteUsers: [],
+  launcherConfigs: [],
+  environments: [],
+});
 
 function mapUsersToView(users) {
   return (users || []).map(val => {
@@ -23,10 +30,9 @@ function ProjectSettings({ match, onSessionChange }) {
   const [project, setProject] = useState(emptyProject());
   const [originalProject, setOriginalProject] = useState(emptyProject());
   const [usersToDisplay, setUsersToDisplay] = useState([]);
-  const [launcherDescriptors, setLauncherDescriptors] = useState([]);
+  const [, setLauncherDescriptors] = useState([]);
   const [session, setSession] = useState({ person: {} });
   const [errorMessage, setErrorMessage] = useState("");
-  const launcherIndexToRemove = useRef(null);
 
   useEffect(() => {
     if (!projectId) return;
@@ -99,7 +105,9 @@ function ProjectSettings({ match, onSessionChange }) {
 
   function removeProject(event) {
     Backend.delete("project/" + project.id)
-      .then(() => { window.location.href = "/"; })
+      .then(() => {
+        window.location.href = "/";
+      })
       .catch(error => setErrorMessage("Couldn't delete project: " + error));
     event.preventDefault();
   }
@@ -108,7 +116,10 @@ function ProjectSettings({ match, onSessionChange }) {
     const updated = { ...project, deleted: false };
     setProject(updated);
     Backend.put("project", updated)
-      .then(response => { setProject(response); setOriginalProject(response); })
+      .then(response => {
+        setProject(response);
+        setOriginalProject(response);
+      })
       .catch(error => setErrorMessage("Couldn't save project: " + error));
     if (event) event.preventDefault();
   }
@@ -121,7 +132,9 @@ function ProjectSettings({ match, onSessionChange }) {
           {project.deleted ? (
             <h1>
               <s>{project.name}</s> - DELETED
-              <button type="button" className="btn" onClick={undelete}>Undelete</button>
+              <button type="button" className="btn" onClick={undelete}>
+                Undelete
+              </button>
             </h1>
           ) : (
             <h1>
@@ -136,11 +149,26 @@ function ProjectSettings({ match, onSessionChange }) {
           <form>
             <div className="form-group row">
               <div className="col-8">
-                <input type="text" name="name" className="form-control" onChange={e => handleChange("name", e)} value={project.name} />
+                <input
+                  type="text"
+                  name="name"
+                  className="form-control"
+                  onChange={e => handleChange("name", e)}
+                  value={project.name}
+                />
               </div>
               <div className="col-4">
-                <button type="button" className="btn btn-light" data-dismiss="modal" onClick={e => cancelEdit("name", e)}>Cancel</button>
-                <button type="button" className="btn btn-primary" onClick={e => submit(e, "name")}>Save</button>
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  data-dismiss="modal"
+                  onClick={e => cancelEdit("name", e)}
+                >
+                  Cancel
+                </button>
+                <button type="button" className="btn btn-primary" onClick={e => submit(e, "name")}>
+                  Save
+                </button>
               </div>
             </div>
           </form>
@@ -168,10 +196,17 @@ function ProjectSettings({ match, onSessionChange }) {
 
       <div className="project-settings-control row">
         <div className="col-1">
-          <button type="button" className="btn btn-success" onClick={submit}>Save</button>
+          <button type="button" className="btn btn-success" onClick={submit}>
+            Save
+          </button>
         </div>
         <div className="col-2">
-          <button type="button" className="btn btn-danger" data-toggle="modal" data-target="#remove-project-confirmation">
+          <button
+            type="button"
+            className="btn btn-danger"
+            data-toggle="modal"
+            data-target="#remove-project-confirmation"
+          >
             Remove Project
           </button>
         </div>
@@ -188,9 +223,13 @@ function ProjectSettings({ match, onSessionChange }) {
             </div>
             <div className="modal-body">Are you sure you want to remove Project?</div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-dismiss="modal" aria-label="Cancel">Close</button>
+              <button type="button" className="btn btn-secondary" data-dismiss="modal" aria-label="Cancel">
+                Close
+              </button>
               {!project.deleted && (
-                <button type="button" className="btn btn-danger" data-dismiss="modal" onClick={removeProject}>Remove Project</button>
+                <button type="button" className="btn btn-danger" data-dismiss="modal" onClick={removeProject}>
+                  Remove Project
+                </button>
               )}
             </div>
           </div>

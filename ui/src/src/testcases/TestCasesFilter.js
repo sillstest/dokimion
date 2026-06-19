@@ -1,11 +1,11 @@
 /* eslint-disable eqeqeq */
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import LaunchForm from "../launches/LaunchForm";
 import { withRouter } from "../common/withRouter";
-import Select, { components as ReactSelectComponents } from "react-select";
+import Select from "react-select";
 import qs from "qs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFilter, faPlay, faPlus, faBars, faFileCsv } from "@fortawesome/free-solid-svg-icons";
+import { faFilter, faPlay, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { faMinusCircle, faSave } from "../common/icons";
 import $ from "jquery";
 import * as Utils from "../common/Utils";
@@ -24,17 +24,17 @@ const GroupingSelectContainer = ({ children, innerRef, innerProps, selectProps }
   //   - Click on listbox while menu was already open → auto-select next option
   const menuWasOpenRef = React.useRef(false);
 
-  const handleMouseDown = (e) => {
+  const handleMouseDown = e => {
     menuWasOpenRef.current = selectProps.menuIsOpen;
     if (innerProps.onMouseDown) innerProps.onMouseDown(e);
   };
 
-  const handleClick = (e) => {
+  const handleClick = e => {
     // Don't interfere with chip-remove (×) or clear-all (×) button clicks.
     let el = e.target;
     while (el && el !== e.currentTarget) {
-      const role = el.getAttribute && el.getAttribute('data-role');
-      if (role === 'remove' || role === 'clear') return;
+      const role = el.getAttribute && el.getAttribute("data-role");
+      if (role === "remove" || role === "clear") return;
       el = el.parentElement;
     }
     if (!menuWasOpenRef.current) return; // This click opened the menu — don't also select
@@ -45,9 +45,14 @@ const GroupingSelectContainer = ({ children, innerRef, innerProps, selectProps }
     if (firstAvailable) selectProps.onChange([...currentValues, firstAvailable]);
   };
   return (
-    <div id="grouping-react-select" ref={innerRef} {...innerProps}
-         onMouseDown={handleMouseDown} onClick={handleClick}
-         style={{ position: 'relative', width: '100%' }}>
+    <div
+      id="grouping-react-select"
+      ref={innerRef}
+      {...innerProps}
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      style={{ position: "relative", width: "100%" }}
+    >
       {children}
     </div>
   );
@@ -72,7 +77,7 @@ const FilterValSelectContainer = ({ children, innerRef, innerProps, selectProps 
     menuWasOpenRef.current = selectProps.menuIsOpen;
   };
 
-  const handleClick = (e) => {
+  const handleClick = e => {
     if (!selectProps.menuIsOpen) return;
     if (!menuWasOpenRef.current) return; // This click opened the menu — don't also select
 
@@ -80,7 +85,7 @@ const FilterValSelectContainer = ({ children, innerRef, innerProps, selectProps 
     // Selenium may land on an inner child with no id, so check the whole ancestry.
     let el = e.target;
     while (el && el !== e.currentTarget) {
-      if ((el.id || '').includes('-option-')) return; // React-select handles option clicks
+      if ((el.id || "").includes("-option-")) return; // React-select handles option clicks
       el = el.parentElement;
     }
 
@@ -93,8 +98,13 @@ const FilterValSelectContainer = ({ children, innerRef, innerProps, selectProps 
   };
 
   return (
-    <div ref={innerRef} {...innerProps} className={selectProps.className}
-         onMouseDown={handleMouseDown} onClick={handleClick}>
+    <div
+      ref={innerRef}
+      {...innerProps}
+      className={selectProps.className}
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+    >
       {children}
     </div>
   );
@@ -106,18 +116,35 @@ const FilterValSelectContainer = ({ children, innerRef, innerProps, selectProps 
 // the Filter1AttribValue locator //div[contains(@id,'react-select')][1] skips it and
 // finds the first OPTION div instead — letting react-select's native handler select it.
 const FilterValPlaceholder = ({ children }) => (
-  <div className="react-select__placeholder" style={{ color: '#aaa', position: 'absolute', top: '50%', transform: 'translateY(-50%)' }}>
+  <div
+    className="react-select__placeholder"
+    style={{ color: "#aaa", position: "absolute", top: "50%", transform: "translateY(-50%)" }}
+  >
     {children}
   </div>
 );
 
 // Custom Control — class="css-1szy77t-control" (exact, for automation XPath match)
 const GroupingControl = ({ children, innerRef, innerProps, isFocused, isDisabled }) => (
-  <div ref={innerRef} {...innerProps} className="css-1szy77t-control"
-    style={{ display:'flex', flexWrap:'wrap', justifyContent:'space-between', alignItems:'center',
-             minHeight:'38px', border:`1px solid ${isFocused ? '#2684FF' : '#ccc'}`,
-             borderRadius:'4px', backgroundColor: isDisabled ? '#f9f9f9' : 'white',
-             cursor:'default', padding:'2px 8px', width:'100%', position:'relative' }}>
+  <div
+    ref={innerRef}
+    {...innerProps}
+    className="css-1szy77t-control"
+    style={{
+      display: "flex",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      alignItems: "center",
+      minHeight: "38px",
+      border: `1px solid ${isFocused ? "#2684FF" : "#ccc"}`,
+      borderRadius: "4px",
+      backgroundColor: isDisabled ? "#f9f9f9" : "white",
+      cursor: "default",
+      padding: "2px 8px",
+      width: "100%",
+      position: "relative",
+    }}
+  >
     {children}
   </div>
 );
@@ -132,9 +159,12 @@ const GroupingControl = ({ children, innerRef, innerProps, isFocused, isDisabled
 const FilterMenuList = ({ children, innerRef, innerProps }) => {
   const { id: _id, ...restInnerProps } = innerProps || {};
   return (
-    <div ref={innerRef} {...restInnerProps} className="css-11unzgr"
-      style={{ maxHeight: '300px', overflowY: 'auto', padding: '4px 0',
-               backgroundColor: 'white', borderRadius: '4px' }}>
+    <div
+      ref={innerRef}
+      {...restInnerProps}
+      className="css-11unzgr"
+      style={{ maxHeight: "300px", overflowY: "auto", padding: "4px 0", backgroundColor: "white", borderRadius: "4px" }}
+    >
       {children}
     </div>
   );
@@ -144,34 +174,47 @@ const FilterMenuList = ({ children, innerRef, innerProps }) => {
 // Applied to all Select components in the filter-control-row so the test locator
 // //div[@class='css-1hwfws3'] finds exactly 3 elements (Grouping + 2 filter selects).
 const StandardValueContainer = ({ children }) => (
-  <div className="css-1hwfws3"
-    style={{ display:'flex', flex:1, flexWrap:'wrap', padding:'2px 8px',
-             overflow:'hidden', alignItems:'qcenter', position:'relative' }}>
+  <div
+    className="css-1hwfws3"
+    style={{
+      display: "flex",
+      flex: 1,
+      flexWrap: "wrap",
+      padding: "2px 8px",
+      overflow: "hidden",
+      alignItems: "qcenter",
+      position: "relative",
+    }}
+  >
     {children}
   </div>
 );
 
-
 // Shared × SVG with the v2/v3 class name the automation tests expect.
 // Used in both MultiValueRemove (chip ×) and ClearIndicator (clear-all ×).
 const CrossSVG = () => (
-  <svg className="css-19bqh2r" height="14" width="14" viewBox="0 0 20 20"
-       aria-hidden="true" focusable="false">
+  <svg className="css-19bqh2r" height="14" width="14" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
     <path d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z" />
   </svg>
 );
 
 // data-role="remove" / data-role="clear" let GroupingSelectContainer skip these clicks.
 const CustomMultiValueRemove = ({ innerProps }) => (
-  <div {...innerProps} data-role="remove"
-       style={{ display:'flex', alignItems:'center', padding:'0 4px', cursor:'pointer', borderRadius:'0 2px 2px 0' }}>
+  <div
+    {...innerProps}
+    data-role="remove"
+    style={{ display: "flex", alignItems: "center", padding: "0 4px", cursor: "pointer", borderRadius: "0 2px 2px 0" }}
+  >
     <CrossSVG />
   </div>
 );
 
 const CustomClearIndicator = ({ innerProps }) => (
-  <div {...innerProps} data-role="clear"
-       style={{ display:'flex', alignItems:'center', padding:'0 8px', cursor:'pointer' }}>
+  <div
+    {...innerProps}
+    data-role="clear"
+    style={{ display: "flex", alignItems: "center", padding: "0 8px", cursor: "pointer" }}
+  >
     <CrossSVG />
   </div>
 );
@@ -179,10 +222,19 @@ const CustomClearIndicator = ({ innerProps }) => (
 const defaultFilters = [{ title: "Select an attribute", attrValues: [] }];
 const defaultTestSuite = () => ({ name: "", filter: { groups: [], filters: [...defaultFilters] } });
 
-function TestCasesFilter({ projectAttributes, onFilter, project, match, history, location,
-                           notFields,
-                           handleBulkAddAttributes, handleBulkRemoveAttributes,
-                           handleLockAllTestCases, handleUnLockAllTestCases }) {
+function TestCasesFilter({
+  projectAttributes,
+  onFilter,
+  project,
+  match,
+  history,
+  location,
+  notFields,
+  handleBulkAddAttributes,
+  handleBulkRemoveAttributes,
+  handleLockAllTestCases,
+  handleUnLockAllTestCases,
+}) {
   const [testSuite, setTestSuite] = useState(defaultTestSuite());
   const [groupsToDisplay, setGroupsToDisplay] = useState([]);
   const [session, setSession] = useState({ person: {} });
@@ -203,7 +255,12 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
           if ((ts.filter.filters || []).length === 0) ts.filter.filters = [...defaultFilters];
           setTestSuite(ts);
           setTestSuiteNameToDisplay(ts.name);
-          setGroupsToDisplay((ts.filter.groups || []).map(attrId => ({ value: attrId, label: getAttributeName(attrId, projectAttributes) })));
+          setGroupsToDisplay(
+            (ts.filter.groups || []).map(attrId => ({
+              value: attrId,
+              label: getAttributeName(attrId, projectAttributes),
+            })),
+          );
           if (onFilter) onFilter(ts.filter);
         })
         .catch(() => setErrorMessage("Couldn't fetch testsuite"));
@@ -211,7 +268,9 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
       const parsedFilter = { groups: [], filters: [...defaultFilters] };
       if (params.groups) {
         parsedFilter.groups = Array.isArray(params.groups) ? params.groups : [params.groups];
-        setGroupsToDisplay(parsedFilter.groups.map(attrId => ({ value: attrId, label: getAttributeName(attrId, projectAttributes) })));
+        setGroupsToDisplay(
+          parsedFilter.groups.map(attrId => ({ value: attrId, label: getAttributeName(attrId, projectAttributes) })),
+        );
       }
       if (params.fulltext) parsedFilter.fulltext = params.fulltext;
       setTestSuite(prev => ({ ...prev, filter: parsedFilter }));
@@ -222,7 +281,10 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
   useEffect(() => {
     if (projectAttributes) {
       setTestSuite(prev => {
-        const filters = (prev.filter.filters || []).map(f => ({ ...f, name: getAttributeName(f.id, projectAttributes) }));
+        const filters = (prev.filter.filters || []).map(f => ({
+          ...f,
+          name: getAttributeName(f.id, projectAttributes),
+        }));
         const groups = groupsToDisplay.map(g => ({ ...g, label: getAttributeName(g.value, projectAttributes) }));
         setGroupsToDisplay(groups);
         return { ...prev, filter: { ...prev.filter, filters } };
@@ -366,9 +428,19 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
         <div className="row filter-control-row">
           <div className="col-1">Grouping</div>
           <div className="col-5">
-            <Select value={groupsToDisplay} isMulti onChange={changeGrouping}
+            <Select
+              value={groupsToDisplay}
+              isMulti
+              onChange={changeGrouping}
               options={getProjectAttributesSelect().filter(attr => attr.value != "broken")}
-              components={{ SelectContainer: GroupingSelectContainer, Control: GroupingControl, ValueContainer: StandardValueContainer, MultiValueRemove: CustomMultiValueRemove, ClearIndicator: CustomClearIndicator }} />
+              components={{
+                SelectContainer: GroupingSelectContainer,
+                Control: GroupingControl,
+                ValueContainer: StandardValueContainer,
+                MultiValueRemove: CustomMultiValueRemove,
+                ClearIndicator: CustomClearIndicator,
+              }}
+            />
           </div>
           <div className="col-2"></div>
           <div className="col-4 btn-group" role="group">
@@ -381,7 +453,13 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
             <button type="button" className="btn btn-success" title="Launch Tescases" onClick={createLaunchModal}>
               <FontAwesomeIcon icon={faPlay} />
             </button>
-            <button type="button" className="btn btn-primary" title="Add Testcase" data-toggle="modal" data-target="#editTestcase">
+            <button
+              type="button"
+              className="btn btn-primary"
+              title="Add Testcase"
+              data-toggle="modal"
+              data-target="#editTestcase"
+            >
               <FontAwesomeIcon icon={faPlus} />
             </button>
           </div>
@@ -391,17 +469,28 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
           {testSuite.filter.filters.map((filter, i) => (
             <div className="row filter-control-row" key={i}>
               <div className="col-1">{i === 0 ? "Filter" : ""}</div>
-              <Select className="col-2 filter-attribute-id-select"
+              <Select
+                className="col-2 filter-attribute-id-select"
                 value={{ value: filter.id, label: filter.name }}
                 onChange={e => changeFilterAttributeId(i, e)}
                 options={getProjectAttributesSelect()}
-                components={{ ValueContainer: StandardValueContainer, MenuList: FilterMenuList }} />
-              <Select className="col-3 filter-attribute-val-select"
+                components={{ ValueContainer: StandardValueContainer, MenuList: FilterMenuList }}
+              />
+              <Select
+                className="col-3 filter-attribute-val-select"
                 value={(filter.attrValues || []).map(av => ({ value: av.value, label: av.value }))}
                 isMulti
                 onChange={e => changeFilterAttributeValues(i, e)}
                 options={getValuesByAttributeId(filter.id).map(av => ({ value: av.value, label: av.value }))}
-                components={{ SelectContainer: FilterValSelectContainer, ValueContainer: StandardValueContainer, Placeholder: FilterValPlaceholder, MenuList: FilterMenuList, MultiValueRemove: CustomMultiValueRemove, ClearIndicator: CustomClearIndicator }} />
+                components={{
+                  SelectContainer: FilterValSelectContainer,
+                  ValueContainer: StandardValueContainer,
+                  Placeholder: FilterValPlaceholder,
+                  MenuList: FilterMenuList,
+                  MultiValueRemove: CustomMultiValueRemove,
+                  ClearIndicator: CustomClearIndicator,
+                }}
+              />
               {filter.id && (
                 <span className="col-1 remove-filter-icon clickable red" onClick={() => removeFilter(i)}>
                   <FontAwesomeIcon icon={faMinusCircle} />
@@ -416,24 +505,42 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
           <div className="col-5">
             <div className="row">
               <div className="col-12">
-                <input type="text" className="form-control" name="fulltext" value={testSuite.filter.fulltext || ""} onChange={changeFulltext} />
+                <input
+                  type="text"
+                  className="form-control"
+                  name="fulltext"
+                  value={testSuite.filter.fulltext || ""}
+                  onChange={changeFulltext}
+                />
               </div>
             </div>
           </div>
           <div className="col-2"></div>
           {Utils.isAdmin(session) && (
             <div className="col-4 btn-group" role="group">
-              <button type="button" className="btn btn-primary" onClick={handleBulkAdd}>Add Attributes</button>
-              <button type="button" className="btn btn-danger" onClick={handleBulkRemove}>Remove Attributes</button>
-              <button type="button" className="btn btn-warning" onClick={handleLock}>Lock All TestCases</button>
-              <button type="button" className="btn btn-success" onClick={handleUnlock}>Unlock All TestCases</button>
+              <button type="button" className="btn btn-primary" onClick={handleBulkAdd}>
+                Add Attributes
+              </button>
+              <button type="button" className="btn btn-danger" onClick={handleBulkRemove}>
+                Remove Attributes
+              </button>
+              <button type="button" className="btn btn-warning" onClick={handleLock}>
+                Lock All TestCases
+              </button>
+              <button type="button" className="btn btn-success" onClick={handleUnlock}>
+                Unlock All TestCases
+              </button>
             </div>
           )}
         </div>
       </div>
 
       <div className="modal fade" id="launch-modal" tabIndex="-1" role="dialog" aria-hidden="true">
-        <LaunchForm launch={createdLaunch} testSuite={{ ...testSuite, filter: { ...testSuite.filter, notFields: notFields || { id: [] } } }} modalName="launch-modal" />
+        <LaunchForm
+          launch={createdLaunch}
+          testSuite={{ ...testSuite, filter: { ...testSuite.filter, notFields: notFields || { id: [] } } }}
+          modalName="launch-modal"
+        />
       </div>
 
       <div className="modal fade" id="suite-modal" tabIndex="-1" role="dialog" aria-hidden="true">
@@ -441,7 +548,9 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
           <ControlledPopup popupMessage={errorMessage} />
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="editAttributeLabel">Test Suite</h5>
+              <h5 className="modal-title" id="editAttributeLabel">
+                Test Suite
+              </h5>
               <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={handleClose}>
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -452,15 +561,25 @@ function TestCasesFilter({ projectAttributes, onFilter, project, match, history,
                   <div className="form-group row">
                     <label className="col-sm-3 col-form-label">Name</label>
                     <div className="col-sm-9">
-                      <input type="text" name="name" className="form-control" onChange={suiteAttrChanged} defaultValue={testSuiteNameToDisplay} />
+                      <input
+                        type="text"
+                        name="name"
+                        className="form-control"
+                        onChange={suiteAttrChanged}
+                        defaultValue={testSuiteNameToDisplay}
+                      />
                     </div>
                   </div>
                 </form>
               </div>
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={handleClose}>Close</button>
-              <button type="button" className="btn btn-primary" onClick={saveSuite}>Save</button>
+              <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={handleClose}>
+                Close
+              </button>
+              <button type="button" className="btn btn-primary" onClick={saveSuite}>
+                Save
+              </button>
             </div>
           </div>
         </div>

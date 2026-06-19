@@ -27,8 +27,15 @@ function TestSuites({ match, onProjectChange }) {
   useEffect(() => {
     if (!project) return;
     Backend.get(project + "/testsuite")
-      .then(response => { setTestSuites(response); setTestSuitesToDisplay(response); setLoading(false); })
-      .catch(error => { setErrorMessage("Couldn't get testsuites: " + error); setLoading(false); });
+      .then(response => {
+        setTestSuites(response);
+        setTestSuitesToDisplay(response);
+        setLoading(false);
+      })
+      .catch(error => {
+        setErrorMessage("Couldn't get testsuites: " + error);
+        setLoading(false);
+      });
   }, [project]);
 
   function onFilter(event) {
@@ -51,7 +58,11 @@ function TestSuites({ match, onProjectChange }) {
       .then(() => {
         const id = testSuiteToRemove.current;
         // eslint-disable-next-line eqeqeq
-        setTestSuites(prev => { const u = prev.filter(ts => ts.id != id); setTestSuitesToDisplay(u); return u; });
+        setTestSuites(prev => {
+          const u = prev.filter(ts => ts.id != id);
+          setTestSuitesToDisplay(u);
+          return u;
+        });
         testSuiteToRemove.current = null;
         $("#remove-testsuite-confirmation").modal("hide");
       })
@@ -81,7 +92,10 @@ function TestSuites({ match, onProjectChange }) {
                     <h5 className="card-title">{testSuite.name}</h5>
                   </div>
                   <div className="col1">
-                    <span className="clickable edit-icon-visible red float-right" onClick={() => removeTestSuiteConfirmation(testSuite.id)}>
+                    <span
+                      className="clickable edit-icon-visible red float-right"
+                      onClick={() => removeTestSuiteConfirmation(testSuite.id)}
+                    >
                       <FontAwesomeIcon icon={faMinusCircle} />
                     </span>
                   </div>
@@ -107,8 +121,12 @@ function TestSuites({ match, onProjectChange }) {
             </div>
             <div className="modal-body">Are you sure you want to remove Test Suite?</div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={cancelRemoveTestSuiteConfirmation}>Close</button>
-              <button type="button" className="btn btn-danger" onClick={removeTestSuite}>Remove Test Suite</button>
+              <button type="button" className="btn btn-secondary" onClick={cancelRemoveTestSuiteConfirmation}>
+                Close
+              </button>
+              <button type="button" className="btn btn-danger" onClick={removeTestSuite}>
+                Remove Test Suite
+              </button>
             </div>
           </div>
         </div>

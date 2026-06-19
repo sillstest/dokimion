@@ -19,7 +19,13 @@ global.jQuery = $;
 require("gijgo/js/gijgo.min.js");
 require("gijgo/css/gijgo.min.css");
 
-const LAUNCH_STATUS = Object.freeze({ PASSED: 'PASSED', FAILED: 'FAILED', BROKEN: 'BROKEN', RUNNABLE: 'RUNNABLE', RUNNING: 'RUNNING' });
+const LAUNCH_STATUS = Object.freeze({
+  PASSED: "PASSED",
+  FAILED: "FAILED",
+  BROKEN: "BROKEN",
+  RUNNABLE: "RUNNABLE",
+  RUNNING: "RUNNING",
+});
 
 // Structural fingerprint of a parsed tree (node uuids + nesting), independent of status.
 // Two fetches with the same structure differ only in icons, so we can refresh in place
@@ -37,7 +43,10 @@ function updateTreeNodeIcons(nodes) {
     if (n.uuid != null && n.uuid !== "" && n.statusHtml) {
       const m = /src="([^"]*)"/.exec(n.statusHtml);
       if (m) {
-        $("#tree li[data-id='" + n.uuid + "'] > div[data-role='wrapper'] > span[data-role='image'] img").attr("src", m[1]);
+        $("#tree li[data-id='" + n.uuid + "'] > div[data-role='wrapper'] > span[data-role='image'] img").attr(
+          "src",
+          m[1],
+        );
       }
     }
     if (n.children) updateTreeNodeIcons(n.children);
@@ -49,8 +58,14 @@ function Launch({ match, history }) {
   const launchId = match?.params?.launchId;
   const testcaseUuidParam = match?.params?.testcaseUuid;
 
-  const [launch, setLaunch] = useState({ launchStats: { statusCounters: {} }, testSuite: {}, restartFailedOnly: false });
-  const [selectedTestCase, setSelectedTestCase] = useState(testcaseUuidParam ? { uuid: testcaseUuidParam } : { uuid: null });
+  const [launch, setLaunch] = useState({
+    launchStats: { statusCounters: {} },
+    testSuite: {},
+    restartFailedOnly: false,
+  });
+  const [selectedTestCase, setSelectedTestCase] = useState(
+    testcaseUuidParam ? { uuid: testcaseUuidParam } : { uuid: null },
+  );
   const [projectAttributes, setProjectAttributes] = useState([]);
   const [configAttributePairs, setConfigAttributePairs] = useState([]);
   const [tcSizes, setTcSizes] = useState({});
@@ -71,21 +86,33 @@ function Launch({ match, history }) {
   const selectedTestCaseRef = useRef(selectedTestCase);
   const tcSizesRef = useRef(tcSizes);
   const configAttrPairsRef = useRef(configAttributePairs);
-  const testCasesStateMap = useRef(null);
   const intervalRef = useRef(null);
   const fetchIdRef = useRef(0);
   const expandedNodesRef = useRef(new Set());
   const lastTreeSignatureRef = useRef(null);
 
-  useEffect(() => { launchRef.current = launch; }, [launch]);
+  useEffect(() => {
+    launchRef.current = launch;
+  }, [launch]);
   // Reset tracked expansion when switching to a different launch — node ids from the
   // previous launch must not leak in and auto-expand unrelated groups in the new one.
   // Also clear the tree signature so the new launch always gets a full (re)build.
-  useEffect(() => { expandedNodesRef.current = new Set(); lastTreeSignatureRef.current = null; }, [launchId]);
-  useEffect(() => { filterLaunchRef.current = filterLaunch; }, [filterLaunch]);
-  useEffect(() => { selectedTestCaseRef.current = selectedTestCase; }, [selectedTestCase]);
-  useEffect(() => { tcSizesRef.current = tcSizes; }, [tcSizes]);
-  useEffect(() => { configAttrPairsRef.current = configAttributePairs; }, [configAttributePairs]);
+  useEffect(() => {
+    expandedNodesRef.current = new Set();
+    lastTreeSignatureRef.current = null;
+  }, [launchId]);
+  useEffect(() => {
+    filterLaunchRef.current = filterLaunch;
+  }, [filterLaunch]);
+  useEffect(() => {
+    selectedTestCaseRef.current = selectedTestCase;
+  }, [selectedTestCase]);
+  useEffect(() => {
+    tcSizesRef.current = tcSizes;
+  }, [tcSizes]);
+  useEffect(() => {
+    configAttrPairsRef.current = configAttributePairs;
+  }, [configAttributePairs]);
 
   function buildTree(launchData, caps, sizes) {
     const dataSource = Utils.parseTree(launchData.testCaseTree, [], sizes, caps);
@@ -124,8 +151,12 @@ function Launch({ match, history }) {
     // Track which group nodes are expanded so we can restore them after a rebuild.
     // gijgo's destroy()/recreate resets every node to collapsed, which otherwise
     // makes a node the user (or Selenium) just expanded snap shut on the next fetch.
-    treeRef.current.on("expand", function (e, node, id) { expandedNodesRef.current.add(String(id)); });
-    treeRef.current.on("collapse", function (e, node, id) { expandedNodesRef.current.delete(String(id)); });
+    treeRef.current.on("expand", function (e, node, id) {
+      expandedNodesRef.current.add(String(id));
+    });
+    treeRef.current.on("collapse", function (e, node, id) {
+      expandedNodesRef.current.delete(String(id));
+    });
     expandedNodesRef.current.forEach(function (id) {
       const node = treeRef.current.getNodeById(id);
       if (node && node.length) treeRef.current.expand(node);
@@ -138,7 +169,7 @@ function Launch({ match, history }) {
   }
 
   function updateCount(launchData) {
-    const groups = (launchData.testSuite?.filter?.groups) || [];
+    const groups = launchData.testSuite?.filter?.groups || [];
     let cnt = launchData.launchStats.total;
     if (launchData.testCaseTree) {
       const tcTree = launchData.testCaseTree;
@@ -146,12 +177,16 @@ function Launch({ match, history }) {
         cnt = tcTree.testCases.length;
       } else if (tcTree.children && groups.length > 0) {
         let tcs = [];
-        tcTree.children.forEach(child => { tcs = tcs.concat(child.testCases); });
+        tcTree.children.forEach(child => {
+          tcs = tcs.concat(child.testCases);
+        });
         cnt = tcs.length;
       }
     }
     setCount(cnt);
-    setNotRun((launchData.launchStats.statusCounters.RUNNABLE || 0) + (launchData.launchStats.statusCounters.RUNNING || 0));
+    setNotRun(
+      (launchData.launchStats.statusCounters.RUNNABLE || 0) + (launchData.launchStats.statusCounters.RUNNING || 0),
+    );
   }
 
   function filterLaunchTestCasesOnStatus(launchData, flFilter) {
@@ -160,11 +195,15 @@ function Launch({ match, history }) {
     const updated = { ...launchData, testCaseTree: { ...testcasesTree } };
     if (testcasesTree.testCases && testcasesTree.testCases.length > 0) {
       let tcs = [];
-      flFilter.forEach(status => { tcs = tcs.concat(testcasesTree.testCases.filter(tc => tc.launchStatus.includes(status))); });
+      flFilter.forEach(status => {
+        tcs = tcs.concat(testcasesTree.testCases.filter(tc => tc.launchStatus.includes(status)));
+      });
       updated.testCaseTree = { ...testcasesTree, testCases: tcs };
     } else if (testcasesTree.children && testcasesTree.children.length > 0) {
       let tcs = [];
-      flFilter.forEach(status => { tcs = tcs.concat(testcasesTree.children[0].testCases.filter(tc => tc.launchStatus.includes(status))); });
+      flFilter.forEach(status => {
+        tcs = tcs.concat(testcasesTree.children[0].testCases.filter(tc => tc.launchStatus.includes(status)));
+      });
       const updatedChildren = [...testcasesTree.children];
       updatedChildren[0] = { ...updatedChildren[0], testCases: tcs };
       updated.testCaseTree = { ...testcasesTree, children: updatedChildren };
@@ -172,41 +211,56 @@ function Launch({ match, history }) {
     return updated;
   }
 
-  const fetchLaunch = useCallback((shouldBuildTree, flFilter) => {
-    const myFetchId = ++fetchIdRef.current;
-    Backend.get(project + "/launch/" + launchId)
-      .then(response => {
-        // Discard results from an earlier in-flight fetch that resolved after a newer one.
-        // Without this, a Start-fetch resolving after a Pass-fetch overwrites PASSED state
-        // with stale RUNNING data, causing Selenium to never see the status badge update.
-        if (fetchIdRef.current !== myFetchId) return;
-        if (!response.testSuite || !response.testSuite.filter) response.testSuite = { filter: { groups: [] } };
-        const caps = response.configAttributePairs;
-        setConfigAttributePairs(caps);
-        const selTC = selectedTestCaseRef.current;
-        if (selTC && selTC.uuid) {
-          const found = Utils.getTestCaseFromTree(selTC.uuid, response.testCaseTree, (tc, id) => tc.uuid === id);
-          if (found) setSelectedTestCase(found);
-        }
-        const filtered = filterLaunchTestCasesOnStatus(response, flFilter || filterLaunchRef.current);
-        setLaunch(filtered);
-        setLoading(false);
-        updateCount(filtered);
-        if (shouldBuildTree) {
-          const capturedLaunch = filtered;
-          const capturedCaps = caps;
-          // Defer until after React has committed its re-render. Without this,
-          // React 18 batches the state updates above and flushes them AFTER
-          // buildTree runs, causing a re-render that makes Selenium's DOM
-          // references stale (StaleElementReferenceException on tree nodes).
-          requestAnimationFrame(() => buildTree(capturedLaunch, capturedCaps, tcSizesRef.current));
-        }
-      })
-      .catch(error => { setErrorMessage("Couldn't get launch: " + error); setLoading(false); });
-  }, [project, launchId]);
+  const fetchLaunch = useCallback(
+    (shouldBuildTree, flFilter) => {
+      const myFetchId = ++fetchIdRef.current;
+      Backend.get(project + "/launch/" + launchId)
+        .then(response => {
+          // Discard results from an earlier in-flight fetch that resolved after a newer one.
+          // Without this, a Start-fetch resolving after a Pass-fetch overwrites PASSED state
+          // with stale RUNNING data, causing Selenium to never see the status badge update.
+          if (fetchIdRef.current !== myFetchId) return;
+          if (!response.testSuite || !response.testSuite.filter) response.testSuite = { filter: { groups: [] } };
+          const caps = response.configAttributePairs;
+          setConfigAttributePairs(caps);
+          const selTC = selectedTestCaseRef.current;
+          if (selTC && selTC.uuid) {
+            const found = Utils.getTestCaseFromTree(selTC.uuid, response.testCaseTree, (tc, id) => tc.uuid === id);
+            if (found) setSelectedTestCase(found);
+          }
+          const filtered = filterLaunchTestCasesOnStatus(response, flFilter || filterLaunchRef.current);
+          setLaunch(filtered);
+          setLoading(false);
+          updateCount(filtered);
+          if (shouldBuildTree) {
+            const capturedLaunch = filtered;
+            const capturedCaps = caps;
+            // Defer until after React has committed its re-render. Without this,
+            // React 18 batches the state updates above and flushes them AFTER
+            // buildTree runs, causing a re-render that makes Selenium's DOM
+            // references stale (StaleElementReferenceException on tree nodes).
+            requestAnimationFrame(() => buildTree(capturedLaunch, capturedCaps, tcSizesRef.current));
+          }
+        })
+        .catch(error => {
+          setErrorMessage("Couldn't get launch: " + error);
+          setLoading(false);
+        });
+    },
+    [project, launchId],
+  );
 
   useEffect(() => {
-    Backend.get("/testcasesizes/getalltcsizes?" + Utils.filterToQuery({ skip: 0, limit: 20, orderby: "name", orderdir: "ASC", includedFields: "name,minLines,maxLines" }))
+    Backend.get(
+      "/testcasesizes/getalltcsizes?" +
+        Utils.filterToQuery({
+          skip: 0,
+          limit: 20,
+          orderby: "name",
+          orderdir: "ASC",
+          includedFields: "name,minLines,maxLines",
+        }),
+    )
       .then(response => setTcSizes(response))
       .catch(() => console.log("Error in handleGetTCSizes"));
 
@@ -223,7 +277,11 @@ function Launch({ match, history }) {
 
   function onTestcaseStateChanged(testcase) {
     setErrorMessage(testcase.displayErrorMessage || "");
-    const updatedTC = Utils.getTestCaseFromTree(testcase.uuid, launchRef.current.testCaseTree, (tc) => tc.uuid === testcase.uuid);
+    const updatedTC = Utils.getTestCaseFromTree(
+      testcase.uuid,
+      launchRef.current.testCaseTree,
+      tc => tc.uuid === testcase.uuid,
+    );
     if (updatedTC) Object.assign(updatedTC, testcase);
     const selTC = selectedTestCaseRef.current;
     if (selTC && selTC.uuid == testcase.uuid) {
@@ -242,26 +300,47 @@ function Launch({ match, history }) {
       switch (status) {
         case LAUNCH_STATUS.PASSED:
           setPassCounter(c => {
-            if (c + 1 > 1) { updated = updated.filter(s => s !== LAUNCH_STATUS.PASSED); return 0; }
-            updated.push(LAUNCH_STATUS.PASSED); return c + 1;
-          }); break;
+            if (c + 1 > 1) {
+              updated = updated.filter(s => s !== LAUNCH_STATUS.PASSED);
+              return 0;
+            }
+            updated.push(LAUNCH_STATUS.PASSED);
+            return c + 1;
+          });
+          break;
         case LAUNCH_STATUS.FAILED:
           setFailCounter(c => {
-            if (c + 1 > 1) { updated = updated.filter(s => s !== LAUNCH_STATUS.FAILED); return 0; }
-            updated.push(LAUNCH_STATUS.FAILED); return c + 1;
-          }); break;
+            if (c + 1 > 1) {
+              updated = updated.filter(s => s !== LAUNCH_STATUS.FAILED);
+              return 0;
+            }
+            updated.push(LAUNCH_STATUS.FAILED);
+            return c + 1;
+          });
+          break;
         case LAUNCH_STATUS.BROKEN:
           setBrokenCounter(c => {
-            if (c + 1 > 1) { updated = updated.filter(s => s !== LAUNCH_STATUS.BROKEN); return 0; }
-            updated.push(LAUNCH_STATUS.BROKEN); return c + 1;
-          }); break;
+            if (c + 1 > 1) {
+              updated = updated.filter(s => s !== LAUNCH_STATUS.BROKEN);
+              return 0;
+            }
+            updated.push(LAUNCH_STATUS.BROKEN);
+            return c + 1;
+          });
+          break;
         case LAUNCH_STATUS.RUNNABLE:
         case LAUNCH_STATUS.RUNNING:
           setNotRunCounter(c => {
-            if (c + 1 > 1) { updated = updated.filter(s => s !== LAUNCH_STATUS.RUNNABLE && s !== LAUNCH_STATUS.RUNNING); return 0; }
-            updated.push(LAUNCH_STATUS.RUNNING, LAUNCH_STATUS.RUNNABLE); return c + 1;
-          }); break;
-        default: break;
+            if (c + 1 > 1) {
+              updated = updated.filter(s => s !== LAUNCH_STATUS.RUNNABLE && s !== LAUNCH_STATUS.RUNNING);
+              return 0;
+            }
+            updated.push(LAUNCH_STATUS.RUNNING, LAUNCH_STATUS.RUNNABLE);
+            return c + 1;
+          });
+          break;
+        default:
+          break;
       }
       fetchLaunch(true, updated);
       return updated;
@@ -289,26 +368,48 @@ function Launch({ match, history }) {
         </div>
         <div className="col-1"></div>
         <div className="col-6 btn-group" role="group">
-          <button type="button" className={passCounter === 0 ? 'btn btn-success' : 'btn btn-success disabled'} onClick={e => handleSubmit("PASSED", e)}>
+          <button
+            type="button"
+            className={passCounter === 0 ? "btn btn-success" : "btn btn-success disabled"}
+            onClick={e => handleSubmit("PASSED", e)}
+          >
             Passed &nbsp;<span className="badge badge-light text-dark">{stats.PASSED}</span>
           </button>
-          <button type="button" className={failCounter === 0 ? 'btn btn-danger' : 'btn btn-danger disabled'} onClick={e => handleSubmit(LAUNCH_STATUS.FAILED, e)}>
+          <button
+            type="button"
+            className={failCounter === 0 ? "btn btn-danger" : "btn btn-danger disabled"}
+            onClick={e => handleSubmit(LAUNCH_STATUS.FAILED, e)}
+          >
             Fail &nbsp;<span className="badge badge-light text-dark">{stats.FAILED}</span>
           </button>
-          <button type="button" className={brokenCounter === 0 ? 'btn btn-warning' : 'btn btn-warning disabled'} onClick={e => handleSubmit(LAUNCH_STATUS.BROKEN, e)}>
+          <button
+            type="button"
+            className={brokenCounter === 0 ? "btn btn-warning" : "btn btn-warning disabled"}
+            onClick={e => handleSubmit(LAUNCH_STATUS.BROKEN, e)}
+          >
             Broken &nbsp;<span className="badge badge-light text-dark">{stats.BROKEN}</span>
           </button>
-          <button type="button" className={notRunCounter === 0 ? 'btn btn-secondary' : 'btn btn-secondary disabled'} onClick={e => handleSubmit(LAUNCH_STATUS.RUNNABLE, e)}>
+          <button
+            type="button"
+            className={notRunCounter === 0 ? "btn btn-secondary" : "btn btn-secondary disabled"}
+            onClick={e => handleSubmit(LAUNCH_STATUS.RUNNABLE, e)}
+          >
             Not Run &nbsp;<span className="badge badge-light text-dark">{notRun}</span>
           </button>
         </div>
       </div>
       <ControlledPopup popupMessage={errorMessage} />
-      <div>Number of Testcases : <span style={{ fontWeight: "bold" }}>{count}</span></div>
+      <div>
+        Number of Testcases : <span style={{ fontWeight: "bold" }}>{count}</span>
+      </div>
       <br />
-      <div className="sweet-loading"><FadeLoader size={100} color={"#135f38"} loading={loading} /></div>
+      <div className="sweet-loading">
+        <FadeLoader size={100} color={"#135f38"} loading={loading} />
+      </div>
       <div className="grid_container">
-        <div className="tree-side"><div id="tree"></div></div>
+        <div className="tree-side">
+          <div id="tree"></div>
+        </div>
         <div id="testCase" className="testcase-side">
           {selectedTestCase && selectedTestCase.uuid && (
             <TestCase
@@ -330,7 +431,9 @@ function Launch({ match, history }) {
               {(launch.testSuite || {}).id && (
                 <div className="launch-summary-block">
                   <div>Test Suite:</div>
-                  <Link to={"/" + project + "/testcases?testSuite=" + launch.testSuite.id}>{launch.testSuite.name}</Link>
+                  <Link to={"/" + project + "/testcases?testSuite=" + launch.testSuite.id}>
+                    {launch.testSuite.name}
+                  </Link>
                 </div>
               )}
               <div className="launch-summary-block">
@@ -338,25 +441,45 @@ function Launch({ match, history }) {
                 <div>Started at: {Utils.timeToDate(launch.startTime)}</div>
                 <div>Finished at: {Utils.timeToDate(launch.finishTime)}</div>
               </div>
-              {typeof launch !== 'undefined' && (
+              {typeof launch !== "undefined" && (
                 <div className="progress launch-summary-block">
-                  <div className="progress-bar progress-bar-striped" role="progressbar" style={Utils.getProgressBarStyle(stats.RUNNING, launch.launchStats.total)}>
+                  <div
+                    className="progress-bar progress-bar-striped"
+                    role="progressbar"
+                    style={Utils.getProgressBarStyle(stats.RUNNING, launch.launchStats.total)}
+                  >
                     {Utils.getProgressBarNumber(stats.RUNNING, launch.launchStats.total)}
                   </div>
-                  <div className="progress-bar bg-success" role="progressbar" style={Utils.getProgressBarStyle(stats.PASSED, launch.launchStats.total)}>
+                  <div
+                    className="progress-bar bg-success"
+                    role="progressbar"
+                    style={Utils.getProgressBarStyle(stats.PASSED, launch.launchStats.total)}
+                  >
                     {Utils.getProgressBarNumber(stats.PASSED, launch.launchStats.total)}
                   </div>
-                  <div className="progress-bar bg-danger" role="progressbar" style={Utils.getProgressBarStyle(stats.FAILED, launch.launchStats.total)}>
+                  <div
+                    className="progress-bar bg-danger"
+                    role="progressbar"
+                    style={Utils.getProgressBarStyle(stats.FAILED, launch.launchStats.total)}
+                  >
                     {Utils.getProgressBarNumber(stats.FAILED, launch.launchStats.total)}
                   </div>
-                  <div className="progress-bar bg-warning" role="progressbar" style={Utils.getProgressBarStyle(stats.BROKEN, launch.launchStats.total)}>
+                  <div
+                    className="progress-bar bg-warning"
+                    role="progressbar"
+                    style={Utils.getProgressBarStyle(stats.BROKEN, launch.launchStats.total)}
+                  >
                     {Utils.getProgressBarNumber(stats.BROKEN, launch.launchStats.total)}
                   </div>
                 </div>
               )}
               <div className="restart-launch-control">
-                <button type="button" className="btn btn-primary" onClick={e => onLaunchRestart(false, e)}>Restart All</button>
-                <button type="button" className="btn btn-danger" onClick={e => onLaunchRestart(true, e)}>Restart Failed</button>
+                <button type="button" className="btn btn-primary" onClick={e => onLaunchRestart(false, e)}>
+                  Restart All
+                </button>
+                <button type="button" className="btn btn-danger" onClick={e => onLaunchRestart(true, e)}>
+                  Restart Failed
+                </button>
               </div>
             </div>
           )}

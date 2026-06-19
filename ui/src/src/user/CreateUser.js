@@ -5,7 +5,13 @@ import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 import * as Utils from "../common/Utils";
 
-const defaultFilter = { skip: 0, limit: 20, orderby: "firstName", orderdir: "ASC", includedFields: "firstName,lastName,login,id,email,role" };
+const defaultFilter = {
+  skip: 0,
+  limit: 20,
+  orderby: "firstName",
+  orderdir: "ASC",
+  includedFields: "firstName,lastName,login,id,email,role",
+};
 const defaultUser = { login: "", password: "", firstName: "", lastName: "", role: "TESTER" };
 
 function CreateUser() {
@@ -28,12 +34,23 @@ function CreateUser() {
   }
 
   function handleSubmit(event) {
-    if (oneUser.login.toLowerCase() == "admin") { setMessage("Error - System admin reserved"); return; }
-    if (oneUser.role.toLowerCase() == "admin" && !isNewAdminAllowed()) { setMessage("Number of users with role = 'ADMIN' is MAXIMUM already"); return; }
-    if (!oneUser.login || !oneUser.firstName || !oneUser.lastName || !oneUser.password) { setMessage("All fields must have a non-null value"); return; }
+    if (oneUser.login.toLowerCase() == "admin") {
+      setMessage("Error - System admin reserved");
+      return;
+    }
+    if (oneUser.role.toLowerCase() == "admin" && !isNewAdminAllowed()) {
+      setMessage("Number of users with role = 'ADMIN' is MAXIMUM already");
+      return;
+    }
+    if (!oneUser.login || !oneUser.firstName || !oneUser.lastName || !oneUser.password) {
+      setMessage("All fields must have a non-null value");
+      return;
+    }
 
     Backend.post("user", oneUser)
-      .then(response => { window.location = decodeURI("/user/profile/" + response.login); })
+      .then(response => {
+        window.location = decodeURI("/user/profile/" + response.login);
+      })
       .catch(error => setMessage("Couldn't create a user: " + error));
     event.preventDefault();
   }
@@ -70,7 +87,8 @@ function CreateUser() {
               <input type="text" className="form-control" name="email" id="email" onChange={handleChange} />
             </div>
             <div className="form-group col-md-6">
-              <label htmlFor="user_role">User Role</label><br />
+              <label htmlFor="user_role">User Role</label>
+              <br />
               <select name="role" value={oneUser.role} onChange={handleChange}>
                 <option value="TESTER">TESTER</option>
                 <option value="TESTDEVELOPER">TESTDEVELOPER</option>
@@ -79,21 +97,43 @@ function CreateUser() {
               </select>
             </div>
           </div>
-          <button onClick={handleSubmit} className="btn btn-primary">Create</button>
+          <button onClick={handleSubmit} className="btn btn-primary">
+            Create
+          </button>
         </form>
         <br />
         <table>
           <tbody>
-            <tr><th>Valid Password Rules</th></tr>
-            <tr><td>Length between 8 and 15 characters</td></tr>
-            <tr><td>No whitespace</td></tr>
-            <tr><td>At least one upper case character</td></tr>
-            <tr><td>At least one lower case character</td></tr>
-            <tr><td>At least one digit</td></tr>
-            <tr><td>At least one special character</td></tr>
-            <tr><td>Illegal character sequence: USQwerty</td></tr>
-            <tr><td>Illegal character sequence: Alphabetical</td></tr>
-            <tr><td>Illegal character sequence: Numerical</td></tr>
+            <tr>
+              <th>Valid Password Rules</th>
+            </tr>
+            <tr>
+              <td>Length between 8 and 15 characters</td>
+            </tr>
+            <tr>
+              <td>No whitespace</td>
+            </tr>
+            <tr>
+              <td>At least one upper case character</td>
+            </tr>
+            <tr>
+              <td>At least one lower case character</td>
+            </tr>
+            <tr>
+              <td>At least one digit</td>
+            </tr>
+            <tr>
+              <td>At least one special character</td>
+            </tr>
+            <tr>
+              <td>Illegal character sequence: USQwerty</td>
+            </tr>
+            <tr>
+              <td>Illegal character sequence: Alphabetical</td>
+            </tr>
+            <tr>
+              <td>Illegal character sequence: Numerical</td>
+            </tr>
           </tbody>
         </table>
       </div>

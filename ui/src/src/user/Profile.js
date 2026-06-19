@@ -20,7 +20,9 @@ function Profile({ match }) {
   return (
     <div>
       <ControlledPopup popupMessage={message} />
-      <h3><span className="text-muted">User: {profile.login}</span></h3>
+      <h3>
+        <span className="text-muted">User: {profile.login}</span>
+      </h3>
       <table className="tableUserProfile">
         <thead>
           <tr>
@@ -29,11 +31,26 @@ function Profile({ match }) {
           </tr>
         </thead>
         <tbody>
-          <tr><td className="cellUserProfile">Login</td><td className="cellUserProfile">{profile.login}</td></tr>
-          <tr><td className="cellUserProfile">First Name</td><td className="cellUserProfile">{profile.firstName}</td></tr>
-          <tr><td className="cellUserProfile">Last Name</td><td className="cellUserProfile">{profile.lastName}</td></tr>
-          <tr><td className="cellUserProfile">Email</td><td className="cellUserProfile">{profile.email}</td></tr>
-          <tr><td className="cellUserProfile">Role</td><td className="cellUserProfile">{profile.role}</td></tr>
+          <tr>
+            <td className="cellUserProfile">Login</td>
+            <td className="cellUserProfile">{profile.login}</td>
+          </tr>
+          <tr>
+            <td className="cellUserProfile">First Name</td>
+            <td className="cellUserProfile">{profile.firstName}</td>
+          </tr>
+          <tr>
+            <td className="cellUserProfile">Last Name</td>
+            <td className="cellUserProfile">{profile.lastName}</td>
+          </tr>
+          <tr>
+            <td className="cellUserProfile">Email</td>
+            <td className="cellUserProfile">{profile.email}</td>
+          </tr>
+          <tr>
+            <td className="cellUserProfile">Role</td>
+            <td className="cellUserProfile">{profile.role}</td>
+          </tr>
         </tbody>
       </table>
       <div className="row">
