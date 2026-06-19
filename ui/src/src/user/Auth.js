@@ -23,6 +23,8 @@ function Auth({ location }) {
         window.location = url;
       })
       .catch(error => console.log(error));
+    // Mount-only auth-config fetch + redirect (former componentDidMount).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <div></div>;

@@ -77,6 +77,8 @@ function Launches({ match, history, location, onProjectChange }) {
     Backend.get("launcher/descriptors").then(setLauncherDescriptors).catch(console.log);
     intervalRef.current = setInterval(() => fetchLaunches(filterRef.current), 30000);
     return () => clearInterval(intervalRef.current);
+    // Mount-only initial load + polling (former componentDidMount); refetches use refs, not deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleFilterChange(fieldName, event) {

@@ -29,6 +29,8 @@ function Project({ match, onProjectChange }) {
         setErrorMessage("Couldn't get project: " + error);
         setLoading(false);
       });
+    // Reloads when projectId changes; onProjectChange is a callback prop, excluded to avoid loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   return (

@@ -23,6 +23,8 @@ function TestSuitesWidget({ projectId, limit: limitProp }) {
         setErrorMessage("Couldn't get testsuites: " + error);
         setLoading(false);
       });
+    // Reloads when projectId changes; limit is a stable prop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   function onFilter(event) {

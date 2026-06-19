@@ -137,15 +137,18 @@ function TestCase({
     if (launchIdProp) setLaunchId(launchIdProp);
     getSession();
     getAttributes();
+    // One-time init (former componentDidMount); prop flags are read once on mount intentionally.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Reset to the Main tab only when navigating to a *different* testcase.
   // Keyed on the stable id (not the object reference) so a refresh of the
   // same testcase — e.g. after a launch status change — doesn't snap the
   // active tab back to Main.
+  const activeTestcaseKey = testcaseProp?.uuid ?? testcaseProp?.id ?? testcaseId ?? match?.params?.testcase;
   useEffect(() => {
     setActiveTab("main");
-  }, [testcaseProp?.uuid ?? testcaseProp?.id ?? testcaseId ?? match?.params?.testcase]);
+  }, [activeTestcaseKey]);
 
   // Load testcase whenever testcaseId or testcaseProp changes (also fires on initial mount)
   useEffect(() => {
@@ -160,6 +163,8 @@ function TestCase({
       const routePid = projectIdRef.current || match?.params?.project;
       if (routeTcId) getTestCase(routePid, routeTcId);
     }
+    // Keyed on testcaseProp/testcaseId; route params are read via refs/fallbacks, not deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testcaseProp, testcaseId]);
 
   useEffect(() => {

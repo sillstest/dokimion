@@ -38,6 +38,8 @@ function Comments({ projectId, entityId, entityType, forceFetch, hideForm, onCom
         })
         .catch(error => console.log(error));
     }
+    // onCommentsNumberChanged is a callback prop; excluded to avoid refetch loops on its identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, entityId, entityType, forceFetch]);
 
   useEffect(() => {

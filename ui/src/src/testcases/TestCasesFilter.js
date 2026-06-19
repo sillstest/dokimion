@@ -276,6 +276,8 @@ function TestCasesFilter({
       setTestSuite(prev => ({ ...prev, filter: parsedFilter }));
       if (onFilter) onFilter(parsedFilter);
     }
+    // Mount-only session fetch + URL/testsuite parse (former componentDidMount).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -290,6 +292,8 @@ function TestCasesFilter({
         return { ...prev, filter: { ...prev.filter, filters } };
       });
     }
+    // Re-labels filters when projectAttributes loads; groupsToDisplay is updated via its setter inside.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectAttributes]);
 
   function getAttributeName(id, attrs) {

@@ -40,6 +40,8 @@ function Users({ location, history }) {
   useEffect(() => {
     fetchUsers(filter);
     fetchCount(filter);
+    // Mount-only initial load (former componentDidMount); filter changes refetch explicitly elsewhere.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handlePageChanged(newPage) {

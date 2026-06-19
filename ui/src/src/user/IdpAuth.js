@@ -16,6 +16,8 @@ function IdpAuth({ location, onSessionChange }) {
       .catch(() => {
         window.location = "/auth";
       });
+    // Mount-only one-shot auth callback + redirect (former componentDidMount).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <div></div>;

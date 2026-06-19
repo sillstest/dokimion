@@ -24,6 +24,8 @@ function Attachments({ testcase, projectId, readonly, testDeveloper, onTestcaseU
     $("#file-data").on("fileuploaded", () => {
       if (onTestcaseUpdated) onTestcaseUpdated();
     });
+    // onTestcaseUpdated is a callback prop; excluded to avoid re-init of the uploader on its identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testcase, projectId]);
 
   function removeAttachmentConfirmation(attachmentId) {

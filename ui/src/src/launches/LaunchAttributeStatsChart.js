@@ -36,6 +36,8 @@ function LaunchAttributeStatsChart({ stats, attrKey }) {
       },
       series: statusSeries,
     });
+    // Redraw is keyed on the data (stats/attrKey); chartContainerId/seriesConfig are stable config.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stats, attrKey]);
 
   return (

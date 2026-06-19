@@ -52,6 +52,8 @@ function TestCaseForm({ testcase: testcaseProp, projectAttributes: projectAttrsP
         .then(response => setDefaultProjectAttributes(response))
         .catch(error => console.log(error));
     }
+    // Reloads when the project route param changes; the filter object is a stable default.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.params?.project]);
 
   function getAttribute(id) {

@@ -162,6 +162,8 @@ function TestCases({ match, history, location, onProjectChange }) {
         treeRef.current.select(node);
       }
     },
+    // getQueryParams/processElementChecked are stable inner fns; excluded to keep this callback stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [project, history, testSuite],
   );
 
@@ -222,6 +224,8 @@ function TestCases({ match, history, location, onProjectChange }) {
         treeRef.current = null;
       }
     };
+    // Mount-only tree build/teardown (former componentDidMount/componentWillUnmount).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function onFilter(newFilter, callback) {

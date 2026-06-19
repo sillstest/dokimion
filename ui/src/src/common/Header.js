@@ -65,6 +65,8 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
     Backend.get("project?includedFields=name,description,id,readWriteUsers")
       .then(response => setProjects(response))
       .catch(() => {});
+    // Mount-only session/projects load (former componentDidMount); history is the stable router object.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

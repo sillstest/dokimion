@@ -247,6 +247,8 @@ function Launch({ match, history }) {
           setLoading(false);
         });
     },
+    // buildTree is a stable inner fn; excluded so fetchLaunch isn't recreated every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [project, launchId],
   );
 
@@ -273,6 +275,8 @@ function Launch({ match, history }) {
 
     intervalRef.current = setInterval(() => fetchLaunch(false, filterLaunchRef.current), 30000);
     return () => clearInterval(intervalRef.current);
+    // Mount-only initial load + polling (former componentDidMount); refetches use refs, not deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function onTestcaseStateChanged(testcase) {
