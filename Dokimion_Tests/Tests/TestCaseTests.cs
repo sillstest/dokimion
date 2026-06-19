@@ -101,6 +101,12 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Click on the Testcases on header");
             Actor.AttemptsTo(Click.On(Header.TestCases));
 
+            // Confirm we actually landed on the TestCases page before reaching for the Add button.
+            // FilterLocator (the funnel icon) is always present once the filter panel renders, so it's
+            // a reliable "page loaded" signal; if it times out, the nav didn't reach the testcases page.
+            userActions.LogConsoleMessage("URL after TestCases nav: " + driver.Url);
+            Actor.WaitsUntil(Appearance.Of(TestCases.FilterLocator), IsEqualTo.True(), timeout: 60);
+
             userActions.LogConsoleMessage("Click on the '+' to Add Test cases");
             Actor.AttemptsTo(Click.On(TestCases.AddTestCase));
 

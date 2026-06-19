@@ -26,6 +26,10 @@ namespace Dokimion.Interactions
             actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 60);
             actor.AttemptsTo(Click.On(Header.TestCases));
 
+            // Confirm the TestCases page rendered (FilterLocator funnel) before clicking Add.
+            // If this wait times out, the nav didn't land on the testcases page (vs. a slow Add button).
+            actor.WaitsUntil(Appearance.Of(TestCases.FilterLocator), IsEqualTo.True(), timeout: 60);
+
             userActions.LogConsoleMessage("Click on the '+' to Add Test cases");
             actor.AttemptsTo(Click.On(TestCases.AddTestCase));
 
