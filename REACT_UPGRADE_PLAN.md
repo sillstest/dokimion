@@ -160,11 +160,34 @@ Only `ErrorBoundary.js` remains as a class (permanent — no hooks equivalent fo
 
 ## Phase 6 — React 18 Strict Mode & Cleanup
 
-**Step 6.1** — Enable `<React.StrictMode>` in `index.js`. Fix any double-effect bugs surfaced in development.
+**Step 6.1** ✅ DECIDED — StrictMode stays **DISABLED** (final). Enabling it double-mounts in dev,
+which breaks TinyMCE's `<Editor>` (orphaned iframes → shifted iframe ordering → step editor empty /
+silent save failures — the TC08 failure mode). Known `@tinymce/tinymce-react` teardown limitation.
+Double-invoke is dev-only (`yarn start`); production renders once and the Selenium suite runs against
+a built app, so prod/tests are unaffected. The dev-only bug-detection benefit doesn't justify breaking
+the editor in dev. Rationale recorded in `index.js`. Do not re-enable without making the editors
+StrictMode-safe first.
 
-**Step 6.2** — Audit `useEffect` calls for missing dependency arrays or stale closures.
+**Step 6.2** ✅ COMPLETED — Audited all 23 `react-hooks/exhaustive-deps` warnings. One real fix
+(`TestCase.js`: extracted a complex dep expression to `activeTestcaseKey`). The other 22 are
+intentional mount-only / change-keyed / stable-callback effects — each annotated with a justified
+`// eslint-disable-next-line react-hooks/exhaustive-deps` rather than blind-adding deps (which would
+risk re-render loops). Effects with subscriptions/timers verified to have cleanup.
 
-**Step 6.3** — Remove `prop-types` declarations (optional cleanup).
+Earlier quick wins also done: deleted the empty `SubComponent.js` shell; ran `yarn lint:fix`
+formatting sweep; cleared all 28 `no-unused-vars`. Lint now: **0 errors, 12 warnings** (10 cosmetic
+`jsx-a11y/anchor-is-valid`, 1 `import/no-anonymous-default-export`, 1 `eqeqeq`).
+
+**Step 6.3** — Remove `prop-types` declarations (optional cleanup). Remaining trivia: the 12 warnings
+above.
+
+---
+
+## Remaining to finalize the upgrade
+- Phase 6.3 trivia (optional): the 12 cosmetic/trivial warnings.
+- Get the Selenium suite (TC1–TC22) green against the React 18 build.
+- Manual smoke-test each module.
+- Merge `upgrade/react-18` → `master`; then this plan is complete.
 
 ---
 
