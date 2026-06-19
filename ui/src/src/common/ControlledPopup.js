@@ -7,7 +7,7 @@ const ControlledPopup = ({ popupMessage }) => {
       <div className="popup-content">{popupMessage}</div>
       <Popup>
         <div className="body">
-          <a className="body">&times;</a>
+          <span className="body">&times;</span>
         </div>
       </Popup>
     </div>

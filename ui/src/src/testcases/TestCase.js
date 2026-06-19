@@ -1,4 +1,4 @@
-/*unc eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable eqeqeq */
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Attachments from "../testcases/Attachments";

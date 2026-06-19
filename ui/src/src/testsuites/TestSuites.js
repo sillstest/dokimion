@@ -57,8 +57,8 @@ function TestSuites({ match, onProjectChange }) {
     Backend.delete(project + "/testsuite/" + testSuiteToRemove.current)
       .then(() => {
         const id = testSuiteToRemove.current;
-        // eslint-disable-next-line eqeqeq
         setTestSuites(prev => {
+          // eslint-disable-next-line eqeqeq
           const u = prev.filter(ts => ts.id != id);
           setTestSuitesToDisplay(u);
           return u;

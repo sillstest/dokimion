@@ -60,7 +60,7 @@ export const inputStyle = {
   margin: ".5em",
 };
 
-export default {
+const buttonStyles = {
   deleteButton,
   updateButton,
   loginButton,
@@ -73,3 +73,5 @@ export default {
   saveButton,
   cancelButton,
 };
+
+export default buttonStyles;

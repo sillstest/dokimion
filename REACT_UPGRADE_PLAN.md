@@ -178,13 +178,15 @@ Earlier quick wins also done: deleted the empty `SubComponent.js` shell; ran `ya
 formatting sweep; cleared all 28 `no-unused-vars`. Lint now: **0 errors, 12 warnings** (10 cosmetic
 `jsx-a11y/anchor-is-valid`, 1 `import/no-anonymous-default-export`, 1 `eqeqeq`).
 
-**Step 6.3** — Remove `prop-types` declarations (optional cleanup). Remaining trivia: the 12 warnings
-above.
+**Step 6.3** ✅ COMPLETED — Cleared the last 12 warnings: fixed a typo'd file-level disable directive
+in `TestCase.js` (`/*unc` → `/*`, which re-enabled its 9 `anchor-is-valid` suppressions), changed the
+decorative `<a>&times;</a>` in `ControlledPopup.js` to a `<span>`, named the default export in
+`ButtonStyles.js`, and moved a misplaced `eslint-disable eqeqeq` to the correct line in `TestSuites.js`.
+**Lint is now fully clean: 0 errors, 0 warnings.** (`prop-types` removal remains an optional future cleanup.)
 
 ---
 
 ## Remaining to finalize the upgrade
-- Phase 6.3 trivia (optional): the 12 cosmetic/trivial warnings.
 - Get the Selenium suite (TC1–TC22) green against the React 18 build.
 - Manual smoke-test each module.
 - Merge `upgrade/react-18` → `master`; then this plan is complete.
