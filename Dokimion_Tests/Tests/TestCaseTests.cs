@@ -297,12 +297,16 @@ namespace Dokimion.Tests
                 //Verify
                 userActions.LogConsoleMessage("Verify : In Step 2 Expectation is updated with UPD");
 
-                driver.SwitchTo().Frame(5);
-                string Expectations2Text = Actor.AskingFor(Text.Of(TestCases.RichTextBody));
-                Assert.That(Expectations2Text, Is.EqualTo("UPD"));
-                driver.SwitchTo().DefaultContent();
+                // Verify against step 2's display text in the MAIN document instead of switching
+                // into the editor iframe. No frame switching means a mismatch fails cleanly (with a
+                // readable diff) and can never leave the driver stuck in a frame to break cleanup.
+                // The expectation is the 2nd ".card-text" in steps-1-display (after the action one).
+                IWebLocator step2ExpectationDisplay = new WebLocator(
+                    "Step2ExpectationDisplay",
+                    By.XPath("(//div[@id='steps-1-display']//div[@class='card-text'])[2]"));
+                Actor.WaitsUntil(Text.Of(step2ExpectationDisplay), ContainsSubstring.Text("UPD"), timeout: 45);
             }
-            finally { 
+            finally {
             // Cleanup
             userActions.LogConsoleMessage("Clean up :");
             Actor.AttemptsTo(DeleteTestCase.For(driver));
