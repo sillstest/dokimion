@@ -43,7 +43,12 @@ namespace Dokimion.Interactions
             // mid-step and a click on it races a NoSuchElement. After the detail is gone, wait for
             // the project nav (restored by TestCases' onProjectChange) so the next test is stable.
             userActions.LogConsoleMessage("Wait for the delete reload to settle");
-            Actor.WaitsUntil(Appearance.Of(TestCases.RemoveTestCase), IsEqualTo.False(), timeout: 60);
+            // Use Count (FindElements) rather than Appearance (get_Displayed) here: during the delete
+            // reload the Remove button's node is being detached, and calling get_Displayed on a node
+            // mid-detach throws "Node ... does not belong to the document" (a -32000 WebDriverException
+            // Boa does not retry). Counting matches never touches get_Displayed, so a gone/detaching
+            // element simply counts as 0.
+            Actor.WaitsUntil(Count.Of(TestCases.RemoveTestCase), IsEqualTo.Value(0), timeout: 60);
             Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 60);
         }
 
