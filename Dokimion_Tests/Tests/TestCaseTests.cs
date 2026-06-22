@@ -840,16 +840,28 @@ namespace Dokimion.Tests
         // Restore the admin session used by the rest of the class.
         private void RestoreAdminSession()
         {
-            // Deterministically restore a clean admin session, mirroring OneTimeSetUp. We do NOT use the
-            // app's Logout here: it redirects to /login?retpath=<the previous page>, so after admin
-            // re-login the app returns to that (non-admin) page and the projects-list DokimionProject
-            // card never appears. Clearing the session cookies and loading the app root gives a
-            // retpath-free login that lands on the projects list, regardless of where the prior flow was.
-            driver.Manage().Cookies.DeleteAllCookies();
+            // Restore a clean admin session that lands on the projects list (where DokimionProject lives),
+            // mirroring OneTimeSetUp. Two pitfalls to avoid:
+            //   (1) the app's Logout reliably reaches the login page but redirects to
+            //       /login?retpath=<previous page>, so a plain re-login returns to that non-projects page;
+            //   (2) clearing cookies alone did not reliably end the session.
+            // So: Logout to the login page (waiting for NameInput confirms logout actually completed),
+            // THEN reload the app root to drop the retpath, then log in -> the app goes to "/" (projects).
+            try { Actor.AttemptsTo(Logout.For()); } catch { /* may already be logged out / no user menu */ }
+            try
+            {
+                Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 20);
+            }
+            catch
+            {
+                // Logout UI wasn't available; fall back to clearing cookies.
+                driver.Manage().Cookies.DeleteAllCookies();
+            }
+            // Reload the root while logged out so the login page carries no retpath.
             driver.Navigate().GoToUrl(userActions.DokimionUrl);
             Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
             Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
-            Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 15);
+            Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 30);
             Actor.AttemptsTo(Click.On(Header.DokimionProject));
         }
 
