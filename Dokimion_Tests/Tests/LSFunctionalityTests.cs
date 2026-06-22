@@ -80,12 +80,6 @@ namespace Dokimion.Tests
             //
             try
             {
-                // Clean slate: delete any leftover launches from a prior (possibly crashed/throttled)
-                // run BEFORE creating the 3 fixtures. Otherwise leftovers inflate the launch counts and
-                // break TC22 (filter row counts) and TC23 (Total Launches = 3).
-                userActions.LogConsoleMessage("Purge any leftover launches (clean slate for the 3 fixtures)");
-                Actor.AttemptsTo(DeleteLaunch.For(driver));
-
                 userActions.LogConsoleMessage("Create Smoke Test Launch, Smoke Test Launch Re-Run, Launch Testcases ");
                 CreationAndFilterHelpers creationAndFilterHelpers = new CreationAndFilterHelpers();
                 creationAndFilterHelpers.CreateSmokeTestReRun(Actor, driver);
