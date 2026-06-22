@@ -614,7 +614,10 @@ namespace Dokimion.Tests
 
                 // Locking navigates back to the list, so re-open the now-locked test case to inspect it.
                 userActions.LogConsoleMessage("Verify : admin sees the Unlock Testcase button on the locked test case");
-                Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+                // Re-navigate to load a SETTLED tree. Reading every node's text immediately after the
+                // lock races the gijgo tree rebuild and throws "Node ... does not belong to the
+                // document"; a fresh navigation (as used at set-up) loads the tree cleanly.
+                OpenProjectLSTestCases();
                 OpenTestCaseInLS(testCaseName);
                 new Actions(driver).SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
                 Actor.WaitsUntil(Appearance.Of(TestCases.UnlockTestcaseButton), IsEqualTo.True(), timeout: 30);
