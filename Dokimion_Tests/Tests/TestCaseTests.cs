@@ -795,10 +795,37 @@ namespace Dokimion.Tests
         // project, so navigation into a project is the caller's responsibility).
         private void LoginAsNonAdmin(string username, string password)
         {
-            try { Actor.AttemptsTo(Logout.For()); } catch { /* may already be on login page */ }
+            // Same robust logout/login as RestoreAdminSession: Logout to reach the login page (waiting for
+            // NameInput confirms it completed), then reload the app root to drop the retpath, then log in
+            // so the non-admin lands on the projects list (Dokimion_LS card). Cookie-clear is a fallback.
+            try { Actor.AttemptsTo(Logout.For()); } catch { /* may already be logged out / no user menu */ }
+            try
+            {
+                Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 20);
+            }
+            catch
+            {
+                driver.Manage().Cookies.DeleteAllCookies();
+            }
+            driver.Navigate().GoToUrl(userActions.DokimionUrl);
             Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
             Actor.AttemptsTo(LoginUser.For(username, password));
-            Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 15);
+            Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
+        }
+
+        // Click, retrying on the transient "Node ... does not belong to the document" / stale-element
+        // error that occurs when a React/gijgo re-render detaches the node between find and click. Boa
+        // retries StaleElementReferenceException but not this -32000 WebDriverException, so we retry here.
+        private void ClickWithRetry(IWebLocator locator, int attempts = 4)
+        {
+            for (int i = 0; ; i++)
+            {
+                try { Actor.AttemptsTo(Click.On(locator)); return; }
+                catch (WebDriverException) when (i < attempts - 1)
+                {
+                    new Actions(driver).Pause(TimeSpan.FromMilliseconds(500)).Build().Perform();
+                }
+            }
         }
 
         // ----- helpers for TC23 / TC24 -----
@@ -806,13 +833,15 @@ namespace Dokimion.Tests
         // Navigate from the current project to Dokimion_LS and open its TestCases page.
         private void OpenProjectLSTestCases()
         {
-            Actor.AttemptsTo(Click.On(Header.ProjectsLink));
+            // Use ClickWithRetry on the header nav: this often runs right after a prior test's session
+            // restore, when the header is still re-rendering, so a plain click can hit a detaching node.
+            ClickWithRetry(Header.ProjectsLink);
             Actor.WaitsUntil(Appearance.Of(Header.AllLink), IsEqualTo.True(), timeout: 30);
-            Actor.AttemptsTo(Click.On(Header.AllLink));
+            ClickWithRetry(Header.AllLink);
             Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
-            Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
+            ClickWithRetry(Header.DokimionLaunchStatisticsProject);
             Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 30);
-            Actor.AttemptsTo(Click.On(Header.TestCases));
+            ClickWithRetry(Header.TestCases);
             Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
         }
 
