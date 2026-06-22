@@ -837,8 +837,23 @@ namespace Dokimion.Tests
         // Log out whoever is logged in and restore the admin session used by the rest of the class.
         private void RestoreAdminSession()
         {
-            try { Actor.AttemptsTo(Logout.For()); } catch { /* may already be on login page */ }
-            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
+            // Return to a clean login page regardless of the state the prior (non-admin) flow left the
+            // browser in. The normal Logout can fail to surface the login page for some users (e.g. a
+            // default-password redirect, or a header without the usual user menu); if NameInput doesn't
+            // appear quickly, force it by clearing the session cookies and reloading the app. This keeps
+            // a flaky logout from leaving the browser logged-out and cascading into the next test.
+            try { Actor.AttemptsTo(Logout.For()); } catch { /* may already be on login page / no user menu */ }
+            try
+            {
+                Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 10);
+            }
+            catch
+            {
+                userActions.LogConsoleMessage("RestoreAdminSession: login page not shown after logout; forcing via cookie clear + reload");
+                driver.Manage().Cookies.DeleteAllCookies();
+                driver.Navigate().GoToUrl(userActions.DokimionUrl);
+                Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
+            }
             Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
             Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 15);
             Actor.AttemptsTo(Click.On(Header.DokimionProject));
