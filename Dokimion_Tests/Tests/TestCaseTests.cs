@@ -302,7 +302,12 @@ namespace Dokimion.Tests
                 Assert.That(Expectations2Text, Is.EqualTo("UPD"));
                 driver.SwitchTo().DefaultContent();
             }
-            finally { 
+            finally {
+            // The verification above switches into a step iframe (SwitchTo().Frame(5)). If the body
+            // throws before SwitchTo().DefaultContent() runs, the driver is left inside that frame and
+            // cleanup fails with "Node with given id does not belong to the document" (and masks the
+            // real failure). Always reset to the main document before deleting.
+            driver.SwitchTo().DefaultContent();
             // Cleanup
             userActions.LogConsoleMessage("Clean up :");
             Actor.AttemptsTo(DeleteTestCase.For(driver));
