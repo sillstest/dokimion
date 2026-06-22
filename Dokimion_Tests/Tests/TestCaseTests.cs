@@ -795,20 +795,7 @@ namespace Dokimion.Tests
         // project, so navigation into a project is the caller's responsibility).
         private void LoginAsNonAdmin(string username, string password)
         {
-            // Same robust logout/login as RestoreAdminSession: Logout to reach the login page (waiting for
-            // NameInput confirms it completed), then reload the app root to drop the retpath, then log in
-            // so the non-admin lands on the projects list (Dokimion_LS card). Cookie-clear is a fallback.
-            try { Actor.AttemptsTo(Logout.For()); } catch { /* may already be logged out / no user menu */ }
-            try
-            {
-                Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 20);
-            }
-            catch
-            {
-                driver.Manage().Cookies.DeleteAllCookies();
-            }
-            driver.Navigate().GoToUrl(userActions.DokimionUrl);
-            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
+            EnsureCleanLoginPage();
             Actor.AttemptsTo(LoginUser.For(username, password));
             Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
         }
@@ -867,28 +854,38 @@ namespace Dokimion.Tests
         }
 
         // Restore the admin session used by the rest of the class.
-        private void RestoreAdminSession()
+        // Log out and reach a clean, retpath-free login page. The SPA's page loads can hit nginx's 429
+        // rate limit (many API calls per load), so retry the reload with backoff. Logout + cookie-clear
+        // together end the session; reloading the app ROOT (not a protected page) keeps the login
+        // retpath-free, so the subsequent login lands on the projects list (mirroring OneTimeSetUp).
+        private void EnsureCleanLoginPage()
         {
-            // Restore a clean admin session that lands on the projects list (where DokimionProject lives),
-            // mirroring OneTimeSetUp. Two pitfalls to avoid:
-            //   (1) the app's Logout reliably reaches the login page but redirects to
-            //       /login?retpath=<previous page>, so a plain re-login returns to that non-projects page;
-            //   (2) clearing cookies alone did not reliably end the session.
-            // So: Logout to the login page (waiting for NameInput confirms logout actually completed),
-            // THEN reload the app root to drop the retpath, then log in -> the app goes to "/" (projects).
             try { Actor.AttemptsTo(Logout.For()); } catch { /* may already be logged out / no user menu */ }
-            try
+            driver.Manage().Cookies.DeleteAllCookies();
+            for (int attempt = 1; attempt <= 4; attempt++)
             {
-                Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 20);
+                driver.Navigate().GoToUrl(userActions.DokimionUrl);
+                try
+                {
+                    Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 15);
+                    return;
+                }
+                catch
+                {
+                    userActions.LogConsoleMessage(
+                        $"EnsureCleanLoginPage: login page not shown (attempt {attempt}/4); backing off ~10s (likely a 429 page load)");
+                    System.Threading.Thread.Sleep(10000);
+                }
             }
-            catch
-            {
-                // Logout UI wasn't available; fall back to clearing cookies.
-                driver.Manage().Cookies.DeleteAllCookies();
-            }
-            // Reload the root while logged out so the login page carries no retpath.
+            // Last try surfaces the real error if the page still won't load.
             driver.Navigate().GoToUrl(userActions.DokimionUrl);
             Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
+        }
+
+        // Restore a clean admin session that lands on the projects list (where DokimionProject lives).
+        private void RestoreAdminSession()
+        {
+            EnsureCleanLoginPage();
             Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
             Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 30);
             Actor.AttemptsTo(Click.On(Header.DokimionProject));
