@@ -534,7 +534,12 @@
                 <plugin>
                     <groupId>org.jvnet.jaxb2.maven2</groupId>
                     <artifactId>maven-jaxb23-plugin</artifactId>
-                    <version>0.14.0</version>
+                    <!-- JDK 21: 0.14.0 bundled JAXB RI 2.3.0, whose XJC defines classes via the removed
+                         Unsafe.defineClass and fails on JDK 16+. 0.15.3 bundles JAXB RI 2.3.7 (codegen
+                         toolchain incl. rngom/codemodel/xsom all consistent), which uses MethodHandles
+                         and runs on JDK 17-21. Still the javax line (jakarta.xml.bind-api 2.3.x keeps the
+                         javax.xml.bind namespace). -->
+                    <version>0.15.3</version>
                     <executions>
                         <execution>
                             <id>xsd-generate</id>
@@ -614,13 +619,22 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.16</version>
+                    <!-- JDK 21: 2.16 cannot fork a JVM / read system props on 18+; 3.x is JDK-21-capable. -->
+                    <version>3.2.5</version>
                     <configuration>
                         <forkCount>1</forkCount>
                         <forkMode>once</forkMode>
 			<reuseForks>true</reuseForks>
 			<reportFormat>plain</reportFormat>
                     </configuration>
+                </plugin>
+                <!-- JDK 21: super-pom default war-plugin 2.2 fails ("Cannot access defaults field of
+                     Properties") because its old plexus-utils reflects into java.util.Properties, which
+                     JDK 18+ blocks. 3.4.0 is JDK-21-capable. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>3.4.0</version>
                 </plugin>
             </plugins>
 
@@ -639,7 +653,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <!-- JDK 21: 2.3.2 predates JDK 9; 3.13.0 is JDK-21-capable (still targets 1.8 bytecode). -->
+                <version>3.13.0</version>
                 <configuration>
                     <source>${maven.compiler}</source>
                     <target>${maven.compiler}</target>
@@ -648,7 +663,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.1.2</version>
+                <!-- JDK 21: 2.1.2 is pre-JDK-9; 3.3.1 is JDK-21-capable. -->
+                <version>3.3.1</version>
                 <executions>
                     <execution>
                         <goals>
