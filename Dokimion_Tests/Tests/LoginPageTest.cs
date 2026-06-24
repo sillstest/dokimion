@@ -4,9 +4,6 @@ using Boa.Constrictor.Screenplay;
 using Boa.Constrictor.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium;
-using WebDriverManager;
-using WebDriverManager.DriverConfigs.Impl;
-using WebDriverManager.Helpers;
 using OpenQA.Selenium.Interactions;
 
 namespace Dokimion.Tests
@@ -26,8 +23,8 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Register Driver & Open the Dokimion website");
 
             Actor = new Actor(name: userActions.ActorName, logger: new NoOpLogger());
-            //This will match ChromeDriver and web browser versions
-            new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
+            // Selenium Manager (built into Selenium 4.9+) auto-resolves the matching chromedriver.
+            // WebDriverManager was removed: its .NET assembly is blocked by Windows Smart App Control.
 
             driver = new ChromeDriver(userActions.GetChromeOptions());
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(300);

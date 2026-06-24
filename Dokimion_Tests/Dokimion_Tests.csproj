@@ -20,8 +20,15 @@
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
     <PackageReference Include="NUnit.Analyzers" Version="3.6.1" />
     <PackageReference Include="coverlet.collector" Version="3.2.0" />
-    <PackageReference Include="Selenium.WebDriver" Version="4.9.1" />
-    <PackageReference Include="WebDriverManager" Version="2.17.1" />
+    <!-- 4.41.0 is the newest Selenium that still ships WebDriver assembly version 4.0.0.0,
+         which Boa.Constrictor 4.0.0 is compiled against (newer Selenium bumps it and breaks
+         the Boa reference). Its bundled Selenium Manager resolves modern Chrome (149+), so it
+         replaces WebDriverManager for driver resolution. -->
+    <PackageReference Include="Selenium.WebDriver" Version="4.41.0" />
+    <PackageReference Include="Selenium.Support" Version="4.41.0" />
+    <!-- Required transitively by Selenium 4.41 on net6.0; without an explicit reference it is
+         not deployed and ChromeDriver creation fails with a FileNotFoundException. -->
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -6,9 +6,6 @@ using FluentAssertions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
-using WebDriverManager;
-using WebDriverManager.DriverConfigs.Impl;
-using WebDriverManager.Helpers;
 
 namespace Dokimion.Tests
 {
@@ -31,8 +28,10 @@ namespace Dokimion.Tests
             try
             {
 
-                //This will match ChromeDriver and web browser versions
-                new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
+                // Selenium Manager (built into Selenium 4.9+) auto-resolves the matching
+                // chromedriver. WebDriverManager was removed: its .NET assembly is blocked by
+                // Windows Smart App Control, while Selenium Manager's signed-by-reputation
+                // chromedriver.exe is allowed to run.
 
                 driver = new ChromeDriver(userActions.GetChromeOptions());
 

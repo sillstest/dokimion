@@ -74,8 +74,19 @@ namespace Dokimion
         //Take a screenshot incase of exception/fail scenario 
         public void captureScreenShot(ChromeDriver driver, string fileName)
         {
+            // driver can be null if the failure happened before the browser was created
+            // (e.g. Chrome/driver launch failed). Don't let the screenshot attempt throw a
+            // NullReferenceException that masks the real exception being handled.
+            if (driver == null)
+            {
+                LogConsoleMessage("Screenshot skipped: driver was not created.");
+                return;
+            }
+
             Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-            screenshot.SaveAsFile(appendDateTimeToFileName(fileName), ScreenshotImageFormat.Png);
+            // Selenium 4.41 removed the ScreenshotImageFormat overload; format is inferred
+            // from the file extension (.png).
+            screenshot.SaveAsFile(appendDateTimeToFileName(fileName));
             LogConsoleMessage("In Exception Screenshot taken: ");
 
         }
