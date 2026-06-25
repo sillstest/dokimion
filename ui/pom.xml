@@ -30,6 +30,11 @@
                             <argument>yarn</argument>
                         </arguments>
                         <workingDirectory>src</workingDirectory>
+                        <!-- yarn is pre-installed on the build boxes; a redundant/failed global install
+                             (EACCES/ENOTEMPTY from leftover root-owned artifacts of prior root builds)
+                             must not abort the build. The yarn install + npm run build steps below use
+                             the existing yarn regardless. -->
+                        <failOnError>false</failOnError>
                     </configuration>
                 </execution>
                 <execution>
