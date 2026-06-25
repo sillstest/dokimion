@@ -86,9 +86,5 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
         </dependency>
-        <dependency>
-            <groupId>ru.yandex.qatools.embed</groupId>
-            <artifactId>embedded-services</artifactId>
-        </dependency>
     </dependencies>
 </project>

@@ -133,6 +133,13 @@ function Launch({ match, history }) {
       imageHtmlField: "statusHtml",
       dataSource: dataSource,
     });
+    // The #tree element may not be in the DOM yet (mid-render, or an empty/"No data" launch):
+    // gijgo's .tree() then returns undefined. Bail gracefully so we don't throw an uncaught
+    // TypeError (...reading 'on') that crashes the page; a later fetch/poll rebuilds once #tree exists.
+    if (!treeRef.current) {
+      lastTreeSignatureRef.current = null;   // force a real rebuild next time (don't cache this failed attempt)
+      return;
+    }
     treeRef.current.on("select", function (e, node, id) {
       // Read from the current launch state (launchRef), NOT the captured launchData
       // closure. buildTree's closure goes stale: the 30s poll refreshes launch state
