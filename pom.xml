@@ -68,7 +68,10 @@
         <spring.version>5.3.14</spring.version>
         <spring.data.version>3.3.0</spring.data.version>
         <httpclient.version>4.5.2</httpclient.version>
-        <jackson.version>2.8.5</jackson.version>
+        <!-- Java 21: 2.8.5 (2016) is JDK-16+ risky. 2.12.7 is JDK-21-safe AND still carries the
+             deprecated PropertyNamingStrategy.PASCAL_CASE_TO_CAMEL_CASE constant that Camel 3.6's
+             jackson integration references (removed by 2.13+, which is why 2.17 broke at runtime). -->
+        <jackson.version>2.12.7</jackson.version>
         <jetty.port>9999</jetty.port>
         <jetty.version>9.4.35.v20201120</jetty.version>
         <sl4j.version>1.7.22</sl4j.version>
@@ -85,6 +88,17 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Java 21: align EVERY Jackson module (core, databind, dataformats, datatypes, jaxrs
+                 providers) to one version. Old libs (swagger, jersey-media-json) drag in jackson
+                 2.4.5/2.8.4 modules that must NOT mix with databind 2.17.x. The BOM forces them all
+                 to ${jackson.version}. -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- Project modules -->
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -336,6 +350,14 @@
             </dependency>
 
             <!-- Jackson -->
+            <!-- jackson-core MUST be pinned too: databind ${jackson.version} needs the matching core
+                 (e.g. core's JacksonFeature, added in 2.12). Unmanaged, a stale transitive core wins on
+                 the WAR classpath -> NoClassDefFoundError at ObjectMapper init. -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
