@@ -48,9 +48,15 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- Java 21/Jersey 2.41: provides the Bean Validation provider (hibernate-validator, javax)
+             that Jersey 2.25.1 used to pull transitively; needed by Spring's LocalValidatorFactoryBean. -->
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-spring3</artifactId>
+            <artifactId>jersey-bean-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-spring5</artifactId>
             <exclusions>
                 <exclusion>
                     <artifactId>spring-web</artifactId>
@@ -160,6 +166,16 @@
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-jersey2-jaxrs</artifactId>
+            <exclusions>
+                <!-- Java 21: swagger-core 1.5.10 drags in the stale Bean Validation 1.1 API
+                     (javax.validation:validation-api:1.1.0.Final), which collides on the javax.validation
+                     namespace with the BV 2.0 API (jakarta.validation-api:2.0.2) that hibernate-validator
+                     6.2.5 needs. Exclude the old one so only BV 2.0 is on the classpath. -->
+                <exclusion>
+                    <groupId>javax.validation</groupId>
+                    <artifactId>validation-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

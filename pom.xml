@@ -63,9 +63,17 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler>1.8</maven.compiler>
-        <jersey.version>2.25.1</jersey.version>
-        <spring.version>5.3.14</spring.version>
+        <!-- Java 21: Phase 3 flips the language/bytecode level from 8 to 21 (class file v65).
+             Uses the compiler 'release' flag (pins the API surface to JDK 21), not source/target. -->
+        <maven.compiler.release>21</maven.compiler.release>
+        <!-- Java 21: 2.25.1's repackaged ASM can't read v65 bytecode during @Path/@Provider scanning
+             (IllegalArgumentException in AnnotationAcceptingListener). 2.41 is the earliest 2.x with
+             JDK-21 support; stays javax.ws.rs (Jersey 3.x = jakarta jump). Pulls HK2 2.6.1. -->
+        <jersey.version>2.41</jersey.version>
+        <!-- Java 21: 5.3.14's bundled ASM can't read Java-21 (class v65) bytecode during component
+             scanning -> "Unsupported class file major version 65". 5.3.30+ added JDK-21 support;
+             5.3.39 is the last 5.3.x. Still javax (Spring 6 would be the jakarta jump). -->
+        <spring.version>5.3.39</spring.version>
         <spring.data.version>3.3.0</spring.data.version>
         <httpclient.version>4.5.2</httpclient.version>
         <!-- Java 21: 2.8.5 (2016) is JDK-16+ risky. 2.12.7 is JDK-21-safe AND still carries the
@@ -264,7 +272,18 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.ext</groupId>
-                <artifactId>jersey-spring3</artifactId>
+                <!-- Java 21/Jersey 2.41: jersey-spring3 (Spring 3 era) is gone; jersey-spring5 is the
+                     Spring 5 integration module. -->
+                <artifactId>jersey-spring5</artifactId>
+                <version>${jersey.version}</version>
+            </dependency>
+            <!-- Java 21/Jersey 2.41: the 2.25.1 dep graph used to pull a Bean Validation provider
+                 (hibernate-validator) transitively; 2.41 no longer does, so Spring's
+                 LocalValidatorFactoryBean fails with NoProviderFoundException. jersey-bean-validation
+                 brings the matching javax hibernate-validator + aligns jakarta.validation-api 2.0. -->
+            <dependency>
+                <groupId>org.glassfish.jersey.ext</groupId>
+                <artifactId>jersey-bean-validation</artifactId>
                 <version>${jersey.version}</version>
             </dependency>
 
@@ -675,11 +694,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <!-- JDK 21: 2.3.2 predates JDK 9; 3.13.0 is JDK-21-capable (still targets 1.8 bytecode). -->
+                <!-- JDK 21: 2.3.2 predates JDK 9; 3.13.0 is JDK-21-capable. -->
                 <version>3.13.0</version>
                 <configuration>
-                    <source>${maven.compiler}</source>
-                    <target>${maven.compiler}</target>
+                    <release>${maven.compiler.release}</release>
                 </configuration>
             </plugin>
             <plugin>
