@@ -12,7 +12,9 @@
 # After it succeeds, deploy normally (the startup scripts auto-select /opt/jdk-21):
 #   cd ~/dokimion && sudo config/common/deploy.sh <N> prod
 #
-set -eu
+# NOTE: no 'set -u' — SDKMAN's sdkman-init.sh references unset vars (e.g. SDKMAN_CANDIDATES_API)
+# and is not nounset-safe; -u would abort on 'source'. We also drop -e around the SDKMAN calls.
+set -e
 
 JDK_ID="21.0.11-tem"                  # match the version used on the other boxes
 SDKMAN_DIR_SYS="/usr/local/sdkman"
@@ -36,14 +38,18 @@ fi
 
 echo "==> 2. Install Temurin JDK ${JDK_ID}"
 export SDKMAN_DIR="${SDKMAN_DIR_SYS}"
+set +e                                # SDKMAN's init/sdk functions are not set -e/-u safe
 # shellcheck disable=SC1091
 source "${SDKMAN_DIR_SYS}/bin/sdkman-init.sh"
-sdk install java "${JDK_ID}" || {
+sdk install java "${JDK_ID}"
+rc=$?
+set -e
+if [ "$rc" -ne 0 ]; then
   echo "ERROR: 'sdk install java ${JDK_ID}' failed. List options with:" >&2
   echo "  sudo bash -c 'source ${SDKMAN_DIR_SYS}/bin/sdkman-init.sh; sdk list java'" >&2
   echo "then set JDK_ID at the top of this script to the current 21.x-tem and re-run." >&2
   exit 1
-}
+fi
 
 echo "==> 3. Make it readable/executable by all users + auto-load for login shells"
 chmod -R a+rX "${SDKMAN_DIR_SYS}"
