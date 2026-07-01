@@ -16,6 +16,12 @@
 # and is not nounset-safe; -u would abort on 'source'. We also drop -e around the SDKMAN calls.
 set -e
 
+# Sanitize PATH: sudo may pass a PATH with non-root/world-writable dirs (e.g. ~/bin, SDKMAN),
+# which makes apt/dpkg maintainer scripts fail Perl taint mode (-T):
+#   "Insecure directory in $ENV{PATH} while running with -T switch ... AdduserLogging.pm"
+# A clean, root-owned PATH avoids that (and is inherited by the apt/dpkg subprocess).
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 JDK_ID="21.0.11-tem"                  # match the version used on the other boxes
 SDKMAN_DIR_SYS="/usr/local/sdkman"
 JDK_LINK="/opt/jdk-21"
@@ -24,6 +30,9 @@ if [ "$(id -u)" -ne 0 ]; then
   echo "ERROR: run with sudo (root needed to write /usr/local/sdkman, /etc/profile.d, /opt)." >&2
   exit 1
 fi
+
+echo "==> 0a. Clear any half-configured packages (with the clean PATH above)"
+dpkg --configure -a || true
 
 echo "==> 0. Prerequisites (curl, zip, unzip)"
 apt-get update && apt-get install -y curl zip unzip
