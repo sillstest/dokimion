@@ -696,6 +696,14 @@ namespace Dokimion.Tests
 
             const int PageSize = 50;
 
+            // Pre-check : a project with fewer than 50 test cases (Dokimion_LS) must NOT show the
+            // "Load more" link at all.
+            userActions.LogConsoleMessage("Pre-check : select the Dokimion_LS project and open TestCases");
+            OpenProjectLSTestCases();
+            userActions.LogConsoleMessage("Verify : 'Load more' link is NOT displayed for Dokimion_LS (< 50 test cases)");
+            Actor.WaitsUntil(Appearance.Of(TestCases.LoadMore), IsEqualTo.False(), timeout: 30);
+            userActions.LogConsoleMessage("Verified: no 'Load more' link is displayed for Dokimion_LS");
+
             userActions.LogConsoleMessage("Set Up : select the paratext2 project and open TestCases");
             OpenParatext2TestCases();
 
@@ -718,6 +726,8 @@ namespace Dokimion.Tests
 
                 userActions.LogConsoleMessage($"Action : click 'Load more' for display #{display} (currently {before} shown)");
                 ClickWithRetry(TestCases.LoadMore);
+                // Give the tree a moment to fetch/merge the next page before the next action.
+                new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
                 // The tree re-renders with the merged (cumulative) set, so wait for it to grow.
                 Actor.WaitsUntil(Count.Of(TestCases.GetTestCaseNameList), IsGreaterThanOrEqualTo.Value(before + 1), timeout: 60);
