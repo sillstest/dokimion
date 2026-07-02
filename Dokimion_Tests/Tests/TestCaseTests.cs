@@ -684,6 +684,83 @@ namespace Dokimion.Tests
             }
         }
 
+        // Verifies the "Load more" pagination of the test-case tree in the paratext2 project (which
+        // has well over 50 test cases). The tree fetches TC_FETCH_LIMIT (50) at a time: the first
+        // display shows 50 with a "Load more" link, each click appends the next 50 (cumulative
+        // 100, 150, ...), and the final display appends fewer than 50 test cases after which the
+        // "Load more" link disappears.
+        [Test]
+        public void TC29LoadMoreTestCases()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            const int PageSize = 50;
+
+            userActions.LogConsoleMessage("Set Up : select the paratext2 project and open TestCases");
+            OpenParatext2TestCases();
+
+            // First display : exactly 50 test cases, and a "Load more" link because paratext2 has >50.
+            Actor.WaitsUntil(Count.Of(TestCases.GetTestCaseNameList), IsEqualTo.Value(PageSize), timeout: 60);
+            int shown = CountDisplayedTestCases();
+            userActions.LogConsoleMessage($"Verify : first display contains {PageSize} test cases (actual {shown})");
+            Assert.That(shown, Is.EqualTo(PageSize), $"First display should contain exactly {PageSize} test cases");
+            Actor.WaitsUntil(Appearance.Of(TestCases.LoadMore), IsEqualTo.True(), timeout: 30);
+            userActions.LogConsoleMessage($"Verified: {PageSize} test cases shown and 'Load more' is present");
+
+            // Click "Load more" repeatedly. A full page adds exactly 50 (cumulative 100, 150, ...) and
+            // keeps the link; the final page adds fewer than 50 and the link disappears once every
+            // test case is loaded. Loop ends when "Load more" is gone.
+            int display = 1;
+            while (Actor.AskingFor(Appearance.Of(TestCases.LoadMore)))
+            {
+                int before = CountDisplayedTestCases();
+                display++;
+
+                userActions.LogConsoleMessage($"Action : click 'Load more' for display #{display} (currently {before} shown)");
+                ClickWithRetry(TestCases.LoadMore);
+
+                // The tree re-renders with the merged (cumulative) set, so wait for it to grow.
+                Actor.WaitsUntil(Count.Of(TestCases.GetTestCaseNameList), IsGreaterThanOrEqualTo.Value(before + 1), timeout: 60);
+                int after = CountDisplayedTestCases();
+                int batch = after - before;
+
+                userActions.LogConsoleMessage($"Display #{display}: added {batch} test cases (now {after} total)");
+                Assert.That(batch, Is.LessThanOrEqualTo(PageSize), $"A single 'Load more' must never add more than {PageSize} test cases");
+
+                if (batch < PageSize)
+                {
+                    // Last display : fewer than 50 added => all test cases are loaded, so the
+                    // "Load more" link must disappear.
+                    userActions.LogConsoleMessage($"Verify : last display added {batch} (< {PageSize}) test cases - 'Load more' should disappear");
+                    Actor.WaitsUntil(Appearance.Of(TestCases.LoadMore), IsEqualTo.False(), timeout: 30);
+                    userActions.LogConsoleMessage($"Verified: final display added {batch} test cases and 'Load more' is gone (total {after})");
+                    break;
+                }
+
+                // Full page : exactly 50 were added. If the total happens to be an exact multiple of
+                // 50 the link is now gone and the while-condition ends the loop; otherwise continue.
+                Assert.That(batch, Is.EqualTo(PageSize), $"A full display should add exactly {PageSize} test cases");
+            }
+        }
+
+        // Navigate from the current project to paratext2 and open its TestCases page. Mirrors
+        // OpenProjectLSTestCases but targets the paratext2 project card.
+        private void OpenParatext2TestCases()
+        {
+            ClickWithRetry(Header.ProjectsLink);
+            Actor.WaitsUntil(Appearance.Of(Header.AllLink), IsEqualTo.True(), timeout: 30);
+            ClickWithRetry(Header.AllLink);
+            Actor.WaitsUntil(Appearance.Of(Header.Paratext2Project), IsEqualTo.True(), timeout: 30);
+            ClickWithRetry(Header.Paratext2Project);
+            Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 30);
+            ClickWithRetry(Header.TestCases);
+            Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
+        }
+
+        // Number of test-case rows currently rendered in the tree (each row has one data-role='display' span).
+        private int CountDisplayedTestCases()
+            => TestCases.GetTestCaseNameList.FindElements(driver).Count;
+
         // Lock the currently-open test case via its admin-only "Lock Testcase" ConfirmButton. The
         // button renders two <a>Lock Testcase</a> elements (the trigger and the modal-footer confirm,
         // see ConfirmButton.js), so click the trigger first, then the confirm in the modal footer.

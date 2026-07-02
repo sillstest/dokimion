@@ -115,6 +115,13 @@ namespace Dokimion.Pages
         // Full-text Search box in the filter panel (used to scope the tree to one test case).
         public static IWebLocator SearchInput => L("SearchInput", By.XPath("//input[@name='fulltext']"));
 
+        // "Load more" link shown under the test-case tree when more than TC_FETCH_LIMIT (50) test
+        // cases match; clicking it appends the next page to the tree. Absent once all are loaded.
+        public static IWebLocator LoadMore => L("LoadMore", By.XPath("//a[normalize-space()='Load more']"));
+
+        // "Number of Test Cases : N" label above the tree (N = total matching count from the backend).
+        public static IWebLocator NumberOfTestCasesLabel => L("NumberOfTestCasesLabel", By.XPath("//*[contains(normalize-space(),'Number of Test Cases')]"));
+
         // Admin-only bulk attribute actions in the Search row of the filter panel.
         public static IWebLocator AddAttributesButton => L("AddAttributesButton", By.XPath("//button[text()='Add Attributes']"));
 

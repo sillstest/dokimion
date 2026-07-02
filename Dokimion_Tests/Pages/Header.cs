@@ -40,6 +40,9 @@ namespace Dokimion.Pages
         public static IWebLocator Launches => L("Launches", By.XPath("//a[normalize-space()='Launches']"));
 
         public static IWebLocator DokimionLaunchStatisticsProject => L("DokimionLaunchStatisticsProject", By.XPath("//div[@class='card-header']//a[normalize-space()='Dokimion_LS']"));
+
+        // paratext2 project card link (case-insensitive so it matches 'Paratext2' or 'paratext2').
+        public static IWebLocator Paratext2Project => L("Paratext2Project", By.XPath("//div[@class='card-header']//a[contains(translate(normalize-space(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'paratext2')]"));
     }
 
 }
