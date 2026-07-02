@@ -13,7 +13,8 @@ namespace Dokimion.Tests
     {
         private IActor Actor;
         UserActions userActions;
-        ChromeDriver driver;
+        // Initialized in [OneTimeSetUp], not the constructor; null-forgiving to satisfy nullable analysis.
+        ChromeDriver driver = null!;
 
         [OneTimeSetUp]
         public void Setup()

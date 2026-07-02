@@ -449,7 +449,7 @@ namespace Dokimion.Tests
 
                 //
                 userActions.LogConsoleMessage("Verify :TestCase status is passed");
-                string TestcaseImgSrc = TestCases.TestCaseLaunchStatusIcon.FindElement(driver).GetAttribute("src");
+                string TestcaseImgSrc = TestCases.TestCaseLaunchStatusIcon.FindElement(driver).GetAttribute("src")!;
                 StringAssert.Contains("pass", TestcaseImgSrc);
 
 
@@ -515,7 +515,7 @@ namespace Dokimion.Tests
                 ReadOnlyCollection<IWebElement> LaunchTestCaseStatuses = TestCases.LaunchTCStatuses.FindElements(driver);
                 foreach (IWebElement tc in LaunchTestCaseStatuses)
                 {
-                    string passImg = tc.GetAttribute("src");
+                    string passImg = tc.GetAttribute("src")!;
                     StringAssert.Contains("pass", passImg);
                 }
             }

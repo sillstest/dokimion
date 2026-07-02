@@ -38,7 +38,7 @@ namespace Dokimion.Interactions
             // (title='Rich Text Area'); TinyMCE names that iframe "<editorId>_ifr" and the
             // `tinymce` global lives on the main window, so no frame switch is needed.
             var editorFrames = driver.FindElements(By.XPath("//iframe[@title='Rich Text Area']"));
-            string iframeId = editorFrames[this.FrameNum].GetAttribute("id");
+            string iframeId = editorFrames[this.FrameNum].GetAttribute("id")!;
             string editorId = iframeId.EndsWith("_ifr")
                 ? iframeId.Substring(0, iframeId.Length - "_ifr".Length)
                 : iframeId;

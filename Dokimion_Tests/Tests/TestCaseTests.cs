@@ -948,7 +948,7 @@ namespace Dokimion.Tests
             driver.Manage().Cookies.DeleteAllCookies();
             for (int attempt = 1; attempt <= 4; attempt++)
             {
-                driver.Navigate().GoToUrl(userActions.DokimionUrl);
+                driver.Navigate().GoToUrl(userActions.DokimionUrl!);
                 try
                 {
                     Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 15);
@@ -962,7 +962,7 @@ namespace Dokimion.Tests
                 }
             }
             // Last try surfaces the real error if the page still won't load.
-            driver.Navigate().GoToUrl(userActions.DokimionUrl);
+            driver.Navigate().GoToUrl(userActions.DokimionUrl!);
             Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
         }
 
@@ -1018,7 +1018,7 @@ namespace Dokimion.Tests
                 Actor.WaitsUntil(Appearance.Of(treeLoading), IsEqualTo.False(), timeout: 60);
                 new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
 
-                IWebElement match;
+                IWebElement? match;
                 try
                 {
                     match = TestCases.GetTestCaseNameList.FindElements(driver)
@@ -1054,7 +1054,7 @@ namespace Dokimion.Tests
             {
                 try
                 {
-                    IWebElement match = TestCases.GetTestCaseNameList.FindElements(driver)
+                    IWebElement? match = TestCases.GetTestCaseNameList.FindElements(driver)
                         .LastOrDefault(name => name.Text.Contains(testcasename));
                     if (match != null)
                     {
