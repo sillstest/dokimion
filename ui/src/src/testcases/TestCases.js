@@ -48,7 +48,6 @@ function TestCases({ match, history, location, onProjectChange }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [tcSizes, setTcSizes] = useState({});
   const [totalNoofTestCase, setTotalNoofTestCase] = useState(0);
-  const [count, setCount] = useState(0);
   const [testSuite, setTestSuite] = useState(null);
 
   // Refs for values needed in callbacks without triggering re-renders
@@ -167,12 +166,6 @@ function TestCases({ match, history, location, onProjectChange }) {
     [project, history, testSuite],
   );
 
-  function updateCount(f) {
-    Backend.get(project + "/testcase/count?" + getFilterApiRequestParams({ ...f }))
-      .then(response => setCount(response))
-      .catch(error => console.log(error));
-  }
-
   function getTotalNumberOfTestCases(f) {
     const countFilter = { ...f };
     delete countFilter.skip;
@@ -234,7 +227,9 @@ function TestCases({ match, history, location, onProjectChange }) {
 
     const f = { ...newFilter };
     if ((f.groups || []).length === 0) {
-      f.skip = f.skip || 0;
+      // Applying/reapplying a filter always starts at page 1. (loadMoreTestCases owns advancing skip;
+      // without this reset, a search or post-edit refresh after "Load more" would start mid-list.)
+      f.skip = 0;
       f.limit = TC_FETCH_LIMIT;
     }
     f.includedFields = f.includedFields || [];
@@ -256,7 +251,6 @@ function TestCases({ match, history, location, onProjectChange }) {
         setTestcasesTree(response);
         setLoading(false);
         getTotalNumberOfTestCases(f);
-        updateCount(f);
         refreshTree(response, selectedTestCaseRef.current, f, tcSizesRef.current);
         if (callback) callback();
       })
@@ -280,18 +274,36 @@ function TestCases({ match, history, location, onProjectChange }) {
   }
 
   function loadMoreTestCases(event) {
+    event.preventDefault();
     const f = { ...filterRef.current, skip: (filterRef.current.skip || 0) + TC_FETCH_LIMIT, limit: TC_FETCH_LIMIT };
-    Backend.get(project + "/testcase?" + getFilterApiRequestParams(f))
+    // Use the SAME endpoint as the initial load (/testcase/tree), not the flat /testcase: they are
+    // different service methods with different ordering, so mixing them dropped one case at the page
+    // boundary. Same endpoint => pages line up exactly. Merge its .testCases into the accumulated tree.
+    Backend.get(project + "/testcase/tree?" + getFilterApiRequestParams(f))
       .then(response => {
-        setTestcasesTree(prev => ({ ...prev, testCases: (prev.testCases || []).concat(response) }));
+        // Advance skip so the NEXT click fetches the following page (it was frozen before).
+        filterRef.current = f;
+        setFilter(f);
+        // Merge the new page into the tree AND rebuild the widget. The concat updated state only;
+        // the visible gijgo tree is built by refreshTree(), so without this call the newly-fetched
+        // rows never appeared (the same page kept showing). parseTree reads .testCases.
+        const merged = {
+          ...testcasesTreeRef.current,
+          testCases: (testcasesTreeRef.current.testCases || []).concat((response || {}).testCases || []),
+        };
+        setTestcasesTree(merged);
+        refreshTree(merged, selectedTestCaseRef.current, f, tcSizesRef.current);
       })
       .catch(error => setErrorMessage("Couldn't fetch testcases: " + error));
-    event.preventDefault();
   }
 
   function showLoadMore() {
-    if (((filterRef.current || {}).groups || []).length > 0 || !count) return false;
-    return ((filterRef.current || {}).skip || 0) + TC_FETCH_LIMIT <= count;
+    // Use totalNoofTestCase — the true filtered total (skip/limit stripped; also what's shown as
+    // "Number of Test Cases"). NOT `count`: updateCount fills it from a limit-capped query, so it
+    // maxes out at TC_FETCH_LIMIT (50) and made "Load more" never appear for a >50 project.
+    if (((filterRef.current || {}).groups || []).length > 0 || !totalNoofTestCase) return false;
+    // Strictly < : only show when MORE than the (skip + LIMIT) already-loaded rows remain.
+    return ((filterRef.current || {}).skip || 0) + TC_FETCH_LIMIT < totalNoofTestCase;
   }
 
   function handleSubmit(testcase) {
