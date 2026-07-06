@@ -4,6 +4,15 @@ export NODE_OPTIONS=--openssl-legacy-provider
 export PATH=/opt/apache-maven-3.6.3/bin:$PATH
 export PATH=/opt/apache-maven/bin:$PATH
 
+# Redirect npm's GLOBAL install prefix to a user-writable dir. The ui build's first step is
+# `npm install -g yarn`; against the default /usr/lib/node_modules it fails with EACCES/ENOTEMPTY
+# whenever a prior root build left root-owned artifacts (e.g. a stale .yarn-XXXX backup dir), and
+# exec-maven-plugin 1.6.0's `exec` goal ignores the pom's failOnError=false, so that non-fatal step
+# aborts the whole build. Installing into $HOME instead makes the step exit 0 without touching
+# /usr/lib; yarn itself is still resolved from PATH (/usr/local/bin), so this changes nothing else.
+export npm_config_prefix="${npm_config_prefix:-$HOME/.npm-global}"
+mkdir -p "$npm_config_prefix"
+
 # Java 21 upgrade: build under JDK 21, preferring the SYSTEM-WIDE install. Search order:
 #   1. system-wide (/opt/jdk-21 symlink -> shared SDKMAN, /usr/local/sdkman, /usr/lib/jvm)  <-- wins
 #   2. an already-set JDK-21 JAVA_HOME (e.g. exported, or SDKMAN's per-user shell init)
