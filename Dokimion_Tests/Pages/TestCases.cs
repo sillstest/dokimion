@@ -52,6 +52,10 @@ namespace Dokimion.Pages
 
         public static IWebLocator EditStep2Expectations => L("EditStep2Expectations", By.XPath("//div[@id='steps-1-display']//a[@class='card-link'][normalize-space()='Edit']\r\n"));
 
+        // Edit link on the FIRST saved step's action card (re-opens its TinyMCE editor). There is
+        // one Edit link per card in the step display, so [1] targets the action card's link.
+        public static IWebLocator EditStep1 => L("EditStep1", By.XPath("(//div[@id='steps-0-display']//a[@class='card-link'][normalize-space()='Edit'])[1]"));
+
         
 
         public static IWebLocator Step1Text => L("Step1Text", By.XPath("//p[normalize-space()='Go to Quack home page']"));

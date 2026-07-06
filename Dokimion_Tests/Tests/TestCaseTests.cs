@@ -753,6 +753,153 @@ namespace Dokimion.Tests
             }
         }
 
+        // Editing an existing test step must not move the caret: when the user clicks into the middle
+        // of a saved step's text and types, the character is inserted at the caret and the caret
+        // advances by exactly one — it must NOT jump to the start or end of the field. (A controlled
+        // component that re-sets the editor content on every change is the classic cause of the caret
+        // jumping to the end.) Creates a test case, adds and saves a step with known content, re-opens
+        // it via Edit, then drives TinyMCE's own selection API to place the caret mid-text, insert one
+        // character, and assert the caret stayed put. Any leftover 'CursorNotMoveTestCase' is purged at
+        // the start of the test (idempotent) and the created test case is left in place afterwards.
+        [Test]
+        public void TC30EditTestStepCursorNotMove()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+            userActions.LogConsoleMessage("Set Up : ");
+            userActions.LogConsoleMessage("Remove any leftover 'CursorNotMoveTestCase' from a prior run (idempotent start)");
+            PurgeTestCasesByName("CursorNotMoveTestCase");
+            Actor.AttemptsTo(CreatTestCase.For("CursorNotMoveTestCase", "Testcase verifying the edit-step caret does not jump"));
+
+            const string StepText = "Cursor position test content";
+
+            Actions actions = new Actions(driver);
+            SelectTestCase("CursorNotMoveTestCase");
+
+            userActions.LogConsoleMessage("Add a step with known content so it can be re-opened for editing");
+            Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
+            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
+
+            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            //Steps (action)
+            Actor.AttemptsTo(WriteToIframe.For(driver, 2, StepText));
+            //Expectations
+            Actor.AttemptsTo(WriteToIframe.For(driver, 3, "Expected result"));
+
+            userActions.LogConsoleMessage("Click Save to persist the step");
+            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True(), timeout: 45);
+            Actor.AttemptsTo(Hover.Over(TestCases.SaveStep1));
+            Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
+
+            // Wait for the step to finish saving (its text renders in display mode) before re-opening it.
+            IWebLocator savedStepText = new WebLocator("SavedStepText", By.XPath($"//p[normalize-space()='{StepText}']"));
+            Actor.WaitsUntil(Appearance.Of(savedStepText), IsEqualTo.True(), timeout: 45);
+
+            userActions.LogConsoleMessage("Action steps : re-open the saved step via Edit");
+            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            Actor.WaitsUntil(Appearance.Of(TestCases.EditStep1), IsEqualTo.True(), timeout: 45);
+            Actor.AttemptsTo(Click.On(TestCases.EditStep1));
+
+            // Wait for the step's edit form (and its action editor iframe) to actually become
+            // VISIBLE. The form is display:none until Edit toggles it, and a TinyMCE editor that
+            // is still hidden cannot take a caret/selection - so gate the caret check on visibility.
+            IWebLocator editActionIframe = new WebLocator("EditStep1ActionIframe",
+                By.XPath("//div[@id='steps-0-form']//iframe[@title='Rich Text Area']"));
+            Actor.WaitsUntil(Appearance.Of(editActionIframe), IsEqualTo.True(), timeout: 45);
+
+            userActions.LogConsoleMessage("Place the caret mid-text, type one character, and read the caret position");
+            var result = RunEditStepCaretCheck(StepText);
+
+            bool hasText = result.TryGetValue("hasText", out var ht) && Convert.ToBoolean(ht);
+            Assert.That(hasText, Is.True, "The re-opened step editor had no editable text to place a caret in");
+
+            // Persist the edited step now that the 'X' has been inserted mid-word ("positi X on").
+            // RunEditStepCaretCheck inserts the character at the midpoint of StepText, so the saved
+            // action is StepText with an 'X' spliced in at StepText.Length/2.
+            userActions.LogConsoleMessage("Save the edited test step (persist the inserted 'X')");
+            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True(), timeout: 45);
+            Actor.AttemptsTo(Hover.Over(TestCases.SaveStep1));
+            Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
+
+            string editedStepText = StepText.Insert(StepText.Length / 2, "X");
+            IWebLocator editedStepDisplay = new WebLocator("EditedStepDisplay",
+                By.XPath($"//p[normalize-space()='{editedStepText}']"));
+            Actor.WaitsUntil(Appearance.Of(editedStepDisplay), IsEqualTo.True(), timeout: 45);
+            userActions.LogConsoleMessage($"Verified: the edited step saved with the inserted 'X' ('{editedStepText}')");
+
+            long before = Convert.ToInt64(result["before"]);
+            long after = Convert.ToInt64(result["after"]);
+            long total = Convert.ToInt64(result["total"]);
+            userActions.LogConsoleMessage($"Caret offset before insert: {before}, after insert: {after}, total length: {total}");
+
+            userActions.LogConsoleMessage("Verify : the inserted character advanced the caret by exactly one (caret stayed mid-text)");
+            Assert.That(after, Is.EqualTo(before + 1),
+                "Editing a step moved the caret: after inserting one character the caret should sit immediately after it " +
+                $"(expected offset {before + 1}) but was at {after} - a jump to start/end means the field re-rendered and reset the caret.");
+
+            userActions.LogConsoleMessage("Verify : the caret did NOT jump to the end of the field");
+            Assert.That(after, Is.LessThan(total),
+                $"The caret jumped to the end of the step text (offset {after} of {total}) instead of staying where the user typed.");
+        }
+
+        // Drives the OPEN step-edit action editor directly through TinyMCE's own API: sets a known
+        // string, places the caret in the MIDDLE of it, inserts a single character (a simulated
+        // keystroke), fires the editor's input/change events (the same events the app's React
+        // onEditorChange listens to), and reports where the caret ends up. The editor is located the
+        // same proven way WriteToIframe does - from the edit form's iframe id -> tinymce.get(...) -
+        // rather than by scanning getContent, because a TinyMCE editor that inits inside a display:none
+        // form returns empty content until it is shown. Retries a few times while TinyMCE settles after
+        // the Edit toggle. Returns a dictionary with:
+        //   found   - the step-edit action editor was located and ready
+        //   hasText - it contained editable text to place a caret in
+        //   before  - absolute caret offset before the insert (mid-text)
+        //   after   - absolute caret offset after inserting one character
+        //   total   - total character length of the field after the insert
+        private Dictionary<string, object> RunEditStepCaretCheck(string knownContent)
+        {
+            const string script = @"
+var text = arguments[0];
+var iframe = document.querySelector('#steps-0-form iframe[title=""Rich Text Area""]');
+if (!iframe || !iframe.id) return { found: false };
+var edId = (iframe.id.slice(-4) === '_ifr') ? iframe.id.slice(0, -4) : iframe.id;
+var ed = window.tinymce ? window.tinymce.get(edId) : null;
+if (!ed || ed.initialized === false) return { found: false };
+ed.setContent('<p>' + text + '</p>');
+ed.focus();
+var doc = ed.getDoc();
+var walker = doc.createTreeWalker(ed.getBody(), NodeFilter.SHOW_TEXT, null, false);
+var node = null, n;
+while (n = walker.nextNode()) { if (n.textContent && n.textContent.replace(/ /g,' ').trim().length > 0) { node = n; break; } }
+if (!node) return { found: true, hasText: false };
+var mid = Math.floor(node.textContent.length / 2);
+var rng = ed.dom.createRng();
+rng.setStart(node, mid); rng.setEnd(node, mid);
+ed.selection.setRng(rng);
+function absOffset() {
+    var r = ed.selection.getRng();
+    var pre = ed.dom.createRng();
+    pre.selectNodeContents(ed.getBody());
+    pre.setEnd(r.startContainer, r.startOffset);
+    return pre.toString().length;
+}
+var before = absOffset();
+ed.insertContent('X');
+ed.fire('input'); ed.fire('change');
+var after = absOffset();
+var total = (ed.getContent({format:'text'}) || '').length;
+return { found: true, hasText: true, before: before, after: after, total: total };
+";
+            for (int attempt = 0; attempt < 10; attempt++)
+            {
+                var result = (Dictionary<string, object>)((IJavaScriptExecutor)driver)
+                    .ExecuteScript(script, knownContent);
+                if (result != null && result.TryGetValue("found", out var found) && Convert.ToBoolean(found))
+                    return result;
+                new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            }
+            throw new NoSuchElementException("The step-edit action TinyMCE editor (#steps-0-form) was not ready after the Edit click");
+        }
+
         // Navigate from the current project to paratext2 and open its TestCases page. Mirrors
         // OpenProjectLSTestCases but targets the paratext2 project card.
         private void OpenParatext2TestCases()
