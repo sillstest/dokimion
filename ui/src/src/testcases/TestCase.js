@@ -61,7 +61,20 @@ function TestCase({
   // Determine projectId from multiple sources
   const projectId = projectIdProp || match?.params?.project;
 
-  const [testcase, setTestcase] = useState(testcaseProp || emptyTestcase());
+  // Stable client-only keys for steps. The Step bean has no id, so tag each step with a unique
+  // `_key` used for React keys AND the editorInstances map. Keying by array index instead made
+  // removing a step shift every index: React reused editor component instances (onInit never
+  // re-fired) and the editorInstances map went stale, so after remove+add the Save button read a
+  // detached/wrong editor and did nothing until a full page reload. `_key` is dropped by the server
+  // (FAIL_ON_UNKNOWN_PROPERTIES=false), so it never persists.
+  const stepKeySeq = useRef(0);
+  const keyedSteps = steps =>
+    (steps || []).map(s => (s && s._key != null ? s : { ...(s || { _new: true }), _key: stepKeySeq.current++ }));
+
+  const [testcase, setTestcase] = useState(() => {
+    const tc = testcaseProp || emptyTestcase();
+    return { ...tc, steps: keyedSteps(tc.steps) };
+  });
   const [originalTestcase, setOriginalTestcase] = useState({ steps: [], attributes: {} });
   const [projectAttributes, setProjectAttributes] = useState(projectAttrsProp || []);
   const [attributesInEdit, setAttributesInEdit] = useState(new Set());
@@ -118,7 +131,7 @@ function TestCase({
     if (!pid || !tcId) return;
     Backend.get(pid + "/testcase/" + tcId)
       .then(response => {
-        setTestcase(response);
+        setTestcase({ ...response, steps: keyedSteps(response.steps) });
         setOriginalTestcase(JSON.parse(JSON.stringify(response)));
         setAttributesInEdit(new Set());
         setPropertiesInEdit(new Set());
@@ -153,7 +166,7 @@ function TestCase({
   // Load testcase whenever testcaseId or testcaseProp changes (also fires on initial mount)
   useEffect(() => {
     if (testcaseProp) {
-      setTestcase(testcaseProp);
+      setTestcase({ ...testcaseProp, steps: keyedSteps(testcaseProp.steps) });
       setLoading(false);
       setTestDeveloper(testDeveloperProp || false);
     } else if (testcaseId) {
@@ -242,7 +255,9 @@ function TestCase({
       const updated = { ...prev };
       if (index != undefined) {
         updated[fieldName] = [...(updated[fieldName] || [])];
-        updated[fieldName][index] = originalTestcase[fieldName]?.[index];
+        // Preserve the step's stable _key when reverting to the original value, so the editor
+        // instance isn't remounted (and re-keyed) by the revert.
+        updated[fieldName][index] = { ...originalTestcase[fieldName]?.[index], _key: prev[fieldName]?.[index]?._key };
       } else {
         updated[fieldName] = originalTestcase[fieldName];
       }
@@ -250,8 +265,9 @@ function TestCase({
     });
     // Reset TinyMCE editor content so it shows the original value next time
     if (index != undefined) {
-      const actionKey = "step-action-" + index;
-      const expKey = "step-exp-" + index;
+      const stepKey = (testcase[fieldName] || [])[index]?._key;
+      const actionKey = "step-action-" + stepKey;
+      const expKey = "step-exp-" + stepKey;
       if (editorInstances.current[actionKey])
         editorInstances.current[actionKey].setContent(originalTestcase[fieldName]?.[index]?.action || "");
       if (editorInstances.current[expKey])
@@ -272,8 +288,9 @@ function TestCase({
       // (Selenium SendKeys), which TinyMCE's onEditorChange does NOT fire for. Fall back to
       // whatever is already in state, and never persist undefined (which rendered as the
       // literal "Step undefined").
-      const actionEditor = editorInstances.current["step-action-" + index];
-      const expEditor = editorInstances.current["step-exp-" + index];
+      const stepKey = (testcase.steps || [])[index]?._key;
+      const actionEditor = editorInstances.current["step-action-" + stepKey];
+      const expEditor = editorInstances.current["step-exp-" + stepKey];
       const steps = [...(testcase.steps || [])];
       steps[index] = {
         ...steps[index],
@@ -288,7 +305,7 @@ function TestCase({
     }
     Backend.put(pid + "/testcase/", tcToSave)
       .then(response => {
-        setTestcase(response);
+        setTestcase({ ...response, steps: keyedSteps(response.steps) });
         setOriginalTestcase(JSON.parse(JSON.stringify(response)));
         setAttributesInEdit(new Set());
         setPropertiesInEdit(new Set());
@@ -357,10 +374,9 @@ function TestCase({
       return s;
     });
     // Submit happens after state update — use current testcase minus this attribute
-    const pid = projectIdRef.current;
     const updated = { ...testcase, attributes: { ...testcase.attributes } };
     delete updated.attributes[key];
-    Backend.put(pid + "/testcase/", updated).catch(() => setErrorMessage("Couldn't save testcase"));
+    putTestcaseInline(updated);
     if (event) event.preventDefault();
   }
 
@@ -399,21 +415,10 @@ function TestCase({
     });
   }
 
-  function handleStepActionChange(index, value) {
-    setTestcase(prev => {
-      const steps = [...(prev.steps || [])];
-      steps[index] = { ...steps[index], action: value };
-      return { ...prev, steps };
-    });
-  }
-
-  function handleStepExpectationChange(index, value) {
-    setTestcase(prev => {
-      const steps = [...(prev.steps || [])];
-      steps[index] = { ...steps[index], expectation: value };
-      return { ...prev, steps };
-    });
-  }
+  // NOTE: the step editors intentionally use a no-op onEditorChange (like description/preconditions).
+  // Calling setTestcase on every keystroke re-rendered the whole component, which reset the TinyMCE
+  // caret/scroll to the top of the step mid-edit. Step content is read live via getContent() in
+  // handleSubmit at save time, so per-keystroke state updates are unnecessary.
 
   function addStep() {
     setTestcase(prev => {
@@ -422,14 +427,32 @@ function TestCase({
       // automation, SendKeys text (which contains spaces) can land on the still-focused
       // "Add Step" button and activate it once per Space, adding a pile of blank steps.
       if (steps.length > 0 && steps[steps.length - 1] && steps[steps.length - 1]._new) return prev;
-      return { ...prev, steps: [...steps, { _new: true }] };
+      return { ...prev, steps: [...steps, { _new: true, _key: stepKeySeq.current++ }] };
     });
+  }
+
+  // PUT an out-of-band testcase change (remove step, toggle broken, remove attribute) and sync the
+  // server-bumped lastModifiedTime/version back into state. BaseService.update rejects a save whose
+  // lastModifiedTime is older than the stored entity's ("Entity has been changed previously"), so
+  // without this refresh the NEXT save after any of these actions fails with a 400 until a reload.
+  // Functional updates so a step/edit made before the PUT resolves is preserved, not clobbered.
+  function putTestcaseInline(updated) {
+    return Backend.put(projectIdRef.current + "/testcase/", updated)
+      .then(response => {
+        setTestcase(prev => ({ ...prev, lastModifiedTime: response.lastModifiedTime, version: response.version }));
+        setOriginalTestcase(prev => ({
+          ...prev,
+          lastModifiedTime: response.lastModifiedTime,
+          version: response.version,
+        }));
+      })
+      .catch(() => setErrorMessage("Couldn't save testcase"));
   }
 
   function removeStep(event, index) {
     const updated = { ...testcase, steps: testcase.steps.filter((_, i) => i !== index) };
     setTestcase(updated);
-    Backend.put(projectIdRef.current + "/testcase/", updated).catch(() => setErrorMessage("Couldn't save testcase"));
+    putTestcaseInline(updated);
     if (event) event.preventDefault();
   }
 
@@ -468,7 +491,7 @@ function TestCase({
   function onBrokenToggle() {
     const updated = { ...testcase, broken: !testcase.broken };
     setTestcase(updated);
-    Backend.put(projectIdRef.current + "/testcase/", updated).catch(() => setErrorMessage("Couldn't save testcase"));
+    putTestcaseInline(updated);
   }
 
   function handleOnClickToSelectText() {
@@ -799,17 +822,17 @@ function TestCase({
             {(testcase.steps || []).map((step, i) => {
               if (!step || step._new) {
                 return (
-                  <div className="step" key={i}>
+                  <div className="step" key={step._key}>
                     <div id={"steps-" + i + "-form"} className="inplace-form card">
                       <div className="card-header">{i + 1}. Step</div>
                       <div className="card-body">
                         <p className="card-text">
                           <Editor
-                            key={testcase.id + "-step-" + i + "-action"}
+                            key={testcase.id + "-step-" + step._key + "-action"}
                             tinymceScriptSrc="/tinymce/tinymce.min.js"
                             initialValue={step.action}
                             onInit={(evt, editor) => {
-                              editorInstances.current["step-action-" + i] = editor;
+                              editorInstances.current["step-action-" + step._key] = editor;
                             }}
                             init={{
                               height: 300,
@@ -818,17 +841,17 @@ function TestCase({
                               toolbar: tinymceToolbar,
                               content_style: tinymceContentStyle,
                             }}
-                            onEditorChange={content => handleStepActionChange(i, content)}
+                            onEditorChange={() => {}}
                           />
                         </p>
                         <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                         <p className="card-text">
                           <Editor
-                            key={testcase.id + "-step-" + i + "-exp"}
+                            key={testcase.id + "-step-" + step._key + "-exp"}
                             tinymceScriptSrc="/tinymce/tinymce.min.js"
                             initialValue={step.expectation}
                             onInit={(evt, editor) => {
-                              editorInstances.current["step-exp-" + i] = editor;
+                              editorInstances.current["step-exp-" + step._key] = editor;
                             }}
                             init={{
                               height: 300,
@@ -837,7 +860,7 @@ function TestCase({
                               toolbar: tinymceToolbar,
                               content_style: tinymceContentStyle,
                             }}
-                            onEditorChange={content => handleStepExpectationChange(i, content)}
+                            onEditorChange={() => {}}
                           />
                         </p>
                         <button type="button" className="btn btn-light" onClick={e => removeStep(e, i)}>
@@ -856,7 +879,7 @@ function TestCase({
                 );
               } else {
                 return (
-                  <div key={i}>
+                  <div key={step._key}>
                     <div id={"steps-" + i + "-display"} className="inplace-display col-sm-12">
                       <div className="row">
                         <div className="card col-md-12">
@@ -918,11 +941,11 @@ function TestCase({
                           <h6 className="card-subtitle mb-2 text-muted">{i + 1}. Step</h6>
                           <p className="card-text">
                             <Editor
-                              key={testcase.id + "-step-" + i + "-action-edit"}
+                              key={testcase.id + "-step-" + step._key + "-action-edit"}
                               tinymceScriptSrc="/tinymce/tinymce.min.js"
                               initialValue={step.action}
                               onInit={(evt, editor) => {
-                                editorInstances.current["step-action-" + i] = editor;
+                                editorInstances.current["step-action-" + step._key] = editor;
                               }}
                               init={{
                                 height: 300,
@@ -931,17 +954,17 @@ function TestCase({
                                 toolbar: tinymceToolbar,
                                 content_style: tinymceContentStyle,
                               }}
-                              onEditorChange={content => handleStepActionChange(i, content)}
+                              onEditorChange={() => {}}
                             />
                           </p>
                           <h6 className="card-subtitle mb-2 text-muted">Expectations</h6>
                           <p className="card-text">
                             <Editor
-                              key={testcase.id + "-step-" + i + "-exp-edit"}
+                              key={testcase.id + "-step-" + step._key + "-exp-edit"}
                               tinymceScriptSrc="/tinymce/tinymce.min.js"
                               initialValue={step.expectation}
                               onInit={(evt, editor) => {
-                                editorInstances.current["step-exp-" + i] = editor;
+                                editorInstances.current["step-exp-" + step._key] = editor;
                               }}
                               init={{
                                 height: 300,
@@ -950,7 +973,7 @@ function TestCase({
                                 toolbar: tinymceToolbar,
                                 content_style: tinymceContentStyle,
                               }}
-                              onEditorChange={content => handleStepExpectationChange(i, content)}
+                              onEditorChange={() => {}}
                             />
                           </p>
                           <button type="button" className="btn btn-light" onClick={e => cancelEdit("steps", e, i)}>
