@@ -1215,26 +1215,58 @@ return { found: true, hasText: true, before: before, after: after, total: total 
             
         }
     
-        // Idempotent setup: delete any pre-existing test cases whose name contains the given text
+        // FadeLoader inside .sweet-loading renders only while the tree is loading (see TestCases.js).
+        private static readonly IWebLocator TreeLoadingSpinner = new WebLocator("TestCaseTreeLoading",
+            By.XPath("//div[contains(@class,'sweet-loading')]//span"));
+
+        // Scope the current project's test-case tree to a single name using the fulltext Search box,
+        // then wait for the (small) filtered result to settle. The tree renders only the first
+        // TC_FETCH_LIMIT (50) test cases without a filter (see TestCases.js), so a freshly created test
+        // case in a project that already has 50+ falls off the first page and cannot be found by
+        // scanning the displayed nodes. Filtering by name guarantees it is rendered regardless of how
+        // many test cases the project has. Same mechanism TC28 exercises.
+        private void FilterTreeByName(string name)
+        {
+            Actor.AttemptsTo(Click.On(Header.TestCases));
+            Actor.WaitsUntil(Appearance.Of(TestCases.SearchInput), IsEqualTo.True(), timeout: 30);
+            Actor.AttemptsTo(Clear.On(TestCases.SearchInput));
+            Actor.AttemptsTo(SendKeys.To(TestCases.SearchInput, name));
+            Actor.AttemptsTo(Hover.Over(TestCases.FilterLocator));
+            Actor.AttemptsTo(Click.On(TestCases.FilterLocator));
+
+            Actor.WaitsUntil(Appearance.Of(TreeLoadingSpinner), IsEqualTo.False(), timeout: 60);
+            new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+        }
+
+        // Clear the fulltext Search filter so the tree returns to its default (unfiltered) view.
+        // Best-effort - never throws (used to leave the tree tidy after a filtered purge/select).
+        private void ClearTreeFilter()
+        {
+            try
+            {
+                Actor.AttemptsTo(Click.On(Header.TestCases));
+                Actor.WaitsUntil(Appearance.Of(TestCases.SearchInput), IsEqualTo.True(), timeout: 30);
+                Actor.AttemptsTo(Clear.On(TestCases.SearchInput));
+                Actor.AttemptsTo(Hover.Over(TestCases.FilterLocator));
+                Actor.AttemptsTo(Click.On(TestCases.FilterLocator));
+                Actor.WaitsUntil(Appearance.Of(TreeLoadingSpinner), IsEqualTo.False(), timeout: 60);
+            }
+            catch (Exception ex) { userActions.LogConsoleMessage("ClearTreeFilter failed (ignored): " + ex.Message); }
+        }
+
+        // Idempotent setup: delete ALL pre-existing test cases whose name contains the given text
         // (leftovers from an aborted prior run). TC08-TC10 create same-named test cases and
         // SelectTestCase picks the LAST match, so a leftover that already has a step shifts the
         // WriteToIframe indices and hides SaveStep1 (the 45s timeout documented on TC08). Purging
         // first guarantees only the fresh test case exists. Runs in the current project's TestCases.
+        // Filters by the name via Search each pass so matches are found even when the project has more
+        // than TC_FETCH_LIMIT (50) test cases - the unfiltered tree only shows the first 50, so a
+        // beyond-page leftover would be silently missed and duplicates would accumulate every run.
         private void PurgeTestCasesByName(string testcaseName)
         {
-            // FadeLoader inside .sweet-loading renders only while the tree is loading (see TestCases.js).
-            IWebLocator treeLoading = new WebLocator("TestCaseTreeLoading",
-                By.XPath("//div[contains(@class,'sweet-loading')]//span"));
-
-            for (int attempt = 0; attempt < 10; attempt++)
+            for (int attempt = 0; attempt < 30; attempt++)
             {
-                // (Re)load the list each pass so a fresh, non-stale set of nodes is queried. The delete
-                // reload (or any tree re-render) otherwise leaves stale element references, which
-                // surface as "Node with given id does not belong to the document". Wait for the fetch
-                // to finish via the spinner - the project may legitimately have no matching test cases.
-                Actor.AttemptsTo(Click.On(Header.TestCases));
-                Actor.WaitsUntil(Appearance.Of(treeLoading), IsEqualTo.False(), timeout: 60);
-                new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                FilterTreeByName(testcaseName);
 
                 IWebElement? match;
                 try
@@ -1244,7 +1276,7 @@ return { found: true, hasText: true, before: before, after: after, total: total 
                 }
                 catch (StaleElementReferenceException) { continue; }
 
-                if (match == null) return; // none left
+                if (match == null) break; // none left
 
                 try
                 {
@@ -1254,21 +1286,42 @@ return { found: true, hasText: true, before: before, after: after, total: total 
                 catch (Exception ex)
                 {
                     // The delete (Remove + confirm) may have succeeded even if the post-delete reload
-                    // wait threw a transient stale-node error; the next pass reloads and re-checks.
+                    // wait threw a transient stale-node error; the next pass re-filters and re-checks.
                     userActions.LogConsoleMessage("Purge delete hit a transient error (will re-check): " + ex.Message);
                 }
             }
+            // Leave the tree unfiltered so a subsequent CreatTestCase / navigation starts clean.
+            ClearTreeFilter();
         }
 
-        // Select a test case in the tree and return its name text. Waits for the SPECIFIC test
-        // case to appear (after a create/reload it may not be listed immediately), re-queries on
-        // stale re-renders, then moves to the node (scrolling it into view, like a user) and
-        // clicks it.
+        // Select a test case in the tree and return its name text. First scans the currently displayed
+        // tree (the fast, common case); if the target is not on the first page (the tree caps at
+        // TC_FETCH_LIMIT=50), it scopes the tree to the name via the Search filter and retries, so
+        // selection works regardless of the project's size. Re-queries on stale re-renders, then moves
+        // to the node (scrolling it into view, like a user) and clicks it.
         private string SelectTestCase(string testcasename)
         {
             Actor.WaitsUntil(TextList.For(TestCases.GetTestCaseNameList), IsAnEnumerable<string>.WhereTheCount(IsGreaterThanOrEqualTo.Value(1)), timeout: 60);
 
-            for (int attempt = 0; attempt < 60; attempt++)
+            // Fast path: it is usually already visible on the current page.
+            string? selected = TrySelectFromTree(testcasename, attempts: 5);
+            if (selected != null) return selected;
+
+            // Fallback: not on the first page - filter the tree by name so it is rendered, then select.
+            userActions.LogConsoleMessage("Test case not on the first page; filtering the tree by name via Search: " + testcasename);
+            FilterTreeByName(testcasename);
+            selected = TrySelectFromTree(testcasename, attempts: 60);
+            if (selected != null) return selected;
+
+            throw new NoSuchElementException("Test case not found in tree: " + testcasename);
+        }
+
+        // Look for the named test case among the currently displayed tree nodes for up to `attempts`
+        // one-second passes; click and return its text if found, otherwise return null. Picks the LAST
+        // match (matching the original SelectTestCase behaviour).
+        private string? TrySelectFromTree(string testcasename, int attempts)
+        {
+            for (int attempt = 0; attempt < attempts; attempt++)
             {
                 try
                 {
@@ -1288,7 +1341,7 @@ return { found: true, hasText: true, before: before, after: after, total: total 
                 }
                 new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
             }
-            throw new NoSuchElementException("Test case not found in tree: " + testcasename);
+            return null;
         }
 
 
