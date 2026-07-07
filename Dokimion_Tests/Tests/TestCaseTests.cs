@@ -842,6 +842,77 @@ namespace Dokimion.Tests
                 $"The caret jumped to the end of the step text (offset {after} of {total}) instead of staying where the user typed.");
         }
 
+        // Self-contained (does not depend on TC30 or any run order): creates its own
+        // 'RemoveAddSaveTestCase' with an initial step, then removes that step, adds a fresh step with
+        // dummy text, saves it, and verifies the new step persisted. Any leftover from a prior run is
+        // purged at the start (idempotent).
+        [Test]
+        public void TC31RemoveAddSave()
+        {
+            userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
+
+            const string InitialAction = "Initial step to be removed";
+            const string DummyAction = "Dummy step action text";
+            const string DummyExpectation = "Dummy expectation text";
+
+            userActions.LogConsoleMessage("Set Up : ");
+            userActions.LogConsoleMessage("Remove any leftover 'RemoveAddSaveTestCase' from a prior run (idempotent start)");
+            PurgeTestCasesByName("RemoveAddSaveTestCase");
+            Actor.AttemptsTo(CreatTestCase.For("RemoveAddSaveTestCase", "Testcase for remove/add/save step"));
+
+            Actions actions = new Actions(driver);
+            SelectTestCase("RemoveAddSaveTestCase");
+
+            // Arrange : add an initial step so there is a step to remove.
+            userActions.LogConsoleMessage("Arrange : add an initial step so there is one to remove");
+            Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
+            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
+
+            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            //Steps (action)
+            Actor.AttemptsTo(WriteToIframe.For(driver, 2, InitialAction));
+            //Expectations
+            Actor.AttemptsTo(WriteToIframe.For(driver, 3, "Initial expectation"));
+
+            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True(), timeout: 45);
+            Actor.AttemptsTo(Hover.Over(TestCases.SaveStep1));
+            Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
+
+            // Wait for the initial step to finish saving (renders in display mode) before removing it.
+            IWebLocator initialStepText = new WebLocator("InitialStepText", By.XPath($"//p[normalize-space()='{InitialAction}']"));
+            Actor.WaitsUntil(Appearance.Of(initialStepText), IsEqualTo.True(), timeout: 45);
+
+            userActions.LogConsoleMessage("Action steps : remove the existing step");
+            RemoveStep();
+
+            // Wait for the removed step's display to disappear before adding a new one, so the new step
+            // renders at steps-0 (a stale steps-0-display would shift the WriteToIframe editor indices).
+            IWebLocator step0Display = new WebLocator("Step0Display", By.XPath("//div[@id='steps-0-display']"));
+            Actor.WaitsUntil(Count.Of(step0Display), IsEqualTo.Value(0), timeout: 45);
+
+            userActions.LogConsoleMessage("Add a new step with dummy text");
+            Actor.WaitsUntil(Appearance.Of(TestCases.AddStepButton), IsEqualTo.True());
+            Actor.AttemptsTo(Hover.Over(TestCases.AddStepButton));
+            Actor.AttemptsTo(Click.On(TestCases.AddStepButton));
+
+            actions.SendKeys(Keys.PageDown).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+            //Steps (action)
+            Actor.AttemptsTo(WriteToIframe.For(driver, 2, DummyAction));
+            //Expectations
+            Actor.AttemptsTo(WriteToIframe.For(driver, 3, DummyExpectation));
+
+            userActions.LogConsoleMessage("Save the step");
+            Actor.WaitsUntil(Appearance.Of(TestCases.SaveStep1), IsEqualTo.True(), timeout: 45);
+            Actor.AttemptsTo(Hover.Over(TestCases.SaveStep1));
+            Actor.AttemptsTo(Click.On(TestCases.SaveStep1));
+
+            userActions.LogConsoleMessage("Verify : the new step is saved with the dummy text");
+            IWebLocator dummyStepText = new WebLocator("DummyStepText", By.XPath($"//p[normalize-space()='{DummyAction}']"));
+            Actor.WaitsUntil(Appearance.Of(dummyStepText), IsEqualTo.True(), timeout: 45);
+            userActions.LogConsoleMessage("Verified: step removed, re-added with dummy text, and saved");
+        }
+
         // Drives the OPEN step-edit action editor directly through TinyMCE's own API: sets a known
         // string, places the caret in the MIDDLE of it, inserts a single character (a simulated
         // keystroke), fires the editor's input/change events (the same events the app's React
