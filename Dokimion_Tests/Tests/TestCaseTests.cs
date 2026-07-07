@@ -971,12 +971,28 @@ return { found: true, hasText: true, before: before, after: after, total: total 
             throw new NoSuchElementException("The step-edit action TinyMCE editor (#steps-0-form) was not ready after the Edit click");
         }
 
+        // Open the Projects dropdown reliably. The "Projects" link is a dropdown toggle, and a single
+        // click is occasionally swallowed when the header is still re-rendering right after a
+        // save/lock/navigation - so the menu never opens and the "All" item never appears (the flaky
+        // "'All Link' ... timed out" failure, e.g. TC27 right after locking a test case). Retry the
+        // toggle until "All" is actually visible. Mirrors AttributeTests.SwitchToDokimionLS.
+        private void OpenProjectsDropdown()
+        {
+            Actor.WaitsUntil(Appearance.Of(Header.ProjectsLink), IsEqualTo.True(), timeout: 30);
+            for (int attempt = 0; attempt < 4; attempt++)
+            {
+                ClickWithRetry(Header.ProjectsLink);
+                new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                if (Actor.AskingFor(Appearance.Of(Header.AllLink))) break;
+            }
+            Actor.WaitsUntil(Appearance.Of(Header.AllLink), IsEqualTo.True(), timeout: 30);
+        }
+
         // Navigate from the current project to paratext2 and open its TestCases page. Mirrors
         // OpenProjectLSTestCases but targets the paratext2 project card.
         private void OpenParatext2TestCases()
         {
-            ClickWithRetry(Header.ProjectsLink);
-            Actor.WaitsUntil(Appearance.Of(Header.AllLink), IsEqualTo.True(), timeout: 30);
+            OpenProjectsDropdown();
             ClickWithRetry(Header.AllLink);
             Actor.WaitsUntil(Appearance.Of(Header.Paratext2Project), IsEqualTo.True(), timeout: 30);
             ClickWithRetry(Header.Paratext2Project);
@@ -1097,9 +1113,12 @@ return { found: true, hasText: true, before: before, after: after, total: total 
         // project, so navigation into a project is the caller's responsibility).
         private void LoginAsNonAdmin(string username, string password)
         {
-            EnsureCleanLoginPage();
-            Actor.AttemptsTo(LoginUser.For(username, password));
-            Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
+            LoginWithRetry("LoginAsNonAdmin", () =>
+            {
+                EnsureCleanLoginPage();
+                Actor.AttemptsTo(LoginUser.For(username, password));
+                Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
+            });
         }
 
         // Click, retrying on the transient "Node ... does not belong to the document" / stale-element
@@ -1122,10 +1141,10 @@ return { found: true, hasText: true, before: before, after: after, total: total 
         // Navigate from the current project to Dokimion_LS and open its TestCases page.
         private void OpenProjectLSTestCases()
         {
-            // Use ClickWithRetry on the header nav: this often runs right after a prior test's session
-            // restore, when the header is still re-rendering, so a plain click can hit a detaching node.
-            ClickWithRetry(Header.ProjectsLink);
-            Actor.WaitsUntil(Appearance.Of(Header.AllLink), IsEqualTo.True(), timeout: 30);
+            // Open the Projects dropdown with the retry-until-"All"-appears helper: this often runs right
+            // after a prior test's save/lock/session-restore, when the header is still re-rendering, so a
+            // single toggle click is swallowed and the "All" item never appears.
+            OpenProjectsDropdown();
             ClickWithRetry(Header.AllLink);
             Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
             ClickWithRetry(Header.DokimionLaunchStatisticsProject);
@@ -1149,10 +1168,15 @@ return { found: true, hasText: true, before: before, after: after, total: total 
         // is never present. Navigation into the project is the caller's responsibility.
         private void SwitchToNormalUser()
         {
-            Actor.AttemptsTo(Logout.For());
-            Actor.WaitsUntil(Appearance.Of(LoginPage.NameInput), IsEqualTo.True(), timeout: 30);
-            Actor.AttemptsTo(LoginUser.For(userActions.NormalTester!, userActions.NormalTesterPasswd!));
-            Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 15);
+            // Use EnsureCleanLoginPage (logout + cookie-clear + reload with 429-aware retry) and retry
+            // the whole login, same as RestoreAdminSession/LoginAsNonAdmin: under a full-suite run the
+            // login form can render and then be replaced by an nginx 429 error, timing out the login.
+            LoginWithRetry("SwitchToNormalUser", () =>
+            {
+                EnsureCleanLoginPage();
+                Actor.AttemptsTo(LoginUser.For(userActions.NormalTester!, userActions.NormalTesterPasswd!));
+                Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 30);
+            });
         }
 
         // Restore the admin session used by the rest of the class.
@@ -1185,12 +1209,37 @@ return { found: true, hasText: true, before: before, after: after, total: total 
         }
 
         // Restore a clean admin session that lands on the projects list (where DokimionProject lives).
+        // Retries the whole login on failure (same 429-throttled-login-page reason as LoginAsNonAdmin):
+        // a single-shot restore was the TC26/27/28 cascade - once the admin session is not restored,
+        // every following test that needs it fails too.
         private void RestoreAdminSession()
         {
-            EnsureCleanLoginPage();
-            Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
-            Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 30);
-            Actor.AttemptsTo(Click.On(Header.DokimionProject));
+            LoginWithRetry("RestoreAdminSession", () =>
+            {
+                EnsureCleanLoginPage();
+                Actor.AttemptsTo(LoginUser.For(userActions.AdminUser!, userActions.AdminPass!));
+                Actor.WaitsUntil(Appearance.Of(Header.DokimionProject), IsEqualTo.True(), timeout: 30);
+                Actor.AttemptsTo(Click.On(Header.DokimionProject));
+            });
+        }
+
+        // Run a full login sequence, retrying the WHOLE thing (not just LoginUser's submit) on any
+        // failure. Under a full-suite run nginx's 429 rate limit can render the login form and then
+        // replace it with an error a moment later, so the login page appears (EnsureCleanLoginPage
+        // returns) but the follow-up NameInput / landing wait times out. On failure, back off and let
+        // the sequence reload a fresh login page before retrying. Shared by the three login helpers.
+        private void LoginWithRetry(string label, Action loginSequence)
+        {
+            for (int attempt = 1; ; attempt++)
+            {
+                try { loginSequence(); return; }
+                catch (Exception ex) when (attempt < 3)
+                {
+                    userActions.LogConsoleMessage(
+                        $"{label} attempt {attempt}/3 failed (likely a 429-throttled login page); backing off 15s and retrying: {ex.Message}");
+                    System.Threading.Thread.Sleep(15000);
+                }
+            }
         }
 
         public void RemoveStep()
@@ -1238,22 +1287,6 @@ return { found: true, hasText: true, before: before, after: after, total: total 
             new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
         }
 
-        // Clear the fulltext Search filter so the tree returns to its default (unfiltered) view.
-        // Best-effort - never throws (used to leave the tree tidy after a filtered purge/select).
-        private void ClearTreeFilter()
-        {
-            try
-            {
-                Actor.AttemptsTo(Click.On(Header.TestCases));
-                Actor.WaitsUntil(Appearance.Of(TestCases.SearchInput), IsEqualTo.True(), timeout: 30);
-                Actor.AttemptsTo(Clear.On(TestCases.SearchInput));
-                Actor.AttemptsTo(Hover.Over(TestCases.FilterLocator));
-                Actor.AttemptsTo(Click.On(TestCases.FilterLocator));
-                Actor.WaitsUntil(Appearance.Of(TreeLoadingSpinner), IsEqualTo.False(), timeout: 60);
-            }
-            catch (Exception ex) { userActions.LogConsoleMessage("ClearTreeFilter failed (ignored): " + ex.Message); }
-        }
-
         // Idempotent setup: delete ALL pre-existing test cases whose name contains the given text
         // (leftovers from an aborted prior run). TC08-TC10 create same-named test cases and
         // SelectTestCase picks the LAST match, so a leftover that already has a step shifts the
@@ -1290,8 +1323,8 @@ return { found: true, hasText: true, before: before, after: after, total: total 
                     userActions.LogConsoleMessage("Purge delete hit a transient error (will re-check): " + ex.Message);
                 }
             }
-            // Leave the tree unfiltered so a subsequent CreatTestCase / navigation starts clean.
-            ClearTreeFilter();
+            // No explicit filter reset needed: the next CreatTestCase / test navigates to
+            // "/{project}/testcases" (no query), which clears the fulltext filter (see Header.js).
         }
 
         // Select a test case in the tree and return its name text. First scans the currently displayed
