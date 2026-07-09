@@ -1276,6 +1276,11 @@ return { found: true, hasText: true, before: before, after: after, total: total 
         // many test cases the project has. Same mechanism TC28 exercises.
         private void FilterTreeByName(string name)
         {
+            // The project-scoped TestCases nav link only renders once the Header has resolved the
+            // current project (Header.js: {project && ...}). Entering straight off a heavy step-editor
+            // test (e.g. TC30) it can take a beat to re-appear, and Click's built-in wait is only 30s -
+            // so wait explicitly first, same as CreatTestCase does, to avoid a flaky nav timeout.
+            Actor.WaitsUntil(Appearance.Of(Header.TestCases), IsEqualTo.True(), timeout: 60);
             Actor.AttemptsTo(Click.On(Header.TestCases));
             Actor.WaitsUntil(Appearance.Of(TestCases.SearchInput), IsEqualTo.True(), timeout: 30);
             Actor.AttemptsTo(Clear.On(TestCases.SearchInput));
