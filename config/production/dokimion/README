@@ -1,0 +1,6 @@
+HOW TO DEPLOY TO PRODUCTION
+---------------------------
+
+cd /etc/nginx/sites-available
+sudo cp ~/dokimion/config/production/* .
+
