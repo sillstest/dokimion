@@ -1,0 +1,8 @@
+DEPLOY
+------
+
+cd /etc/nginx/sites_available
+sudo mv dokimion1.conf dokimion1.conf_good
+sudo cp ~dokimion/config/production/dokimion1/dokimion_common.conf .
+sudo cp ~dokimion/config/production/s-dokimion1/server_name.h .
+
