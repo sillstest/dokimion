@@ -1,8 +1,21 @@
 DEPLOY
 ------
 
-cd /etc/nginx/sites_available
+cd /etc/nginx/sites-available
 sudo mv dokimion1.conf dokimion1.conf_good
 sudo cp ~dokimion/config/production/dokimion1/dokimion_common.conf .
-sudo cp ~dokimion/config/production/s-dokimion1/server_name.h .
+sudo cp ~dokimion/config/staging/s-dokimion1/server_name.h .
 
+# security_hardening H1 — required includes. dokimion_common.conf includes both,
+# and nginx refuses to start if either file is missing.
+sudo cp ~dokimion/config/staging/s-dokimion1/lb_access.h .
+sudo cp ~dokimion/config/staging/s-dokimion1/lb_mtls.h .
+
+sudo nginx -t && sudo systemctl reload nginx
+
+# lb_access.h restricts :443 to the staging load balancer (10.3.0.171) and
+# localhost; every other source gets 403. Before deploying, confirm no other
+# legitimate client reaches this box directly:
+#   sudo awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head
+# Known offender: Dokimion_Tests/.runsettings points at http://s-dokimion3.psonet
+# directly, which 301s to :443 and will then be denied.

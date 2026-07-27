@@ -3,7 +3,11 @@ HOW TO GET DEPLOY CHANGES TO STAGING
 
 cd /etc/nginx/sites-available
 sudo cp ~dokimion/config/production/dokimion/load_balancer.conf .
-sudo cp ~dokimion/config/staging/s-dokimion/*.conf .
-sudo cp ~dokimion/config/staging/s-dokimion/s-dokimion-staging.conf
+sudo cp ~dokimion/config/staging/s-dokimion/*.h .
+sudo cp ~dokimion/config/staging/s-dokimion/s-dokimion-staging.crt .
 
+# security_hardening H1 — load_balancer.conf now includes lb_client_cert.h
+# (copied by the *.h line above); nginx refuses to start if it is missing.
+# It is inert until the LB client cert from H2 is issued.
 
+sudo nginx -t && sudo systemctl reload nginx
