@@ -3,14 +3,14 @@ DEPLOY
 
 cd /etc/nginx/sites-available
 sudo mv dokimion3.conf dokimion3.conf_good
-sudo cp ~dokimion/config/production/dokimion1/dokimion_common.conf .
-sudo cp ~dokimion/config/production/dokimion3/server_name.h .
+sudo cp ~/dokimion/config/production/dokimion1/dokimion_common.conf .
+sudo cp ~/dokimion/config/production/dokimion3/server_name.h .
 
 # security_hardening H1 — required includes. dokimion_common.conf includes both,
 # and nginx refuses to start if either file is missing. Both ship inert on
 # production (lb_access.h is "allow all"), so behaviour is unchanged until the
 # restriction is deliberately enabled.
-sudo cp ~dokimion/config/production/dokimion3/lb_access.h .
-sudo cp ~dokimion/config/production/dokimion3/lb_mtls.h .
+sudo cp ~/dokimion/config/production/dokimion3/lb_access.h .
+sudo cp ~/dokimion/config/production/dokimion3/lb_mtls.h .
 
 sudo nginx -t && sudo systemctl reload nginx
