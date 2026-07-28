@@ -7,5 +7,5 @@
 #   2. the LB presents its client cert (staging/s-dokimion/lb_client_cert.h).
 # Roll one node at a time and watch the LB error log for handshake failures.
 #
-# ssl_verify_client      on;
-# ssl_client_certificate /etc/nginx/sites-available/lb-client-ca.crt;
+ssl_verify_client      on;
+ssl_client_certificate /etc/nginx/sites-available/lb-client-ca.crt;
