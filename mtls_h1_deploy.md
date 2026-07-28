@@ -41,51 +41,63 @@ presenting the client cert → handshake **accepted**; omitting it → **refused
 | `lb_client_cert.h` deployed, inert | yes | n/a | no | n/a |
 | `lb-client.{crt,key}` installed | **no** | n/a | **no** | n/a |
 | `lb-client-ca.crt` installed | n/a | **no** | n/a | no |
-| repo commit | `d3ddff57` | `d3ddff57` | `d82e1435` | `210031a8` |
+| repo commit | `dfc6ccb8` | `dfc6ccb8` / `de9073c7` ×2 | `d82e1435` | `210031a8` |
 
 So staging picks up at **Phase 1**. Production is several commits behind and does not yet have the
 part 1 includes at all — **do not run any production phase until part 1 is deployed there**, or nginx
 will fail on a missing `include`.
 
-## Phase -1 — prerequisites (do this first)
+## Phase -1 — prerequisites — ✅ (a)(b)(c) DONE 2026-07-28, (d) still open
 
-Three corrections are not yet committed, and one of them will break Phase 4 if you skip it.
+Three corrections had to land before Phase 4. All three are now committed and pushed as
+**`dfc6ccb8`**; only decision **(d)** remains.
 
-**(a) The pushed `lb_client_cert.h` has a `sed` hazard.** In commit `d3ddff57`, line 4 begins
-`# proxy_ssl_verify directives…`, so Phase 4's `sed` would uncomment prose into the config and
-`nginx -t` would fail. The fix is in the working tree on `s-dokimion3` but not committed. Confirm you
-have the fixed copy before Phase 4:
+**(a) `sed` hazard in `lb_client_cert.h` — ✅ resolved (already fixed in `de9073c7`).**
+The hazard was that a prose line began `# proxy_ssl_verify directives…`, so Phase 4's `sed` would
+uncomment prose into the config and `nginx -t` would fail. Both LB copies now carry the
+`#--BEGIN-DIRECTIVES--` marker and no comment line other than the two real directives starts with
+`# proxy_ssl_`. Re-confirm on the box you are about to work on:
 ```bash
 grep -c '^#--BEGIN-DIRECTIVES--' config/staging/s-dokimion/lb_client_cert.h   # must print 1
+sed 's/^# proxy_ssl_/proxy_ssl_/' config/staging/s-dokimion/lb_client_cert.h | grep -v '^#'
+# must print exactly the two proxy_ssl_certificate* lines and nothing else
 ```
+Verified by dry-run on `s-dokimion.psonet` itself on 2026-07-28: output was exactly those two lines.
 
-**(b) `config/production/dokimion1/webserver_cert.h` contains staging cert paths** — harmless on
-staging, fatal on a production web box. It is root-owned, so it needs sudo:
-```bash
-sudo tee /home/bob_beck/dokimion/config/production/dokimion1/webserver_cert.h >/dev/null <<'EOF'
-ssl_certificate     /etc/nginx/sites-available/dokimion-production.crt;
-ssl_certificate_key /etc/nginx/sites-available/dokimion-production.key;
-EOF
-sudo chown bob_beck:bob_beck /home/bob_beck/dokimion/config/production/dokimion1/webserver_cert.h
-```
+**(b) `config/production/dokimion1/webserver_cert.h` contained staging cert paths — ✅ fixed.**
+It now matches `dokimion2`/`dokimion3` byte-for-byte (all three md5 `5ff32e70…`), and
+`grep -rn s-dokimion-staging config/production/` is clean. **No sudo was required:** the file was
+root-owned but `config/production/dokimion1/` is `bob_beck`-writable, so replacing the file in place
+also restored `bob_beck:bob_beck` ownership. (The old `sudo tee` + `sudo chown` recipe is no longer
+needed; nothing under `config/` is root-owned any more.)
 
-**(c) Commit and distribute.** On `s-dokimion3`:
-```bash
-cd ~/dokimion
-git add config/*/*/webserver_cert.h config/*/*/lb_client_cert.h mtls_h1_deploy.md
-git commit -m "H1 mTLS: per-host webserver_cert.h, fix lb_client_cert.h enable marker, add runbook"
-git push origin https_upgrade
-```
-Then pull on the box you are about to work on — at minimum the **staging LB**, which needs the
-corrected `lb_client_cert.h`:
-```bash
-ssh -p 32 s-dokimion.psonet 'cd ~/dokimion && git pull --ff-only origin https_upgrade'
-```
-`dokimion1/2/3.psonet` have dirty working trees; check `git status` there before pulling.
+**(c) Commit and distribute — ✅ done.** Committed as `dfc6ccb8` and pushed to `origin/https_upgrade`
+(rebased over the unrelated `c2e04a64` "TC22 fix"). The **staging LB has been pulled** and is at
+`dfc6ccb8`, so it holds the corrected `lb_client_cert.h` that Phase 4 needs. Nothing live changed:
+`/etc/nginx/sites-available/lb_client_cert.h` is still the inert copy, `lb-client.*` is not installed,
+and `https://s-dokimion.psonet/` still returns **200**.
 
-**(d) Decide about the Selenium suite.** `Dokimion_Tests/.runsettings` targets
-`http://s-dokimion3.psonet` directly, which already returns **403** under part 1 and will return
-**400** once mTLS is on. Repoint it at the load balancer, or allow the runner's IP in `lb_access.h`.
+Still on the older `de9073c7`: `s-dokimion1`, `s-dokimion2` — harmless, they need no file until
+Phase 3, which copies the CA cert directly rather than via git. Correction to the earlier warning
+about `dokimion1/2/3.psonet`: their working trees are dirty only with **untracked build artifacts**
+(`ui/ui.tgz`, `ui/src/package-lock.json`), so a future `git pull` there will not conflict.
+
+Phase 1/2 key material is intact on the staging LB: `~bob_beck/lb-mtls/` is `700`, `ca.key` and
+`lb-client.key` are `600`, certs `644`.
+
+**(d) Decide about the Selenium suite — ⬜ STILL OPEN (your call).**
+`Dokimion_Tests/.runsettings` line 16 sets `Url = http://s-dokimion3.psonet`, which already returns
+**403** under part 1 and will return **400** once mTLS is on. Either:
+- repoint it at the load balancer (`https://s-dokimion.psonet`, or the public
+  `test_staging.languagetechnology.org`) — note this crosses `ip_hash` load balancing, so the suite no
+  longer pins to one node; or
+- add the runner's IP to `lb_access.h` on the web boxes — keeps direct single-node targeting, but that
+  exemption survives mTLS only because `lb_access.h` and `ssl_verify_client` are separate controls, and
+  `ssl_verify_client` fires **first** — so an IP allowance alone will **not** save the suite after
+  Phase 5. Under mTLS the runner would also need a client cert.
+
+Because `ssl_verify_client` is evaluated before the access phase, repointing at the LB is the only
+option that survives Phase 5 without issuing the test runner its own certificate.
 
 ---
 
