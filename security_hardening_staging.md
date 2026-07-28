@@ -11,19 +11,19 @@ it supersedes the repo-based `security_hardening.md` for the staging environment
 
 ---
 
-## Status — re-verified live on 2026-07-27
+## Status — re-verified live on 2026-07-28
 
 | # | Item | Status |
 |---|------|--------|
 | **H1a** | Source restriction (`allow`/`deny`) on the web servers | ✅ **DEPLOYED & VERIFIED** |
 | **H1b** | mTLS (`ssl_verify_client` + LB client cert) | ✅ **LIVE on all 3 nodes & VERIFIED (2026-07-28)** |
-| H2 | Shared private key `644` on all 3 web boxes | 🔴 Open — unchanged |
+| H2 | Shared private key `644` on all 3 web boxes | ✅ **Perms fixed & VERIFIED (2026-07-28)** — `600 root:root` ×3; shared-key/no-revocation deferred |
 | M1 | Wildcard CORS | 🟠 Open — unchanged (2 wildcard headers live) |
-| M2 | `rate_limiting.h` empty, `auth` zone unapplied | 🟠 Open — unchanged (`rate_limiting.h` = 1 byte, `zone=auth` used 0×) |
+| M2 | `rate_limiting.h` empty, `auth` zone unapplied | ⏸️ **Deferred by decision (2026-07-28)** — still 1 byte, `zone=auth` used 0× |
 | M3 | No `ssl_ciphers` on the web servers | 🟠 Open — unchanged (0 occurrences) |
 | L1 | LB redirect double slash | 🟡 Open — unchanged |
 | L2 | HSTS `preload` | 🟡 Open — unchanged |
-| L3 | Stray / user-owned keys | 🟡 Open — unchanged (s-dokimion3 still worst) |
+| L3 | Stray / user-owned keys | ✅ Largely resolved 2026-07-28 — see the ⚠️ lesson in the L3 finding |
 | N1 | LB `server_name` :80 vs :443 mismatch | 🟡 Open — unchanged |
 | L4 | Web-server config drift | ✅ Resolved |
 
@@ -114,10 +114,12 @@ options are:
 
 ## Findings, by severity (staging)
 
-### 🔴 H1 — The LB can be bypassed; web servers don't authenticate the LB — **H1a RESOLVED, H1b PENDING**
-> **2026-07-27:** the source-restriction half is deployed and verified (see Status above); the mTLS
-> half is staged and inert, with key material generated and awaiting install per `mtls_h1_deploy.md`.
-> The original finding text follows.
+### ✅ H1 — The LB can be bypassed; web servers don't authenticate the LB — **BOTH HALVES RESOLVED**
+> **2026-07-28:** fully closed on staging. H1a (source restriction) deployed 2026-07-27; H1b (mTLS)
+> live on all three nodes 2026-07-28 at commit `f7070f46`. Both are verified live under Status above.
+> The internal hop is now authenticated in both directions: the LB verifies the upstream cert, and each
+> web server verifies the LB's client cert. **H1c** (host firewall, defence in depth) is deferred by
+> decision. The original finding text follows, for history.
 
 Each web server does `listen 443 ssl;` on **all interfaces**, with **no `ssl_verify_client`** (no mTLS)
 and **no `allow`/`deny`**. The LB's `proxy_pass.h` verifies the upstream but presents **no client
@@ -140,19 +142,22 @@ sources from its `eth0` IPv4).
 - **mTLS** — issue an LB client cert; web servers `ssl_verify_client on; ssl_client_certificate …;`,
   LB adds `proxy_ssl_certificate`/`_key` in `proxy_pass.h`. Roll one node at a time.
 
-### 🔴 H2 — Shared private key on all 3 web boxes, world-readable (`644`) — OPEN (confirmed)
-`s-dokimion-staging.key` is **byte-identical** across all three web servers (md5 `931ef2…`, 1704 bytes)
-and mode **`-rw-r--r--` (644)**. Any local account on any web box can read the key that authenticates
-the whole pool; self-signed with `verify_depth 1` = **no revocation**. (The LB does not hold this key —
-good.)
+### ✅ H2 — Shared private key was world-readable (`644`) — PERMISSIONS FIXED 2026-07-28
+> **Resolved:** `chown root:root` + `chmod 600` applied on all three web boxes. Verified live —
+> `mode=600 owner=root:root` on `s-dokimion{1,2,3}`, and reading the file as `bob_beck` now returns
+> **Permission denied** on all three (tested, not inferred). nginx is unaffected: it reads the key as
+> root at startup. All three still `active`, still enforcing mTLS (`400` direct), site `200` via the LB.
 
-**Fix now (each web box):**
-```bash
-sudo chown root:root /etc/nginx/sites-available/s-dokimion-staging.key
-sudo chmod 600       /etc/nginx/sites-available/s-dokimion-staging.key
-```
-**Fix structurally:** per-host certs from a small internal CA (LB trusts the CA; each box holds only its
-own key; gain revocation).
+The original finding: `s-dokimion-staging.key` was **byte-identical** across all three web servers
+(md5 `931ef2…`, 1704 bytes) at mode **`-rw-r--r--` (644)**, so any local account on any web box could
+read the key that authenticates the whole pool.
+
+**Still open — the structural half (deliberately deferred):** it remains **one shared key across three
+hosts**, self-signed, used with `proxy_ssl_verify_depth 1`, so there is **no revocation path**. Root on
+any one web box still means the whole pool's identity. The fix is per-host certs from a small internal
+CA — the LB trusts the CA, each box holds only its own key. Lower priority now that the key is no
+longer readable by unprivileged local accounts, and that the LB→web hop is separately authenticated by
+H1b's mTLS, but the blast radius of a single-box root compromise is unchanged.
 
 ### 🟠 M1 — Wildcard CORS on the web servers — OPEN
 Each web server sets server-level `add_header Access-Control-Allow-Origin *;` and, in `location /api`,
@@ -161,13 +166,19 @@ Each web server sets server-level `add_header Access-Control-Allow-Origin *;` an
 server-level `*` (note: `location`-level `add_header` replaces the inherited server-level header, so
 `/api` already emits only its own set, but `location /` still inherits `*`).
 
-### 🟠 M2 — Rate limiting defined but NOT applied — OPEN (worse than prod)
+### ⏸️ M2 — Rate limiting defined but NOT applied — DEFERRED BY DECISION (2026-07-28)
+> **Deferred, not resolved.** Owner's call on 2026-07-28: leave as-is for now. Re-verified still open at
+> that date (`rate_limiting.h` = 1 byte, `zone=auth` used 0×). Recorded here so a later reader does not
+> mistake the state for an oversight. The staging environment currently has **no request throttling at
+> all** — this is a known, accepted gap, not a finished item.
+
 Zones are declared in `load_balancer.conf` (`general` 10r/s, `auth` 5r/m, `conn_limit`) **but
 `rate_limiting.h` is empty**, so `location /` applies none of them. Nothing on the path throttles
 abuse. (This is the documented Selenium workaround; production has since re-enabled the `general` zone,
 staging has not.)
-**Fix:** populate `rate_limiting.h` (`limit_req zone=general burst=20 nodelay; limit_conn conn_limit 20;`)
-with a verified runner exemption, and apply the `auth` zone (5r/m) to login/sensitive endpoints.
+**Fix when picked up:** populate `rate_limiting.h`
+(`limit_req zone=general burst=20 nodelay; limit_conn conn_limit 20;`) with a verified runner exemption,
+and apply the `auth` zone (5r/m) to login/sensitive endpoints.
 
 ### 🟠 M3 — Web-server TLS unhardened vs. the LB — OPEN
 Web `listen 443 ssl` blocks set only `ssl_protocols TLSv1.2 TLSv1.3;` — no `ssl_ciphers`, no session
@@ -182,7 +193,28 @@ cache, no `http2`. Low real risk (only the LB connects) but inconsistent.
 LB sends `Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;` despite the
 inline "remove while testing" note. **Fix:** drop `preload` (and consider lowering `max-age`) on staging.
 
-### 🟡 L3 — Stray / world-readable / user-owned keys on the boxes — OPEN (worse than prod)
+### ✅ L3 — Stray / world-readable / user-owned keys on the boxes — LARGELY RESOLVED 2026-07-28
+> **Resolved:** the unused per-host certs and the stray client-facing keys were removed from the web
+> boxes on 2026-07-28, and the shared key is now `600 root:root` everywhere (see H2). Verified: no
+> `*.psonet.{crt,key,pem}` per-host leftovers and no `languagetechnology` keys remain in
+> `sites-available` on any web box.
+>
+> **⚠️ Lesson from this cleanup — read before deleting key material again.** The LB's
+> `test_staging.languagetechnology.org.{pem,key}` was swept up as "unused". It was **not** unused: it is
+> the live client-facing keypair the LB serves. nginx had it loaded in memory, so nothing broke visibly
+> and the site kept returning 200 — but `certificates.h` then referenced two nonexistent files, so
+> `nginx -t` would fail and the box **could not have survived a restart or reboot**. It was recovered
+> from `~bob_beck/dokimion_private/` on the LB (a private git repo, the de facto backup of record) and
+> is now `600 root:root`. Before deleting a key, check what the *running* config references, not only
+> what a file you happen to be reading references — and prefer `chmod 600` over `rm` for anything
+> client-facing.
+>
+> Still present and harmless: `nginx_signing.key` on s-dokimion3 (an apt repo **public** signing key,
+> not a private key, though `bob_beck`-owned in `/etc/nginx` is untidy), and a second copy of the
+> `testing.languagetechnology.org` keypair at `/etc/nginx/snippets/` on s-dokimion1, referenced only by
+> the dead `snippets/self-signed.conf`.
+>
+> The original finding text follows.
 - Every web box has **unused per-host certs** left over: `s-dokimionN.psonet.{crt,key,pem}` (mode 644),
   no longer referenced (config uses `s-dokimion-staging.*`).
 - **`s-dokimion3` is the worst:** it carries client-facing private keys that have no business on a web
@@ -209,34 +241,42 @@ All three `dokimion_common.conf` are byte-identical. Keep them in sync going for
 |---|----------|------|--------|--------|
 | H1a | High | `allow/deny` so the backend only trusts the LB | ✅ Deployed 2026-07-27 | — |
 | H1b | High | mTLS — CA/client cert installed, `ssl_verify_client` on across all 3 nodes | ✅ **Live 2026-07-28** (`f7070f46`) | — |
-| H1c | High | Host firewall limiting `:443` to the LB (defence in depth; `ufw` state still unconfirmed) | Open | Low |
-| H2 | High | `chmod 600` + `chown root:root` the shared key on all 3 web boxes; plan internal-CA certs | Open | Low now / Medium later |
+| H1c | High | Host firewall limiting `:443` to the LB (defence in depth; `ufw` state still unconfirmed) | ⏸️ Deferred by decision 2026-07-28 | Low |
+| H2 | High | `chmod 600` + `chown root:root` the shared key on all 3 web boxes | ✅ Done & verified 2026-07-28 | — |
+| H2b | Medium | Replace the one shared self-signed key with per-host internal-CA certs (gains revocation) | Open — structural half of H2 | Medium |
 | M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | Open | Low |
-| M2 | Medium | Populate `rate_limiting.h`; apply the `auth` zone to login endpoints | Open | Low |
+| M2 | Medium | Populate `rate_limiting.h`; apply the `auth` zone to login endpoints | ⏸️ Deferred by decision 2026-07-28 | Low |
 | M3 | Medium | Pin `ssl_ciphers` on the web servers | Open | Low |
 | L1 | Low | Fix LB redirect double-slash (`$host$request_uri`) | Open | Trivial |
 | L2 | Low | Drop HSTS `preload` on the LB | Open | Trivial |
-| L3 | Low | Remove unused per-host + client-facing keys; fix ownership/perms (esp. s-dokimion3) | Open | Low |
+| L3 | Low | Remove unused per-host + client-facing keys; fix ownership/perms | ✅ Largely resolved 2026-07-28 | — |
 | N1 | Low | Align LB `server_name` between :80 and :443; verify redirect | Verify | Low |
 | L4 | — | Web-server config drift | ✅ Resolved | — |
 
-**Next up (2026-07-28):** H1 is fully closed on staging — both halves are live and measured, so the
-internal hop is now authenticated in both directions. The highest-value remaining items are:
+**Next up (2026-07-28):** **H1 and H2 are both closed on staging.** The internal hop is authenticated in
+both directions, and the shared upstream key is no longer readable by unprivileged local accounts.
 
-1. **The Selenium suite**, which this rollout broke (see "Known casualty" above). Not a hardening
-   item, but it blocks test feedback, and an IP exemption is not a valid fix.
-2. **H2** — `s-dokimion-staging.key` is still `644` on **s-dokimion1 and s-dokimion2**; s-dokimion3 is
-   now `600 root:root`. A two-command fix on the two remaining boxes.
-3. **M2** — rate limiting is still entirely off on staging (`rate_limiting.h` is 1 byte), unlike
-   production, which has re-enabled the `general` zone.
-4. **H1c** — host firewall limiting `:443` to the LB; `ufw` state still unconfirmed (needs interactive
-   sudo). Defence in depth behind two controls that are now both working.
+**Deferred by owner decision on 2026-07-28 — not oversights:**
+- **M2** (rate limiting) — staging has **no request throttling at all**. Accepted gap.
+- **H1c** (host firewall limiting `:443` to the LB) — defence in depth behind two controls that are both
+  now verified working, so the marginal gain is smaller than it was.
 
-**L3 is largely resolved** as of 2026-07-28: the unused per-host certs and the stray client-facing keys
-were removed from the web boxes. One lesson worth recording — the LB's
-`test_staging.languagetechnology.org.{pem,key}` was deleted in that sweep, but it was **not** unused;
-it is the live client-facing keypair. nginx kept serving it from memory, so nothing broke visibly, but
-the box could not have survived a restart until it was restored. It was recovered from
-`~bob_beck/dokimion_private/` on the LB — a private git repo, which is the de facto backup of record
-for this material and the reason recovery was possible. Distinguish *unused* from *not currently
-referenced by a file you happen to be reading* before deleting key material.
+**Actually next, in order:**
+
+1. **The Selenium suite** — broken by the H1b rollout (see "Known casualty" above). Not a hardening
+   item, but it blocks test feedback, and the intuitive fix (an `lb_access.h` IP exemption) does **not**
+   work, because `ssl_verify_client` is evaluated first. This is the only item causing active breakage.
+2. **M1** (wildcard CORS) — `Access-Control-Allow-Origin *` still live at server level and in
+   `location /api`. The largest remaining item with real exposure, and low effort.
+3. **M3** (pin `ssl_ciphers` on the web servers), **L1** (LB redirect double slash), **L2** (drop HSTS
+   `preload` on staging) — all trivial, and L1/L2 are one-line changes.
+4. **N1** — confirm the HTTP→HTTPS redirect fires for the staging hostname and align the two
+   `server_name`s. Note H1b's replacement cert now covers both `*.languagetechnology.org` and the apex,
+   so the certificate side of this mismatch is no longer a problem — only the redirect logic is.
+5. **H2b** (structural) — still one shared self-signed key across three hosts with **no revocation
+   path**. Root on any one web box still compromises the pool's identity. Deferred, not fixed.
+
+**Production is untouched and must not be assumed to match staging.** It has neither the part 1
+includes nor a CA, all findings remain open there, and its `certificates.h` still points at
+`testing_languagetechnology_org.{pem,key}`. See `security_hardening_production.md` and run
+`mtls_h1_deploy.md` from Phase -1 with production's own key material.

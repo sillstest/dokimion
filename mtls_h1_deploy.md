@@ -85,9 +85,10 @@ needed; nothing under `config/` is root-owned any more.)
 
 **(c) Commit and distribute — ✅ done.** Committed as `dfc6ccb8` and pushed to `origin/https_upgrade`
 (rebased over the unrelated `c2e04a64` "TC22 fix"). The **staging LB has been pulled** and is at
-`dfc6ccb8`, so it holds the corrected `lb_client_cert.h` that Phase 4 needs. Nothing live changed:
-`/etc/nginx/sites-available/lb_client_cert.h` is still the inert copy, `lb-client.*` is not installed,
-and `https://s-dokimion.psonet/` still returns **200**.
+`dfc6ccb8`, so it holds the corrected `lb_client_cert.h` that Phase 4 needs. At the time Phase -1
+finished nothing live had changed — the deployed `lb_client_cert.h` was still the inert copy and
+`lb-client.*` was not yet installed. *(Both have since been deployed in Phases 2 and 4; see the banner
+at the top of this file for current staging state.)*
 
 Still on the older `de9073c7`: `s-dokimion1`, `s-dokimion2` — harmless, they need no file until
 Phase 3, which copies the CA cert directly rather than via git. Correction to the earlier warning
