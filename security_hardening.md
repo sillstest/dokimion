@@ -1,5 +1,13 @@
 # security_hardening — Load Balancer ↔ Web Server communication
 
+> **SUPERSEDED (2026-07-27).** This was the original analysis of the *repo copies* of the staging
+> configs. For live-verified findings and current status use:
+> - `security_hardening_staging.md` — staging (H1a deployed; H1b staged)
+> - `security_hardening_production.md` — production (all findings still open)
+> - `mtls_h1_deploy.md` — the H1 part 2 (mTLS) deployment runbook
+>
+> Kept for history; do not use it to judge current posture.
+
 **Scope:** the internal hop between the nginx load balancer and the three nginx web servers.
 Analyzed configs:
 - Load balancer: `config/staging/s-dokimion/load_balancer.conf`
