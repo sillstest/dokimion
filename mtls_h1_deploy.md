@@ -4,6 +4,18 @@ Companion to `security_hardening_staging.md` / `security_hardening_production.md
 The nginx config scaffolding is already committed and inert; this runbook installs the key material
 and switches it on.
 
+> ## ✅ STAGING IS COMPLETE (2026-07-28, commit `f7070f46`)
+> All phases have been run on staging and verified live: mTLS is enforced on
+> `s-dokimion{1,2,3}` and the LB presents `lb-client.crt`. Verification results are in
+> `security_hardening_staging.md` under "H1b is LIVE".
+>
+> **Production has not started and must not skip ahead.** Its boxes still lack the part 1
+> includes *and* the CA, so enabling `ssl_verify_client` there would stop nginx from starting.
+> Run production's Phase -1 → 5 in order, on its own key material (each environment has its
+> own CA — a staging cert cannot authenticate to production).
+>
+> The phase instructions below are unchanged and remain the procedure for production.
+
 **Key material was generated on 2026-07-27, on each load balancer itself**, so no private key has
 crossed the network. It currently sits in `~bob_beck/lb-mtls/` (dir `700`, keys `600`) on:
 
@@ -37,15 +49,15 @@ presenting the client cert → handshake **accepted**; omitting it → **refused
 | | staging LB | staging web ×3 | production LB | production web ×3 |
 |---|---|---|---|---|
 | `lb_access.h` active (`deny all`) | n/a | **yes — live** | n/a | no |
-| `lb_mtls.h` deployed, inert | n/a | yes | no | no |
-| `lb_client_cert.h` deployed, inert | yes | n/a | no | n/a |
-| `lb-client.{crt,key}` installed | **no** | n/a | **no** | n/a |
-| `lb-client-ca.crt` installed | n/a | **no** | n/a | no |
-| repo commit | `dfc6ccb8` | `dfc6ccb8` / `de9073c7` ×2 | `d82e1435` | `210031a8` |
+| `lb_mtls.h` **ACTIVE** (`ssl_verify_client on`) | n/a | **yes — live ×3** | n/a | no (inert) |
+| `lb_client_cert.h` **ACTIVE** | **yes — live** | n/a | no (inert) | n/a |
+| `lb-client.{crt,key}` installed | **yes** | n/a | **no** | n/a |
+| `lb-client-ca.crt` installed | n/a | **yes ×3** | n/a | no |
+| repo commit | `f7070f46` | `f7070f46` | `d82e1435` | `210031a8` |
 
-So staging picks up at **Phase 1**. Production is several commits behind and does not yet have the
-part 1 includes at all — **do not run any production phase until part 1 is deployed there**, or nginx
-will fail on a missing `include`.
+Staging has now run every phase (see the banner at the top). Production is several commits behind and
+does not yet have the part 1 includes at all — **do not run any production phase until part 1 is
+deployed there**, or nginx will fail on a missing `include`.
 
 ## Phase -1 — prerequisites — ✅ (a)(b)(c) DONE 2026-07-28, (d) still open
 

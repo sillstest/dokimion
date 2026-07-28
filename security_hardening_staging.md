@@ -16,7 +16,7 @@ it supersedes the repo-based `security_hardening.md` for the staging environment
 | # | Item | Status |
 |---|------|--------|
 | **H1a** | Source restriction (`allow`/`deny`) on the web servers | ✅ **DEPLOYED & VERIFIED** |
-| **H1b** | mTLS (`ssl_verify_client` + LB client cert) | 🔑 key material generated, **not installed** |
+| **H1b** | mTLS (`ssl_verify_client` + LB client cert) | ✅ **LIVE on all 3 nodes & VERIFIED (2026-07-28)** |
 | H2 | Shared private key `644` on all 3 web boxes | 🔴 Open — unchanged |
 | M1 | Wildcard CORS | 🟠 Open — unchanged (2 wildcard headers live) |
 | M2 | `rate_limiting.h` empty, `auth` zone unapplied | 🟠 Open — unchanged (`rate_limiting.h` = 1 byte, `zone=auth` used 0×) |
@@ -43,14 +43,33 @@ estimate: `ip route get` on `s-dokimion.psonet` reports `dev eth0 src 10.3.0.171
 upstreams, and the web servers bind `0.0.0.0:443` (IPv4 only), so the `fd80:…` AAAA records cannot
 appear as `$remote_addr`.
 
-### H1b is staged but inert
+### H1b is LIVE — measured on 2026-07-28
 
-`lb_mtls.h` (web boxes) and `lb_client_cert.h` (LB) are deployed with their directives commented out —
-enabling `ssl_verify_client` before the CA file exists would stop nginx from starting.
+mTLS is enforced on all three staging web servers. The LB presents `lb-client.crt`; each web box
+verifies it against `lb-client-ca.crt`. Deployed at commit `f7070f46`.
 
-A dedicated client-auth CA and an LB client certificate were generated **on 2026-07-27, on the load
-balancer itself**, so no private key has crossed the network. They sit in `~bob_beck/lb-mtls/` on
-`s-dokimion.psonet` (dir `700`, keys `600`), awaiting installation:
+| Probe | Result |
+|---|---|
+| through the LB, from 5 vantage points incl. the public hostname | **200** |
+| direct to `s-dokimion{1,2,3}` with **no** client cert | **400** `No required SSL certificate was sent` |
+| from the LB, presenting `lb-client.crt`, to each of the 3 nodes | **200** |
+| CA name each node advertises in the handshake (`openssl s_client`) | `CN = Dokimion staging LB Client CA, O = SIL` |
+| `lb-client-ca.crt` on all 3 boxes | identical, sha256 `e23f8012…` |
+
+That fourth row matters: it proves Phase 3 installed *the right* CA rather than merely some CA, which
+a 400/200 response code alone cannot distinguish.
+
+Note the change in failure mode: unauthorised direct requests now return **400**, not the **403** that
+`lb_access.h` produced on its own, because `ssl_verify_client` is evaluated before the access phase.
+Both controls remain active — the certificate check simply fires first. A `403` from any node would now
+indicate mTLS had silently stopped enforcing there.
+
+**Production remains deliberately inert** — those boxes have no CA installed, and enabling
+`ssl_verify_client` there would stop nginx from starting. Do not enable until production's own Phase 3.
+
+The client-auth CA and LB client certificate were generated **on 2026-07-27, on the load balancer
+itself**, so no private key crossed the network. The CA key now lives root-only in
+`/etc/nginx/internal-ca` on the LB (`~bob_beck/lb-mtls/ca.key` was shredded after install):
 
 - CA `Dokimion staging LB Client CA`, RSA 4096, `pathlen:0`, expires 2036-07-25
 - Client `CN=s-dokimion.psonet`, RSA 2048, `extendedKeyUsage = critical,clientAuth`,
@@ -59,15 +78,22 @@ balancer itself**, so no private key has crossed the network. They sit in `~bob_
   `openssl s_server -Verify 1` handshake **accepts** the cert and **refuses** its absence
   (`alert certificate required`, alert 116); production's cert does **not** validate against this CA.
 
-Installation and cut-over steps: **`mtls_h1_deploy.md`**. Note that once mTLS is on, an unauthorised
-direct request returns **400** (`No required SSL certificate was sent`) rather than the 403 above —
-`ssl_verify_client` is evaluated before the access phase. Both controls remain active.
+Installation and cut-over steps, now all complete for staging: **`mtls_h1_deploy.md`**.
 
-### Known casualty of H1a
+### 🔴 Known casualty — the Selenium suite is BROKEN as of 2026-07-28
 
-`Dokimion_Tests/.runsettings` targets `http://s-dokimion3.psonet` directly. That now 301s to `:443`
-and receives **403**; after H1b it will receive **400**. Repoint the suite at the load balancer, or
-add the runner's IP to `lb_access.h`.
+`Dokimion_Tests/.runsettings` line 16 sets `Url = http://s-dokimion3.psonet`, targeting a web box
+directly. That 301s to `:443` and now receives **400**.
+
+**Adding the runner's IP to `lb_access.h` will NOT fix this.** `ssl_verify_client` is evaluated before
+the access phase, so the certificate check rejects the runner before any `allow` rule is consulted. The
+options are:
+
+- **repoint the suite at the load balancer** (`https://s-dokimion.psonet`, or the public
+  `test_staging.languagetechnology.org`) — the only fix that needs no new key material. Note it crosses
+  `ip_hash`, so the suite no longer pins to a single node; or
+- **issue the test runner its own client certificate** from the LB client CA, and configure the suite to
+  present it — preserves direct single-node targeting, at the cost of another certificate to manage.
 
 ---
 
@@ -182,7 +208,7 @@ All three `dokimion_common.conf` are byte-identical. Keep them in sync going for
 | # | Severity | Item | Status | Effort |
 |---|----------|------|--------|--------|
 | H1a | High | `allow/deny` so the backend only trusts the LB | ✅ Deployed 2026-07-27 | — |
-| H1b | High | mTLS — install the generated CA/client cert and switch on `ssl_verify_client` | Ready to install (`mtls_h1_deploy.md`) | Low |
+| H1b | High | mTLS — CA/client cert installed, `ssl_verify_client` on across all 3 nodes | ✅ **Live 2026-07-28** (`f7070f46`) | — |
 | H1c | High | Host firewall limiting `:443` to the LB (defence in depth; `ufw` state still unconfirmed) | Open | Low |
 | H2 | High | `chmod 600` + `chown root:root` the shared key on all 3 web boxes; plan internal-CA certs | Open | Low now / Medium later |
 | M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | Open | Low |
@@ -194,8 +220,23 @@ All three `dokimion_common.conf` are byte-identical. Keep them in sync going for
 | N1 | Low | Align LB `server_name` between :80 and :443; verify redirect | Verify | Low |
 | L4 | — | Web-server config drift | ✅ Resolved | — |
 
-**Next up (2026-07-27):** H1a is done, so the highest-value remaining items are **H2** (a two-minute
-`chmod`/`chown` on three boxes, still untouched) and **H1b** (key material already generated and
-verified — just needs the install in `mtls_h1_deploy.md`). Then **M2**: rate limiting is still
-entirely off on staging, unlike production. **L3** remains the largest hygiene debt — notably the
-client-facing private keys still sitting `644` and owned by `bob_beck` on s-dokimion3.
+**Next up (2026-07-28):** H1 is fully closed on staging — both halves are live and measured, so the
+internal hop is now authenticated in both directions. The highest-value remaining items are:
+
+1. **The Selenium suite**, which this rollout broke (see "Known casualty" above). Not a hardening
+   item, but it blocks test feedback, and an IP exemption is not a valid fix.
+2. **H2** — `s-dokimion-staging.key` is still `644` on **s-dokimion1 and s-dokimion2**; s-dokimion3 is
+   now `600 root:root`. A two-command fix on the two remaining boxes.
+3. **M2** — rate limiting is still entirely off on staging (`rate_limiting.h` is 1 byte), unlike
+   production, which has re-enabled the `general` zone.
+4. **H1c** — host firewall limiting `:443` to the LB; `ufw` state still unconfirmed (needs interactive
+   sudo). Defence in depth behind two controls that are now both working.
+
+**L3 is largely resolved** as of 2026-07-28: the unused per-host certs and the stray client-facing keys
+were removed from the web boxes. One lesson worth recording — the LB's
+`test_staging.languagetechnology.org.{pem,key}` was deleted in that sweep, but it was **not** unused;
+it is the live client-facing keypair. nginx kept serving it from memory, so nothing broke visibly, but
+the box could not have survived a restart until it was restored. It was recovered from
+`~bob_beck/dokimion_private/` on the LB — a private git repo, which is the de facto backup of record
+for this material and the reason recovery was possible. Distinguish *unused* from *not currently
+referenced by a file you happen to be reading* before deleting key material.
