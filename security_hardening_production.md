@@ -21,8 +21,8 @@ across `ip_hash` through the LB, and clean per-host `:80` → `:443` 301s.
 
 | # | Item | Status |
 |---|------|--------|
-| H1 | LB bypass — no `allow/deny`, no mTLS | 🔴 Open — **but the scaffolding is now deployed.** `lb_access.h` / `lb_mtls.h` present on all 3 web boxes, `lb_client_cert.h` on the LB. All inert (`allow all;`, 0 active mTLS lines), so the bypass is unchanged. What remains is the *decision* to enforce, not a deployment |
-| H2 | Shared key `644` on all 4 boxes; needless copy on the LB | 🔴 Open — 644 on all 4 boxes at the 2026-07-23 analysis. The 07-27 re-check covered the **LB and `dokimion1` only** — both still `-rw-r--r--`. `dokimion2/3` were *not* re-checked; assume still 644 until measured |
+| H1 | LB bypass — no `allow/deny`, no mTLS | 🟠 **H1a committed, awaiting deploy** (`lb_access.h` = `allow 10.3.0.43; allow 127.0.0.1; deny all;`, LB IP verified empirically 2026-07-29). Live files still `allow all;`, so the bypass is open until installed — **run the access-log check first.** H1b (mTLS) not started on production |
+| H2 | Shared key `644` on all 4 boxes; needless copy on the LB | 🔴 Open — **now measured on all four (2026-07-29): `644 root:root`, byte-identical, every box.** The `dokimion2/3` gap is closed. LB confirmed not to reference the `.key` at all. Fix is a `chmod 600` ×3 plus an `rm` on the LB; commands in the finding |
 | M1 | Wildcard CORS | ✅ **DEPLOYED & VERIFIED 2026-07-29** — trusted origins reflected, `evil.example.com` gets no `Allow-Origin` at all, on all 3 web boxes. See the finding for the measurement |
 | M2 | `auth` zone defined but unapplied | 🟠 Open — `general` + `limit_conn` + `429` live; `zone=auth` used 0× |
 | M3 | No `ssl_ciphers` on the web servers | 🟠 Open — unchanged |
@@ -112,6 +112,12 @@ carried inside those 54 lines — wildcard `*` replaced by the trusted-origin al
 curl -sI -H 'Origin: https://evil.example.com' https://dokimion1.psonet/api/ | grep -i access-control || echo "no CORS header for an untrusted origin — correct"
 curl -sI -H 'Origin: https://dokimion.psonet'  https://dokimion1.psonet/api/ | grep -i access-control
 ```
+
+🛑 **As of `lb_access.h`'s 2026-07-29 change, this install command ENFORCES the H1 source restriction.**
+It is no longer behaviour-neutral. `lb_access.h` now ships `allow 10.3.0.43; allow 127.0.0.1; deny all;`
+instead of `allow all;`, so any client reaching a web box directly from another address starts getting
+**403** the moment you reload. Run the access-log check in the H1 finding first, and roll one node at a
+time. To deploy the other files without enforcing yet, install everything *except* `lb_access.h`.
 
 **Per web server** — run on the box, substituting its own number for `<N>`:
 
@@ -271,7 +277,46 @@ The LB has been materially hardened; several staging findings are now closed in 
 
 ## Findings, by severity (production)
 
-### 🔴 H1 — The LB can still be bypassed; web servers don't authenticate the LB — OPEN
+### 🔴 H1 — The LB can still be bypassed; web servers don't authenticate the LB — PART 1 READY TO DEPLOY
+**H1a (source restriction) is committed and awaiting deploy.** `config/production/dokimion{1,2,3}/lb_access.h`
+now carries `allow 10.3.0.43; allow 127.0.0.1; deny all;` in place of `allow all;`, validated with a real
+`nginx -t`. **Not yet installed on any production box** — the live files are still `allow all;`, so the
+bypass remains open until you install it.
+
+**LB source IP verified empirically 2026-07-29, not inferred.** With traffic flowing through the LB,
+`ss -tnH 'sport = :443'` on each web box showed exactly one peer — `10.3.0.43` — on all three, matching
+`dokimion.psonet` eth0 (`10.3.0.43/8`). Staging learned to confirm this rather than trust the documented
+estimate; re-run it if the network changes.
+
+⚠️ **Do this first — it is the step that broke staging.** `access.log` is not readable without sudo, so
+it has **not** been done for production:
+
+```bash
+sudo awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head -20
+```
+
+Every source other than `10.3.0.43` and `127.0.0.1` will start receiving **403**. On staging this rollout
+broke the Selenium suite, whose `Dokimion_Tests/.runsettings` targets a web box directly. Add legitimate
+clients to `lb_access.h` first, or repoint them at the LB.
+
+**Then roll one node at a time**, checking the site through the LB between each:
+
+```bash
+# on dokimion<N>, after the access-log check
+sudo install -m 644 ~/dokimion/config/production/dokimion<N>/lb_access.h /etc/nginx/sites-available/lb_access.h
+sudo nginx -t && sudo systemctl reload nginx
+curl -sko /dev/null -w 'via LB: %{http_code}\n' https://testing.languagetechnology.org/
+curl -sko /dev/null -w 'direct: %{http_code}\n' https://dokimion<N>.psonet/
+```
+
+Expect `200` via the LB and `403` direct. **403, not 400** — `lb_mtls.h` is still inert on production, so
+`ssl_verify_client` is never evaluated. Once mTLS is enabled the failure mode becomes 400 and an IP
+exemption in this file stops helping, because the certificate check fires before the access phase.
+
+**H1b (mTLS) is unchanged and still not started on production** — no CA is installed. Follow
+`mtls_h1_deploy.md` from Phase -1 with production's own key material.
+
+The original finding text follows.
 Each web server does `listen 443 ssl;` on **all interfaces**, with **no `ssl_verify_client`** (no mTLS)
 and **no `allow`/`deny`**. The LB's `proxy_pass.h` sets `proxy_ssl_trusted_certificate` +
 `proxy_ssl_name` but presents **no client certificate** (`proxy_ssl_certificate`/`_key` absent). Trust
@@ -306,9 +351,18 @@ on the LB and all three web servers **as measured on 2026-07-23**. Any local acc
 read the key that authenticates the *entire* pool; self-signed with `verify_depth 1` means **no
 revocation** — remediation is re-issuing on every box.
 
-**Scope of the 2026-07-27 re-check:** the LB and `dokimion1` only, both confirmed still `644`.
-`dokimion2` and `dokimion3` were not re-measured, so treat them as unchanged from 07-23 rather than
-as verified. Confirm all four before calling H2 closed:
+**All four boxes measured 2026-07-29 — the gap in the 07-27 re-check is closed, and the finding holds
+on every box:**
+
+| Box | Mode | Owner | md5 (first 12) |
+|---|---|---|---|
+| `dokimion` (LB) | **644** | `root:root` | `c20ec60c0c5a` |
+| `dokimion1` | **644** | `root:root` | `c20ec60c0c5a` |
+| `dokimion2` | **644** | `root:root` | `c20ec60c0c5a` |
+| `dokimion3` | **644** | `root:root` | `c20ec60c0c5a` |
+
+One identical key, world-readable, on all four. Ownership is already `root:root`, so only the mode needs
+changing. Re-measure at any time with:
 
 ```bash
 for h in dokimion dokimion1 dokimion2 dokimion3; do
@@ -317,17 +371,33 @@ for h in dokimion dokimion1 dokimion2 dokimion3; do
 done
 ```
 
-**New sub-finding:** the LB carries `dokimion-production.key` even though it only needs the `.crt`
-(`proxy_ssl_trusted_certificate`). That is an **unnecessary copy of the upstream private key** on the
-internet-facing box — delete it.
+**New sub-finding — confirmed 2026-07-29.** The LB carries `dokimion-production.key` even though it only
+needs the `.crt`. Verified by grepping the LB's whole live config: the single reference is
+`proxy_pass.h:2 → proxy_ssl_trusted_certificate .../dokimion-production.crt`, and **the `.key` is
+referenced nowhere**. It is an unnecessary copy of the upstream private key on the internet-facing box —
+delete it.
 
-**Fix now (all boxes that legitimately hold it):**
+**Fix — on the three web boxes** (they legitimately serve with this key):
 ```bash
-sudo chown root:root /etc/nginx/sites-available/dokimion-production.key
-sudo chmod 600       /etc/nginx/sites-available/dokimion-production.key
-# On the LB, the upstream key is not needed at all:
-sudo rm /etc/nginx/sites-available/dokimion-production.key   # LB only
+sudo chmod 600 /etc/nginx/sites-available/dokimion-production.key
+stat -c '%a %U:%G' /etc/nginx/sites-available/dokimion-production.key   # expect 600 root:root
+sudo nginx -t && sudo systemctl reload nginx                            # proves root can still read it
+curl -sko /dev/null -w 'direct: %{http_code}\n' https://$(hostname).psonet/   # expect 200
 ```
+
+**Fix — on the LB** (delete rather than chmod; nothing references it):
+```bash
+sudo cp /etc/nginx/sites-available/dokimion-production.key ~/dokimion-production.key.bak && chmod 600 ~/dokimion-production.key.bak
+sudo nginx -T 2>/dev/null | grep -c dokimion-production.key    # expect 0 before deleting
+sudo rm /etc/nginx/sites-available/dokimion-production.key
+sudo nginx -t && sudo systemctl reload nginx
+curl -sko /dev/null -w 'via LB: %{http_code}\n' https://testing.languagetechnology.org/   # expect 200
+```
+
+`chmod 600` is safe for nginx: the master process reads certificates as root at startup and on reload,
+before dropping to the worker user. Staging did exactly this on 2026-07-28 and verified both that nginx
+was unaffected and that reading the file as `bob_beck` then returned **Permission denied**. Keep the LB
+backup only until the reload proves clean, then shred it — the point of this finding is fewer copies.
 **Fix structurally:** move to **per-host certs signed by a small internal CA**. LB trusts the CA
 (`proxy_ssl_trusted_certificate` = CA); each web server holds only its own key (single-box compromise ≠
 pool-wide) and you gain revocation. Trade-off: `proxy_ssl_name` must match each upstream's cert, or
@@ -494,8 +564,10 @@ the above, but it removes a trap for whoever next adds a vhost.
 
 | # | Severity | Item | Status | Effort |
 |---|----------|------|--------|--------|
-| H1 | High | mTLS + `allow/deny` (+ firewall) so the backend only trusts the LB | Open — **inert scaffolding deployed 2026-07-29**; now a decision to enforce, not a deployment | Medium |
-| H2 | High | `chmod 600` shared key everywhere; delete it from the LB; plan internal-CA per-host certs | Open | Low now / Medium later |
+| H1a | High | `allow/deny` so the backend only trusts the LB | **Committed, awaiting deploy** — access-log check outstanding | Low |
+| H1b | High | mTLS — issue a production CA + LB client cert, then `ssl_verify_client` | Open — not started; `mtls_h1_deploy.md` from Phase -1 | Medium |
+| H2 | High | `chmod 600` shared key on the 3 web boxes; `rm` the needless LB copy | Open — measured on all 4; commands ready | Low |
+| H2b | Medium | Replace the shared self-signed key with per-host internal-CA certs (gains revocation) | Open — structural half | Medium |
 | M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | ✅ **Deployed & verified 2026-07-29** (`fd9b3f8f`) | — |
 | M2 | Medium | Apply the existing `auth` zone (5r/m) to login/sensitive endpoints | Open | Low |
 | M3 | Medium | Pin `ssl_ciphers` on the web servers | Open | Low |
