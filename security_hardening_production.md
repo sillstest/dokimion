@@ -10,34 +10,52 @@ deployed in **production**. Supersedes the staging-scoped `security_hardening.md
 
 ---
 
-## Status — re-verified live on 2026-07-27
+## Status — re-verified live on 2026-07-29
 
-**Production is unchanged since the 2026-07-23 analysis. Every finding below is still open as written.**
-The H1 hardening built this week has been deployed to **staging only**; production has deliberately not
-been touched.
+**Production is no longer untouched.** On 2026-07-29 the repo configs were installed on all four boxes
+(`dokimion`, `dokimion{1,2,3}`) and nginx reloaded on each — verified by an old master PID with fresh
+workers, not a restart. Two things changed on the wire: **M1 is closed** (wildcard CORS replaced by the
+trusted-origin allowlist) and **H1's include scaffolding is now in place but deliberately inert**.
+Everything served correctly afterwards: 200 direct on all three web boxes, `200 200 200 200 200 200`
+across `ip_hash` through the LB, and clean per-host `:80` → `:443` 301s.
 
 | # | Item | Status |
 |---|------|--------|
-| H1 | LB bypass — no `allow/deny`, no mTLS | 🔴 Open — **nothing deployed**; `lb_access.h` / `lb_mtls.h` / `lb_client_cert.h` absent from all four boxes |
+| H1 | LB bypass — no `allow/deny`, no mTLS | 🔴 Open — **but the scaffolding is now deployed.** `lb_access.h` / `lb_mtls.h` present on all 3 web boxes, `lb_client_cert.h` on the LB. All inert (`allow all;`, 0 active mTLS lines), so the bypass is unchanged. What remains is the *decision* to enforce, not a deployment |
 | H2 | Shared key `644` on all 4 boxes; needless copy on the LB | 🔴 Open — 644 on all 4 boxes at the 2026-07-23 analysis. The 07-27 re-check covered the **LB and `dokimion1` only** — both still `-rw-r--r--`. `dokimion2/3` were *not* re-checked; assume still 644 until measured |
-| M1 | Wildcard CORS | 🟠 Open **live** — but the fix is already written in the shared `dokimion_common.conf` (`ed8cc604`…`28b05893`) and is not deployed anywhere yet. See the note under the finding |
+| M1 | Wildcard CORS | ✅ **DEPLOYED & VERIFIED 2026-07-29** — trusted origins reflected, `evil.example.com` gets no `Allow-Origin` at all, on all 3 web boxes. See the finding for the measurement |
 | M2 | `auth` zone defined but unapplied | 🟠 Open — `general` + `limit_conn` + `429` live; `zone=auth` used 0× |
 | M3 | No `ssl_ciphers` on the web servers | 🟠 Open — unchanged |
-| L1 | LB redirect double slash | 🟡 Open — `return 301 https://$host/$request_uri;` still live |
+| L1 | LB redirect double slash | 🟠 **Fix committed `44d35fb8`, NOT yet deployed** — confirmed still live 2026-07-29: `http://testing.languagetechnology.org/` → `301 https://testing.languagetechnology.org//` |
 | L2 | HSTS `preload` | 🟡 Open — still sent |
 | L3 | Stray / world-readable certs on the LB | 🟡 Open — `test_staging.*` pair and `testing_languagetechnology_org.key` still `644`. **Read the ⚠️ in the L3 finding before deleting either** |
 | N1 | LB `server_name` :80 vs :443 mismatch | 🟡 Open — `:443` = `testing…`, `:80` = `test_staging…` |
 | L4 | Web-server config drift | ✅ Resolved |
 
-### Why production is behind, and why that is currently safe
+### ⚠️ Deploy-day lesson — `server_name.h` is the one file you cannot copy-paste between hosts
 
-**Checkout state re-measured live on 2026-07-29: all four boxes are now at `de168077` on
-`https_upgrade`** (they were at `d82e1435` / `210031a8` when this section was written). The *checkouts*
-are therefore current; what is behind is the **installed** config in `/etc/nginx`, which still predates
-the H1 include lines. That combination — repo ahead, live behind — is exactly the state the two traps
-below are about, so it is self-consistent and nginx is healthy only until someone installs half of it.
+During the 2026-07-29 rollout the `dokimion2` install block was reused on `dokimion1` and `dokimion3`,
+which left **both** boxes running `server_name dokimion2.psonet;`. It went unnoticed because every
+functional check still passed: each box has a single `:443` server block, so nginx treats it as the
+default server and serves regardless of the name, and the `:80` redirects use `$host` rather than
+`$server_name`. Corrected the same day; all three now match their own host.
 
-**Do not pull `d3ddff57` onto production and deploy without preparation.** Two traps:
+This was survivable only because `server_name.h` is the **sole** per-host file — `webserver_cert.h`,
+`lb_access.h` and `lb_mtls.h` are byte-identical across `dokimion{1,2,3}`, so reusing another host's
+copies of those changed nothing. Substitute the host number in *every* `$R/dokimion<N>/` path, and
+confirm afterwards:
+
+```bash
+cat /etc/nginx/sites-available/server_name.h     # must name THIS host
+```
+
+### Why production was behind — resolved 2026-07-29
+
+All four boxes are at `fd9b3f8f` on `https_upgrade` and the installed config now matches the repo. The
+repo-ahead/live-behind gap this section described is closed.
+
+**Both traps below were navigated successfully on 2026-07-29 — they are kept as the record of why the
+deploy was staged the way it was, and because they still apply to any rebuilt box.**
 
 1. The shared `dokimion_common.conf` and `load_balancer.conf` now contain `include` lines for
    `lb_access.h`, `lb_mtls.h` and `lb_client_cert.h`. nginx treats a missing `include` as **fatal**, so
@@ -72,9 +90,11 @@ every `include` inside the site file resolves against `sites-available/`, so all
 `dokimion-production.crt/key` are already installed on all four boxes and are **not** part of this
 sync — see the warning at the end of this section.
 
-**What the install will actually change — measured live 2026-07-29.** Everything not listed is already
-byte-identical to the repo (`servers.h`, `certificates.h`, `server_name.h`, `rate_limiting.h`,
-`http_return.h`, and — since `de168077` — `proxy_pass.h`):
+**What the install changed — the delta measured immediately before the 2026-07-29 rollout.** This has
+now been applied on all four boxes; it is kept as the record of what landed, and as the expected delta
+for a rebuilt box. Everything not listed was already byte-identical to the repo (`servers.h`,
+`certificates.h`, `server_name.h`, `rate_limiting.h`, `http_return.h`, and — since `de168077` —
+`proxy_pass.h`):
 
 | Box | File | Change |
 |---|---|---|
@@ -313,7 +333,30 @@ sudo rm /etc/nginx/sites-available/dokimion-production.key   # LB only
 pool-wide) and you gain revocation. Trade-off: `proxy_ssl_name` must match each upstream's cert, or
 keep one SAN cert and accept the shared-key risk.
 
-### 🟠 M1 — Wildcard CORS on the web servers — OPEN
+### ✅ M1 — Wildcard CORS on the web servers — RESOLVED 2026-07-29
+> **Closed on production.** Deployed at `fd9b3f8f` and measured on all three web boxes with an `OPTIONS`
+> preflight against `/api/project`:
+>
+> | Origin | `Access-Control-Allow-Origin` |
+> |---|---|
+> | `https://dokimion.psonet` (production LB) | reflected |
+> | `https://testing.languagetechnology.org` (public) | reflected |
+> | `https://evil.example.com` | **absent** — no wildcard, no reflection |
+>
+> Two measurement traps cost time here; use the preflight above rather than either:
+> - `curl -sI https://dokimion1.psonet/api/` returns **404**, and `add_header` *without* `always` only
+>   fires on 200/201/204/206/301/302/303/304/307/308. A 404 carries no CORS header for *any* origin, so
+>   that test reads as "working" and "broken" identically. `/api/project` returns 401 unauthenticated —
+>   also not in the list. The `OPTIONS` preflight returns 200, which is why it works.
+> - `curl -s` against an internal hostname (`dokimion1.psonet`) fails certificate verification, sends the
+>   error to stderr, and prints nothing on stdout. Use `-k` on internal names.
+>
+> Consequence worth knowing, unchanged from before: error responses (401/404/500) carry **no** CORS
+> headers, because `add_header` lacks `always`. A browser making a cross-origin call that 404s sees a CORS
+> error rather than the 404. The old wildcard config had the same omission, so this is not a regression —
+> but it is the knob if you ever want error responses readable cross-origin.
+>
+> The original finding text follows.
 Each web server sets a **server-level** `add_header Access-Control-Allow-Origin *;` and, in
 `location /api`, `Access-Control-Allow-Origin "*"` with `GET,PUT,OPTIONS,POST,DELETE`. Any web origin
 can invoke the API from a victim's browser; with bearer-token auth this is real cross-origin exposure.
@@ -353,11 +396,28 @@ session cache, no `http2`. Low real risk (the only intended client is the LB, wh
 but inconsistent.
 **Fix:** pin the same `ssl_ciphers` list the LB uses for parity.
 
-### 🟡 L1 — LB redirect double-slash bug — OPEN (LB only)
+### 🟠 L1 — LB redirect double-slash bug — FIX COMMITTED `44d35fb8`, NOT YET DEPLOYED
 `load_balancer.conf` `:80` block: `return 301 https://$host/$request_uri;` produces
 `https://host//path` (`$request_uri` already has a leading slash). The web-server redirects are
 already correct.
-**Fix:** `return 301 https://$host$request_uri;`
+
+**Confirmed still live 2026-07-29**, immediately after that day's deploy:
+
+```
+http://testing.languagetechnology.org/  ->  301 https://testing.languagetechnology.org//
+```
+
+**Fix — committed at `44d35fb8`, awaiting an LB install:** `return 301 https://$host$request_uri;`.
+Verified against a standalone nginx reproducing the `:80` block, including paths and query strings:
+
+| Request | Redirect emitted |
+|---|---|
+| `/` | `https://testing.languagetechnology.org/` |
+| `/api/project` | `https://testing.languagetechnology.org/api/project` |
+| `/deep/path?q=1` | `https://testing.languagetechnology.org/deep/path?q=1` |
+
+Deploy with the LB `install` command in the section above, then re-check with
+`curl -sko /dev/null -w '%{http_code} -> %{redirect_url}\n' http://testing.languagetechnology.org/`.
 
 ### 🟡 L2 — HSTS `preload` set on the LB — OPEN
 LB sends `Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;` despite the
@@ -413,12 +473,12 @@ default server instead of getting the 301.
 
 | # | Severity | Item | Status | Effort |
 |---|----------|------|--------|--------|
-| H1 | High | mTLS + `allow/deny` (+ firewall) so the backend only trusts the LB | Open | Medium |
+| H1 | High | mTLS + `allow/deny` (+ firewall) so the backend only trusts the LB | Open — **inert scaffolding deployed 2026-07-29**; now a decision to enforce, not a deployment | Medium |
 | H2 | High | `chmod 600` shared key everywhere; delete it from the LB; plan internal-CA per-host certs | Open | Low now / Medium later |
-| M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | Open live — **fix written** in the shared conf; needs `https://dokimion.psonet` added to the `map` before it ships here | Low (now a deploy) |
+| M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | ✅ **Deployed & verified 2026-07-29** (`fd9b3f8f`) | — |
 | M2 | Medium | Apply the existing `auth` zone (5r/m) to login/sensitive endpoints | Open | Low |
 | M3 | Medium | Pin `ssl_ciphers` on the web servers | Open | Low |
-| L1 | Low | Fix LB redirect double-slash (`$host$request_uri`) | Open | Trivial |
+| L1 | Low | Fix LB redirect double-slash (`$host$request_uri`) | **Fix committed `44d35fb8`** — awaiting LB install | Trivial |
 | L2 | Low | Drop HSTS `preload` on the LB | Open | Trivial |
 | L3 | Low | `chmod 600` the client-facing key; verify `test_staging.*` against the **running** config before deleting anything (see the ⚠️ in the finding) | Open | Low |
 | N1 | Low | Align LB `server_name` between :80 and :443; verify redirect | Verify | Low |
