@@ -134,8 +134,23 @@ option that survives Phase 5 without issuing the test runner its own certificate
 | 1 — secure the CA key | ✅ `/etc/nginx/internal-ca` `700 root:root`; `~/lb-mtls/ca.key` shredded |
 | 2 — client credentials on the LB | ✅ `lb-client.crt` `644`, `lb-client.key` `600`, both `root:root` |
 | 3 — CA cert to the web boxes | ✅ all three: `644 root:root`, sha256 `d3eb2e8b…` = production CA, home copies removed |
-| 4 — LB presents its cert | ⬜ next — safe, no-op on its own |
-| 5 — `ssl_verify_client` per web box | ⬜ order: `dokimion3` → `dokimion1` → `dokimion2` |
+| 4 — LB presents its cert | ✅ done 2026-07-29 16:14 — 2 active `proxy_ssl_certificate*`, reloaded, site 200 |
+| 5 — `ssl_verify_client` per web box | 🔄 **`dokimion3` ✅ live 16:20:58**; `dokimion1` ⬜, `dokimion2` ⬜ |
+
+**`dokimion3` cutover verified 2026-07-29 16:20:58:**
+
+| Probe | Result |
+|---|---|
+| direct to `dokimion3`, no client cert | **400** `No required SSL certificate was sent` (was 403) |
+| CA demanded in the handshake | **`CN = Dokimion production LB Client CA, O = SIL`** — the production CA, not staging's |
+| direct to `dokimion1` / `dokimion2` | **403** — unchanged; the change is isolated to one node |
+| `dokimion1` handshake | requests no client CA — correct, not yet enabled |
+| site through the LB | `200` ×12 across `ip_hash` |
+| `:80` redirect | `301`, single slash |
+
+The handshake row is the load-bearing one: it proves the box demands *the right* CA. A syntactically valid
+but wrong-environment CA would pass `nginx -t` and then reject the LB — which is why Phase 3 verifies the
+checksum rather than just the file's presence.
 
 Verified after Phase 3 that nothing changed on the wire: `lb_mtls.h` still has **0** active directives on
 all three boxes, the site returns `200` through the LB, and direct access from a non-allowlisted source
