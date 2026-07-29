@@ -1,17 +1,46 @@
 DEPLOY
 ------
 
-cd /etc/nginx/sites-available
-sudo mv dokimion2.conf dokimion2.conf_good
-sudo cp ~/dokimion/config/production/dokimion1/dokimion_common.conf .
-sudo cp ~/dokimion/config/staging/s-dokimion2/server_name.h .
+# dokimion_common.conf replaces the old per-host site file dokimion2.conf.
+#
+# nginx reads sites *through* sites-enabled/*.conf and treats a BROKEN SYMLINK
+# there as fatal. Do not simply rename dokimion2.conf inside sites-available --
+# that leaves sites-enabled/dokimion2.conf dangling and nginx will not start.
+# Disable the old site in sites-enabled instead, and leave the file itself in
+# sites-available so rollback needs no repo access.
+#
+# Check what is actually enabled first:
+ls -l /etc/nginx/sites-enabled/
 
-# security_hardening H1 — required includes. dokimion_common.conf includes both,
-# and nginx refuses to start if either file is missing.
-sudo cp ~/dokimion/config/staging/s-dokimion2/lb_access.h .
-sudo cp ~/dokimion/config/staging/s-dokimion2/lb_mtls.h .
+# dokimion_common.conf is stored ONCE in the repo, under production/dokimion1, and
+# is shared by all three staging and all three production web servers. The four .h
+# files are this host's own; every include in dokimion_common.conf resolves against
+# sites-available, so they all land there.
+sudo install -m 644 -t /etc/nginx/sites-available \
+  ~/dokimion/config/production/dokimion1/dokimion_common.conf \
+  ~/dokimion/config/staging/s-dokimion2/server_name.h \
+  ~/dokimion/config/staging/s-dokimion2/webserver_cert.h \
+  ~/dokimion/config/staging/s-dokimion2/lb_access.h \
+  ~/dokimion/config/staging/s-dokimion2/lb_mtls.h
+
+# security_hardening H1 — lb_access.h and lb_mtls.h are required includes:
+# dokimion_common.conf includes both, and nginx refuses to start if either file is
+# missing. webserver_cert.h is required too -- it carries the :443 certificate paths.
+
+# Swap the enabled site.
+sudo ln -sfn ../sites-available/dokimion_common.conf /etc/nginx/sites-enabled/dokimion_common.conf
+sudo rm -f /etc/nginx/sites-enabled/dokimion2.conf
 
 sudo nginx -t && sudo systemctl reload nginx
+
+# ROLLBACK — dokimion2.conf is still in sites-available, so this needs no repo:
+#   sudo ln -sfn ../sites-available/dokimion2.conf /etc/nginx/sites-enabled/dokimion2.conf
+#   sudo rm -f /etc/nginx/sites-enabled/dokimion_common.conf
+#   sudo nginx -t && sudo systemctl reload nginx
+# H1 was deployed here at d3ddff57, back when this README still said
+# `mv dokimion2.conf dokimion2.conf_good`. If that rename was run, the retired file
+# is dokimion2.conf_good -- check `ls /etc/nginx/sites-available/` and use that name
+# in the rollback, or a dangling symlink will stop nginx.
 
 # lb_access.h restricts :443 to the staging load balancer (10.3.0.171) and
 # localhost; every other source gets 403. Before deploying, confirm no other

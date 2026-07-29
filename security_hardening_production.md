@@ -19,13 +19,13 @@ been touched.
 | # | Item | Status |
 |---|------|--------|
 | H1 | LB bypass — no `allow/deny`, no mTLS | 🔴 Open — **nothing deployed**; `lb_access.h` / `lb_mtls.h` / `lb_client_cert.h` absent from all four boxes |
-| H2 | Shared key `644` on all 4 boxes; needless copy on the LB | 🔴 Open — `dokimion-production.key` still `-rw-r--r--` on the LB *and* `dokimion1` |
-| M1 | Wildcard CORS | 🟠 Open — unchanged |
+| H2 | Shared key `644` on all 4 boxes; needless copy on the LB | 🔴 Open — 644 on all 4 boxes at the 2026-07-23 analysis. The 07-27 re-check covered the **LB and `dokimion1` only** — both still `-rw-r--r--`. `dokimion2/3` were *not* re-checked; assume still 644 until measured |
+| M1 | Wildcard CORS | 🟠 Open **live** — but the fix is already written in the shared `dokimion_common.conf` (`ed8cc604`…`28b05893`) and is not deployed anywhere yet. See the note under the finding |
 | M2 | `auth` zone defined but unapplied | 🟠 Open — `general` + `limit_conn` + `429` live; `zone=auth` used 0× |
 | M3 | No `ssl_ciphers` on the web servers | 🟠 Open — unchanged |
 | L1 | LB redirect double slash | 🟡 Open — `return 301 https://$host/$request_uri;` still live |
 | L2 | HSTS `preload` | 🟡 Open — still sent |
-| L3 | Stray / world-readable certs on the LB | 🟡 Open — `test_staging.*` pair and `testing_languagetechnology_org.key` still `644` |
+| L3 | Stray / world-readable certs on the LB | 🟡 Open — `test_staging.*` pair and `testing_languagetechnology_org.key` still `644`. **Read the ⚠️ in the L3 finding before deleting either** |
 | N1 | LB `server_name` :80 vs :443 mismatch | 🟡 Open — `:443` = `testing…`, `:80` = `test_staging…` |
 | L4 | Web-server config drift | ✅ Resolved |
 
@@ -42,11 +42,132 @@ configuration is self-consistent and nginx is healthy.
    `lb_access.h`, `lb_mtls.h` and `lb_client_cert.h`. nginx treats a missing `include` as **fatal**, so
    all three files must be present before a reload. Production copies exist in the repo and ship inert
    (`lb_access.h` is `allow all;`), preserving current behaviour.
-2. `config/production/dokimion1/webserver_cert.h` as committed contains **staging** certificate paths
-   (`s-dokimion-staging.crt`). Deployed to a production web box it references a nonexistent file and
-   nginx will not start. Fix per `mtls_h1_deploy.md`, Phase -1(b).
+2. `webserver_cert.h` is another such required include, and it used to carry **staging** certificate
+   paths on `dokimion1` — deployed to a production box it referenced a nonexistent file and nginx
+   would not start. Fixed in `dfc6ccb8`: all three production copies now point at
+   `dokimion-production.crt/key`. Verify before deploying if working from an older checkout.
 
 Also note `dokimion1/2/3` have dirty working trees — check `git status` before pulling.
+
+### Installing the repo configs into `/etc/nginx/sites-available`
+
+The per-host `README`s do this in five `cp` lines each. One `install` call per host replaces them: it
+takes multiple sources into one destination directory (`-t`) and sets the mode explicitly, so nothing
+inherits a stray permission from the checkout.
+
+**What each box needs.** nginx reads sites *through* `sites-enabled/*.conf` (see `nginx.conf`), but
+every `include` inside the site file resolves against `sites-available/`, so all of these land in
+`sites-available`:
+
+| Host | From repo | Files |
+|---|---|---|
+| `dokimion{1,2,3}` | `config/production/dokimion1` | `dokimion_common.conf` — the single shared copy |
+| | `config/production/dokimion<N>` | `server_name.h`, `webserver_cert.h`, `lb_access.h`, `lb_mtls.h` |
+| `dokimion` (LB) | `config/production/dokimion` | `load_balancer.conf`, `servers.h`, `certificates.h`, `server_name.h`, `rate_limiting.h`, `proxy_pass.h`, `http_return.h`, `lb_client_cert.h` |
+
+`dokimion-production.crt/key` are already installed on all four boxes and are **not** part of this
+sync — see the warning at the end of this section.
+
+**Per web server** — run on the box, substituting its own number for `<N>`:
+
+```bash
+R=~/dokimion/config/production
+sudo install -m 644 -t /etc/nginx/sites-available \
+  $R/dokimion1/dokimion_common.conf \
+  $R/dokimion<N>/server_name.h $R/dokimion<N>/webserver_cert.h \
+  $R/dokimion<N>/lb_access.h   $R/dokimion<N>/lb_mtls.h
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Only `server_name.h` actually differs between the three hosts today — `webserver_cert.h`,
+`lb_access.h` and `lb_mtls.h` are byte-identical across `dokimion{1,2,3}`. Keep sourcing them from
+the host's own directory anyway: they are per-host by design, and `lb_access.h` is where the three
+will diverge when the `allow`/`deny` restriction is enforced.
+
+**On the load balancer:**
+
+```bash
+R=~/dokimion/config/production/dokimion
+sudo install -m 644 -t /etc/nginx/sites-available \
+  $R/load_balancer.conf $R/servers.h $R/certificates.h $R/server_name.h \
+  $R/rate_limiting.h $R/proxy_pass.h $R/http_return.h $R/lb_client_cert.h
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+**`proxy_pass.h` drift — resolved 2026-07-29.** Until then the repo copy was **stale and unsafe to
+deploy**: untouched since `d31cfbcc` (2026-07-21), it read `proxy_ssl_trusted_certificate
+/etc/nginx/sites-available/dokimion-staging.crt` — a filename that exists nowhere, neither the production
+name (`dokimion-production.crt`) nor the staging one (`s-dokimion-staging.crt`) — and
+`proxy_pass http://prod_servers$empty` in place of `https://`. Installing it would have failed
+`nginx -t` on the missing certificate; worse, correcting only the certificate path would have left the
+LB→upstream hop in **cleartext**, with every `proxy_ssl_*` directive in `load_balancer.conf` inert and
+`nginx -t` passing silently.
+
+The live LB was correct all along. Its file was captured and committed verbatim, so the repo now matches
+`dokimion.psonet` and `$R/proxy_pass.h` is safe to include in the `install` above.
+
+Two lessons worth keeping:
+
+- **`nginx -t` does not validate the upstream scheme.** A wrong `proxy_pass http://` is syntactically
+  valid; only the missing-certificate error made this file fail loudly. Do not treat a passing
+  `nginx -t` as proof the internal hop is still encrypted — check the scheme directly.
+- **The Phase -1(b) audit missed this.** `mtls_h1_deploy.md` records
+  `grep -rn s-dokimion-staging config/production/` as clean, and it was — but that pattern does not match
+  `dokimion-staging`. Audit for wrong-environment paths with a looser pattern:
+  ```bash
+  grep -rniE 'staging|s-dokimion' config/production/ | grep -vi 'shared with staging'
+  grep -rn 'proxy_pass http://' config/          # scheme downgrades
+  ```
+
+⚠️ **Never revert to `sudo cp ~/dokimion/config/production/dokimion/* .`** That glob copies
+`dokimion-production.key` into `sites-available` — which *is* finding **H2** (needless world-readable
+copy of the shared key on the LB) — along with `nginx.conf`, `nginx.service`, `rsyslog.conf`,
+`rsyslog.service` and `README`, none of which belong in that directory. `config/production/dokimion/README`
+used to say exactly that; it now carries the explicit list above, which is both fewer bytes on the wire
+and the fix for H2's second half.
+
+**All three web boxes in one pass**, stopping at the first failure rather than rolling a broken config
+forward:
+
+```bash
+for n in 1 2 3; do
+  echo "===== dokimion$n ====="
+  ssh -p 32 "dokimion$n.psonet" bash -s "$n" <<'REMOTE' || { echo "dokimion$n FAILED — stopping"; break; }
+set -euo pipefail
+n=$1
+R=$HOME/dokimion/config/production
+cd "$HOME/dokimion" && git pull --ff-only
+sudo install -m 644 -t /etc/nginx/sites-available \
+  "$R/dokimion1/dokimion_common.conf" \
+  "$R/dokimion$n/server_name.h" "$R/dokimion$n/webserver_cert.h" \
+  "$R/dokimion$n/lb_access.h"   "$R/dokimion$n/lb_mtls.h"
+sudo nginx -t && sudo systemctl reload nginx
+REMOTE
+done
+```
+
+`git pull --ff-only` is deliberate: it **fails** on the dirty working trees noted above instead of
+merging over them. Clear those first. The loop assumes passwordless `sudo` (see `config/common/sudoers`);
+without it, run the per-host command on each box instead. For the mTLS cutover, ignore the loop and roll
+one node at a time per `mtls_h1_deploy.md`.
+
+**One-time step — retiring `dokimion<N>.conf`.** `dokimion_common.conf` supersedes the old per-host site
+file. The READMEs used to retire it with `sudo mv dokimion<N>.conf dokimion<N>.conf_good`, which leaves
+`sites-enabled/dokimion<N>.conf` dangling — and a broken symlink in `sites-enabled` is **fatal** to nginx.
+All six web-server READMEs now do the swap in `sites-enabled` instead, leaving the old file untouched in
+`sites-available` so rollback needs no repo access:
+
+```bash
+ls -l /etc/nginx/sites-enabled/
+sudo ln -sfn ../sites-available/dokimion_common.conf /etc/nginx/sites-enabled/dokimion_common.conf
+sudo rm -f /etc/nginx/sites-enabled/dokimion<N>.conf
+sudo nginx -t
+```
+
+The live `sites-enabled` layout has not been inspected — the four boxes still run the pre-`d3ddff57`
+config, where `dokimion<N>.conf` is the enabled site. Confirm with the `ls` above before assuming. If an
+earlier deploy already ran the old `mv`, the retired file is `dokimion<N>.conf_good`; use that name when
+rolling back.
 
 ### mTLS key material for production already exists
 
@@ -84,6 +205,8 @@ The LB has been materially hardened; several staging findings are now closed in 
 - LB→upstream is verified: `proxy_ssl_verify on`, `proxy_ssl_verify_depth 1`,
   `proxy_ssl_name dokimion1.psonet`, `proxy_ssl_trusted_certificate dokimion-production.crt`.
   Upstream `prod_servers` uses `ip_hash` across `dokimion{1,2,3}.psonet:443` with `keepalive 64`.
+  The repo's `proxy_pass.h` had drifted from this and would have regressed it if deployed; captured from
+  the live LB and committed 2026-07-29 (see the drift note in the install section).
 
 ---
 
@@ -120,9 +243,20 @@ only control.**
 
 ### 🔴 H2 — Shared private key on all 4 boxes, world-readable (`644`) — OPEN (confirmed)
 `dokimion-production.key` (1704 bytes) is **byte-for-byte identical** and mode **`-rw-r--r--` (644)**
-on the LB and all three web servers. Any local account on any box can read the key that authenticates
-the *entire* pool; self-signed with `verify_depth 1` means **no revocation** — remediation is
-re-issuing on every box.
+on the LB and all three web servers **as measured on 2026-07-23**. Any local account on any box can
+read the key that authenticates the *entire* pool; self-signed with `verify_depth 1` means **no
+revocation** — remediation is re-issuing on every box.
+
+**Scope of the 2026-07-27 re-check:** the LB and `dokimion1` only, both confirmed still `644`.
+`dokimion2` and `dokimion3` were not re-measured, so treat them as unchanged from 07-23 rather than
+as verified. Confirm all four before calling H2 closed:
+
+```bash
+for h in dokimion dokimion1 dokimion2 dokimion3; do
+  echo -n "$h: "
+  ssh -p 32 "$h.psonet" 'stat -c "%a %U:%G %n" /etc/nginx/sites-available/dokimion-production.key 2>&1'
+done
+```
 
 **New sub-finding:** the LB carries `dokimion-production.key` even though it only needs the `.crt`
 (`proxy_ssl_trusted_certificate`). That is an **unnecessary copy of the upstream private key** on the
@@ -148,6 +282,24 @@ can invoke the API from a victim's browser; with bearer-token auth this is real 
 only its own CORS set — but `location /` still inherits the server-level `*`.)
 **Fix:** reflect an allowlist of trusted origins instead of `*`; narrow methods to those actually used;
 drop the blanket server-level `*`.
+
+> **The fix is already committed — and it is in the file production now shares with staging.**
+> `dokimion_common.conf` at HEAD carries a `map $http_origin $cors_origin` allowlist (untrusted origins
+> get *no* `Access-Control-Allow-Origin` header, since nginx omits an `add_header` with an empty value),
+> the server-level blanket `*` deleted, and `proxy_hide_header` on
+> `Access-Control-Allow-{Origin,Methods,Headers}` in `location /` to strip the wildcards the UI upstream
+> on `:3000` sets for itself. Commits `ed8cc604`, `96cb8910`, `28b05893` — all *after* staging's last
+> deploy (`f7070f46`), so this is live on **neither** environment.
+>
+> ⚠️ **Consequence of the single shared copy:** the next time any web box installs
+> `dokimion_common.conf` it picks up this CORS change too — M1 cannot be deployed to staging alone, and
+> a production deploy done for some unrelated reason will carry it. Decide deliberately, don't discover it.
+>
+> ⚠️ **The allowlist is currently staging-only.** The `map` lists
+> `https://test_staging.languagetechnology.org`, `https://testing.languagetechnology.org` and
+> `https://s-dokimion.psonet` — **`https://dokimion.psonet` is absent.** Deployed to production as-is,
+> any browser request carrying the production LB's own origin gets no CORS header. Add that origin
+> before, or with, the first production deploy of this file.
 
 ### 🟠 M2 — `auth` rate-limit zone defined but never applied — OPEN (downgraded)
 General flood protection is now live (good). However the stricter **`auth` zone (5r/m) is defined but
@@ -178,8 +330,30 @@ inline "remove … while testing" note. This is now the **production** hostname
 Web boxes are clean. On the LB, `test_staging.languagetechnology.org.{key,pem}` (mode 644) appear
 **unreferenced** as any `ssl_certificate` (only `server_name` is set from `http_return.h`), and the
 client-facing key `testing_languagetechnology_org.key` is also **644 (world-readable)**.
-**Fix:** remove the unused `test_staging.*` pair; `chmod 600` the client-facing
-`testing_languagetechnology_org.key`.
+
+> ⚠️ **Do not delete the `test_staging.*` pair on the strength of that "unreferenced" reading.** The
+> identically-named pair was assessed as unused on the *staging* LB and deleted at `c55112ba` — and it
+> was **not** unused: it is the keypair that LB's `certificates.h` serves. nginx already had it loaded
+> in memory, so the site kept returning 200 and nothing looked wrong, but `nginx -t` would then fail on
+> two nonexistent files and the box **could not have survived a restart**. Recovered from
+> `~bob_beck/dokimion_private/`. Full account in `security_hardening_staging.md`, finding L3.
+>
+> Production is *probably* genuinely different — its `certificates.h` points at
+> `testing_languagetechnology_org.pem/.key` both at HEAD and at `d82e1435`, the commit the LB actually
+> runs, whereas staging's points at `test_staging.*`. But note prod's `http_return.h` does serve
+> `server_name test_staging.languagetechnology.org;` on `:80`, and the repo is not the authority on what
+> a box at an older commit has loaded.
+
+**Fix — in this order:**
+1. `chmod 600` the client-facing `testing_languagetechnology_org.key`. Unambiguous win, no risk.
+2. Before touching `test_staging.*`, check what the **running** config references, not what a repo file
+   references:
+   ```bash
+   sudo nginx -T | grep -E 'ssl_certificate(_key)?' | sort -u
+   ```
+3. If it really is absent from that output, prefer `chmod 600` over `rm`. Delete only after
+   `sudo nginx -t` passes *and* a real `sudo systemctl restart nginx` succeeds — a reload will not
+   catch a missing file that is still open in memory.
 
 ### 🟡 L4 — Web-server config drift — RESOLVED
 All three deployed `dokimion_common.conf` are byte-identical, and the repo no longer carries per-host
@@ -202,12 +376,12 @@ default server instead of getting the 301.
 |---|----------|------|--------|--------|
 | H1 | High | mTLS + `allow/deny` (+ firewall) so the backend only trusts the LB | Open | Medium |
 | H2 | High | `chmod 600` shared key everywhere; delete it from the LB; plan internal-CA per-host certs | Open | Low now / Medium later |
-| M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | Open | Low |
+| M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | Open live — **fix written** in the shared conf; needs `https://dokimion.psonet` added to the `map` before it ships here | Low (now a deploy) |
 | M2 | Medium | Apply the existing `auth` zone (5r/m) to login/sensitive endpoints | Open | Low |
 | M3 | Medium | Pin `ssl_ciphers` on the web servers | Open | Low |
 | L1 | Low | Fix LB redirect double-slash (`$host$request_uri`) | Open | Trivial |
 | L2 | Low | Drop HSTS `preload` on the LB | Open | Trivial |
-| L3 | Low | Remove unused `test_staging.*` certs; `chmod 600` client-facing key | Open | Low |
+| L3 | Low | `chmod 600` the client-facing key; verify `test_staging.*` against the **running** config before deleting anything (see the ⚠️ in the finding) | Open | Low |
 | N1 | Low | Align LB `server_name` between :80 and :443; verify redirect | Verify | Low |
 | L4 | — | Web-server config drift | ✅ Resolved | — |
 

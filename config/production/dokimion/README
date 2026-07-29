@@ -1,6 +1,23 @@
 HOW TO DEPLOY TO PRODUCTION
 ---------------------------
 
-cd /etc/nginx/sites-available
-sudo cp ~/dokimion/config/production/dokimion/* .
+# Explicit file list -- do NOT go back to `sudo cp ~/dokimion/config/production/dokimion/* .`
+# That wildcard also copied dokimion-production.key into sites-available, which IS
+# security_hardening_production.md finding H2 (needless world-readable copy of the
+# shared upstream private key on the load balancer). It also dumped nginx.conf,
+# nginx.service, rsyslog.conf, rsyslog.service and this README into a directory
+# where none of them belong; those four have their own destinations, see
+# config/common/install_configfiles.py.
 
+R=~/dokimion/config/production/dokimion
+sudo install -m 644 -t /etc/nginx/sites-available \
+  $R/load_balancer.conf $R/servers.h $R/certificates.h $R/server_name.h \
+  $R/rate_limiting.h $R/proxy_pass.h $R/http_return.h $R/lb_client_cert.h
+
+sudo nginx -t && sudo systemctl reload nginx
+
+# Certificates are deliberately NOT part of this sync -- they are already installed
+# on the box. If rebuilding the LB from scratch, install dokimion-production.crt
+# (mode 644, needed for proxy_ssl_trusted_certificate) and the client-facing
+# testing_languagetechnology_org.pem/.key referenced by certificates.h. Do not put
+# dokimion-production.key on the LB at all; the LB never presents it.

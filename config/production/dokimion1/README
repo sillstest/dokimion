@@ -1,16 +1,43 @@
 DEPLOY
 ------
 
-cd /etc/nginx/sites-available
-sudo mv dokimion1.conf dokimion1.conf_good
-sudo cp ~/dokimion/config/production/dokimion1/dokimion_common.conf .
-sudo cp ~/dokimion/config/production/dokimion1/server_name.h .
+# dokimion_common.conf replaces the old per-host site file dokimion1.conf.
+#
+# nginx reads sites *through* sites-enabled/*.conf and treats a BROKEN SYMLINK
+# there as fatal. Do not simply rename dokimion1.conf inside sites-available --
+# that leaves sites-enabled/dokimion1.conf dangling and nginx will not start.
+# Disable the old site in sites-enabled instead, and leave the file itself in
+# sites-available so rollback needs no repo access.
+#
+# Check what is actually enabled first:
+ls -l /etc/nginx/sites-enabled/
 
-# security_hardening H1 — required includes. dokimion_common.conf includes both,
-# and nginx refuses to start if either file is missing. Both ship inert on
-# production (lb_access.h is "allow all"), so behaviour is unchanged until the
-# restriction is deliberately enabled.
-sudo cp ~/dokimion/config/production/dokimion1/lb_access.h .
-sudo cp ~/dokimion/config/production/dokimion1/lb_mtls.h .
+# dokimion_common.conf is stored ONCE in the repo, under dokimion1, and is shared
+# by all three production and all three staging web servers. The four .h files are
+# this host's own; every include in dokimion_common.conf resolves against
+# sites-available, so they all land there.
+R=~/dokimion/config/production
+sudo install -m 644 -t /etc/nginx/sites-available \
+  $R/dokimion1/dokimion_common.conf \
+  $R/dokimion1/server_name.h $R/dokimion1/webserver_cert.h \
+  $R/dokimion1/lb_access.h   $R/dokimion1/lb_mtls.h
+
+# security_hardening H1 — lb_access.h and lb_mtls.h are required includes:
+# dokimion_common.conf includes both, and nginx refuses to start if either file is
+# missing. Both ship inert on production (lb_access.h is "allow all"), so behaviour
+# is unchanged until the restriction is deliberately enabled. webserver_cert.h is
+# required too -- it carries the :443 certificate paths.
+
+# Swap the enabled site.
+sudo ln -sfn ../sites-available/dokimion_common.conf /etc/nginx/sites-enabled/dokimion_common.conf
+sudo rm -f /etc/nginx/sites-enabled/dokimion1.conf
 
 sudo nginx -t && sudo systemctl reload nginx
+
+# ROLLBACK — dokimion1.conf is still in sites-available, so this needs no repo:
+#   sudo ln -sfn ../sites-available/dokimion1.conf /etc/nginx/sites-enabled/dokimion1.conf
+#   sudo rm -f /etc/nginx/sites-enabled/dokimion_common.conf
+#   sudo nginx -t && sudo systemctl reload nginx
+# This README previously said `mv dokimion1.conf dokimion1.conf_good`. If that rename
+# was ever run here, the retired file is dokimion1.conf_good -- check
+# `ls /etc/nginx/sites-available/` and use that name, or the symlink will dangle.

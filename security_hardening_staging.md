@@ -18,7 +18,7 @@ it supersedes the repo-based `security_hardening.md` for the staging environment
 | **H1a** | Source restriction (`allow`/`deny`) on the web servers | ✅ **DEPLOYED & VERIFIED** |
 | **H1b** | mTLS (`ssl_verify_client` + LB client cert) | ✅ **LIVE on all 3 nodes & VERIFIED (2026-07-28)** |
 | H2 | Shared private key `644` on all 3 web boxes | ✅ **Perms fixed & VERIFIED (2026-07-28)** — `600 root:root` ×3; shared-key/no-revocation deferred |
-| M1 | Wildcard CORS | 🟠 Open — unchanged (2 wildcard headers live) |
+| M1 | Wildcard CORS | 🟠 Open **live** (2 wildcard headers still served) — but the fix is written and committed (`ed8cc604`…`28b05893`), awaiting deploy. See the note under the finding |
 | M2 | `rate_limiting.h` empty, `auth` zone unapplied | ⏸️ **Deferred by decision (2026-07-28)** — still 1 byte, `zone=auth` used 0× |
 | M3 | No `ssl_ciphers` on the web servers | 🟠 Open — unchanged (0 occurrences) |
 | L1 | LB redirect double slash | 🟡 Open — unchanged |
@@ -168,6 +168,20 @@ Each web server sets server-level `add_header Access-Control-Allow-Origin *;` an
 server-level `*` (note: `location`-level `add_header` replaces the inherited server-level header, so
 `/api` already emits only its own set, but `location /` still inherits `*`).
 
+> **Written, not yet deployed — the two wildcard headers above are still what staging serves.**
+> `dokimion_common.conf` at HEAD carries a `map $http_origin $cors_origin` allowlist (untrusted origins
+> get *no* `Access-Control-Allow-Origin` header at all), the server-level blanket `*` deleted, and
+> `proxy_hide_header` on `Access-Control-Allow-{Origin,Methods,Headers}` in `location /` — that last part
+> was necessary because the UI upstream on `:3000` sets its own wildcards and nginx passes upstream
+> headers through untouched, so the nginx-side fix alone left `curl -H 'Origin: https://evil.example.com'`
+> still getting `*`. Commits `ed8cc604`, `96cb8910`, `28b05893`, all after `f7070f46`.
+>
+> ⚠️ **Deploying this to staging also stages it for production**, because it is now the single shared
+> `config/production/dokimion1/dokimion_common.conf`. The `map` lists
+> `https://test_staging.languagetechnology.org`, `https://testing.languagetechnology.org` and
+> `https://s-dokimion.psonet`; **`https://dokimion.psonet` is missing**, so the file is not yet safe to
+> put on a production box as-is. See `security_hardening_production.md`, M1.
+
 ### ⏸️ M2 — Rate limiting defined but NOT applied — DEFERRED BY DECISION (2026-07-28)
 > **Deferred, not resolved.** Owner's call on 2026-07-28: leave as-is for now. Re-verified still open at
 > that date (`rate_limiting.h` = 1 byte, `zone=auth` used 0×). Recorded here so a later reader does not
@@ -249,7 +263,7 @@ there reaches staging *and* production.
 | H1c | High | Host firewall limiting `:443` to the LB (defence in depth; `ufw` state still unconfirmed) | ⏸️ Deferred by decision 2026-07-28 | Low |
 | H2 | High | `chmod 600` + `chown root:root` the shared key on all 3 web boxes | ✅ Done & verified 2026-07-28 | — |
 | H2b | Medium | Replace the one shared self-signed key with per-host internal-CA certs (gains revocation) | Open — structural half of H2 | Medium |
-| M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | Open | Low |
+| M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | Open live — **fix written** (`ed8cc604`…`28b05893`), awaiting deploy | Low (now a deploy) |
 | M2 | Medium | Populate `rate_limiting.h`; apply the `auth` zone to login endpoints | ⏸️ Deferred by decision 2026-07-28 | Low |
 | M3 | Medium | Pin `ssl_ciphers` on the web servers | Open | Low |
 | L1 | Low | Fix LB redirect double-slash (`$host$request_uri`) | Open | Trivial |
@@ -272,7 +286,9 @@ both directions, and the shared upstream key is no longer readable by unprivileg
    item, but it blocks test feedback, and the intuitive fix (an `lb_access.h` IP exemption) does **not**
    work, because `ssl_verify_client` is evaluated first. This is the only item causing active breakage.
 2. **M1** (wildcard CORS) — `Access-Control-Allow-Origin *` still live at server level and in
-   `location /api`. The largest remaining item with real exposure, and low effort.
+   `location /api`. The largest remaining item with real exposure — and no longer a design task: the fix
+   is committed, so what is left is the deploy. Add `https://dokimion.psonet` to the `map` first, since
+   the same file now goes to production.
 3. **M3** (pin `ssl_ciphers` on the web servers), **L1** (LB redirect double slash), **L2** (drop HSTS
    `preload` on staging) — all trivial, and L1/L2 are one-line changes.
 4. **N1** — confirm the HTTP→HTTPS redirect fires for the staging hostname and align the two

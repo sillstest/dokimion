@@ -83,6 +83,16 @@ root-owned but `config/production/dokimion1/` is `bob_beck`-writable, so replaci
 also restored `bob_beck:bob_beck` ownership. (The old `sudo tee` + `sudo chown` recipe is no longer
 needed; nothing under `config/` is root-owned any more.)
 
+⚠️ **That verification grep was too narrow — a second wrong-environment path survived it.**
+`config/production/dokimion/proxy_pass.h` pointed at `dokimion-staging.crt`, which `s-dokimion-staging`
+does not match. Found and fixed 2026-07-29 (see `security_hardening_production.md`, the install section).
+Use a looser pattern when re-auditing:
+
+```bash
+grep -rniE 'staging|s-dokimion' config/production/ | grep -vi 'shared with staging'
+grep -rn 'proxy_pass http://' config/ | grep -v 127.0.0.1
+```
+
 **(c) Commit and distribute — ✅ done.** Committed as `dfc6ccb8` and pushed to `origin/https_upgrade`
 (rebased over the unrelated `c2e04a64` "TC22 fix"). The **staging LB has been pulled** and is at
 `dfc6ccb8`, so it holds the corrected `lb_client_cert.h` that Phase 4 needs. At the time Phase -1
