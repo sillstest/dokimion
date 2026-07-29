@@ -31,10 +31,11 @@ been touched.
 
 ### Why production is behind, and why that is currently safe
 
-The production checkouts sit at older commits — LB `dokimion.psonet` at `d82e1435`, web boxes
-`dokimion{1,2,3}` at `210031a8` — none of which contain the H1 include lines. Their live
-`load_balancer.conf` / `dokimion_common.conf` therefore predate the new `include` directives, so the
-configuration is self-consistent and nginx is healthy.
+**Checkout state re-measured live on 2026-07-29: all four boxes are now at `de168077` on
+`https_upgrade`** (they were at `d82e1435` / `210031a8` when this section was written). The *checkouts*
+are therefore current; what is behind is the **installed** config in `/etc/nginx`, which still predates
+the H1 include lines. That combination — repo ahead, live behind — is exactly the state the two traps
+below are about, so it is self-consistent and nginx is healthy only until someone installs half of it.
 
 **Do not pull `d3ddff57` onto production and deploy without preparation.** Two traps:
 
@@ -47,7 +48,10 @@ configuration is self-consistent and nginx is healthy.
    would not start. Fixed in `dfc6ccb8`: all three production copies now point at
    `dokimion-production.crt/key`. Verify before deploying if working from an older checkout.
 
-Also note `dokimion1/2/3` have dirty working trees — check `git status` before pulling.
+~~Also note `dokimion1/2/3` have dirty working trees — check `git status` before pulling.~~
+**Retracted 2026-07-29 (measured):** the only dirt is untracked build artifacts — `ui/ui.tgz` on all
+three, plus `ui/src/package-lock.json` on `dokimion1`. Nothing is modified, no incoming commit touches
+`ui/`, and neither path is git-ignored, so a pull cannot conflict. There is nothing to clear.
 
 ### Installing the repo configs into `/etc/nginx/sites-available`
 
@@ -67,6 +71,27 @@ every `include` inside the site file resolves against `sites-available/`, so all
 
 `dokimion-production.crt/key` are already installed on all four boxes and are **not** part of this
 sync — see the warning at the end of this section.
+
+**What the install will actually change — measured live 2026-07-29.** Everything not listed is already
+byte-identical to the repo (`servers.h`, `certificates.h`, `server_name.h`, `rate_limiting.h`,
+`http_return.h`, and — since `de168077` — `proxy_pass.h`):
+
+| Box | File | Change |
+|---|---|---|
+| `dokimion{1,2,3}` | `dokimion_common.conf` | **54 lines differ** — the H1 includes *and* the M1 CORS rework |
+| `dokimion{1,2,3}` | `webserver_cert.h`, `lb_access.h`, `lb_mtls.h` | **absent live → newly added.** All three are required includes; they must land in the *same* `install` as the conf above or nginx will not start |
+| `dokimion` (LB) | `load_balancer.conf` | **5 lines** — adds only `include .../lb_client_cert.h` plus comments |
+| `dokimion` (LB) | `lb_client_cert.h` | **absent live → newly added**, and inert (all directives commented) |
+
+Behaviour after this lands: unchanged. `lb_access.h` ships `allow all;` on production, `lb_mtls.h` and
+`lb_client_cert.h` are fully commented out. The one real behaviour change is the M1 CORS tightening
+carried inside those 54 lines — wildcard `*` replaced by the trusted-origin allowlist, which now includes
+`https://dokimion.psonet`. Verify after reload with:
+
+```bash
+curl -sI -H 'Origin: https://evil.example.com' https://dokimion1.psonet/api/ | grep -i access-control || echo "no CORS header for an untrusted origin — correct"
+curl -sI -H 'Origin: https://dokimion.psonet'  https://dokimion1.psonet/api/ | grep -i access-control
+```
 
 **Per web server** — run on the box, substituting its own number for `<N>`:
 
@@ -146,10 +171,18 @@ REMOTE
 done
 ```
 
-`git pull --ff-only` is deliberate: it **fails** on the dirty working trees noted above instead of
-merging over them. Clear those first. The loop assumes passwordless `sudo` (see `config/common/sudoers`);
-without it, run the per-host command on each box instead. For the mTLS cutover, ignore the loop and roll
-one node at a time per `mtls_h1_deploy.md`.
+`git pull --ff-only` is deliberate: it refuses to merge if the branch has diverged, rather than
+creating a merge commit on a production box. (It is *not* needed to guard against dirty trees — see the
+retraction above.) As of 2026-07-29 all four boxes are already at `de168077`, so the pull is a no-op.
+
+🛑 **`sudo` requires a password on all four production boxes** — measured 2026-07-29 (`sudo -n true`
+fails on `dokimion`, `dokimion1`, `dokimion2`, `dokimion3`). The loop above therefore **cannot run
+unattended**, and neither can any single `install`/`nginx -t`/`systemctl reload` from a non-interactive
+session. Run the per-host commands yourself in an interactive shell, or grant NOPASSWD for exactly
+`install`, `nginx` and `systemctl reload nginx` first. The `config/common/sudoers` file in this repo does
+not currently give that.
+
+For the mTLS cutover, ignore the loop and roll one node at a time per `mtls_h1_deploy.md`.
 
 **One-time step — retiring `dokimion<N>.conf`.** `dokimion_common.conf` supersedes the old per-host site
 file. The READMEs used to retire it with `sudo mv dokimion<N>.conf dokimion<N>.conf_good`, which leaves
@@ -164,10 +197,16 @@ sudo rm -f /etc/nginx/sites-enabled/dokimion<N>.conf
 sudo nginx -t
 ```
 
-The live `sites-enabled` layout has not been inspected — the four boxes still run the pre-`d3ddff57`
-config, where `dokimion<N>.conf` is the enabled site. Confirm with the `ls` above before assuming. If an
-earlier deploy already ran the old `mv`, the retired file is `dokimion<N>.conf_good`; use that name when
-rolling back.
+**Inspected 2026-07-29 — this step is already done on production and is now a no-op.** All three web
+boxes have `sites-enabled/dokimion_common.conf -> ../sites-available/dokimion_common.conf` (symlinks
+dated Jul 22), and **no `dokimion<N>.conf` symlink exists** in `sites-enabled` on any of them, so there
+is nothing dangling and nothing to swap. The LB has `load_balancer.conf` symlinked (Apr 2023). Keep the
+commands above for a rebuilt box; run the `ls` first either way.
+
+Note the retired `dokimion<N>.conf` is therefore *not* enabled anywhere, which also means the rollback
+path in the per-host READMEs — re-pointing `sites-enabled` at `dokimion<N>.conf` — reverts to a site that
+has not been live since July. Rolling back that way is a change in behaviour, not a restoration of the
+current state; prefer restoring the previous `dokimion_common.conf`.
 
 ### mTLS key material for production already exists
 
