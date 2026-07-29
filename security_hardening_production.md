@@ -21,7 +21,7 @@ across `ip_hash` through the LB, and clean per-host `:80` → `:443` 301s.
 
 | # | Item | Status |
 |---|------|--------|
-| H1 | LB bypass — no `allow/deny`, no mTLS | 🟠 **H1a committed, awaiting deploy** (`lb_access.h` = `allow 10.3.0.43; allow 127.0.0.1; deny all;`, LB IP verified empirically 2026-07-29). Live files still `allow all;`, so the bypass is open until installed — **run the access-log check first.** H1b (mTLS) not started on production |
+| H1 | LB bypass — no `allow/deny`, no mTLS | 🟠 **H1a committed, awaiting deploy.** `lb_access.h` allows the LB + all three web boxes + loopback, then `deny all;` — all five addresses verified empirically 2026-07-29. Live files still `allow all;`. **Blocked on re-running the access-log audit**: the first one used `awk '{print $1}'`, which mis-parses the `upstreamlog` format and under-reported clients. H1b (mTLS) not started |
 | H2 | Shared key `644` on all 4 boxes; needless copy on the LB | 🔴 Open — **now measured on all four (2026-07-29): `644 root:root`, byte-identical, every box.** The `dokimion2/3` gap is closed. LB confirmed not to reference the `.key` at all. Fix is a `chmod 600` ×3 plus an `rm` on the LB; commands in the finding |
 | M1 | Wildcard CORS | ✅ **DEPLOYED & VERIFIED 2026-07-29** — trusted origins reflected, `evil.example.com` gets no `Allow-Origin` at all, on all 3 web boxes. See the finding for the measurement |
 | M2 | `auth` zone defined but unapplied | 🟠 Open — `general` + `limit_conn` + `429` live; `zone=auth` used 0× |
@@ -279,7 +279,8 @@ The LB has been materially hardened; several staging findings are now closed in 
 
 ### 🔴 H1 — The LB can still be bypassed; web servers don't authenticate the LB — PART 1 READY TO DEPLOY
 **H1a (source restriction) is committed and awaiting deploy.** `config/production/dokimion{1,2,3}/lb_access.h`
-now carries `allow 10.3.0.43; allow 127.0.0.1; deny all;` in place of `allow all;`, validated with a real
+now allows the LB (`10.3.0.43`), the three web boxes (`10.3.0.139`, `10.3.0.213`, `10.3.0.145`) and
+`127.0.0.1`, then `deny all;` — in place of `allow all;`. Validated with a real
 `nginx -t`. **Not yet installed on any production box** — the live files are still `allow all;`, so the
 bypass remains open until you install it.
 
@@ -288,16 +289,46 @@ bypass remains open until you install it.
 `dokimion.psonet` eth0 (`10.3.0.43/8`). Staging learned to confirm this rather than trust the documented
 estimate; re-run it if the network changes.
 
-⚠️ **Do this first — it is the step that broke staging.** `access.log` is not readable without sudo, so
-it has **not** been done for production:
+**Direct clients audited 2026-07-29 — every source turned out to be internal.** Reverse DNS on the
+non-LB addresses in the web-server access logs:
+
+| IP | Host | Appears in |
+|---|---|---|
+| `10.3.0.43` | `dokimion.psonet` (LB) | all three, dominant |
+| `10.3.0.139` | `dokimion1.psonet` | its own log, and `dokimion2`'s |
+| `10.3.0.145` | `dokimion3.psonet` | its own log, and `dokimion2`'s |
+| `10.3.0.213` | `dokimion2.psonet` | its own log |
+
+No external client, monitoring agent or test runner appeared. Production has no equivalent of staging's
+Selenium problem *on this evidence* — but see the caveat below before trusting that.
+
+**`allow 127.0.0.1;` is not sufficient, and this is easy to get wrong.** A request to
+`https://dokimion1.psonet` *from* `dokimion1` resolves to that box's LAN address, and Linux then picks the
+same address as the source:
 
 ```bash
-sudo awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head -20
+ip route get 10.3.0.139        # -> local 10.3.0.139 dev lo src 10.3.0.139
 ```
 
-Every source other than `10.3.0.43` and `127.0.0.1` will start receiving **403**. On staging this rollout
-broke the Selenium suite, whose `Dokimion_Tests/.runsettings` targets a web box directly. Add legitimate
-clients to `lb_access.h` first, or repoint them at the LB.
+So on-box checks arrive as `10.3.0.139`, never as loopback. `lb_access.h` therefore lists all three web
+boxes as well as the LB; without them, every self-check and peer-check would 403 while the site itself
+kept working — a failure that only shows up in monitoring, not in a browser.
+
+🛑 **The first audit under-counted, and the corrected one has not been run.** `/var/log/nginx/access.log`
+holds **two log formats**: `upstreamlog` from `nginx.conf:23` (`[$time_local] $remote_addr …`) for most
+requests, and the built-in `combined` (`$remote_addr …`) for `location /api` only
+(`dokimion_common.conf:154`). So `awk '{print $1}'` reads a *timestamp* for the majority of lines and
+silently under-reports clients — on `dokimion1` the timestamp rows outnumbered every real IP. Run this on
+each web box before enforcing:
+
+```bash
+sudo zcat -f /var/log/nginx/access.log* \
+  | awk '{print ($1 ~ /^\[/) ? $3 : $1}' | sort | uniq -c | sort -rn | head -20
+```
+
+Any address outside the five in `lb_access.h` will start receiving **403**. On staging this rollout broke
+the Selenium suite, whose `Dokimion_Tests/.runsettings` targets a web box directly. Add legitimate clients
+to `lb_access.h` first, or repoint them at the LB.
 
 **Then roll one node at a time**, checking the site through the LB between each:
 
