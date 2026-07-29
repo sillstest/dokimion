@@ -127,6 +127,31 @@ option that survives Phase 5 without issuing the test runner its own certificate
 
 ---
 
+## Production progress — Phases 1–3 ✅ DONE 2026-07-29
+
+| Phase | State on production |
+|---|---|
+| 1 — secure the CA key | ✅ `/etc/nginx/internal-ca` `700 root:root`; `~/lb-mtls/ca.key` shredded |
+| 2 — client credentials on the LB | ✅ `lb-client.crt` `644`, `lb-client.key` `600`, both `root:root` |
+| 3 — CA cert to the web boxes | ✅ all three: `644 root:root`, sha256 `d3eb2e8b…` = production CA, home copies removed |
+| 4 — LB presents its cert | ⬜ next — safe, no-op on its own |
+| 5 — `ssl_verify_client` per web box | ⬜ order: `dokimion3` → `dokimion1` → `dokimion2` |
+
+Verified after Phase 3 that nothing changed on the wire: `lb_mtls.h` still has **0** active directives on
+all three boxes, the site returns `200` through the LB, and direct access from a non-allowlisted source
+still returns **403** — i.e. H1a is the control in force and mTLS has not engaged.
+
+Two implementation notes from doing it, both of which cost time:
+
+- **`install` on the web boxes is `coreutils-from-uutils` 0.8.0, not GNU** (`dokimion` the LB has GNU
+  9.4). All the options this runbook uses — `-m -o -g -t -d` — are supported, but its error messages are
+  terser: a missing *source* file reports only `install: No such file or directory`, where GNU names the
+  path. If you see that, check the source exists before suspecting anything else.
+- Do **not** "fix" that by installing GNU `coreutils` — on those boxes it would replace
+  `coreutils-from-uutils`, a package swap on three production web servers for a non-problem.
+
+---
+
 ## Production preflight — ✅ ALL CHECKS PASS, verified 2026-07-29
 
 Run before production's Phase 1. Every item below was measured, not assumed.
