@@ -46,18 +46,21 @@ presenting the client cert → handshake **accepted**; omitting it → **refused
 | direct to `s-dokimion{1,2,3}` from a non-allowed host | **403** |
 | direct to `s-dokimion{1,2,3}` from the LB (`10.3.0.171`) | **200** |
 
+**Updated 2026-07-29 — production part 1 is now deployed, so the phases below are unblocked:**
+
 | | staging LB | staging web ×3 | production LB | production web ×3 |
 |---|---|---|---|---|
-| `lb_access.h` active (`deny all`) | n/a | **yes — live** | n/a | no |
-| `lb_mtls.h` **ACTIVE** (`ssl_verify_client on`) | n/a | **yes — live ×3** | n/a | no (inert) |
-| `lb_client_cert.h` **ACTIVE** | **yes — live** | n/a | no (inert) | n/a |
-| `lb-client.{crt,key}` installed | **yes** | n/a | **no** | n/a |
-| `lb-client-ca.crt` installed | n/a | **yes ×3** | n/a | no |
-| repo commit | `f7070f46` | `f7070f46` | `d82e1435` | `210031a8` |
+| part 1 includes present | n/a | **yes** | **yes** (2026-07-29) | **yes** (2026-07-29) |
+| `lb_access.h` active (`deny all`) | n/a | **yes — live** | n/a | **yes — live ×3** (2026-07-29) |
+| `lb_mtls.h` **ACTIVE** (`ssl_verify_client on`) | n/a | **yes — live ×3** | n/a | no (inert) ← **this is what H1b turns on** |
+| `lb_client_cert.h` **ACTIVE** | **yes — live** | n/a | no (inert) ← **Phase 4** | n/a |
+| `lb-client.{crt,key}` installed | **yes** | n/a | **no** ← **Phase 2** | n/a |
+| `lb-client-ca.crt` installed | n/a | **yes ×3** | n/a | **no** ← **Phase 3** |
+| repo commit | `f7070f46` | `f7070f46` | `c2192e3f` | `2a0ff258` |
 
-Staging has now run every phase (see the banner at the top). Production is several commits behind and
-does not yet have the part 1 includes at all — **do not run any production phase until part 1 is
-deployed there**, or nginx will fail on a missing `include`.
+Production's blocker is cleared: the part 1 `include` lines are installed on all four boxes and
+`lb_access.h` is enforcing (verified 403 from a non-allowlisted source). What is missing is purely the
+**key material** — Phases 1–3 — and then the two switch-on phases, 4 and 5.
 
 ## Phase -1 — prerequisites — ✅ (a)(b)(c) DONE 2026-07-28, (d) still open
 
@@ -121,6 +124,54 @@ Phase 1/2 key material is intact on the staging LB: `~bob_beck/lb-mtls/` is `700
 
 Because `ssl_verify_client` is evaluated before the access phase, repointing at the LB is the only
 option that survives Phase 5 without issuing the test runner its own certificate.
+
+---
+
+## Production preflight — ✅ ALL CHECKS PASS, verified 2026-07-29
+
+Run before production's Phase 1. Every item below was measured, not assumed.
+
+| Check | Result |
+|---|---|
+| Key material still present in `~bob_beck/lb-mtls/` on `dokimion.psonet` | ✅ dir `700`, `ca.key`/`lb-client.key` `600`, certs `644` |
+| CA identity | `CN = Dokimion production LB Client CA`, `CA:TRUE, pathlen:0`, expires **2036-07-24** |
+| Client cert | `CN = dokimion.psonet`, EKU `critical, TLS Web Client Authentication`, expires **2029-07-26** |
+| `openssl verify -purpose sslclient -CAfile lb-client-ca.crt lb-client.crt` | ✅ **OK** |
+| Client key matches client cert (pubkey md5) | ✅ **MATCH** |
+| Production CA is *distinct* from staging's | ✅ `d3eb2e8b…` vs `e23f8012…` — separate CA per environment |
+| Phase 3 requires LB → web-box SSH on port 32 | ✅ `dokimion.psonet` reaches `dokimion{1,2,3}` |
+| Phase 4 `sed` hazard (`#--BEGIN-DIRECTIVES--` count must be 1) | ✅ 1; the `sed` yields exactly the two `proxy_ssl_certificate*` lines |
+| Phase 5 `sed` on `lb_mtls.h`, all three boxes | ✅ yields exactly `ssl_verify_client on;` + `ssl_client_certificate …;` |
+| Anything automated that would break when direct access becomes 400 | ✅ **nothing** — no user crontab, no `cron.d`/`cron.daily` `curl`/`wget`, no Zabbix web scenario; only stock OS timers (sysstat, apt-daily, logrotate, man-db) |
+| External clients hitting the web boxes directly | ✅ **none** — the H1a audit found only the LB and the three web boxes themselves |
+
+**Production has no Selenium problem.** Phase -1(d), which is still open for staging, does not apply
+here: nothing outside the four internal addresses reaches the production web boxes.
+
+**Two production-specific cautions.**
+
+1. **After Phase 5, on-box self-checks return 400.** `curl https://dokimion1.psonet/` *from* `dokimion1`
+   presents no client certificate, so it will be rejected — the same behaviour staging has. That is
+   expected, and per the table above nothing automated depends on it. `lb_access.h`'s LAN-IP entries stay
+   useful for the pre-mTLS state and for a rollback, but under mTLS they no longer decide the outcome.
+2. **`ip_hash` makes "check through the LB" a weak per-box test.** A single client is hashed to one
+   upstream, so after enabling box N your `curl https://testing.languagetechnology.org/` may never touch
+   box N. Verify that box directly *from the LB, presenting the client cert* — that is the only probe that
+   proves box N accepts this LB:
+
+```bash
+# on dokimion.psonet, after enabling mTLS on dokimion<N>
+sudo curl -sk --cert /etc/nginx/sites-available/lb-client.crt \
+               --key  /etc/nginx/sites-available/lb-client.key \
+     -o /dev/null -w 'dokimion<N> with client cert: %{http_code}\n' https://dokimion<N>.psonet/
+```
+
+Expect `200`. A `400` there means that box is not accepting this LB's certificate — roll it back before
+touching the next one.
+
+**Suggested order for production Phase 5:** `dokimion3` (lowest direct traffic, 4 self-requests), then
+`dokimion1` (22), then `dokimion2` last (highest volume at 13.9k LB requests, and the only box that saw
+traffic from both peers).
 
 ---
 
