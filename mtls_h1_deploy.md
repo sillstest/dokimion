@@ -284,24 +284,42 @@ checksum, stop — that box would reject the production LB, and `nginx -t` would
 
 ---
 
+> 🛑 **Two ways Phases 4 and 5 silently do nothing — both hit on production 2026-07-29.**
+>
+> 1. **Relative paths.** The original text was `cd <dir>` then `sudo install … lb_mtls.h …`. Run the
+>    `install` in a different shell, or after moving directory, and the file does not resolve. On the web
+>    boxes `install` is `coreutils-from-uutils`, which reports only `install: No such file or directory`
+>    without naming the path — it reads like a missing program. The commands below use absolute paths.
+> 2. **`nginx -t` and `reload` succeed regardless.** If the `install` failed, the live config is still the
+>    previous valid one, so the test passes, the reload succeeds, and nothing warns you. The `sed` also
+>    leaves the repo copy looking correct, so inspecting *that* file confirms nothing.
+>
+> **Therefore: always `grep` the file in `/etc/nginx/sites-available/` after installing and before
+> reloading.** That is the only step that distinguishes "deployed" from "no-op". On production, Phase 5's
+> `sed` ran on `dokimion3` while the live file stayed untouched for 3.5 hours, and every other signal
+> looked healthy.
+
 ## Phase 4 — enable the LB side first
 
 Presenting a client certificate to a server that never asks for one is a no-op, so this phase is
 safe on its own and can sit in place for as long as you like before Phase 5.
 
+Use **absolute paths throughout** — see the warning at the end of this phase.
+
 ```bash
-cd ~/dokimion/config/staging/s-dokimion          # production: config/production/dokimion
-sed -i 's/^# proxy_ssl_/proxy_ssl_/' lb_client_cert.h
-grep -v '^#' lb_client_cert.h                    # expect the two proxy_ssl_certificate* lines
+D=~/dokimion/config/staging/s-dokimion          # production: ~/dokimion/config/production/dokimion
+sed -i 's/^# proxy_ssl_/proxy_ssl_/' $D/lb_client_cert.h
+grep -vE '^\s*#|^\s*$' $D/lb_client_cert.h    # expect the two proxy_ssl_certificate* lines
 ```
 
-Deploy and reload:
+Deploy, **verify it landed**, then reload:
 ```bash
-sudo cp ~/dokimion/config/staging/s-dokimion/lb_client_cert.h /etc/nginx/sites-available/
+sudo install -m 644 $D/lb_client_cert.h /etc/nginx/sites-available/lb_client_cert.h
+grep -vE '^\s*#|^\s*$' /etc/nginx/sites-available/lb_client_cert.h   # <-- must show the 2 directives
 sudo nginx -t && sudo systemctl reload nginx
 curl -sk -o /dev/null -w "site through LB: HTTP %{http_code}\n" https://s-dokimion.psonet/
 ```
-Expect `HTTP 200`. If not, revert: `sed -i 's/^proxy_ssl_/# proxy_ssl_/' lb_client_cert.h`, re-copy, reload.
+Expect `HTTP 200`. If not, revert: `sed -i 's/^proxy_ssl_/# proxy_ssl_/' $D/lb_client_cert.h`, re-install, reload.
 
 ---
 
@@ -311,12 +329,13 @@ Start with **`s-dokimion3.psonet`** (it is the node the Selenium suite targets, 
 fastest there).
 
 ```bash
-cd ~/dokimion/config/staging/s-dokimion3
+D=~/dokimion/config/staging/s-dokimion3        # production: ~/dokimion/config/production/dokimion3
 sed -i -e 's/^# ssl_verify_client/ssl_verify_client/' \
-       -e 's/^# ssl_client_certificate/ssl_client_certificate/' lb_mtls.h
-grep -v '^#' lb_mtls.h        # expect ssl_verify_client on; + ssl_client_certificate ...;
+       -e 's/^# ssl_client_certificate/ssl_client_certificate/' $D/lb_mtls.h
+grep -vE '^\s*#|^\s*$' $D/lb_mtls.h    # expect ssl_verify_client on; + ssl_client_certificate ...;
 
-sudo cp lb_mtls.h /etc/nginx/sites-available/
+sudo install -m 644 $D/lb_mtls.h /etc/nginx/sites-available/lb_mtls.h
+grep -vE '^\s*#|^\s*$' /etc/nginx/sites-available/lb_mtls.h   # <-- MUST show the 2 directives
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
