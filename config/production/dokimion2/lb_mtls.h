@@ -6,5 +6,5 @@
 # lb-client-ca.crt is installed here, and the LB presents its client cert
 # (production/dokimion/lb_client_cert.h). Roll one node at a time.
 #
-# ssl_verify_client      on;
-# ssl_client_certificate /etc/nginx/sites-available/lb-client-ca.crt;
+ssl_verify_client      on;
+ssl_client_certificate /etc/nginx/sites-available/lb-client-ca.crt;
