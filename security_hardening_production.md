@@ -22,7 +22,7 @@ across `ip_hash` through the LB, and clean per-host `:80` → `:443` 301s.
 | # | Item | Status |
 |---|------|--------|
 | H1a | Source restriction (`allow`/`deny`) on the web servers | ✅ **DEPLOYED & VERIFIED 2026-07-29** — `403` from a non-allowlisted source on all three boxes, on `/` and `/api`, while the LB and on-box checks still get `200`. See the finding |
-| H1b | mTLS (`ssl_verify_client` + LB client cert) | 🟠 Open — **preflight complete 2026-07-29, ready to execute.** Key material on `dokimion.psonet` validated (chain OK, key matches, CA distinct from staging); LB→web SSH, both `sed` hazards and "nothing automated breaks" all verified. Remaining work is Phases 1–5 of `mtls_h1_deploy.md`, which need interactive `sudo` |
+| H1b | mTLS (`ssl_verify_client` + LB client cert) | ✅ **DEPLOYED & VERIFIED 2026-07-29** — all 3 web boxes reject unauthenticated clients with `400 No required SSL certificate was sent` and demand `CN = Dokimion production LB Client CA`; LB presents `lb-client.crt`. 24 consecutive 200s through the LB with mTLS mandatory. See `mtls_h1_deploy.md` |
 | H2 | Shared key `644` on all 4 boxes; needless copy on the LB | 🔴 Open — **now measured on all four (2026-07-29): `644 root:root`, byte-identical, every box.** The `dokimion2/3` gap is closed. LB confirmed not to reference the `.key` at all. Fix is a `chmod 600` ×3 plus an `rm` on the LB; commands in the finding |
 | M1 | Wildcard CORS | ✅ **DEPLOYED & VERIFIED 2026-07-29** — trusted origins reflected, `evil.example.com` gets no `Allow-Origin` at all, on all 3 web boxes. See the finding for the measurement |
 | M2 | `auth` zone defined but unapplied | 🟠 Open — `general` + `limit_conn` + `429` live; `zone=auth` used 0× |
@@ -278,7 +278,7 @@ The LB has been materially hardened; several staging findings are now closed in 
 
 ## Findings, by severity (production)
 
-### 🟠 H1 — LB bypass: H1a RESOLVED 2026-07-29, H1b (mTLS) still open
+### ✅ H1 — LB bypass — **BOTH HALVES RESOLVED 2026-07-29**
 **H1a (source restriction) is LIVE on all three production web boxes as of 2026-07-29**, at `2a0ff258`.
 `lb_access.h` allows the LB (`10.3.0.43`), the three web boxes (`10.3.0.139`, `10.3.0.213`, `10.3.0.145`)
 and `127.0.0.1`, then `deny all;`.
@@ -377,8 +377,11 @@ Expect `200` via the LB and `403` direct. **403, not 400** — `lb_mtls.h` is st
 `ssl_verify_client` is never evaluated. Once mTLS is enabled the failure mode becomes 400 and an IP
 exemption in this file stops helping, because the certificate check fires before the access phase.
 
-**H1b (mTLS) is unchanged and still not started on production** — no CA is installed. Follow
-`mtls_h1_deploy.md` from Phase -1 with production's own key material.
+**H1b (mTLS) is now LIVE on production too, 2026-07-29.** All three web boxes run
+`ssl_verify_client on` against `CN = Dokimion production LB Client CA`, and the LB presents
+`lb-client.crt`. Unauthenticated direct requests get **400** rather than 403, because
+`ssl_verify_client` is evaluated before the access phase — both controls are active, the certificate
+check simply fires first. Full phase-by-phase record and verification in `mtls_h1_deploy.md`.
 
 The original finding text follows.
 Each web server does `listen 443 ssl;` on **all interfaces**, with **no `ssl_verify_client`** (no mTLS)
@@ -629,7 +632,7 @@ the above, but it removes a trap for whoever next adds a vhost.
 | # | Severity | Item | Status | Effort |
 |---|----------|------|--------|--------|
 | H1a | High | `allow/deny` so the backend only trusts the LB | ✅ **Deployed & verified 2026-07-29** (`2a0ff258`) — 403 from denied sources on all 3 | — |
-| H1b | High | mTLS — install the (already generated) production CA + client cert, then `ssl_verify_client` | Open — **preflight ✅ 2026-07-29**; Phases 1–5 remain | Medium |
+| H1b | High | mTLS — production CA + client cert installed, `ssl_verify_client` on ×3 | ✅ **Deployed & verified 2026-07-29** | — |
 | H2 | High | `chmod 600` shared key on the 3 web boxes; `rm` the needless LB copy | Open — measured on all 4; commands ready | Low |
 | H2b | Medium | Replace the shared self-signed key with per-host internal-CA certs (gains revocation) | Open — structural half | Medium |
 | M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | ✅ **Deployed & verified 2026-07-29** (`fd9b3f8f`) | — |

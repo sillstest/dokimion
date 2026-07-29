@@ -4,6 +4,12 @@ Companion to `security_hardening_staging.md` / `security_hardening_production.md
 The nginx config scaffolding is already committed and inert; this runbook installs the key material
 and switches it on.
 
+> ## ✅ BOTH ENVIRONMENTS COMPLETE — staging 2026-07-28, production 2026-07-29
+>
+> Production finished at `7ded093c`+: mTLS is enforced on `dokimion{1,2,3}` and the LB presents
+> `lb-client.crt`. All three reject unauthenticated clients with **400** and demand
+> `CN = Dokimion production LB Client CA`. See "PRODUCTION mTLS COMPLETE" below.
+>
 > ## ✅ STAGING IS COMPLETE (2026-07-28, commit `f7070f46`)
 > All phases have been run on staging and verified live: mTLS is enforced on
 > `s-dokimion{1,2,3}` and the LB presents `lb-client.crt`. Verification results are in
@@ -135,9 +141,22 @@ option that survives Phase 5 without issuing the test runner its own certificate
 | 2 — client credentials on the LB | ✅ `lb-client.crt` `644`, `lb-client.key` `600`, both `root:root` |
 | 3 — CA cert to the web boxes | ✅ all three: `644 root:root`, sha256 `d3eb2e8b…` = production CA, home copies removed |
 | 4 — LB presents its cert | ✅ done 2026-07-29 16:14 — 2 active `proxy_ssl_certificate*`, reloaded, site 200 |
-| 5 — `ssl_verify_client` per web box | 🔄 **`dokimion3` ✅ live 16:20:58**; `dokimion1` ⬜, `dokimion2` ⬜ |
+| 5 — `ssl_verify_client` per web box | ✅ **ALL THREE LIVE 2026-07-29** — `dokimion3` 16:20:58, `dokimion1` 16:22:56, `dokimion2` 16:24:04 |
 
-**`dokimion3` cutover verified 2026-07-29 16:20:58:**
+**PRODUCTION mTLS COMPLETE — all three web boxes verified 2026-07-29:**
+
+| Box | unauthenticated | CA demanded | reloaded |
+|---|---|---|---|
+| `dokimion1` | **400** | `CN = Dokimion production LB Client CA` | 16:22:56 |
+| `dokimion2` | **400** | same | 16:24:04 |
+| `dokimion3` | **400** | same | 16:20:58 |
+
+With mTLS mandatory on every node, the site returned **24 consecutive 200s** through the LB (18 external
++ 6 from the LB itself, spread across `ip_hash`), and the `:80` redirect stayed a single-slash 301. Every
+one of those requests required the LB to authenticate with its client certificate, so the whole chain is
+proven end to end.
+
+**`dokimion3` cutover detail, the first node, verified 16:20:58:**
 
 | Probe | Result |
 |---|---|
