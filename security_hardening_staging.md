@@ -99,8 +99,10 @@ options are:
 
 ## Current posture (verified good — do not regress)
 
-- **Web-server drift resolved** (was L4): all three `dokimion_common.conf` are **byte-identical**, each
-  with the websocket `Upgrade`/`Connection` block.
+- **Web-server drift resolved** (was L4): all three deployed `dokimion_common.conf` are
+  **byte-identical**, each with the websocket `Upgrade`/`Connection` block. The repo now keeps a single
+  copy at `config/production/dokimion1/dokimion_common.conf` serving both environments, so drift cannot
+  recur.
 - **LB TLS is strong**: `TLSv1.2/1.3`, explicit `ssl_ciphers`, `http2 on`, `ssl_session_cache`,
   `ssl_session_tickets off`, `ssl_buffer_size 4k`, `X-Frame-Options DENY`, `X-Content-Type-Options nosniff`.
 - **Web-server redirect is clean**: the `:80` blocks use `https://$host$request_uri` (no double slash).
@@ -231,7 +233,10 @@ inline "remove while testing" note. **Fix:** drop `preload` (and consider loweri
 **Fix:** confirm the HTTP→HTTPS redirect fires for the staging hostname; align the two `server_name`s.
 
 ### 🟡 L4 — Web-server config drift — RESOLVED
-All three `dokimion_common.conf` are byte-identical. Keep them in sync going forward.
+All three deployed `dokimion_common.conf` are byte-identical, and the repo no longer carries per-host
+copies to keep in sync: there is exactly one, `config/production/dokimion1/dokimion_common.conf`, used
+by all six web servers (`s-dokimion{1,2,3}` and `dokimion{1,2,3}`). Edit only that file — a change
+there reaches staging *and* production.
 
 ---
 

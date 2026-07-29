@@ -71,8 +71,10 @@ The LB has been materially hardened; several staging findings are now closed in 
 - **Rate limiting is now ACTIVE at the LB** (was M2). `rate_limiting.h` applies
   `limit_req zone=general burst=20 nodelay` + `limit_conn conn_limit 20`, returning `429`.
   Zones defined: `general` 10r/s, `auth` 5r/m, `conn_limit`.
-- **Web-server TLS parity / drift resolved** (was L4). All three `dokimion_common.conf` files are now
-  **byte-identical**, and each includes the websocket `Upgrade`/`Connection` block.
+- **Web-server TLS parity / drift resolved** (was L4). All three deployed `dokimion_common.conf` are
+  **byte-identical**, and each includes the websocket `Upgrade`/`Connection` block. Drift cannot recur:
+  the repo now keeps a single copy at `config/production/dokimion1/dokimion_common.conf`, shared by
+  `dokimion{1,2,3}` and `s-dokimion{1,2,3}` alike.
 - **LB TLS is strong**: `TLSv1.2/1.3`, explicit strong `ssl_ciphers`, `http2 on`,
   `ssl_session_cache`, `ssl_session_tickets off`, `ssl_buffer_size 4k`,
   `X-Frame-Options DENY`, `X-Content-Type-Options nosniff`.
@@ -180,7 +182,10 @@ client-facing key `testing_languagetechnology_org.key` is also **644 (world-read
 `testing_languagetechnology_org.key`.
 
 ### 🟡 L4 — Web-server config drift — RESOLVED
-All three `dokimion_common.conf` are byte-identical. No action; keep them in sync going forward.
+All three deployed `dokimion_common.conf` are byte-identical, and the repo no longer carries per-host
+copies to keep in sync: there is exactly one, `config/production/dokimion1/dokimion_common.conf`, used
+by all six web servers (`dokimion{1,2,3}` and `s-dokimion{1,2,3}`). Edit only that file — a change
+there reaches production *and* staging.
 
 ### 🟡 N1 — LB `server_name` mismatch between :443 and :80 — NEW, verify
 The `:443` block serves `server_name testing.languagetechnology.org;` while the `:80` redirect block

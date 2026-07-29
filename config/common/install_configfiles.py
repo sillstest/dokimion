@@ -76,6 +76,18 @@ VM_dokimion4_configFiles = [
    [ "nginx.service",            "/etc/systemd/system/multi-user.target.wants" ]
 ]
 
+#  dokimion_common.conf is stored ONCE in the repo, under dokimion1, and is shared
+#  verbatim by all six web servers -- production dokimion{1,2,3} and staging
+#  s-dokimion{1,2,3}.  Its source directory is dokimion1's regardless of the host
+#  we are running on, so it cannot live in the per-host tables above.
+VM_webserver_sharedConfigFiles = [
+   [ "dokimion/config/production/dokimion1"                 ],
+   [ "dokimion_common.conf",     "/etc/nginx/sites-available" ]
+]
+
+webserverHostnames = [ "dokimion1",   "dokimion2",   "dokimion3",
+                       "s-dokimion1", "s-dokimion2", "s-dokimion3" ]
+
 VM_dokimiondev_configFiles = [
    [ "dokimion/config/development/laptop_VM"                   ],
    [ "25-dokimion_dev.conf",        "/etc/rsyslog.d"           ],
@@ -96,6 +108,15 @@ def main():
 
     homeDir = sys.argv[1];
     hostname = platform.node()
+
+    # diff the config file shared by all six web servers (one repo copy, six hosts)
+    if hostname in webserverHostnames:
+       midDir = VM_webserver_sharedConfigFiles[0][0]
+
+       for configFile, destDir in VM_webserver_sharedConfigFiles[1:]:
+           print( "\'diff " + configFile + "\'" );
+           print("----------------------------");
+           os.system("/usr/bin/diff " + os.path.join( rootDir, midDir, configFile ) + " " +  destDir );
 
     # diff dokimion files
     if "dokimion" == hostname:
@@ -180,7 +201,9 @@ def main():
                  pass;
 
 
-    else:
+    # the staging web servers have no per-host table yet -- the shared file above is
+    # all they need, so do not report them as unsupported
+    elif hostname not in webserverHostnames:
        print("Non-supported hostname: " + hostname);
 
     return
