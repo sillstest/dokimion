@@ -26,10 +26,10 @@ across `ip_hash` through the LB, and clean per-host `:80` → `:443` 301s.
 | M1 | Wildcard CORS | ✅ **DEPLOYED & VERIFIED 2026-07-29** — trusted origins reflected, `evil.example.com` gets no `Allow-Origin` at all, on all 3 web boxes. See the finding for the measurement |
 | M2 | `auth` zone defined but unapplied | 🟠 Open — `general` + `limit_conn` + `429` live; `zone=auth` used 0× |
 | M3 | No `ssl_ciphers` on the web servers | 🟠 Open — unchanged |
-| L1 | LB redirect double slash | 🟠 **Fix committed `44d35fb8`, NOT yet deployed** — confirmed still live 2026-07-29: `http://testing.languagetechnology.org/` → `301 https://testing.languagetechnology.org//` |
+| L1 | LB redirect double slash | ✅ **DEPLOYED & VERIFIED 2026-07-29** (`44d35fb8`) — `/`, `/api/project` and `/deep/path?q=1` all redirect with a single slash and the query string intact |
 | L2 | HSTS `preload` | 🟡 Open — still sent |
 | L3 | Stray / world-readable certs on the LB | 🟡 Open — `test_staging.*` pair and `testing_languagetechnology_org.key` still `644`. **Read the ⚠️ in the L3 finding before deleting either** |
-| N1 | LB `server_name` :80 vs :443 mismatch | 🟡 Open — `:443` = `testing…`, `:80` = `test_staging…` |
+| N1 | LB `server_name` :80 vs :443 mismatch | 🟡 Open, **downgraded — the feared breakage does not occur.** Measured 2026-07-29: the redirect fires for *both* hostnames, because the `:80` block is the LB's only one and is therefore the default server. Latent, not live |
 | L4 | Web-server config drift | ✅ Resolved |
 
 ### ⚠️ Deploy-day lesson — `server_name.h` is the one file you cannot copy-paste between hosts
@@ -396,7 +396,12 @@ session cache, no `http2`. Low real risk (the only intended client is the LB, wh
 but inconsistent.
 **Fix:** pin the same `ssl_ciphers` list the LB uses for parity.
 
-### 🟠 L1 — LB redirect double-slash bug — FIX COMMITTED `44d35fb8`, NOT YET DEPLOYED
+### ✅ L1 — LB redirect double-slash bug — RESOLVED 2026-07-29
+> **Deployed and verified on `dokimion.psonet`** at `44d35fb8`. Live measurement after the reload:
+> `/` → `https://testing.languagetechnology.org/` (single slash), `/api/project` and `/deep/path?q=1`
+> both preserved intact. All 8 LB files in sync with the repo; site still `200` across `ip_hash`.
+>
+> The original finding text follows.
 `load_balancer.conf` `:80` block: `return 301 https://$host/$request_uri;` produces
 `https://host//path` (`$request_uri` already has a leading slash). The web-server redirects are
 already correct.
@@ -407,7 +412,7 @@ already correct.
 http://testing.languagetechnology.org/  ->  301 https://testing.languagetechnology.org//
 ```
 
-**Fix — committed at `44d35fb8`, awaiting an LB install:** `return 301 https://$host$request_uri;`.
+**Fix — `return 301 https://$host$request_uri;`, deployed 2026-07-29.**
 Verified against a standalone nginx reproducing the `:80` block, including paths and query strings:
 
 | Request | Redirect emitted |
@@ -416,7 +421,7 @@ Verified against a standalone nginx reproducing the `:80` block, including paths
 | `/api/project` | `https://testing.languagetechnology.org/api/project` |
 | `/deep/path?q=1` | `https://testing.languagetechnology.org/deep/path?q=1` |
 
-Deploy with the LB `install` command in the section above, then re-check with
+Re-check at any time with
 `curl -sko /dev/null -w '%{http_code} -> %{redirect_url}\n' http://testing.languagetechnology.org/`.
 
 ### 🟡 L2 — HSTS `preload` set on the LB — OPEN
@@ -460,12 +465,28 @@ copies to keep in sync: there is exactly one, `config/production/dokimion1/dokim
 by all six web servers (`dokimion{1,2,3}` and `s-dokimion{1,2,3}`). Edit only that file — a change
 there reaches production *and* staging.
 
-### 🟡 N1 — LB `server_name` mismatch between :443 and :80 — NEW, verify
+### 🟡 N1 — LB `server_name` mismatch between :443 and :80 — OPEN, but DOWNGRADED (verified 2026-07-29)
 The `:443` block serves `server_name testing.languagetechnology.org;` while the `:80` redirect block
-serves `server_name test_staging.languagetechnology.org;`. A plain-HTTP request to
-`testing.languagetechnology.org` may not match the `:80` server and could fall through to nginx's
-default server instead of getting the 301.
-**Fix:** confirm the HTTP→HTTPS redirect fires for the production hostname; align the two `server_name`s.
+serves `server_name test_staging.languagetechnology.org;`.
+
+> **The feared symptom does not occur — measured, not assumed.** The `:80` redirect fires correctly for
+> *both* hostnames:
+>
+> | `Host:` header | Result |
+> |---|---|
+> | `testing.languagetechnology.org` | `301 → https://testing.languagetechnology.org/` |
+> | `test_staging.languagetechnology.org` | `301 → https://test_staging.languagetechnology.org/` |
+>
+> The reason: `load_balancer.conf` contains exactly **one** `listen 80` block and it is the only enabled
+> site, so it is nginx's default server for `:80` and matches every `Host`. The `return` uses `$host`
+> rather than `$server_name`, so the redirect target is correct regardless of the declared name.
+>
+> This is the same mechanism that hid the `server_name.h` mix-up on the web boxes — see the deploy-day
+> lesson in the Status section. It is **latent, not live**: add a second `:80` vhost to the LB and the
+> mismatch starts routing real traffic to the wrong place.
+
+**Fix:** align the two `server_name`s — set `http_return.h` to the production hostname. Low urgency given
+the above, but it removes a trap for whoever next adds a vhost.
 
 ---
 
@@ -478,10 +499,10 @@ default server instead of getting the 301.
 | M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | ✅ **Deployed & verified 2026-07-29** (`fd9b3f8f`) | — |
 | M2 | Medium | Apply the existing `auth` zone (5r/m) to login/sensitive endpoints | Open | Low |
 | M3 | Medium | Pin `ssl_ciphers` on the web servers | Open | Low |
-| L1 | Low | Fix LB redirect double-slash (`$host$request_uri`) | **Fix committed `44d35fb8`** — awaiting LB install | Trivial |
+| L1 | Low | Fix LB redirect double-slash (`$host$request_uri`) | ✅ **Deployed & verified 2026-07-29** (`44d35fb8`) | — |
 | L2 | Low | Drop HSTS `preload` on the LB | Open | Trivial |
 | L3 | Low | `chmod 600` the client-facing key; verify `test_staging.*` against the **running** config before deleting anything (see the ⚠️ in the finding) | Open | Low |
-| N1 | Low | Align LB `server_name` between :80 and :443; verify redirect | Verify | Low |
+| N1 | Low | Align LB `server_name` between :80 and :443 | Open — **downgraded**, redirect verified working for both hostnames 2026-07-29; latent not live | Low |
 | L4 | — | Web-server config drift | ✅ Resolved | — |
 
 **Act first on H1 + H2** — they harden the LB→web channel itself and H2 is a two-minute `chmod`. Then
