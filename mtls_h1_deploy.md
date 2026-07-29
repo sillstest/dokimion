@@ -215,24 +215,47 @@ The LB does **not** need `lb-client-ca.crt` — it presents a cert, it doesn't v
 
 The CA *certificate* is public; only it gets copied. Run from the relevant LB.
 
+> 🛑 **Corrected 2026-07-29 — the original instruction could not work.** It said to `scp` from
+> `/etc/nginx/internal-ca/lb-client-ca.crt`, but Phase 1 creates that directory `700 root:root`, and
+> `scp` runs as `bob_beck` — so the copy fails with a permission error on the *source*. Copy the
+> still-present home copy instead: Phase 1 shreds only `ca.key`, and `~/lb-mtls/lb-client-ca.crt`
+> remains, mode `644`, user-owned. It is the same file that was installed into `internal-ca`.
+
 Staging:
 ```bash
 for h in s-dokimion1 s-dokimion2 s-dokimion3; do
-  scp -P 32 /etc/nginx/internal-ca/lb-client-ca.crt "$h.psonet:~/lb-client-ca.crt"
+  scp -P 32 ~/lb-mtls/lb-client-ca.crt "$h.psonet:~/lb-client-ca.crt"
 done
 ```
 Production:
 ```bash
 for h in dokimion1 dokimion2 dokimion3; do
-  scp -P 32 /etc/nginx/internal-ca/lb-client-ca.crt "$h.psonet:~/lb-client-ca.crt"
+  scp -P 32 ~/lb-mtls/lb-client-ca.crt "$h.psonet:~/lb-client-ca.crt"
 done
 ```
 
-Then on **each web box**:
+If the home copy is ever gone (a rebuilt LB), stage a readable copy first rather than changing the mode
+of `internal-ca`:
+```bash
+sudo install -m 644 -o "$USER" -g "$USER" /etc/nginx/internal-ca/lb-client-ca.crt ~/lb-client-ca.crt
+```
+
+Then on **each web box** — and verify the checksum, so a truncated or wrong-environment file cannot pass
+silently:
 ```bash
 sudo install -m 644 -o root -g root ~/lb-client-ca.crt /etc/nginx/sites-available/lb-client-ca.crt
 rm ~/lb-client-ca.crt
+sha256sum /etc/nginx/sites-available/lb-client-ca.crt
+openssl x509 -in /etc/nginx/sites-available/lb-client-ca.crt -noout -subject
 ```
+
+Expected on **production** (verified 2026-07-29):
+```
+d3eb2e8b54f569849afcd83706dbace465e69462258587464472dbf2e0f68dea
+subject=CN = Dokimion production LB Client CA, O = SIL, OU = Dokimion production
+```
+Staging's CA is `e23f8012…` with `CN = Dokimion staging LB Client CA`. If a box shows the staging
+checksum, stop — that box would reject the production LB, and `nginx -t` would **not** catch it.
 
 ---
 
