@@ -10,6 +10,6 @@
 # See mtls_h1_deploy.md, Phase 4.
 #
 #--BEGIN-DIRECTIVES--
-# proxy_ssl_certificate     /etc/nginx/sites-available/lb-client.crt;
-# proxy_ssl_certificate_key /etc/nginx/sites-available/lb-client.key;
+proxy_ssl_certificate     /etc/nginx/sites-available/lb-client.crt;
+proxy_ssl_certificate_key /etc/nginx/sites-available/lb-client.key;
 #--END-DIRECTIVES--
