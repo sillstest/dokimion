@@ -21,7 +21,7 @@ across `ip_hash` through the LB, and clean per-host `:80` → `:443` 301s.
 
 | # | Item | Status |
 |---|------|--------|
-| H1 | LB bypass — no `allow/deny`, no mTLS | 🟠 **H1a committed, awaiting deploy.** `lb_access.h` allows the LB + all three web boxes + loopback, then `deny all;` — all five addresses verified empirically 2026-07-29. Live files still `allow all;`. **Blocked on re-running the access-log audit**: the first one used `awk '{print $1}'`, which mis-parses the `upstreamlog` format and under-reported clients. H1b (mTLS) not started |
+| H1 | LB bypass — no `allow/deny`, no mTLS | 🟠 **H1a committed, awaiting deploy.** `lb_access.h` allows the LB + all three web boxes + loopback, then `deny all;` — all five addresses verified empirically 2026-07-29. Live files still `allow all;`. **Audit complete on all three boxes 2026-07-29** — 4 distinct sources, all internal, all already allowed; 36,616 requests via the LB vs 37 direct. Cleared to deploy, one node at a time. H1b (mTLS) not started |
 | H2 | Shared key `644` on all 4 boxes; needless copy on the LB | 🔴 Open — **now measured on all four (2026-07-29): `644 root:root`, byte-identical, every box.** The `dokimion2/3` gap is closed. LB confirmed not to reference the `.key` at all. Fix is a `chmod 600` ×3 plus an `rm` on the LB; commands in the finding |
 | M1 | Wildcard CORS | ✅ **DEPLOYED & VERIFIED 2026-07-29** — trusted origins reflected, `evil.example.com` gets no `Allow-Origin` at all, on all 3 web boxes. See the finding for the measurement |
 | M2 | `auth` zone defined but unapplied | 🟠 Open — `general` + `limit_conn` + `429` live; `zone=auth` used 0× |
@@ -289,18 +289,26 @@ bypass remains open until you install it.
 `dokimion.psonet` eth0 (`10.3.0.43/8`). Staging learned to confirm this rather than trust the documented
 estimate; re-run it if the network changes.
 
-**Direct clients audited 2026-07-29 — every source turned out to be internal.** Reverse DNS on the
-non-LB addresses in the web-server access logs:
+**Direct-client audit COMPLETE — 2026-07-29, all three web boxes, corrected command, all rotations.**
+Every source is internal and already in the allowlist, so H1a is cleared to deploy:
 
-| IP | Host | Appears in |
+| Box | Sources found (requests) | All allowed? |
 |---|---|---|
-| `10.3.0.43` | `dokimion.psonet` (LB) | all three, dominant |
-| `10.3.0.139` | `dokimion1.psonet` | its own log, and `dokimion2`'s |
-| `10.3.0.145` | `dokimion3.psonet` | its own log, and `dokimion2`'s |
-| `10.3.0.213` | `dokimion2.psonet` | its own log |
+| `dokimion1` | `10.3.0.43` LB (11423), `10.3.0.139` self (22) | ✅ |
+| `dokimion2` | `10.3.0.43` LB (13879), `10.3.0.213` self (7), `10.3.0.145` (2), `10.3.0.139` (2) | ✅ |
+| `dokimion3` | `10.3.0.43` LB (11314), `10.3.0.145` self (4) | ✅ |
 
-No external client, monitoring agent or test runner appeared. Production has no equivalent of staging's
-Selenium problem *on this evidence* — but see the caveat below before trusting that.
+Reverse DNS: `10.3.0.43` = `dokimion.psonet`, `10.3.0.139` = `dokimion1`, `10.3.0.145` = `dokimion3`,
+`10.3.0.213` = `dokimion2`. **Four distinct addresses across all three logs, no external client,
+monitoring agent or test runner anywhere.** Production has no equivalent of staging's Selenium breakage.
+
+Scale of what `deny all;` will actually reject: 36,616 requests arrived via the LB versus **37** direct,
+a ratio between 519:1 and 2829:1 depending on the box. LB traffic is also spread evenly across the three
+(11.4k / 13.9k / 11.3k), as `ip_hash` should. `127.0.0.1` never appears in any log — the loopback entry is
+kept only for manual `curl 127.0.0.1` on the box.
+
+Counts span the current log *and* all rotations (`access.log`, `.1`, `.2.gz`…`.4.gz`), which is why they
+do not track the current file sizes.
 
 **`allow 127.0.0.1;` is not sufficient, and this is easy to get wrong.** A request to
 `https://dokimion1.psonet` *from* `dokimion1` resolves to that box's LAN address, and Linux then picks the
@@ -314,12 +322,13 @@ So on-box checks arrive as `10.3.0.139`, never as loopback. `lb_access.h` theref
 boxes as well as the LB; without them, every self-check and peer-check would 403 while the site itself
 kept working — a failure that only shows up in monitoring, not in a browser.
 
-🛑 **The first audit under-counted, and the corrected one has not been run.** `/var/log/nginx/access.log`
+**How the audit had to be corrected** — worth reading before running it again on a rebuilt box. `/var/log/nginx/access.log`
 holds **two log formats**: `upstreamlog` from `nginx.conf:23` (`[$time_local] $remote_addr …`) for most
 requests, and the built-in `combined` (`$remote_addr …`) for `location /api` only
 (`dokimion_common.conf:154`). So `awk '{print $1}'` reads a *timestamp* for the majority of lines and
-silently under-reports clients — on `dokimion1` the timestamp rows outnumbered every real IP. Run this on
-each web box before enforcing:
+silently under-reports clients — the first attempt on `dokimion1` returned mostly timestamp rows, and
+raised its apparent LB traffic from 656 to 11423 once fixed. Note `$time_local` contains a space, so in
+`upstreamlog` the address is **`$3`**, not `$2`. Use:
 
 ```bash
 sudo zcat -f /var/log/nginx/access.log* \
@@ -329,6 +338,9 @@ sudo zcat -f /var/log/nginx/access.log* \
 Any address outside the five in `lb_access.h` will start receiving **403**. On staging this rollout broke
 the Selenium suite, whose `Dokimion_Tests/.runsettings` targets a web box directly. Add legitimate clients
 to `lb_access.h` first, or repoint them at the LB.
+
+Sanity-check the output per box: if two boxes report *identical* counts, one is a duplicate paste rather
+than a real result — the three logs differ substantially in volume.
 
 **Then roll one node at a time**, checking the site through the LB between each:
 
@@ -595,7 +607,7 @@ the above, but it removes a trap for whoever next adds a vhost.
 
 | # | Severity | Item | Status | Effort |
 |---|----------|------|--------|--------|
-| H1a | High | `allow/deny` so the backend only trusts the LB | **Committed, awaiting deploy** — access-log check outstanding | Low |
+| H1a | High | `allow/deny` so the backend only trusts the LB | **Committed, audit complete, cleared to deploy** | Low |
 | H1b | High | mTLS — issue a production CA + LB client cert, then `ssl_verify_client` | Open — not started; `mtls_h1_deploy.md` from Phase -1 | Medium |
 | H2 | High | `chmod 600` shared key on the 3 web boxes; `rm` the needless LB copy | Open — measured on all 4; commands ready | Low |
 | H2b | Medium | Replace the shared self-signed key with per-host internal-CA certs (gains revocation) | Open — structural half | Medium |
