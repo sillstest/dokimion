@@ -21,7 +21,8 @@ across `ip_hash` through the LB, and clean per-host `:80` → `:443` 301s.
 
 | # | Item | Status |
 |---|------|--------|
-| H1 | LB bypass — no `allow/deny`, no mTLS | 🟠 **H1a committed, awaiting deploy.** `lb_access.h` allows the LB + all three web boxes + loopback, then `deny all;` — all five addresses verified empirically 2026-07-29. Live files still `allow all;`. **Audit complete on all three boxes 2026-07-29** — 4 distinct sources, all internal, all already allowed; 36,616 requests via the LB vs 37 direct. Cleared to deploy, one node at a time. H1b (mTLS) not started |
+| H1a | Source restriction (`allow`/`deny`) on the web servers | ✅ **DEPLOYED & VERIFIED 2026-07-29** — `403` from a non-allowlisted source on all three boxes, on `/` and `/api`, while the LB and on-box checks still get `200`. See the finding |
+| H1b | mTLS (`ssl_verify_client` + LB client cert) | 🔴 Open — **not started on production.** No CA installed; `lb_mtls.h` and `lb_client_cert.h` are deployed but fully commented. `mtls_h1_deploy.md` from Phase -1 |
 | H2 | Shared key `644` on all 4 boxes; needless copy on the LB | 🔴 Open — **now measured on all four (2026-07-29): `644 root:root`, byte-identical, every box.** The `dokimion2/3` gap is closed. LB confirmed not to reference the `.key` at all. Fix is a `chmod 600` ×3 plus an `rm` on the LB; commands in the finding |
 | M1 | Wildcard CORS | ✅ **DEPLOYED & VERIFIED 2026-07-29** — trusted origins reflected, `evil.example.com` gets no `Allow-Origin` at all, on all 3 web boxes. See the finding for the measurement |
 | M2 | `auth` zone defined but unapplied | 🟠 Open — `general` + `limit_conn` + `429` live; `zone=auth` used 0× |
@@ -277,12 +278,32 @@ The LB has been materially hardened; several staging findings are now closed in 
 
 ## Findings, by severity (production)
 
-### 🔴 H1 — The LB can still be bypassed; web servers don't authenticate the LB — PART 1 READY TO DEPLOY
-**H1a (source restriction) is committed and awaiting deploy.** `config/production/dokimion{1,2,3}/lb_access.h`
-now allows the LB (`10.3.0.43`), the three web boxes (`10.3.0.139`, `10.3.0.213`, `10.3.0.145`) and
-`127.0.0.1`, then `deny all;` — in place of `allow all;`. Validated with a real
-`nginx -t`. **Not yet installed on any production box** — the live files are still `allow all;`, so the
-bypass remains open until you install it.
+### 🟠 H1 — LB bypass: H1a RESOLVED 2026-07-29, H1b (mTLS) still open
+**H1a (source restriction) is LIVE on all three production web boxes as of 2026-07-29**, at `2a0ff258`.
+`lb_access.h` allows the LB (`10.3.0.43`), the three web boxes (`10.3.0.139`, `10.3.0.213`, `10.3.0.145`)
+and `127.0.0.1`, then `deny all;`.
+
+**Measured from `s-dokimion3` (`10.3.0.236`), an address deliberately *not* in the allowlist:**
+
+| Probe | dokimion1 | dokimion2 | dokimion3 |
+|---|---|---|---|
+| `https://dokimion<N>.psonet/` from a denied source | **403** | **403** | **403** |
+| same, `/api/project` | **403** | **403** | **403** |
+| self-check via own hostname (LAN IP) | 200 | 200 | 200 |
+| self-check via `https://127.0.0.1/` | 200 | 200 | 200 |
+
+Service unaffected: 9 consecutive requests through the LB returned `200` across `ip_hash`, and the `:80`
+redirect still emits a single-slash 301.
+
+⚠️ **A 200 on the self-check proves nothing on its own.** Twice during this rollout both post-deploy
+`curl`s returned 200 while `lb_access.h` was still `allow all;` — once because the boxes had not pulled the
+enforcing commit, once because the install step was skipped. The only probe that distinguishes enforcement
+from a no-op is a request **from an address outside the allowlist**, which must return 403. Verify the
+rules before and after, not just the response codes:
+
+```bash
+grep -vE '^\s*#|^\s*$' /etc/nginx/sites-available/lb_access.h
+```
 
 **LB source IP verified empirically 2026-07-29, not inferred.** With traffic flowing through the LB,
 `ss -tnH 'sport = :443'` on each web box showed exactly one peer — `10.3.0.43` — on all three, matching
@@ -607,7 +628,7 @@ the above, but it removes a trap for whoever next adds a vhost.
 
 | # | Severity | Item | Status | Effort |
 |---|----------|------|--------|--------|
-| H1a | High | `allow/deny` so the backend only trusts the LB | **Committed, audit complete, cleared to deploy** | Low |
+| H1a | High | `allow/deny` so the backend only trusts the LB | ✅ **Deployed & verified 2026-07-29** (`2a0ff258`) — 403 from denied sources on all 3 | — |
 | H1b | High | mTLS — issue a production CA + LB client cert, then `ssl_verify_client` | Open — not started; `mtls_h1_deploy.md` from Phase -1 | Medium |
 | H2 | High | `chmod 600` shared key on the 3 web boxes; `rm` the needless LB copy | Open — measured on all 4; commands ready | Low |
 | H2b | Medium | Replace the shared self-signed key with per-host internal-CA certs (gains revocation) | Open — structural half | Medium |
