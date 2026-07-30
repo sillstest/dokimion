@@ -1,13 +1,34 @@
-HOW TO GET DEPLOY CHANGES TO STAGING
-------------------------------------
+HOW TO DEPLOY TO STAGING
+------------------------
 
-cd /etc/nginx/sites-available
-sudo cp ~/dokimion/config/production/dokimion/load_balancer.conf .
-sudo cp ~/dokimion/config/staging/s-dokimion/*.h .
-sudo cp ~/dokimion/config/staging/s-dokimion/s-dokimion-staging.crt .
+# Explicit file list -- do NOT go back to `sudo cp ~/dokimion/config/staging/s-dokimion/* .`
+# or a `*.h` wildcard. This directory also holds s-dokimion-staging.key (the web-server SAN
+# cert's PRIVATE key); a wildcard copy would drop it into sites-available -- the staging twin
+# of security_hardening_production.md finding H2 (needless world-readable private key on the
+# load balancer). The LB never presents that key; it only needs the public .crt to verify
+# upstreams (proxy_pass.h).
 
-# security_hardening H1 — load_balancer.conf now includes lb_client_cert.h
-# (copied by the *.h line above); nginx refuses to start if it is missing.
-# It is inert until the LB client cert from H2 is issued.
+# load_balancer.conf is stored ONCE in the repo, under production/dokimion, and is shared by
+# the production and staging load balancers. The seven .h files are this LB's own (staging
+# upstreams + staging certs); every include in load_balancer.conf resolves against
+# sites-available, so they all land there.
+CONF=~/dokimion/config/production/dokimion     # shared LB config
+H=~/dokimion/config/staging/s-dokimion         # this LB's host/env includes
+sudo install -m 644 -t /etc/nginx/sites-available \
+  $CONF/load_balancer.conf \
+  $H/servers.h $H/certificates.h $H/server_name.h \
+  $H/rate_limiting.h $H/proxy_pass.h $H/http_return.h $H/lb_client_cert.h
 
 sudo nginx -t && sudo systemctl reload nginx
+
+# security_hardening H1 — load_balancer.conf includes lb_client_cert.h (installed above);
+# nginx refuses to start if it is missing. It ships inert (the two proxy_ssl_certificate
+# directives are commented) until the LB client cert is issued and enabled -- see
+# mtls_h1_deploy.md, Phase 4.
+
+# Certificates are deliberately NOT part of this sync -- they are already installed on the box.
+# If rebuilding the LB from scratch, install:
+#   - s-dokimion-staging.crt (mode 644) -- web-server SAN cert, used by
+#     proxy_ssl_trusted_certificate to verify the s-dokimion1/2/3 upstreams (proxy_pass.h)
+#   - test_staging.languagetechnology.org.pem/.key -- client-facing cert (certificates.h)
+# Do NOT put s-dokimion-staging.key on the LB at all; the LB never presents it.
