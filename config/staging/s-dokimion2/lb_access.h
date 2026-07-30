@@ -11,6 +11,7 @@
 # so the IPv4 address is the only one that can appear as $remote_addr.
 
 allow 10.3.0.171;   # s-dokimion.psonet — staging load balancer (eth0)
+allow 10.3.0.172;   # s-dokimion LB (eth0 src changed 2026-07-30)
 allow 127.0.0.1;    # on-box health checks / local curl
 
 # BEFORE DEPLOYING: Dokimion_Tests/.runsettings targets
