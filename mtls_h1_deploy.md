@@ -15,12 +15,19 @@ and switches it on.
 > `s-dokimion{1,2,3}` and the LB presents `lb-client.crt`. Verification results are in
 > `security_hardening_staging.md` under "H1b is LIVE".
 >
-> **Production has not started and must not skip ahead.** Its boxes still lack the part 1
+> ~~**Production has not started and must not skip ahead.** Its boxes still lack the part 1
 > includes *and* the CA, so enabling `ssl_verify_client` there would stop nginx from starting.
 > Run production's Phase -1 → 5 in order, on its own key material (each environment has its
-> own CA — a staging cert cannot authenticate to production).
+> own CA — a staging cert cannot authenticate to production).~~
 >
-> The phase instructions below are unchanged and remain the procedure for production.
+> 🛑 **Struck 2026-08-03 — the paragraph above was stale and contradicted the banner above it.**
+> Production completed all phases on 2026-07-29; mTLS is enforced on `dokimion{1,2,3}`, the CA *is*
+> installed, and the part 1 includes *are* present (see the Phase 1–5 table below). It is kept struck
+> rather than deleted because it was the operative instruction until 2026-07-29. What remains true from
+> it: **each environment has its own CA, and a staging cert cannot authenticate to production.**
+>
+> The phase instructions below are unchanged and remain the procedure of record for a rebuild or a
+> cert rotation in either environment.
 
 **Key material was generated on 2026-07-27, on each load balancer itself**, so no private key has
 crossed the network. It currently sits in `~bob_beck/lb-mtls/` (dir `700`, keys `600`) on:
@@ -332,6 +339,21 @@ checksum, stop — that box would reject the production LB, and `nginx -t` would
 > reloading.** That is the only step that distinguishes "deployed" from "no-op". On production, Phase 5's
 > `sed` ran on `dokimion3` while the live file stayed untouched for 3.5 hours, and every other signal
 > looked healthy.
+>
+> 3. **`sudo` is not passwordless — verification probes fail silently under a non-interactive shell.**
+>    Measured 2026-08-03: `sudo -n true` reports "a password is required" on the staging LB *and* all three
+>    staging web boxes. So the `sudo curl --cert …` probe in the production cautions below, and anything
+>    reading `lb-client.key`, emits **no output at all** over `ssh -o BatchMode=yes`. Piped into
+>    `grep -i access-control || echo "(no header)"`, or into `grep … | wc -l`, that reads as a clean pass —
+>    an empty result from a command that never ran is indistinguishable from a genuine negative. **Run
+>    these probes in an interactive session**, or check `${PIPESTATUS[0]}` rather than the pipeline's exit
+>    status. This is the same class of trap as 1 and 2: the reassuring signal is absence of output.
+>
+> 4. **A stale `nginx: master` start time does not mean the config was never loaded.** `systemctl reload`
+>    re-reads the config and replaces the *workers*, leaving the master's start time untouched — so a
+>    master older than the config file looks like an unreloaded box when it may be current. Compare
+>    `ps -eo lstart=,args= | grep 'nginx: worker'` against the config mtime instead. On 2026-08-03
+>    `s-dokimion2` had a master predating its config by 3.5 hours but workers from two days *after* it.
 
 ## Phase 4 — enable the LB side first
 

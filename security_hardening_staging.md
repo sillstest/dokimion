@@ -11,14 +11,14 @@ it supersedes the repo-based `security_hardening.md` for the staging environment
 
 ---
 
-## Status — re-verified live on 2026-07-28
+## Status — M1 re-verified live on 2026-08-03; everything else 2026-07-28
 
 | # | Item | Status |
 |---|------|--------|
 | **H1a** | Source restriction (`allow`/`deny`) on the web servers | ✅ **DEPLOYED & VERIFIED** |
 | **H1b** | mTLS (`ssl_verify_client` + LB client cert) | ✅ **LIVE on all 3 nodes & VERIFIED (2026-07-28)** |
 | H2 | Shared private key `644` on all 3 web boxes | ✅ **Perms fixed & VERIFIED (2026-07-28)** — `600 root:root` ×3; shared-key/no-revocation deferred |
-| M1 | Wildcard CORS | 🟠 Open **live** (2 wildcard headers still served) — but the fix is written and committed (`ed8cc604`…`28b05893`), awaiting deploy. See the note under the finding |
+| M1 | Wildcard CORS | 🟠 Open **live**, but not for the reason recorded before — the fix *was* deployed on 2026-07-28 and is **partially live**: `s-dokimion2`/`3` strip the wildcard, `s-dokimion1` does not. `*` is still served publicly. Measured 2026-08-03 — see the finding |
 | M2 | `rate_limiting.h` empty, `auth` zone unapplied | ⏸️ **Deferred by decision (2026-07-28)** — still 1 byte, `zone=auth` used 0× |
 | M3 | No `ssl_ciphers` on the web servers | 🟠 Open — unchanged (0 occurrences) |
 | L1 | LB redirect double slash | 🟡 Open — unchanged |
@@ -161,26 +161,84 @@ CA — the LB trusts the CA, each box holds only its own key. Lower priority now
 longer readable by unprivileged local accounts, and that the LB→web hop is separately authenticated by
 H1b's mTLS, but the blast radius of a single-box root compromise is unchanged.
 
-### 🟠 M1 — Wildcard CORS on the web servers — OPEN
-Each web server sets server-level `add_header Access-Control-Allow-Origin *;` and, in `location /api`,
-`Access-Control-Allow-Origin "*"` with `GET,PUT,OPTIONS,POST,DELETE`.
-**Fix:** reflect a trusted-origin allowlist instead of `*`; narrow methods; drop the blanket
-server-level `*` (note: `location`-level `add_header` replaces the inherited server-level header, so
-`/api` already emits only its own set, but `location /` still inherits `*`).
+### 🟠 M1 — Wildcard CORS on the web servers — OPEN on one box of three
 
-> **Written, not yet deployed — the two wildcard headers above are still what staging serves.**
+> ### ⚠️ Re-measured 2026-08-03 — the fix is PARTIALLY DEPLOYED, and `*` is still served
+>
+> This finding previously read "written, not yet deployed". That is no longer accurate: the file **was**
+> deployed to the web boxes on 2026-07-28, but completely to only two of the three. The header is still
+> wildcard in public, so the finding stays open — for a narrower reason than before. The original finding
+> text and the 2026-07-28 note are preserved at the end of this section.
+>
+> | Box | live md5 | lines | what it has |
+> |---|---|---|---|
+> | `s-dokimion1` | `3c6cbba8` | 158 | part 1 only — **missing the 11-line `proxy_hide_header` block** (`28b05893`) |
+> | `s-dokimion2` | `474edcbb` | 169 | parts 1 + 2 |
+> | `s-dokimion3` | `474edcbb` | 169 | parts 1 + 2 |
+> | repo gold | `6b88c34b` | 172 | parts 1 + 2 + `fd9b3f8f` |
+>
+> **All three are running their on-disk config** — verified from *worker* start times, not the master's:
+> `s-dokimion2`'s master dates from 2026-07-28 11:26 EDT, *before* its config mtime, which looks like an
+> unreloaded box until you notice its workers restarted 2026-07-30 16:14. `s-dokimion1`/`3` restarted
+> 07-31 and 08-01. So this is a content gap, not a missing reload.
+>
+> **The remaining wildcard comes from the UI upstream, not from nginx's own `add_header`.** `grep -rn
+> Access-Control` across the LB's config finds nothing, and the server-level blanket `*` is gone from all
+> three web boxes. `curl -H 'Origin: …' http://127.0.0.1:3000/` on each box returns
+> `Access-Control-Allow-{Origin,Methods,Headers}: *` — confirmed on all three. That is why part 2
+> (`proxy_hide_header`) is the load-bearing half, and why `s-dokimion1` alone still leaks `*`:
+>
+> ```
+> $ curl -H 'Origin: https://evil.example.com' https://test_staging.languagetechnology.org/
+> access-control-allow-origin: *
+> ```
+>
+> **✅ The production-origin blocker recorded below is cleared.** `fd9b3f8f` (2026-07-29) added
+> `"https://dokimion.psonet" $http_origin;` to the `map`, so the gold file is now safe on a production
+> box. No box has `fd9b3f8f` yet, but it affects *production* CORS only — it changes nothing on staging.
+>
+> **🛑 Two probes that cannot verify this, and both mislead if you trust them.**
+> 1. **"Check through the LB" cannot target a chosen box.** nginx's `ip_hash` buckets IPv4 by the *first
+>    three octets*, and the LB (`10.3.0.171`/`.172`) and all three web boxes (`10.3.0.199`, `.72`, `.236`)
+>    are one bucket — so every vantage point available here pins to the same upstream, and four probes
+>    from four addresses all returned `*`. **Which** upstream was not measured directly: it is *inferred*
+>    to be `s-dokimion1`, because `s-dokimion2`/`3` both carry `proxy_hide_header` and both are running
+>    that config, so a wildcard response can only originate from `s-dokimion1`. Proving it outright needs
+>    either a probe from a different `/24` or the interactive `--cert` probe in item 2.
+> 2. **The runbook's per-box `--cert` probe needs a password.** `sudo` is not passwordless on the LB or
+>    any web box, so `sudo curl --cert …/lb-client.key` produces *no output at all* under a
+>    non-interactive shell. Piped into `grep … || echo "(no header)"` it reads as a clean pass. Run it
+>    interactively, or check `${PIPESTATUS[0]}`.
+>
+> ⚠️ **This file is shared with production** — it is the single
+> `config/production/dokimion1/dokimion_common.conf`. Deploying to staging stages it for production too.
+> See `security_hardening_production.md`, M1.
+>
+> **Correction to L4 below:** L4 claims drift "cannot recur" now that the repo has one copy. One repo copy
+> prevents *repo* drift; it does not prevent *deploy* drift, and deploy drift is exactly what happened
+> here — `s-dokimion1` sat 11 lines behind its peers for six days. Verify the live md5 on all three after
+> any deploy.
+>
+> **Staged 2026-08-03, awaiting root:** the gold file is copied to `~/dokimion_common.conf` on all three
+> boxes, md5 `6b88c34b` verified on each. What remains is the privileged half only — `sudo install`,
+> `nginx -t`, `systemctl reload` (commands in the priority note below).
+>
+> ---
+>
+> *Original finding, and the state as of 2026-07-28 — both superseded by the box above:*
+>
+> Each web server sets server-level `add_header Access-Control-Allow-Origin *;` and, in `location /api`,
+> `Access-Control-Allow-Origin "*"` with `GET,PUT,OPTIONS,POST,DELETE`.
+> **Fix:** reflect a trusted-origin allowlist instead of `*`; narrow methods; drop the blanket
+> server-level `*` (note: `location`-level `add_header` replaces the inherited server-level header, so
+> `/api` already emits only its own set, but `location /` still inherits `*`).
+>
 > `dokimion_common.conf` at HEAD carries a `map $http_origin $cors_origin` allowlist (untrusted origins
 > get *no* `Access-Control-Allow-Origin` header at all), the server-level blanket `*` deleted, and
 > `proxy_hide_header` on `Access-Control-Allow-{Origin,Methods,Headers}` in `location /` — that last part
 > was necessary because the UI upstream on `:3000` sets its own wildcards and nginx passes upstream
 > headers through untouched, so the nginx-side fix alone left `curl -H 'Origin: https://evil.example.com'`
 > still getting `*`. Commits `ed8cc604`, `96cb8910`, `28b05893`, all after `f7070f46`.
->
-> ⚠️ **Deploying this to staging also stages it for production**, because it is now the single shared
-> `config/production/dokimion1/dokimion_common.conf`. The `map` lists
-> `https://test_staging.languagetechnology.org`, `https://testing.languagetechnology.org` and
-> `https://s-dokimion.psonet`; **`https://dokimion.psonet` is missing**, so the file is not yet safe to
-> put on a production box as-is. See `security_hardening_production.md`, M1.
 
 ### ⏸️ M2 — Rate limiting defined but NOT applied — DEFERRED BY DECISION (2026-07-28)
 > **Deferred, not resolved.** Owner's call on 2026-07-28: leave as-is for now. Re-verified still open at
@@ -246,7 +304,14 @@ inline "remove while testing" note. **Fix:** drop `preload` (and consider loweri
 `test_staging.languagetechnology.org` may not match the `:80` server and skip the 301.
 **Fix:** confirm the HTTP→HTTPS redirect fires for the staging hostname; align the two `server_name`s.
 
-### 🟡 L4 — Web-server config drift — RESOLVED
+### 🟡 L4 — Web-server config drift — RESOLVED in the repo, **recurred live** 2026-08-03
+> ⚠️ **Corrected 2026-08-03.** The claim below that drift "cannot recur" is too strong. One repo copy
+> prevents *repo* drift; it does nothing about *deploy* drift. On 2026-08-03 the three live
+> `dokimion_common.conf` were **not** byte-identical — `s-dokimion1` was 11 lines and one commit behind
+> `s-dokimion2`/`3`, and had been for six days (md5 `3c6cbba8` vs `474edcbb`). That gap was the whole of
+> the still-open half of M1. **Verify the live md5 on all three boxes after every deploy**; a single
+> source file is not evidence that three servers received it.
+
 All three deployed `dokimion_common.conf` are byte-identical, and the repo no longer carries per-host
 copies to keep in sync: there is exactly one, `config/production/dokimion1/dokimion_common.conf`, used
 by all six web servers (`s-dokimion{1,2,3}` and `dokimion{1,2,3}`). Edit only that file — a change
@@ -263,7 +328,7 @@ there reaches staging *and* production.
 | H1c | High | Host firewall limiting `:443` to the LB (defence in depth; `ufw` state still unconfirmed) | ⏸️ Deferred by decision 2026-07-28 | Low |
 | H2 | High | `chmod 600` + `chown root:root` the shared key on all 3 web boxes | ✅ Done & verified 2026-07-28 | — |
 | H2b | Medium | Replace the one shared self-signed key with per-host internal-CA certs (gains revocation) | Open — structural half of H2 | Medium |
-| M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | Open live — **fix written** (`ed8cc604`…`28b05893`), awaiting deploy | Low (now a deploy) |
+| M1 | Medium | Replace wildcard CORS with an origin allowlist; drop server-level `*` | Open live on **`s-dokimion1` only** — 2 of 3 boxes already strip it; file staged on all 3 (2026-08-03), needs root install + reload | Low (privileged deploy) |
 | M2 | Medium | Populate `rate_limiting.h`; apply the `auth` zone to login endpoints | ⏸️ Deferred by decision 2026-07-28 | Low |
 | M3 | Medium | Pin `ssl_ciphers` on the web servers | Open | Low |
 | L1 | Low | Fix LB redirect double-slash (`$host$request_uri`) | Open | Trivial |
@@ -285,10 +350,32 @@ both directions, and the shared upstream key is no longer readable by unprivileg
 1. **The Selenium suite** — broken by the H1b rollout (see "Known casualty" above). Not a hardening
    item, but it blocks test feedback, and the intuitive fix (an `lb_access.h` IP exemption) does **not**
    work, because `ssl_verify_client` is evaluated first. This is the only item causing active breakage.
-2. **M1** (wildcard CORS) — `Access-Control-Allow-Origin *` still live at server level and in
-   `location /api`. The largest remaining item with real exposure — and no longer a design task: the fix
-   is committed, so what is left is the deploy. Add `https://dokimion.psonet` to the `map` first, since
-   the same file now goes to production.
+2. **M1** (wildcard CORS) — **narrowed on 2026-08-03 to a single box.** `s-dokimion2`/`3` already strip
+   the wildcard; `s-dokimion1` is 11 lines behind (no `proxy_hide_header`) and is the only source of the
+   `*` still served publicly. The server-level blanket `*` is gone everywhere, and
+   `https://dokimion.psonet` is already in the `map` (`fd9b3f8f`) — both earlier blockers are closed. The
+   gold file (md5 `6b88c34b`) is staged at `~/dokimion_common.conf` on all three boxes; only the
+   privileged half remains, and `sudo` is **not** passwordless, so it needs an interactive session:
+
+   ```bash
+   # on each of s-dokimion1, s-dokimion2, s-dokimion3 (s-dokimion1 first — it is the one still leaking)
+   sudo install -m 644 -o root -g root ~/dokimion_common.conf \
+        /etc/nginx/sites-available/dokimion_common.conf
+   md5sum /etc/nginx/sites-available/dokimion_common.conf   # MUST be 6b88c34b… before reloading
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
+
+   The `md5sum` line is not optional — a failed `install` leaves the previous valid config in place, so
+   `nginx -t` and `reload` both succeed silently (the failure mode documented in `mtls_h1_deploy.md`).
+   Then confirm the wildcard is gone, from **two different `/24`s if you can** — one `10.3.0.x` vantage
+   point only ever reaches one upstream under `ip_hash`:
+
+   ```bash
+   curl -sk -D - -o /dev/null -H 'Origin: https://evil.example.com' \
+        https://test_staging.languagetechnology.org/ | grep -i access-control   # expect no output
+   curl -sk -D - -o /dev/null -H 'Origin: https://s-dokimion.psonet' \
+        https://test_staging.languagetechnology.org/ | grep -i access-control   # expect the origin echoed
+   ```
 3. **M3** (pin `ssl_ciphers` on the web servers), **L1** (LB redirect double slash), **L2** (drop HSTS
    `preload` on staging) — all trivial, and L1/L2 are one-line changes.
 4. **N1** — confirm the HTTP→HTTPS redirect fires for the staging hostname and align the two
