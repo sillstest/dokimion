@@ -9,10 +9,27 @@ HOW TO DEPLOY TO PRODUCTION
 # where none of them belong; those four have their own destinations, see
 # config/common/install_configfiles.py.
 
+# ==> load_balancer.conf IN THIS DIRECTORY IS SHARED WITH STAGING. <==
+# It is the ONLY copy in the repo, and the staging LB installs it from here too
+# (config/staging/s-dokimion/README does the same). So an edit made here for production
+# reaches s-dokimion.psonet as well, and this path is the one that bites: nothing in this
+# directory's name suggests staging depends on it. Keep anything environment-specific in the
+# .h includes -- those ARE per-LB (servers.h, certificates.h, server_name.h, proxy_pass.h,
+# http_return.h, rate_limiting.h, lb_client_cert.h). The same applies to
+# production/dokimion1/dokimion_common.conf, which all six web servers share.
+
 R=~/dokimion/config/production/dokimion
 sudo install -m 644 -t /etc/nginx/sites-available \
   $R/load_balancer.conf $R/servers.h $R/certificates.h $R/server_name.h \
   $R/rate_limiting.h $R/proxy_pass.h $R/http_return.h $R/lb_client_cert.h
+
+# VERIFY THE INSTALL LANDED, BEFORE RELOADING. A failed `install` leaves the previous valid
+# config in place, so `nginx -t` passes and the reload succeeds while nothing has changed --
+# no warning, every signal healthy. This exact no-op cost 3.5 hours on dokimion3 during the
+# mTLS rollout (mtls_h1_deploy.md) and six days of live wildcard CORS on s-dokimion1
+# (security_hardening_staging.md, M1 + L4). A single source file is NOT evidence that the
+# server received it.
+md5sum /etc/nginx/sites-available/load_balancer.conf $R/load_balancer.conf   # must match
 
 sudo nginx -t && sudo systemctl reload nginx
 

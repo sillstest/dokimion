@@ -12,12 +12,25 @@ HOW TO DEPLOY TO STAGING
 # the production and staging load balancers. The seven .h files are this LB's own (staging
 # upstreams + staging certs); every include in load_balancer.conf resolves against
 # sites-available, so they all land there.
+#
+# ==> BECAUSE IT IS SHARED, EDITING IT REACHES PRODUCTION TOO. <==
+# There is no staging-only copy to change. Anything environment-specific belongs in one of
+# the .h includes, not in load_balancer.conf. Before deploying an edit here, confirm it is
+# correct for BOTH LBs -- see the same warning in production/dokimion/README.
 CONF=~/dokimion/config/production/dokimion     # shared LB config
 H=~/dokimion/config/staging/s-dokimion         # this LB's host/env includes
 sudo install -m 644 -t /etc/nginx/sites-available \
   $CONF/load_balancer.conf \
   $H/servers.h $H/certificates.h $H/server_name.h \
   $H/rate_limiting.h $H/proxy_pass.h $H/http_return.h $H/lb_client_cert.h
+
+# VERIFY THE INSTALL LANDED, BEFORE RELOADING. A failed `install` leaves the previous valid
+# config in place, so `nginx -t` passes and the reload succeeds while nothing has changed --
+# no warning, every signal healthy. This exact no-op cost 3.5 hours on dokimion3 during the
+# mTLS rollout (mtls_h1_deploy.md) and six days of live wildcard CORS on s-dokimion1
+# (security_hardening_staging.md, M1 + L4). A single source file is NOT evidence that the
+# server received it.
+md5sum /etc/nginx/sites-available/load_balancer.conf $CONF/load_balancer.conf   # must match
 
 sudo nginx -t && sudo systemctl reload nginx
 
