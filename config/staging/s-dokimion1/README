@@ -16,12 +16,27 @@ ls -l /etc/nginx/sites-enabled/
 # is shared by all three staging and all three production web servers. The four .h
 # files are this host's own; every include in dokimion_common.conf resolves against
 # sites-available, so they all land there.
+#
+# ==> BECAUSE IT IS SHARED, EDITING IT REACHES PRODUCTION TOO. <==
+# There is no staging-only copy. Anything environment-specific belongs in one of the
+# .h includes, not in dokimion_common.conf.
 sudo install -m 644 -t /etc/nginx/sites-available \
   ~/dokimion/config/production/dokimion1/dokimion_common.conf \
   ~/dokimion/config/staging/s-dokimion1/server_name.h \
   ~/dokimion/config/staging/s-dokimion1/webserver_cert.h \
   ~/dokimion/config/staging/s-dokimion1/lb_access.h \
   ~/dokimion/config/staging/s-dokimion1/lb_mtls.h
+
+# VERIFY THE INSTALL LANDED, BEFORE RELOADING. A failed `install` leaves the previous
+# valid config in place, so `nginx -t` passes and the reload succeeds while nothing has
+# changed -- no warning, every signal healthy. On these boxes `install` is
+# coreutils-from-uutils, whose "No such file or directory" does not name the missing path,
+# so it reads like a missing program. This no-op cost 3.5 hours on dokimion3 during the
+# mTLS rollout (mtls_h1_deploy.md) and six days of live wildcard CORS on s-dokimion1
+# (security_hardening_staging.md, M1 + L4). Because this file is shared by six servers, a
+# single source copy is NOT evidence that any given server received it -- check all six.
+md5sum /etc/nginx/sites-available/dokimion_common.conf \
+       ~/dokimion/config/production/dokimion1/dokimion_common.conf   # must match
 
 # security_hardening H1 — lb_access.h and lb_mtls.h are required includes:
 # dokimion_common.conf includes both, and nginx refuses to start if either file is
