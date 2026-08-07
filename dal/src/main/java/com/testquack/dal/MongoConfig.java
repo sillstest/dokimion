@@ -60,11 +60,9 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
                         builder.hosts(addresses)
                 );
 
-System.out.println("MongoConfig::mongoClient - username: " + username );
-System.out.println("MongoConfig::mongoClient - dbname: " + dbname );
-System.out.println("MongoConfig::mongoClient - password: " + password );
-System.out.flush();
-
+        // Credentials are deliberately not logged here: this class's stdout is piped to
+        // syslog by startup_dokimion_server.sh, so the username/dbname/password ended up in
+        // /var/log on every start.
 
         if (!isEmpty(username)){
            final String secretKey = "al;jf;lda1_+_!!()!!!!";

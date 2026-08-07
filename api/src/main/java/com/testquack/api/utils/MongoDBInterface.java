@@ -1,187 +1,72 @@
 package com.testquack.api.utils;
 
-import com.testquack.dal.aes;
-
 import com.mongodb.client.MongoCollection;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.MongoCredential;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.ServerAddress;
-import com.mongodb.client.result.UpdateResult;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-import static com.mongodb.internal.connection.ServerAddressHelper.createServerAddress;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.stereotype.Component;
 import ru.greatbit.whoru.auth.Person;
 
-import org.bson.Document;
-
 import org.json.JSONObject;
-import org.json.JSONException;
 import org.json.JSONArray;
 import org.json.simple.parser.*;
 
-import java.net.InetAddress;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.concurrent.TimeUnit;
-import java.util.Scanner;
 
-
-@Configuration
+@Component
 public class MongoDBInterface  {
 
-   String mongoReplicaSet;
-   String mongoUsername;
-   String mongoPassword;
-   String mongoDBname;
+   /**
+    * Shares the application's single connection pool via Spring's MongoDatabaseFactory (the
+    * `mongoDbFactory` bean set up by com.testquack.dal.MongoConfig, and already used by
+    * gridFsTemplate in dal-context.xml).
+    *
+    * This class used to build its OWN MongoClient on every setMongoDBProperties() call and
+    * never close it. Each orphaned client kept its minSize(10) pooled connections open for
+    * the lifetime of the JVM, which is what exhausted mongod (25,605 connections against a
+    * configured pool max of 300). Do not create a MongoClient here.
+    *
+    * NB: inject MongoDatabaseFactory, not MongoClient -- spring-data-mongodb's
+    * AbstractMongoClientConfiguration.mongoClient() is NOT annotated @Bean (only
+    * mongoTemplate, mongoDbFactory and mappingMongoConverter are), so there is no MongoClient
+    * bean to autowire and asking for one fails context startup.
+    *
+    * Injection is via the constructor deliberately -- there is no no-arg constructor, so
+    * `new MongoDBInterface()` no longer compiles and the leak cannot be reintroduced.
+    */
+   private final MongoDatabaseFactory mongoDbFactory;
 
-
-   private static MongoDatabase s_db;
-
-   public void setMongoDBProperties(String replicaSet,
-                                    String username,
-                                    String password,
-                                    String dbname)
-   {
-      mongoReplicaSet = replicaSet;
-      mongoUsername = username;
-      mongoPassword = password;
-      mongoDBname = dbname;
-System.out.println("setMongoDBProperties - replicaSet: " + replicaSet);
-System.out.println("setMongoDBProperties - username: " + username);
-System.out.println("setMongoDBProperties - dbname: " + dbname);
-
-
-      MongoClient s_mongoClient = getMongoClient();
-      s_db = s_mongoClient.getDatabase(dbname);
+   @Autowired
+   public MongoDBInterface(MongoDatabaseFactory mongoDbFactory) {
+      this.mongoDbFactory = mongoDbFactory;
    }
 
-   public MongoClient getMongoClient()
-   {
-
-      List<ServerAddress> addresses = Stream.of(mongoReplicaSet.split(",")).
-		          map(String::trim).
-	                  map(host-> {
-                              String[] tokens = host.split(":");
-                              return tokens.length == 2 ?
-				      createServerAddress(tokens[0], Integer.parseInt(tokens[1])) :
-				      createServerAddress(host);
-			  }).
-	                  collect(Collectors.toList());
-
-      if (mongoUsername == null || mongoUsername.isEmpty()) {
-
-         System.out.println("MongoDBInterface - mongoUsername = null");
-         System.out.flush();
-
-         MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
-		 .applyToClusterSettings(builder ->
-				 builder.hosts(new ArrayList<>(addresses))
-		 )
-		 .applyToConnectionPoolSettings(builder -> 
-				 builder.minSize(10)
-				 .maxSize(100)
-				 .maxWaitTime(8, TimeUnit.MINUTES)
-		);
-         return MongoClients.create(settingsBuilder.build());
-
-      } else {
-
-         final String secretKey = "al;jf;lda1_+_!!()!!!!";
-         String decryptedPasswd = aes.decrypt(mongoPassword, secretKey) ;
-
-         MongoCredential credential = MongoCredential.createCredential(mongoUsername, "admin",
-                                   decryptedPasswd.toCharArray());
-
-         MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
-		 .applyToClusterSettings(builder ->
-				 builder.hosts(new ArrayList<>(addresses))
-		 )
-                 .credential(credential)
-		 .applyToConnectionPoolSettings(builder -> 
-				 builder.minSize(10)
-				 .maxSize(300)
-				 .maxWaitTime(60, TimeUnit.SECONDS)
-		);
-         return MongoClients.create(settingsBuilder.build());
-
-      }
-
-
+   /** Resolves ${mongo.dbname} off the shared pool. Cheap: no I/O, no new connections. */
+   private MongoDatabase db() {
+      return mongoDbFactory.getMongoDatabase();
    }
 
    public Person getPerson(String loginToFind) {
 
+      // Query by login rather than scanning the whole users collection -- see the note in
+      // getUserCollectionAttribute.
+      Document user = db().getCollection("users").
+              find(Filters.eq("login", loginToFind)).
+              first();
 
-      MongoCollection<Document> collection = s_db.getCollection("users");
-
-      JSONParser parser = new JSONParser();
-
-      if (collection == null) {
-         System.out.println("getUserCollectionAttribute - collection = null");
-         System.out.flush();
+      if (user == null) {
+         return null;
       }
 
-      for (Document doc : collection.find())
-      {
-         String jsonStr = doc.toJson();
+      Person person = new Person();
+      person.setLogin(user.getString("login"));
+      person.setFirstName(user.getString("firstName"));
+      person.setLastName(user.getString("lastName"));
+      person.setPassword(user.getString("password"));
 
-         Object obj = null;
-         try {
-            obj = parser.parse(jsonStr);
-         } catch (ParseException e) {
-            System.out.println("ParseException - jsonStr: " + jsonStr);
-         }
-
-         org.json.simple.JSONObject jsonObj = (org.json.simple.JSONObject)obj;
-
-	 String login = (String)jsonObj.get("login");
-         String email = (String)jsonObj.get("email");
-         String role = (String)jsonObj.get("role");
-         String password = (String)jsonObj.get("password");
-         String firstName = (String)jsonObj.get("firstName");
-         String lastName = (String)jsonObj.get("lastName");
-
-	 if (login.equals(loginToFind)) {
-
-		        /*
-       Person person = new Person().withFirstName(user.getFirstName()).
-                withLastName(user.getLastName()).
-                withLogin(user.getLogin()).
-                withActive(true).
-                withDefaultPassword(user.isPasswordChangeRequired()).
-                withPassword(user.getPassword()).
-                withRoles(user.getRole());
-                */
-            Person person = new Person();
-	    person.setLogin(login);
-	    person.setFirstName(firstName);
-	    person.setLastName(lastName);
-	    person.setPassword(password);
-
-	    return person;
-	 }
-
-      }
-
-      return null;
-
-
+      return person;
    }
 
    public String getEmail(String loginToFind)
@@ -214,7 +99,7 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
       System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue - attributeName2ToSearch: " + attributeName2ToSearch);
       System.out.flush();
 
-      MongoCollection<Document> collection = s_db.getCollection(collectionName);
+      MongoCollection<Document> collection = db().getCollection(collectionName);
       String attributeValue ="";
 
       System.out.println("MongoDBInterface::get3LevelCollectionAttributeValue  - after parser call: collection: " + collection);
@@ -290,7 +175,7 @@ System.out.println("setMongoDBProperties - dbname: " + dbname);
       System.out.println("MongoDBInterface::getCollectionAttributeValue - attributeValues ToSearch: " + attribute1ValueToSearch + ", " + attribute2ValueToSearch);
       System.out.flush();
 
-      MongoCollection<Document> collection = s_db.getCollection(collectionName);
+      MongoCollection<Document> collection = db().getCollection(collectionName);
       String attributeValue ="";
 
       JSONParser parser = new JSONParser();
@@ -378,7 +263,7 @@ System.out.flush();
       System.out.println("MongoDBInterface::getCollectionAttributeValue - collectionName, attributeNameToSearch: " + collectionName + ", " + attributeNameToSearch);
       System.out.flush();
 
-      MongoCollection<Document> collection = s_db.getCollection(collectionName);
+      MongoCollection<Document> collection = db().getCollection(collectionName);
       String attributeValue ="";
 
       JSONParser parser = new JSONParser();
@@ -422,54 +307,27 @@ System.out.flush();
 
    private String getUserCollectionAttribute(String loginToFind, String userAttribute)
    {
-      MongoCollection<Document> collection = s_db.getCollection("users");
+      // Query by login rather than fetching every user and comparing in Java. This is on the
+      // login path (getRole/getPassword/getEmail), so the old full-collection scan cost one
+      // read of the entire users collection per login.
+      Document user = db().getCollection("users").
+              find(Filters.eq("login", loginToFind)).
+              first();
 
-      JSONParser parser = new JSONParser();
-
-      if (collection == null) {
-	 System.out.println("getUserCollectionAttribute - collection = null");
-	 System.out.flush();
+      if (user == null) {
+         return "";
       }
 
-      for (Document doc : collection.find())
-      {
-	 String jsonStr = doc.toJson();
-
-	 Object obj = null;
-	 try {
-	    obj = parser.parse(jsonStr);
-	 } catch (ParseException e) {
-            System.out.println("ParseException - jsonStr: " + jsonStr);
-	 }
-
-	 org.json.simple.JSONObject jsonObj = (org.json.simple.JSONObject)obj;
-
-	 String login = (String)jsonObj.get("login");
-	 String email = (String)jsonObj.get("email");
-	 String role = (String)jsonObj.get("role");
-	 String password = (String)jsonObj.get("password");
-
-	 System.out.println("login: " + login);
-	 System.out.println("email: " + email);
-	 System.out.flush();
-
-	 if (login.equals(loginToFind))
-         {
-	    System.out.println("email found: " + email);
-	    System.out.flush();
-            if (userAttribute == "email")
-            {
-	       return email;
-            } else if (userAttribute == "role") {
-               return role;
-	    } else { // password
-	       return password;
-            }
-	 }
-
+      // These were compared with ==, which happened to work only because every caller passes
+      // a string literal (and literals are interned). Any non-literal argument fell silently
+      // through to the password branch.
+      if ("email".equals(userAttribute)) {
+         return user.getString("email");
+      } else if ("role".equals(userAttribute)) {
+         return user.getString("role");
+      } else { // password
+         return user.getString("password");
       }
-
-      return "";
    }
 
    public void updatePassword(String loginToFind, String password)
@@ -484,7 +342,7 @@ System.out.flush();
          System.out.println("MongoDBInterface updatePassword - BEFORE call to updateOne");
 	 System.out.flush();
 
-	 updateOne(loginToFind, password, s_db);
+	 updateOne(loginToFind, password, db());
 
          System.out.println("MongoDBInterface updatePassword - AFTER call to updateOne");
 	 System.out.flush();

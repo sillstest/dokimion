@@ -69,30 +69,13 @@ public class UserResource extends BaseResource<User> {
 
     private String cloudflareSecret = TurnstileProperties.get("app.secret");
 
-    private static MongoDBInterface s_mongoDBInterface;
-
-    @POST
-    @Path("/init")
-    public Response init() {
-
-       Duration deltaTime = Duration.ZERO;
-       Instant beginTime = Instant.now();
-
-       s_mongoDBInterface = new MongoDBInterface();
-       s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
-                                              getService().getMongoUsername(),
-                                              getService().getMongoPassword(),
-                                              getService().getMongoDBName());
-
-       deltaTime = Duration.between(beginTime, Instant.now());
-
-       System.out.println("UserResource::init - deltaTime to get mongoClient: " + deltaTime);
-       System.out.flush();
-
-       return Response.ok().build();
-
-    }
-
+    // Injected singleton over the shared connection pool. This was a `static` field assigned
+    // only by a POST /init endpoint, so every other user of it NPE'd until the UI had called
+    // that endpoint, and login/logout re-initialised it on each request -- leaking a
+    // MongoClient every time. Spring now wires it once at startup, so /init has been removed
+    // along with the Header.js call that invoked it.
+    @Autowired
+    private MongoDBInterface mongoDBInterface;
 
     @Override
     protected Filter initFilter(HttpServletRequest hsr) {
@@ -185,7 +168,7 @@ System.out.println("UserResource::delete - rc: " + rc);
        System.out.flush();
 
        beginTime = Instant.now();
-       String email = s_mongoDBInterface.getEmail(login);
+       String email = mongoDBInterface.getEmail(login);
        deltaTime = Duration.between(beginTime, Instant.now());
 
        System.out.println("UserResource::sendEmail - deltaTime to getEmail: " + deltaTime);
@@ -202,7 +185,7 @@ System.out.println("UserResource::delete - rc: " + rc);
 
        // create new session
        beginTime = Instant.now();
-       Person person = s_mongoDBInterface.getPerson(login);
+       Person person = mongoDBInterface.getPerson(login);
        deltaTime = Duration.between(beginTime, Instant.now());
 
        System.out.println("UserResource::sendEmail - deltaTime to getPerson: " + deltaTime);
@@ -343,14 +326,10 @@ System.out.println("UserResource::login - session: " + session);
 System.out.flush();
 
     Person person = session.getPerson();
-    s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
-                                            getService().getMongoUsername(),
-                                            getService().getMongoPassword(),
-                                            getService().getMongoDBName());
 
-    String thisRole = s_mongoDBInterface.getRole(login);
+    String thisRole = mongoDBInterface.getRole(login);
 
-    String mongopass = s_mongoDBInterface.getPassword(login);
+    String mongopass = mongoDBInterface.getPassword(login);
 
 System.out.println("UserResource::login - role: " + thisRole);
 System.out.println("UserResource::login - mongo password: " + mongopass);
@@ -468,18 +447,13 @@ System.out.flush();
 	   System.out.flush();
 	}
 
-       s_mongoDBInterface.setMongoDBProperties(getService().getMongoReplicaSet(),
-                                              getService().getMongoUsername(),
-                                              getService().getMongoPassword(),
-                                              getService().getMongoDBName());
-
-       String pass = s_mongoDBInterface.getPassword(session.getLogin());
+       String pass = mongoDBInterface.getPassword(session.getLogin());
 System.out.println("logout - before doLogout mongo pass: " + pass);
 System.out.flush();
 
         authProvider.doLogout(request, response);
 
-        pass = s_mongoDBInterface.getPassword(session.getLogin());
+        pass = mongoDBInterface.getPassword(session.getLogin());
 System.out.println("logout - after doLogout mongo pass: " + pass);
 System.out.flush();
 System.out.println("UserResource::logout - after authProvider.doLogout call");

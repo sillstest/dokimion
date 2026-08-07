@@ -1,7 +1,6 @@
 package com.testquack.api.security;
 
 import com.testquack.dal.aes;
-import com.testquack.api.utils.MongoDBInterface;
 import com.testquack.beans.Filter;
 import com.testquack.beans.User;
 import com.testquack.services.UserService;
@@ -208,11 +207,13 @@ System.out.flush();
     @Override
     protected Person findPersonByLogin(String login) {
 
+        // This used to build the person, log it, then throw it away and repeat the whole
+        // lookup -- two identical Mongo queries per auth. Return the one we already have.
         Person person = convertUser(userService.findOne(null, new Filter().withField("login", login)));
         System.out.println("DbAuthProvider.findPersonByLogin - person: " + person);
         System.out.flush();
 
-        return convertUser(userService.findOne(null, new Filter().withField("login", login)));
+        return person;
     }
 
     @Override
@@ -248,15 +249,9 @@ System.out.flush();
 
     private Person convertUser(User user){
 
-        System.out.println("convertUser");
-        System.out.flush();
-
-        MongoDBInterface mongoDBInterface = new MongoDBInterface();
-        mongoDBInterface.setMongoDBProperties(userService.getMongoReplicaSet(),
-                                              userService.getMongoUsername(),
-                                              userService.getMongoPassword(),
-                                              userService.getMongoDBName());
-
+        // A MongoDBInterface was constructed here and then never used -- the Person below is
+        // built entirely from `user`. Each construction leaked a MongoClient holding 10
+        // pooled connections, so this was pure cost. Removed.
         return new Person().withFirstName(user.getFirstName()).
                 withLastName(user.getLastName()).
                 withLogin(user.getLogin()).
