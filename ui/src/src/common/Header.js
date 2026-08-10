@@ -33,10 +33,6 @@ function Header({ session: sessionProp, project, onSessionChange, history }) {
   }
 
   useEffect(() => {
-    Backend.postPlain("user/init")
-      .then(() => console.log("Initialized UserResource"))
-      .catch(error => console.log("Unable to initialize UserResource: " + error));
-
     Backend.get("user/session")
       .then(response => {
         setSession(prev => {
