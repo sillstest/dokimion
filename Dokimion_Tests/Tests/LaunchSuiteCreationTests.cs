@@ -74,6 +74,12 @@ namespace Dokimion.Tests
             Actor.WaitsUntil(Appearance.Of(Header.DokimionLaunchStatisticsProject), IsEqualTo.True(), timeout: 15);
             Actor.AttemptsTo(Click.On(Header.DokimionLaunchStatisticsProject));
             creationAndFilterHelpers = new CreationAndFilterHelpers();
+
+            // Purge any leftover launches from a prior aborted run BEFORE the suite starts, so TC18-TC31
+            // never match a stale launch. Done once here (not per-test) because TC18 -> TC19 chain on the
+            // same launch. Suites are purged per-test in TC17/TC29 (distinct names, no chaining).
+            userActions.LogConsoleMessage("Set Up : purge any leftover launches (idempotent)");
+            PurgeAllLaunches();
         }
 
 
@@ -309,94 +315,92 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
 
-            userActions.LogConsoleMessage("Action steps : ");
-            //create a group with Functionality and Priority high
-            creationAndFilterHelpers.CreateSmokeTestFilter(Actor, driver);
+            userActions.LogConsoleMessage("Set Up : remove any leftover 'Smoke Test' suite from a prior run (idempotent)");
+            PurgeSuiteByName("Smoke Test");
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : ");
+                //create a group with Functionality and Priority high
+                creationAndFilterHelpers.CreateSmokeTestFilter(Actor, driver);
 
-            userActions.LogConsoleMessage("Click on save button on the right");
-            Actor.AttemptsTo(Click.On(TestCases.SaveSuiteLocator));
-            userActions.LogConsoleMessage("Enter Smoke Test in the input ");
-            Actor.AttemptsTo(Clear.On(TestCases.SuiteNameInput));
-            Actor.AttemptsTo(SendKeys.To(TestCases.SuiteNameInput, "Smoke Test"));
-            userActions.LogConsoleMessage("Click on save button on the right");
-            Actor.AttemptsTo(Click.On(TestCases.SuiteSaveButton));
+                userActions.LogConsoleMessage("Click on save button on the right");
+                Actor.AttemptsTo(Click.On(TestCases.SaveSuiteLocator));
+                userActions.LogConsoleMessage("Enter Smoke Test in the input ");
+                Actor.AttemptsTo(Clear.On(TestCases.SuiteNameInput));
+                Actor.AttemptsTo(SendKeys.To(TestCases.SuiteNameInput, "Smoke Test"));
+                userActions.LogConsoleMessage("Click on save button on the right");
+                Actor.AttemptsTo(Click.On(TestCases.SuiteSaveButton));
 
-            Actor.WaitsUntil(Appearance.Of(TestCases.TestSuiteNameOnTC), IsEqualTo.True(), timeout: 45);
+                Actor.WaitsUntil(Appearance.Of(TestCases.TestSuiteNameOnTC), IsEqualTo.True(), timeout: 45);
 
-            Actions actions = new Actions(driver);
+                userActions.LogConsoleMessage("Verify : There are 4 test cases after filter");
 
-            userActions.LogConsoleMessage("Verify : There are 4 test cases after filter");
+                Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(4)), timeout: 60);
 
-            Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(4)), timeout: 60);
+                ReadOnlyCollection<IWebElement> Filtered_TestCase = TestCases.TestCaseTreeListMain.FindElements(driver);
 
-            ReadOnlyCollection<IWebElement> Filtered_TestCase = TestCases.TestCaseTreeListMain.FindElements(driver);
+                Assert.That(Filtered_TestCase.Count, Is.EqualTo(4));
 
-            Assert.That(Filtered_TestCase.Count, Is.EqualTo(4));
+                string locator1 = "//li[contains(@data-id,'TestCase')]//i[contains(@class,'gj-icon')]";
+                driver.FindElement(By.XPath(locator1)).Click();
+                string locator2 = "//li[contains(@data-id,'Launch')]//i[contains(@class,'gj-icon')]";
+                driver.FindElement(By.XPath(locator2)).Click();
+                //
+                userActions.LogConsoleMessage("Verify : Authentication is present ");
 
-            string locator1 = "//li[contains(@data-id,'TestCase')]//i[contains(@class,'gj-icon')]";
-            driver.FindElement(By.XPath(locator1)).Click();
-            string locator2 = "//li[contains(@data-id,'Launch')]//i[contains(@class,'gj-icon')]";
-            driver.FindElement(By.XPath(locator2)).Click();
-            //
-            userActions.LogConsoleMessage("Verify : Authentication is present ");
+                string Authentication_Priority = Actor.AskingFor(Text.Of(TestCases.AuthenticationGroupTC));
+                Assert.That(Authentication_Priority, Is.EqualTo("Authentication"));
 
-            string Authentication_Priority = Actor.AskingFor(Text.Of(TestCases.AuthenticationGroupTC));
-            Assert.That(Authentication_Priority, Is.EqualTo("Authentication"));
+                string locator3 = "//li[contains(@data-id,'Projects')]//i[contains(@class,'gj-icon')]";
+                driver.FindElement(By.XPath(locator3)).Click();
 
-            string locator3 = "//li[contains(@data-id,'Projects')]//i[contains(@class,'gj-icon')]";
-            driver.FindElement(By.XPath(locator3)).Click();
+                Actor.WaitsUntil(Appearance.Of(TestCases.HeaderProjectListGroupTC), IsEqualTo.True(), timeout: 60);
 
-            Actor.WaitsUntil(Appearance.Of(TestCases.HeaderProjectListGroupTC), IsEqualTo.True(), timeout: 60);
-
-            string headerProjectList = Actor.AskingFor(Text.Of(TestCases.HeaderProjectListGroupTC));
-
-
-            string locator4 = $"(//li[contains(@data-id,'Authentication')]//i[contains(@class,'gj-icon')])[1]";
-            driver.FindElement(By.XPath(locator4)).Click();
-            userActions.LogConsoleMessage("Verify : Validate login TC is present ");
-
-            string validateLogin = Actor.AskingFor(Text.Of(TestCases.ValidateLoginGroupTC));
-            Assert.That(validateLogin.Contains("Validate login"), Is.True);
-            Assert.IsNotNull(headerProjectList);
-            userActions.LogConsoleMessage("Verify : Header project list validation TC is present ");
-
-            Assert.That(headerProjectList.Contains("Header project list validation"), Is.True);
+                string headerProjectList = Actor.AskingFor(Text.Of(TestCases.HeaderProjectListGroupTC));
 
 
-            userActions.LogConsoleMessage("Click on Suites on header ");
+                string locator4 = $"(//li[contains(@data-id,'Authentication')]//i[contains(@class,'gj-icon')])[1]";
+                driver.FindElement(By.XPath(locator4)).Click();
+                userActions.LogConsoleMessage("Verify : Validate login TC is present ");
 
-            Actor.AttemptsTo(Click.On(Header.Suites));
-            //Verify the SmokeTest is saved / Created
-            string suiteName = Actor.AskingFor(Text.Of(TestCases.SuiteNameHeading));
+                string validateLogin = Actor.AskingFor(Text.Of(TestCases.ValidateLoginGroupTC));
+                Assert.That(validateLogin.Contains("Validate login"), Is.True);
+                Assert.IsNotNull(headerProjectList);
+                userActions.LogConsoleMessage("Verify : Header project list validation TC is present ");
 
-            userActions.LogConsoleMessage("Verify : Smoke Test is created");
-
-            Assert.That(suiteName, Is.EqualTo("Smoke Test"));
-
-            userActions.LogConsoleMessage("Click on view link on Suites ");
-
-            Actor.AttemptsTo(Click.On(TestCases.SuiteViewLink));
-
-            userActions.LogConsoleMessage("Verify : Smoke Test is created with TC list as 4");
+                Assert.That(headerProjectList.Contains("Header project list validation"), Is.True);
 
 
-            Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(4)), timeout: 60);
+                userActions.LogConsoleMessage("Click on Suites on header ");
 
-            //Validate the navigation based on the TCs displayed
-            ReadOnlyCollection<IWebElement> Suite_TC = TestCases.TestCaseTreeListMain.FindElements(driver);
+                Actor.AttemptsTo(Click.On(Header.Suites));
+                //Verify the SmokeTest is saved / Created
+                string suiteName = Actor.AskingFor(Text.Of(TestCases.SuiteNameHeading));
 
-            Assert.That(Suite_TC.Count, Is.EqualTo(4));
+                userActions.LogConsoleMessage("Verify : Smoke Test is created");
 
-            //Clean up
-           userActions.LogConsoleMessage("Clean up : Delete Suite created");
-            Actor.AttemptsTo(Click.On(Header.Suites));
-            Actor.WaitsUntil(Appearance.Of(TestCases.SuiteRemoveIcon), IsEqualTo.True(), timeout: 60);
-            Actor.AttemptsTo(Click.On(TestCases.SuiteRemoveIcon));
+                Assert.That(suiteName, Is.EqualTo("Smoke Test"));
 
-            Actor.WaitsUntil(Appearance.Of(TestCases.SuiteRemoveConfirmButton), IsEqualTo.True(), timeout: 60);
-            IWebElement element = TestCases.SuiteRemoveConfirmButton.FindElement(driver);
-            actions.MoveToElement(element).Click(element).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                userActions.LogConsoleMessage("Click on view link on Suites ");
 
+                Actor.AttemptsTo(Click.On(TestCases.SuiteViewLink));
+
+                userActions.LogConsoleMessage("Verify : Smoke Test is created with TC list as 4");
+
+
+                Actor.WaitsUntil(TextList.For(TestCases.TestCaseTreeListMain), IsAnEnumerable<string>.WhereTheCount(IsEqualTo.Value(4)), timeout: 60);
+
+                //Validate the navigation based on the TCs displayed
+                ReadOnlyCollection<IWebElement> Suite_TC = TestCases.TestCaseTreeListMain.FindElements(driver);
+
+                Assert.That(Suite_TC.Count, Is.EqualTo(4));
+            }
+            finally
+            {
+                // Clean up in finally (idempotent) so a mid-test failure cannot leak the suite.
+                userActions.LogConsoleMessage("Clean up : delete the 'Smoke Test' suite");
+                PurgeSuiteByName("Smoke Test");
+            }
         }
 
         [Test]
@@ -539,6 +543,8 @@ namespace Dokimion.Tests
             const string suiteName = "TempTestSuite";
             IWebLocator suiteCard = SuiteCardByName(suiteName);
             bool created = false;
+            userActions.LogConsoleMessage($"Set Up : remove any leftover '{suiteName}' suite from a prior run (idempotent)");
+            PurgeSuiteByName(suiteName);
             try
             {
                 userActions.LogConsoleMessage("Action steps : open TestCases with all test cases (no grouping/filter)");
@@ -605,6 +611,28 @@ namespace Dokimion.Tests
             Actor.WaitsUntil(Appearance.Of(TestCases.SuiteRemoveConfirmButton), IsEqualTo.True(), timeout: 60);
             IWebElement element = TestCases.SuiteRemoveConfirmButton.FindElement(driver);
             new Actions(driver).MoveToElement(element).Click(element).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+        }
+
+        // Idempotent purge for a test suite by name on the Suites window. Deletes the named suite if a
+        // card for it is present and no-ops when absent - so a leftover from a prior aborted run cannot
+        // fail the next create, and it is safe to call from a finally even when the body never created
+        // it. Loops to clear duplicates. TC17 ("Smoke Test") and TC29 ("TempTestSuite") use distinct
+        // names, so a per-test leading purge is safe (no cross-test suite dependency).
+        private void PurgeSuiteByName(string suiteName)
+        {
+            for (int pass = 0; pass < 10; pass++)
+            {
+                Actor.AttemptsTo(Click.On(Header.Suites));
+                new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
+                if (!Actor.AskingFor(Appearance.Of(SuiteCardByName(suiteName)))) return; // none present
+
+                try { DeleteSuiteByName(suiteName); }
+                catch (Exception ex)
+                {
+                    userActions.LogConsoleMessage("Purge suite '" + suiteName + "' transient error (will re-check): " + ex.Message);
+                }
+            }
         }
 
         // Creates two temp launches from all test cases (TC18/TC30 launch-save flow), named "Temp1" and
@@ -747,6 +775,45 @@ namespace Dokimion.Tests
             foreach (string name in launchNames)
             {
                 DeleteLaunchByName(name);
+            }
+        }
+
+        // Idempotent: delete ALL launches in the current project (Dokimion_LS). Called once from
+        // [OneTimeSetUp] so leftover launches from an aborted prior run (Smoke Test Launch,
+        // Smoke Test Launch Re-Run, Launch Testcases, Temp1/Pmet1/Temp Launch) cannot make TC18-TC31's
+        // title/status assertions match the wrong launch. Ported from LSFunctionalityTests. Purged ONCE
+        // at fixture start (not per-test) because TC18 -> TC19 chain: TC19 restarts TC18's launch, so a
+        // per-test purge would delete the very launch TC19 needs.
+        private void PurgeAllLaunches()
+        {
+            Actor.AttemptsTo(Click.On(Header.Launches));
+            Actor.WaitsUntil(Appearance.Of(Launches.LaunchFilterButton), IsEqualTo.True(), timeout: 60);
+
+            // The project legitimately has ZERO launches on a clean run, so wait for the loading spinner
+            // to clear (not for a row, which would time out on an empty list), then let the table render.
+            IWebLocator launchesLoading = new WebLocator("LaunchesLoadingSpinner",
+                By.XPath("//div[contains(@class,'sweet-loading')]//span"));
+            Actor.WaitsUntil(Appearance.Of(launchesLoading), IsEqualTo.False(), timeout: 60);
+            new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+
+            for (int pass = 0; pass < 30; pass++)
+            {
+                ReadOnlyCollection<IWebElement> trashIcons;
+                try { trashIcons = Launches.LaunchDelete.FindElements(driver); }
+                catch (StaleElementReferenceException) { continue; }
+
+                if (trashIcons.Count == 0) return; // nothing (left) to delete
+
+                try
+                {
+                    new Actions(driver).MoveToElement(trashIcons[0]).Click().Build().Perform();
+                    new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                }
+                catch (Exception ex)
+                {
+                    // The row may have been removed between find and click; re-query on the next pass.
+                    userActions.LogConsoleMessage("Purge launch hit a transient error (will re-check): " + ex.Message);
+                }
             }
         }
 
