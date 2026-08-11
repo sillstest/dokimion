@@ -131,6 +131,49 @@ namespace Dokimion.Tests
             Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributeValueButton), IsEqualTo.True(), timeout: 30);
         }
 
+        // Idempotent purge for a project attribute on the current Attributes page (TC11-TC15 run in
+        // the Dokimion project). Deletes the named attribute if a card for it is present and no-ops
+        // when absent, so: (a) a leftover from a prior aborted run cannot fail the next Create with a
+        // duplicate name, and (b) it is safe to call from a finally even when the body never created
+        // it. Loops to clear duplicates. Modelled on RemoveTempAttributeCardIfPresent (which does the
+        // same for the bulk tests' BulkTestAttr in Dokimion_LS).
+        private void PurgeAttributeByName(string attribName)
+        {
+            for (int attempt = 0; attempt < 10; attempt++)
+            {
+                // Wait for the attribute list to finish loading so a not-yet-rendered card is not
+                // mistaken for an absent one.
+                Actor.WaitsUntil(Appearance.Of(Attributes.AddAttributes), IsEqualTo.True(), timeout: 60);
+                new Actions(driver).Pause(TimeSpan.FromSeconds(2)).Build().Perform();
+
+                IWebLocator heading = new WebLocator("AttrHeading:" + attribName, By.XPath($"//b[text()='{attribName}']"));
+                if (!Actor.AskingFor(Appearance.Of(heading))) return; // none present - nothing to delete
+
+                try
+                {
+                    // The pencil is visibility:hidden until its h5 heading is hovered (App.css), so hover
+                    // the heading first, then click the pencil scoped to THIS card (not the generic first
+                    // pencil, which would target the wrong attribute when several are listed).
+                    Actor.AttemptsTo(Hover.Over(heading));
+                    IWebLocator editPencil = new WebLocator("AttrEditPencil:" + attribName,
+                        By.XPath($"//h5[contains(@class,'alert-heading')][b[text()='{attribName}']]//span[contains(@class,'edit-icon')]"));
+                    Actor.AttemptsTo(Hover.Over(editPencil));
+                    Actor.AttemptsTo(Click.On(editPencil));
+
+                    Actor.WaitsUntil(Appearance.Of(Attributes.RemoveAttribButton), IsEqualTo.True(), timeout: 60);
+                    Actor.AttemptsTo(Hover.Over(Attributes.RemoveAttribButton));
+                    Actor.AttemptsTo(Click.On(Attributes.RemoveAttribButton));
+                    Actor.WaitsUntil(Appearance.Of(heading), IsEqualTo.False(), timeout: 60);
+                }
+                catch (Exception ex)
+                {
+                    // The delete may have succeeded even if a post-delete wait threw a transient
+                    // stale-node error; the next pass re-checks and stops when the card is gone.
+                    userActions.LogConsoleMessage("Purge attribute '" + attribName + "' transient error (will re-check): " + ex.Message);
+                }
+            }
+        }
+
         [Test]
         public void TC11AddFunctionalityAttribute()
         {
@@ -138,28 +181,35 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Set Up : ");
 
 
-            userActions.LogConsoleMessage("Action steps : ");
-            userActions.LogConsoleMessage("Click on the Add button");
-            OpenNewAttributeForm();
+            userActions.LogConsoleMessage("Set Up : remove any leftover 'Functionality' from a prior run (idempotent start)");
+            PurgeAttributeByName("Functionality");
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : ");
+                userActions.LogConsoleMessage("Click on the Add button");
+                OpenNewAttributeForm();
 
-            userActions.LogConsoleMessage("Enter Name: Functionality ");
-            userActions.LogConsoleMessage("Enter Values: Authentication,TestCase, TestSuites,Projects, Launch");
-            userActions.LogConsoleMessage("Click on Add values button ");
+                userActions.LogConsoleMessage("Enter Name: Functionality ");
+                userActions.LogConsoleMessage("Enter Values: Authentication,TestCase, TestSuites,Projects, Launch");
+                userActions.LogConsoleMessage("Click on Add values button ");
 
-            Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
-                "TestCase", "TestSuites", "Projects", "Launch" }, driver));
+                Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
+                    "TestCase", "TestSuites", "Projects", "Launch" }, driver));
 
-            userActions.LogConsoleMessage("Click on Save changes button ");
-            //Check the functionality header is there
-            //With values
-            string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
-            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
-            Assert.That(name.Trim(), Is.EqualTo("Functionality"));
-            StringAssert.Contains("Authentication, TestCase, TestSuites, Projects, Launch", values.Trim());
-
-            userActions.LogConsoleMessage("Clean up: Click on Remove button to delete the attribute ");
-            Actor.AttemptsTo(DeleteAttribute.For("Functionality"));
-
+                userActions.LogConsoleMessage("Click on Save changes button ");
+                //Check the functionality header is there
+                //With values
+                string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
+                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+                Assert.That(name.Trim(), Is.EqualTo("Functionality"));
+                StringAssert.Contains("Authentication, TestCase, TestSuites, Projects, Launch", values.Trim());
+            }
+            finally
+            {
+                // Clean up in finally (idempotent) so a mid-test failure cannot leak the attribute.
+                userActions.LogConsoleMessage("Clean up: delete the attribute");
+                PurgeAttributeByName("Functionality");
+            }
         }
 
         [Test]
@@ -169,58 +219,63 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Set Up : ");
 
 
-            userActions.LogConsoleMessage("Action steps : ");
-            userActions.LogConsoleMessage("Click on the Add button");
-            OpenNewAttributeForm();
+            userActions.LogConsoleMessage("Set Up : remove any leftover 'Functionality' from a prior run (idempotent start)");
+            PurgeAttributeByName("Functionality");
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : ");
+                userActions.LogConsoleMessage("Click on the Add button");
+                OpenNewAttributeForm();
 
-            userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
-                "TestSuites, Projects, Launch");
-            //Create Functionality again
-            Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
-                "TestCase", "TestSuites", "Projects", "Launch" }, driver));
-
-
-            Actor.AttemptsTo(Hover.Over(Attributes.FunctionalityAttrib));
-
-            userActions.LogConsoleMessage("Click on edit 'pencil' to add Faulty Attribute");
-
-            Actor.AttemptsTo(Hover.Over(Attributes.EditAttribSVG));
-            Actor.AttemptsTo(Click.On(Attributes.EditAttribSVG));
-
-            userActions.LogConsoleMessage("Click on Add Value button ");
-
-            Actor.AttemptsTo(Hover.Over(Attributes.AddAttributeValueButton));
-
-            Actor.AttemptsTo(Click.On(Attributes.AddAttributeValueButton));
-
-            var attribValueLocator = $"//input[@name='value' and @index='5']";
-
-            Actor.WaitsUntil(Appearance.Of(new WebLocator("AttribValueLocator", By.XPath(attribValueLocator))), IsEqualTo.True(), timeout: 60);
-            IWebElement attribLocator = driver.FindElement(By.XPath(attribValueLocator));
-
-            userActions.LogConsoleMessage("Enter 'Faulty' in the value ");
-            Actor.AttemptsTo(SendKeys.To(new WebLocator("AttribValueLocator", By.XPath(attribValueLocator)), "Faulty"));
-
-            userActions.LogConsoleMessage("Click on Save button ");
-
-            Attributes.SaveAttribute.FindElement(driver).Click();
-
-            Actor.WaitsUntil(Text.Of(Attributes.VerifyAttributesList), ContainsSubstring.Text("Faulty"), timeout: 60);
-
-            string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
-            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
-
-            userActions.LogConsoleMessage("Verify : Faulty is added to Functionality ");
+                userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
+                    "TestSuites, Projects, Launch");
+                //Create Functionality again
+                Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
+                    "TestCase", "TestSuites", "Projects", "Launch" }, driver));
 
 
-            Assert.That(name.Trim(), Is.EqualTo("Functionality"));
-            Assert.That(values.Contains("Faulty"), Is.True);
+                Actor.AttemptsTo(Hover.Over(Attributes.FunctionalityAttrib));
+
+                userActions.LogConsoleMessage("Click on edit 'pencil' to add Faulty Attribute");
+
+                Actor.AttemptsTo(Hover.Over(Attributes.EditAttribSVG));
+                Actor.AttemptsTo(Click.On(Attributes.EditAttribSVG));
+
+                userActions.LogConsoleMessage("Click on Add Value button ");
+
+                Actor.AttemptsTo(Hover.Over(Attributes.AddAttributeValueButton));
+
+                Actor.AttemptsTo(Click.On(Attributes.AddAttributeValueButton));
+
+                var attribValueLocator = $"//input[@name='value' and @index='5']";
+
+                Actor.WaitsUntil(Appearance.Of(new WebLocator("AttribValueLocator", By.XPath(attribValueLocator))), IsEqualTo.True(), timeout: 60);
+                IWebElement attribLocator = driver.FindElement(By.XPath(attribValueLocator));
+
+                userActions.LogConsoleMessage("Enter 'Faulty' in the value ");
+                Actor.AttemptsTo(SendKeys.To(new WebLocator("AttribValueLocator", By.XPath(attribValueLocator)), "Faulty"));
+
+                userActions.LogConsoleMessage("Click on Save button ");
+
+                Attributes.SaveAttribute.FindElement(driver).Click();
+
+                Actor.WaitsUntil(Text.Of(Attributes.VerifyAttributesList), ContainsSubstring.Text("Faulty"), timeout: 60);
+
+                string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
+                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+
+                userActions.LogConsoleMessage("Verify : Faulty is added to Functionality ");
 
 
-            userActions.LogConsoleMessage("Clean up: Delete the attribute ");
-            Actor.AttemptsTo(DeleteAttribute.For("Functionality"));
-
-
+                Assert.That(name.Trim(), Is.EqualTo("Functionality"));
+                Assert.That(values.Contains("Faulty"), Is.True);
+            }
+            finally
+            {
+                // Clean up in finally (idempotent) so a mid-test failure cannot leak the attribute.
+                userActions.LogConsoleMessage("Clean up: delete the attribute");
+                PurgeAttributeByName("Functionality");
+            }
         }
 
 
@@ -230,51 +285,58 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
 
-            userActions.LogConsoleMessage("Action steps : ");
-            userActions.LogConsoleMessage("Click on the Add button");
-            OpenNewAttributeForm();
+            userActions.LogConsoleMessage("Set Up : remove any leftover 'Functionality' from a prior run (idempotent start)");
+            PurgeAttributeByName("Functionality");
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : ");
+                userActions.LogConsoleMessage("Click on the Add button");
+                OpenNewAttributeForm();
 
-            userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
-                "TestSuites, Projects, Launch , Faulty");
-            Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
-                "TestCase", "TestSuites", "Projects", "Launch", "Faulty" }, driver));
+                userActions.LogConsoleMessage("Add Functionality Attribute with values Authentication, TestCase," +
+                    "TestSuites, Projects, Launch , Faulty");
+                Actor.AttemptsTo(CreateAttributes.For("Functionality", new List<string>() { "Authentication" ,
+                    "TestCase", "TestSuites", "Projects", "Launch", "Faulty" }, driver));
 
 
-            Actor.AttemptsTo(Hover.Over(Attributes.FunctionalityAttrib));
+                Actor.AttemptsTo(Hover.Over(Attributes.FunctionalityAttrib));
 
-            userActions.LogConsoleMessage("Click on edit 'pencil' to modify Functionality attribute");
+                userActions.LogConsoleMessage("Click on edit 'pencil' to modify Functionality attribute");
 
-            Actor.AttemptsTo(Hover.Over(Attributes.EditAttribSVG));
-            Actor.AttemptsTo(Click.On(Attributes.EditAttribSVG));
+                Actor.AttemptsTo(Hover.Over(Attributes.EditAttribSVG));
+                Actor.AttemptsTo(Click.On(Attributes.EditAttribSVG));
 
-            userActions.LogConsoleMessage("Click on 'delete' to modify Functionality attribute to delete Faulty");
+                userActions.LogConsoleMessage("Click on 'delete' to modify Functionality attribute to delete Faulty");
 
-            //Add logic to remove n save
-            IWebLocator DeleteSVG = new WebLocator("DeleteSVG", By.XPath("(//*[local-name()='svg' and @data-icon='minus-circle'])[6]"));
+                //Add logic to remove n save
+                IWebLocator DeleteSVG = new WebLocator("DeleteSVG", By.XPath("(//*[local-name()='svg' and @data-icon='minus-circle'])[6]"));
 
-            Actor.AttemptsTo(Hover.Over(DeleteSVG));
-            Actor.AttemptsTo(Click.On(DeleteSVG));
+                Actor.AttemptsTo(Hover.Over(DeleteSVG));
+                Actor.AttemptsTo(Click.On(DeleteSVG));
 
-            Actor.WaitsUntil(Appearance.Of(Attributes.SaveAttribute), IsEqualTo.True(), timeout: 60);
+                Actor.WaitsUntil(Appearance.Of(Attributes.SaveAttribute), IsEqualTo.True(), timeout: 60);
 
-            userActions.LogConsoleMessage("Click on Save Changes button");
-            Attributes.SaveAttribute.FindElement(driver).Click();
-            //var check = ContainsSubstring.Text("Goodbye").Evaluate("Hello World!").Should().BeFalse();
-            Actor.WaitsUntil(Text.Of(Attributes.VerifyAttributesList), IsEqualTo.Value("Authentication, TestCase, TestSuites, Projects, Launch")
-             , timeout: 60);
-            //  Actor.WaitsUntil(Appearance.Of(Attributes.VerifyAttributesList), IsEqualTo.True(), timeout: 60);
+                userActions.LogConsoleMessage("Click on Save Changes button");
+                Attributes.SaveAttribute.FindElement(driver).Click();
+                //var check = ContainsSubstring.Text("Goodbye").Evaluate("Hello World!").Should().BeFalse();
+                Actor.WaitsUntil(Text.Of(Attributes.VerifyAttributesList), IsEqualTo.Value("Authentication, TestCase, TestSuites, Projects, Launch")
+                 , timeout: 60);
+                //  Actor.WaitsUntil(Appearance.Of(Attributes.VerifyAttributesList), IsEqualTo.True(), timeout: 60);
 
-            string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
-            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+                string name = Actor.AskingFor(Text.Of(Attributes.FunctionalityAttrib));
+                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
 
-            userActions.LogConsoleMessage("Verify: Faulty is not available in Functionality attribute");
+                userActions.LogConsoleMessage("Verify: Faulty is not available in Functionality attribute");
 
-            Assert.That(name.Trim(), Is.EqualTo("Functionality"));
-            StringAssert.DoesNotContain("Faulty", values.Trim());
-
-            userActions.LogConsoleMessage("Clean up: Delete the attribute ");
-            Actor.AttemptsTo(DeleteAttribute.For("Functionality"));
-
+                Assert.That(name.Trim(), Is.EqualTo("Functionality"));
+                StringAssert.DoesNotContain("Faulty", values.Trim());
+            }
+            finally
+            {
+                // Clean up in finally (idempotent) so a mid-test failure cannot leak the attribute.
+                userActions.LogConsoleMessage("Clean up: delete the attribute");
+                PurgeAttributeByName("Functionality");
+            }
         }
 
 
@@ -285,30 +347,38 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Set Up : ");
 
 
-            userActions.LogConsoleMessage("Action steps : ");
-            userActions.LogConsoleMessage("Click on the Add button");
-            OpenNewAttributeForm();
+            userActions.LogConsoleMessage("Set Up : remove any leftover 'Priority' from a prior run (idempotent start)");
+            PurgeAttributeByName("Priority");
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : ");
+                userActions.LogConsoleMessage("Click on the Add button");
+                OpenNewAttributeForm();
 
-            userActions.LogConsoleMessage("Enter Name: ");
-            userActions.LogConsoleMessage("Enter Values: ");
-            userActions.LogConsoleMessage("Click on Add values button ");
-            userActions.LogConsoleMessage("Add attribute 'Priority' with values High, Medium and Low ");
+                userActions.LogConsoleMessage("Enter Name: ");
+                userActions.LogConsoleMessage("Enter Values: ");
+                userActions.LogConsoleMessage("Click on Add values button ");
+                userActions.LogConsoleMessage("Add attribute 'Priority' with values High, Medium and Low ");
 
-            Actor.AttemptsTo(CreateAttributes.For("Priority", new List<string>() { "High" ,
-                "Medium","Low" }, driver));
+                Actor.AttemptsTo(CreateAttributes.For("Priority", new List<string>() { "High" ,
+                    "Medium","Low" }, driver));
 
-            userActions.LogConsoleMessage("Click on Save changes button ");
+                userActions.LogConsoleMessage("Click on Save changes button ");
 
-            //With values
-            string name = Actor.AskingFor(Text.Of(Attributes.PriorityAttrib));
-            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+                //With values
+                string name = Actor.AskingFor(Text.Of(Attributes.PriorityAttrib));
+                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
 
-            userActions.LogConsoleMessage("Verify : Priority attribute is added");
-            Assert.That(name.Trim(), Is.EqualTo("Priority"));
-            Assert.That(values.Trim(), Is.EqualTo("High, Medium, Low"));
-
-            userActions.LogConsoleMessage("Clean up: Delete the attribute ");
-            Actor.AttemptsTo(DeleteAttribute.For("Priority"));
+                userActions.LogConsoleMessage("Verify : Priority attribute is added");
+                Assert.That(name.Trim(), Is.EqualTo("Priority"));
+                Assert.That(values.Trim(), Is.EqualTo("High, Medium, Low"));
+            }
+            finally
+            {
+                // Clean up in finally (idempotent) so a mid-test failure cannot leak the attribute.
+                userActions.LogConsoleMessage("Clean up: delete the attribute");
+                PurgeAttributeByName("Priority");
+            }
         }
 
         [Test]
@@ -318,31 +388,39 @@ namespace Dokimion.Tests
             userActions.LogConsoleMessage("Set Up : ");
 
 
-            userActions.LogConsoleMessage("Action steps : ");
-            userActions.LogConsoleMessage("Click on the Add button");
-            OpenNewAttributeForm();
+            userActions.LogConsoleMessage("Set Up : remove any leftover 'Placement' from a prior run (idempotent start)");
+            PurgeAttributeByName("Placement");
+            try
+            {
+                userActions.LogConsoleMessage("Action steps : ");
+                userActions.LogConsoleMessage("Click on the Add button");
+                OpenNewAttributeForm();
 
-            userActions.LogConsoleMessage("Enter Name: ");
-            userActions.LogConsoleMessage("Enter Values: ");
-            userActions.LogConsoleMessage("Click on Add values button ");
-            userActions.LogConsoleMessage("Add attibute 'Placement' with values Header, Footer and Body");
+                userActions.LogConsoleMessage("Enter Name: ");
+                userActions.LogConsoleMessage("Enter Values: ");
+                userActions.LogConsoleMessage("Click on Add values button ");
+                userActions.LogConsoleMessage("Add attibute 'Placement' with values Header, Footer and Body");
 
-            Actor.AttemptsTo(CreateAttributes.For("Placement", new List<string>() { "Header" ,
-                "Footer","Body" }, driver));
+                Actor.AttemptsTo(CreateAttributes.For("Placement", new List<string>() { "Header" ,
+                    "Footer","Body" }, driver));
 
-            userActions.LogConsoleMessage("Click on Save changes button ");
+                userActions.LogConsoleMessage("Click on Save changes button ");
 
-            //With values
-            string name = Actor.AskingFor(Text.Of(Attributes.PlacementAttrib));
-            string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
+                //With values
+                string name = Actor.AskingFor(Text.Of(Attributes.PlacementAttrib));
+                string values = Actor.AskingFor(Text.Of(Attributes.VerifyAttributesList));
 
-            userActions.LogConsoleMessage("Verfiy: Placement attribute is added ");
+                userActions.LogConsoleMessage("Verfiy: Placement attribute is added ");
 
-            Assert.That(name.Trim(), Is.EqualTo("Placement"));
-            StringAssert.Contains("Header, Footer, Body", values);
-
-            userActions.LogConsoleMessage("Clean up: Delete the attribute ");
-            Actor.AttemptsTo(DeleteAttribute.For("Placement"));
+                Assert.That(name.Trim(), Is.EqualTo("Placement"));
+                StringAssert.Contains("Header, Footer, Body", values);
+            }
+            finally
+            {
+                // Clean up in finally (idempotent) so a mid-test failure cannot leak the attribute.
+                userActions.LogConsoleMessage("Clean up: delete the attribute");
+                PurgeAttributeByName("Placement");
+            }
         }
 
         // The three test cases (in project Dokimion_LS) the bulk operation should target.

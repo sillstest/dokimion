@@ -93,6 +93,8 @@ namespace Dokimion.Tests
         {
             userActions.LogConsoleMessage(TestContext.CurrentContext.Test.MethodName!);
             userActions.LogConsoleMessage("Set Up : ");
+            userActions.LogConsoleMessage("Remove any leftover 'Validate login' from a prior run (idempotent start)");
+            PurgeTestCasesByName("Validate login");
             userActions.LogConsoleMessage("Action steps : ");
 
             userActions.LogConsoleMessage("Click on the Testcases on header");
