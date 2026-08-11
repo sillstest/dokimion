@@ -38,6 +38,10 @@ function TestCases({ match, history, location, onProjectChange }) {
 
   const [testcasesTree, setTestcasesTree] = useState({ children: [] });
   const [testcaseToEdit, setTestcaseToEdit] = useState({ ...defaultTestcase, attributes: {}, steps: [] });
+  // Bumped after each successful create to remount TestCaseForm. Its attribute dropdowns are
+  // uncontrolled (defaultValue, no value), so defaults are only applied on mount -- without a
+  // remount the reused selects keep showing the values picked for the previous test case.
+  const [testcaseFormKey, setTestcaseFormKey] = useState(0);
   const [projectAttributes, setProjectAttributes] = useState([]);
   const [selectedTestCase, setSelectedTestCase] = useState({});
   const [filter, setFilter] = useState({
@@ -262,6 +266,7 @@ function TestCases({ match, history, location, onProjectChange }) {
 
   function onTestCaseAdded(testcase) {
     setTestcaseToEdit({ ...defaultTestcase, attributes: {}, steps: [] });
+    setTestcaseFormKey(k => k + 1);
     onFilter(filterRef.current, () => {
       const tc = Utils.getTestCaseFromTree(testcase.id, testcasesTreeRef.current, (tc, id) => tc.id === id);
       setSelectedTestCase(tc || {});
@@ -440,6 +445,7 @@ function TestCases({ match, history, location, onProjectChange }) {
           aria-hidden="true"
         >
           <TestCaseForm
+            key={testcaseFormKey}
             project={project}
             testcase={testcaseToEdit}
             projectAttributes={projectAttributes}
