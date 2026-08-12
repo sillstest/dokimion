@@ -24,10 +24,14 @@ namespace Dokimion.Interactions
 
             // Same react-error-overlay hazard as DeleteLaunch.cs: a stray runtime error (this
             // page also renders TinyMCE editors) can leave an undismissable full-page overlay
-            // eating clicks. Reload clears it; nginx's SPA fallback keeps us on this route.
-            driver.Navigate().Refresh();
-            Actor.WaitsUntil(Appearance.Of(TestCases.RemoveTestCase), IsEqualTo.True(), timeout: 60);
+            // eating clicks. Remove it directly rather than reloading (reload isn't reliable on
+            // this view) — see DeleteLaunch.cs for why this DOM query is safe.
+            ((IJavaScriptExecutor)driver).ExecuteScript(
+                "Array.from(document.body.children).forEach(function (el) {" +
+                "  if (el.tagName === 'IFRAME' && getComputedStyle(el).position === 'fixed') el.remove();" +
+                "});");
 
+            Actor.WaitsUntil(Appearance.Of(TestCases.RemoveTestCase), IsEqualTo.True(), timeout: 60);
             userActions.LogConsoleMessage("Click on the Remove Testcase button");
 
             Actions actions = new Actions(driver);

@@ -30,10 +30,15 @@ namespace Dokimion.Interactions {
             // to fetch its keyboard-nav i18n snippet) can leave react-error-overlay's
             // full-viewport "Uncaught runtime errors" iframe on top of the app. That overlay has
             // no dismiss button and swallows every click underneath it, so the click below would
-            // silently no-op and the LaunchDelete wait would time out (TC18). A hard reload
-            // clears it; nginx's SPA fallback (try_files ... /index.html) keeps us on this route.
-            driver.Navigate().Refresh();
-            Actor.WaitsUntil(Appearance.Of(Header.Launches), IsEqualTo.True(), timeout: 60);
+            // silently no-op and the LaunchDelete wait would time out (TC18). A page reload isn't
+            // reliable here (the app can't always rebuild the current view from the URL alone),
+            // so remove the overlay's iframe directly instead: it's the only fixed-position
+            // iframe react-scripts appends as a direct child of <body> — TinyMCE's own iframes
+            // live nested inside its editor container, never there, so this can't touch them.
+            ((IJavaScriptExecutor)driver).ExecuteScript(
+                "Array.from(document.body.children).forEach(function (el) {" +
+                "  if (el.tagName === 'IFRAME' && getComputedStyle(el).position === 'fixed') el.remove();" +
+                "});");
 
            // userActions.LogConsoleMessage("Click on the Launches on header");
             Actor.AttemptsTo(Click.On(Header.Launches));
