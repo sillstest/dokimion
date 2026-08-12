@@ -92,6 +92,32 @@ namespace Dokimion.Tests
             userActions.TearDownAfterTestcase();
         }
 
+        // Click a settings-gear link and confirm the SPA actually navigated to the /settings route
+        // before waiting for the page to render. The gear is a react-router <Link>; a plain click can
+        // race a just-loaded projects/dashboard view and never fire the client-side navigation (the
+        // page renders fine manually, so this is a nav-timing flake, not a missing page - it timed out
+        // TC32 waiting for RemoveProjectButton). Poll the URL and re-click until the route changes,
+        // then wait for the Remove Project button (a stable "Settings page loaded" marker).
+        private void OpenProjectSettings(IWebLocator gear)
+        {
+            for (int attempt = 0; attempt < 4; attempt++)
+            {
+                Actor.WaitsUntil(Appearance.Of(gear), IsEqualTo.True(), timeout: 30);
+                Actor.AttemptsTo(Hover.Over(gear));
+                Actor.AttemptsTo(Click.On(gear));
+
+                bool navigated = false;
+                for (int i = 0; i < 10; i++)
+                {
+                    if (driver.Url.Contains("/settings")) { navigated = true; break; }
+                    new Actions(driver).Pause(TimeSpan.FromSeconds(1)).Build().Perform();
+                }
+                if (navigated) break;
+                userActions.LogConsoleMessage("Settings nav did not take (URL still " + driver.Url + "); re-clicking the gear");
+            }
+            Actor.WaitsUntil(Appearance.Of(ProjectSettingsPage.RemoveProjectButton), IsEqualTo.True(), timeout: 30);
+        }
+
         [Test]
         public void TC32ProjectSettings()
         {
@@ -106,12 +132,8 @@ namespace Dokimion.Tests
             {
                 userActions.LogConsoleMessage("Action steps : ");
                 userActions.LogConsoleMessage("Click the settings (double-gear) icon to the far right of the Dokimion project title");
-                Actor.WaitsUntil(Appearance.Of(ProjectSettingsPage.SettingsGear), IsEqualTo.True(), timeout: 30);
-                Actor.AttemptsTo(Hover.Over(ProjectSettingsPage.SettingsGear));
-                Actor.AttemptsTo(Click.On(ProjectSettingsPage.SettingsGear));
-
                 userActions.LogConsoleMessage("Verify : the project Settings page is displayed");
-                Actor.WaitsUntil(Appearance.Of(ProjectSettingsPage.RemoveProjectButton), IsEqualTo.True(), timeout: 30);
+                OpenProjectSettings(ProjectSettingsPage.SettingsGear);
 
                 // If the user is already in the project's Users list (e.g. left over from a prior run),
                 // remove it AND save first. react-select hides an already-selected option from the
@@ -205,9 +227,7 @@ namespace Dokimion.Tests
                 // without opening the project dashboard first.
                 userActions.LogConsoleMessage("Click the Dokimion projects-list gear icon to open its Settings (Users list)");
                 IWebLocator dokimionGearOnList = ProjectSettingsPage.ProjectListSettingsGear("Dokimion");
-                Actor.WaitsUntil(Appearance.Of(dokimionGearOnList), IsEqualTo.True(), timeout: 30);
-                Actor.AttemptsTo(Click.On(dokimionGearOnList));
-                Actor.WaitsUntil(Appearance.Of(ProjectSettingsPage.RemoveProjectButton), IsEqualTo.True(), timeout: 30);
+                OpenProjectSettings(dokimionGearOnList);
                 userActions.LogConsoleMessage("Verify : the Users list is displayed");
                 Actor.WaitsUntil(Appearance.Of(ProjectSettingsPage.UsersSelectControl), IsEqualTo.True(), timeout: 30);
 
