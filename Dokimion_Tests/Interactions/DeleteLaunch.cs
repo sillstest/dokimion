@@ -26,6 +26,14 @@ namespace Dokimion.Interactions {
 
         public void PerformAs(IActor Actor)
         {
+            // An unrelated JS error elsewhere on the page (e.g. TinyMCE's help plugin failing
+            // to fetch its keyboard-nav i18n snippet) can leave react-error-overlay's
+            // full-viewport "Uncaught runtime errors" iframe on top of the app. That overlay has
+            // no dismiss button and swallows every click underneath it, so the click below would
+            // silently no-op and the LaunchDelete wait would time out (TC18). A hard reload
+            // clears it; nginx's SPA fallback (try_files ... /index.html) keeps us on this route.
+            driver.Navigate().Refresh();
+            Actor.WaitsUntil(Appearance.Of(Header.Launches), IsEqualTo.True(), timeout: 60);
 
            // userActions.LogConsoleMessage("Click on the Launches on header");
             Actor.AttemptsTo(Click.On(Header.Launches));
