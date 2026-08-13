@@ -57,19 +57,22 @@ Vendored (not npm) — **no action needed**: TinyMCE core is self-hosted under `
 | Package | Why |
 |---|---|
 | `@storybook/*` (6 packages) + `storybook` devDependency | **Zero** `*.stories.*` files exist anywhere in `src`. Confirmed via `npm ls react`: its own transitive deps (`react-inspector`, `react-element-to-jsx-string`) are *already* peer-dep-invalid under the **current** React 18 — nobody noticed because nothing uses it. Upgrading Storybook 6→10 (4 majors) to silence warnings for an unused tool isn't worth it; remove it. |
-| `typescript` (`^4.3.3`, devDependency) | No `.ts`/`.tsx` files exist in `src` — vestigial. Confirm nothing else references it before dropping. |
+| ~~`typescript` (`^4.3.3`, devDependency)~~ | ~~No `.ts`/`.tsx` files exist in `src` — vestigial.~~ **AUDIT WAS WRONG — do not remove.** Tried 2026-08-13 and reverted: `eslint-config-react-app` registers an `@typescript-eslint/parser` override unconditionally, and that parser `require()`s the `typescript` module at load time regardless of whether any `.ts` files exist. Removing it makes `yarn lint` fail outright with `Cannot find module 'typescript'`. "No `.ts` files in `src`" was the wrong test — the dependency belongs to eslint, not to the source tree. (Webpack is unaffected: its TS checker no-ops when no TS files are present, so `yarn build` still succeeded without it.) |
 
 ---
 
-## Phase 2 — Remove dead weight first (before touching React at all)
+## Phase 2 — Remove dead weight first (before touching React at all) ✅ COMPLETED 2026-08-13
 
 Doing this first isolates "stuff we removed" build breakage from "React 19" build breakage.
 
-1. Replace `import { Checkbox } from "semantic-ui-react"` with `import Checkbox from "@mui/material/Checkbox"` in both files. Watch the onChange contract — semantic-ui-react's `Checkbox` calls `onChange(e, data)` with `data.checked`; MUI's calls `onChange(e)` with `e.target.checked`. This is the one real code change in the whole plan.
-2. Remove `semantic-ui-react`, `semantic-ui-css` from `dependencies`; drop the CSS import for `semantic-ui-css` if present in `index.js`.
-3. Remove `@storybook/*` (6 packages) + `storybook` from `devDependencies`; delete the `storybook` / `build-storybook` scripts.
-4. Remove `typescript` from `devDependencies` (after confirming nothing else needs it).
-5. `yarn install && yarn build` — confirm clean before Phase 3.
+1. ✅ Replace `import { Checkbox } from "semantic-ui-react"` with `import Checkbox from "@mui/material/Checkbox"` in both files. Watch the onChange contract — semantic-ui-react's `Checkbox` calls `onChange(e, data)` with `data.checked`; MUI's calls `onChange(e)` with `e.target.checked`. This is the one real code change in the whole plan.
+   - Used `@mui/material`'s **`Switch`** rather than `Checkbox` — the originals passed `toggle`, so `Switch` is the faithful equivalent.
+   - The onChange contract risk turned out to be a **non-issue**: `onBrokenToggle()` in `TestCase.js` takes no arguments and derives the new value from current state, so nothing depended on the old `(e, data)` signature.
+   - **Follow-up fix:** the first pass wrapped only `TestCase.js` in `FormControlLabel` and dropped the `label` on `LaunchTestcasesHeatmap.js` entirely, so the heatmap toggle silently lost its On/Off text. Restored — both call sites now use `FormControlLabel` and render consistently.
+2. ✅ Remove `semantic-ui-react`, `semantic-ui-css` from `dependencies`; drop the CSS import for `semantic-ui-css` if present in `index.js`.
+3. ✅ Remove `@storybook/*` (6 packages) + `storybook` from `devDependencies`; delete the `storybook` / `build-storybook` scripts. Also removed two things the audit missed: the now-dead `**/*.stories.*` override in `eslintConfig`, and the `.storybook/` config directory (`main.js` + `preview.js`, both pointing only at story globs that match nothing).
+4. ❌ ~~Remove `typescript` from `devDependencies`~~ — **attempted and reverted.** Breaks `yarn lint`; see the corrected Phase 1 dead-weight table above. `typescript: ^4.3.3` stays.
+5. ⚠️ `yarn install` clean. **`yarn build` not yet run** — blocked on a pre-existing permissions issue, see Open Blockers below.
 
 ---
 
@@ -77,7 +80,8 @@ Doing this first isolates "stuff we removed" build breakage from "React 19" buil
 
 One at a time, `yarn build` after each — a failure then points at exactly one cause.
 
-1. `@tinymce/tinymce-react` 4.3.2 → 6.3.0. Check v5 and v6 changelogs for prop renames/removed shorthand init options. Smoke-test **all 6 editor instances** in `TestCase.js` (Preconditions, Steps, and per-step sub-editors) — this is the biggest version jump (2 majors) on the most heavily-used integration point in the app.
+1. ✅ **Bumped 2026-08-13** — `@tinymce/tinymce-react` 4.3.2 → 6.3.0, installed and resolved; `eslint src` clean. Confirmed against the registry: 6.3.0 declares `react: ^19 || ^18 || ^17 || ^16.7` and `tinymce: ^8 || ^7 || ^6 || ^5.5.1`, so the vendored core at 6.8.6 satisfies it and **does not need to change**. All 6 call sites already use the modern prop API (`tinymceScriptSrc` / `initialValue` / `onInit` / `init={{…}}` / `onEditorChange`), with `plugins` and `toolbar` nested inside `init` rather than as top-level shorthand props — which is where most 4→6 breakage lands, so the exposure here is smaller than the 2-major jump suggests.
+   - ⚠️ **Still needs a build + manual smoke test of all 6 editor instances** in `TestCase.js` (description, preconditions, and the per-step sub-editors) before moving to 3.2. Not yet done — see Open Blockers.
 2. `react-date-picker` 10.6.0 → 12.1.0. Check v11/v12 changelogs (locale handling and `calendarIcon`/`clearIcon` prop shapes commonly change between majors). Smoke-test `Events.js`'s date filter.
 3. `react-helmet-async` 2.0.5 → 3.0.0. Low risk — usage in `Header.js` is minimal per the React 18 plan's notes.
 4. `react-spinners` 0.13.8 → 0.17.0. Check for further prop removals beyond the `sizeUnit` removal already handled in the React 18 upgrade; spot-check a few of the ~21 `FadeLoader` call sites.
@@ -101,9 +105,29 @@ Nothing here is a blocker; this codebase is already hooks-only and already on `c
 
 ---
 
+## Open Blockers & Findings (added 2026-08-13)
+
+Discovered while executing Phases 2–3.1. None are caused by the React 19 work; all three predate it.
+
+### 1. `yarn build` fails with EACCES — blocks the per-bump build gate
+
+`ui/src/build/images/` is owned by `root` (from a root-run build/deploy on 2026-08-12), so `yarn build` under an ordinary uid dies on `EACCES: permission denied, unlink '.../build/images/1px.png'`. `build/` is gitignored generated output, so the fix is just `sudo rm -rf ui/src/build`. Until then the "build after every single bump" discipline in Phase 3 can't run, and bumps 3.2–3.4 should **not** be stacked on top of an unbuilt 3.1 — the whole point of one-at-a-time is losing that isolation.
+
+### 2. `yarn.lock` is not tracked in git — real hazard for a dependency-driven upgrade
+
+Deleted in commit `66473c9f` ("replace google recaptcha with cloudflare turnstile") and never restored; it is not in `.gitignore`, just untracked. Every `yarn install` therefore re-resolves all `^` ranges freely, so a dev machine and the deploy target can silently land on different versions of the very packages this plan bumps — which also means a green Selenium run proves less than it appears to. **The lockfile should be committed as part of this branch** so the React 19 dependency set is actually pinned and reproducible.
+
+### 3. `yarn lint` as configured is impractical
+
+The script is `eslint .`, which walks the entire 681MB `node_modules` (the `ignorePatterns` entry doesn't stop directory traversal). A cold run was killed at 2h34m of CPU time. It only ever appeared to work because `.eslintcache` masked it — and `postinstall: yarn clean` deletes that cache on every install, so any run right after an install pays full cost. Scope the script to `src` (`eslint src`) to make Phase 6.1 usable; `yarn eslint src` completes in ~3s.
+
+---
+
 ## Phase 6 — Validation
 
 1. `yarn lint` — should still be 0 errors/0 warnings (final state of the React 18 plan); flag anything new introduced by the dependency bumps.
+   - **Correction:** the real baseline is 0 errors / **1** warning — a pre-existing `prettier/prettier` "Delete `··`" at `launches/Launch.js:140`, introduced by commit `b000f06a` ("Phase 4 working"), unrelated to any upgrade work. Treat 0 errors / 1 warning as the clean baseline, or clear it with `yarn lint:fix`.
+   - See Open Blockers #3 — run it as `yarn eslint src`, not `yarn lint`, until the script is rescoped.
 2. Manual smoke test each module, with extra attention to: the 6 TinyMCE editor instances, the date picker, the 2 replaced checkboxes, and the spinners.
 3. Run the Dokimion_Tests Selenium suite (TC1–TC22) against the built React 19 app. This is the same finish line the React 18 plan never crossed (its "Remaining to finalize" section still reads "Get the Selenium suite green" as of last update) — worth clearing both upgrades' validation in the same pass rather than twice. Note: the suite has an unrelated, currently-open flakiness issue (intermittent 429s from a load-balancer rate limit tripped by TinyMCE's per-plugin asset bursts on the testcase page) — don't let that get misattributed to this upgrade if it resurfaces mid-testing.
 4. Merge `upgrade/react-19` → `main`.
