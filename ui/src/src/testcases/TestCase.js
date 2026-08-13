@@ -17,7 +17,8 @@ import * as Utils from "../common/Utils";
 import ControlledPopup from "../common/ControlledPopup";
 import { FadeLoader } from "react-spinners";
 import { faPlug } from "@fortawesome/free-solid-svg-icons";
-import { Checkbox } from "semantic-ui-react";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 import { ConfirmButton } from "../common/uicomponents/ConfirmButton";
 import { Editor } from "@tinymce/tinymce-react";
 import Backend from "../services/backend";
@@ -671,11 +672,9 @@ function TestCase({
               )}
               {!readonly && testcase.launchStatus !== undefined && (
                 <div className="col-2">
-                  <Checkbox
-                    toggle
-                    onChange={onBrokenToggle}
-                    checked={testcase.broken}
-                    label={{ children: testcase.broken ? "On" : "Off" }}
+                  <FormControlLabel
+                    control={<Switch checked={testcase.broken} onChange={onBrokenToggle} />}
+                    label={testcase.broken ? "On" : "Off"}
                   />
                 </div>
               )}

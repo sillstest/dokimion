@@ -4,7 +4,7 @@ import { withRouter } from "../common/withRouter";
 import { Link } from "react-router-dom";
 import { FadeLoader } from "react-spinners";
 import * as Utils from "../common/Utils";
-import { Checkbox } from "semantic-ui-react";
+import Switch from "@mui/material/Switch";
 import ControlledPopup from "../common/ControlledPopup";
 import Backend from "../services/backend";
 
@@ -73,11 +73,9 @@ function LaunchTestcasesHeatmap({ match, location }) {
               </td>
               <td className={getCellColorClass(testcase) + " center-text"}>{getPercentile(testcase)}%</td>
               <td>
-                <Checkbox
-                  toggle
-                  onClick={() => onBrokenToggle(testcase.id, !testcase.launchBroken)}
+                <Switch
                   checked={testcase.launchBroken}
-                  label={{ children: testcase.launchBroken ? "On" : "Off" }}
+                  onClick={() => onBrokenToggle(testcase.id, !testcase.launchBroken)}
                 />
               </td>
             </tr>
