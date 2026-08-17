@@ -5,11 +5,14 @@ import { faCogs } from "@fortawesome/free-solid-svg-icons";
 import { FadeLoader } from "react-spinners";
 import Backend from "../services/backend";
 import ControlledPopup from "../common/ControlledPopup";
+import * as Utils from "../common/Utils";
 
 function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage] = useState("");
+  const [session, setSession] = useState({ person: {} });
+
 
   useEffect(() => {
     Backend.get("project")
@@ -18,6 +21,11 @@ function Projects() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+
+    Backend.get("user/session")
+      .then(response => setSession(response))
+      .catch(() => console.log("Unable to fetch session"));
+
   }, []);
 
   return (
@@ -38,11 +46,13 @@ function Projects() {
             <span>
               <Link to={"/projects/" + project.id}>{project.name}</Link>
             </span>
+	    {Utils.isAdmin(session) && (
             <span className="float-right">
               <Link to={"/projects/" + project.id + "/settings"}>
                 <FontAwesomeIcon icon={faCogs} />
               </Link>
             </span>
+            )}
           </div>
           <div className="card-body">
             <p className="card-text">{project.description || ""}</p>
