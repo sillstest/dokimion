@@ -67,8 +67,6 @@ chown dokimion:dokimion .
 chown dokimion:dokimion -R *
 chmod -R a+w *
 chmod -R a+w .
-cd src
-cp -r node_modules/tinymce* public/.
 
 # restart relevant system services
 if [ $1 == "_dev" ]
