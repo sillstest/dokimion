@@ -440,7 +440,7 @@ export function getSizeOfTestcase(tcSizes, steps) {
     if (actions && tcSizes && tcSizes.length > 0) {
 
       // split on "<br>" and "<\n>"
-      var tempLines = actions.replace("<br>", "\n");
+      var tempLines = actions.replaceAll("<br>", "\n");
       var lines = tempLines.split("\n");
 
       var noOfLines = lines.length;
