@@ -438,13 +438,10 @@ export function getSizeOfTestcase(tcSizes, steps) {
     var actions = steps[0].action ? steps[0].action : "";
     actions += steps[0].expectation ? steps[0].expectation : "";
     if (actions && tcSizes && tcSizes.length > 0) {
-      var hasBreak = actions.includes("<br>");
-      var lines = [];
-      if (hasBreak) {
-        lines = actions.split("<br>");
-      } else {
-        lines = actions.split("\n");
-      }
+
+      // split on "<br>" and "<\n>"
+      var tempLines = actions.replace("<br>", "\n");
+      var lines = tempLines.split("\n");
 
       var noOfLines = lines.length;
       // console.log("No of lines" + noOfLines);
