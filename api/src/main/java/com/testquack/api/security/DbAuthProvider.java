@@ -89,8 +89,12 @@ System.out.flush();
         String decryptedAdminPassword = aes.decrypt(this.adminPassword, secretKey) ;
 
         if (login.equalsIgnoreCase(this.adminLogin) && getMd5(password, login).equals(getMd5(decryptedAdminPassword, this.adminLogin))) {
+System.out.println("dbAuthByLoginPassword - before call to getAdminPerson");
+System.out.flush();
             person = getAdminPerson(login, password);
         } else {
+System.out.println("dbAuthByLoginPassword - before call to findPersonByLogin");
+System.out.flush();
             person = findPersonByLogin(login);
         }
 
