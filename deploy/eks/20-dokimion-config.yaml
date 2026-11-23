@@ -14,8 +14,8 @@ data:
   MONGO_URI: "mongodb://mongo-0.mongo.dokimion.svc.cluster.local:27017/"
   MONGO_DBNAME: "dokimion"
   # --- public identity (CHANGE to your hostname) ---
-  AUTH_DOMAIN: "dokimion.example.org"
-  QUACK_UI_URL: "https://dokimion.example.org"
+  AUTH_DOMAIN: "${DOKIMION_HOST}"
+  QUACK_UI_URL: "${QUACK_UI_URL}"
   AUTH_ADMIN_LOGIN: "admin"
   # Cognito is the real login gate, so the UI build uses Turnstile's always-pass test keys:
   QUACK_TURNSTILE_SECRET: "1x0000000000000000000000000000000AA"
@@ -34,4 +34,4 @@ metadata:
   namespace: dokimion
 type: Opaque
 stringData:
-  AUTH_ADMIN_PASSWORD: "REPLACE_WITH_AES_CIPHERTEXT"
+  AUTH_ADMIN_PASSWORD: "${AUTH_ADMIN_PASSWORD_CIPHER}"

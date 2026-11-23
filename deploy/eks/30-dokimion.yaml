@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: dokimion
-          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/dokimion:latest   # <-- set your ECR image
+          image: ${ECR_IMAGE}            # from deploy.env (rendered by apply.sh)
           imagePullPolicy: IfNotPresent
           ports:
             - { name: http, containerPort: 80 }

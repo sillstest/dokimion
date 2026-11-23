@@ -35,36 +35,39 @@ Internet ──HTTPS──▶ ALB (ACM TLS + Cognito authN) ──▶ Service �
   includes `https://<host>/oauth2/idpresponse` and sign-out URL `https://<host>`.
 - A machine with **Docker + network** to build/push, and **JDK 21** to run `aes-encrypt.java`.
 
-## Placeholders to fill in
+## Configuration — one file
 
-| Where | Replace |
-|---|---|
-| `30-dokimion.yaml` | image `ACCOUNT.dkr.ecr.REGION.amazonaws.com/dokimion:latest` |
-| `20-dokimion-config.yaml` | `AUTH_DOMAIN`, `QUACK_UI_URL` (your host); `AUTH_ADMIN_PASSWORD` (ciphertext) |
-| `40-ingress.yaml` | `<ACM_CERT_ARN>`, Cognito `userPoolARN`/`userPoolClientID`/`userPoolDomain`, `host:` |
+All the environment-specific values live in **`deploy.env`** (the only file you edit). The
+manifests carry `${VAR}` placeholders; **`apply.sh`** renders them with your values and applies
+them. `deploy.env` documents each value and how to get it. It holds a secret (the admin
+ciphertext), so don't commit a filled-in copy (`git update-index --skip-worktree deploy.env`, or
+move the secret to Secrets Manager — see Notes).
 
 ## Steps
 
-**1. Build & push the image**
+**1. Fill in `deploy.env`** — ECR image URI, hostname, ACM cert ARN, Cognito pool/client/domain,
+and the admin ciphertext. For that last one:
+```bash
+cd deploy/eks && java aes-encrypt.java 'YourAdminPassword'   # paste the output into AUTH_ADMIN_PASSWORD_CIPHER
+```
+
+**2. Build & push the image** to the ECR repo named in `deploy.env` (`ECR_IMAGE`):
 ```bash
 aws ecr get-login-password --region REGION | docker login --username AWS --password-stdin ACCOUNT.dkr.ecr.REGION.amazonaws.com
-DOCKER_BUILDKIT=1 docker build -f deploy/Dockerfile -t ACCOUNT.dkr.ecr.REGION.amazonaws.com/dokimion:latest .
-docker push ACCOUNT.dkr.ecr.REGION.amazonaws.com/dokimion:latest
+DOCKER_BUILDKIT=1 docker build -f deploy/Dockerfile -t "$ECR_IMAGE" .
+docker push "$ECR_IMAGE"
 ```
 
-**2. Encrypt the admin password** and paste it into the Secret in `20-dokimion-config.yaml`:
+**3. Preview, then apply** (renders `deploy.env` → all manifests, in order):
 ```bash
-java deploy/eks/aes-encrypt.java 'YourAdminPassword'
+cd deploy/eks
+./apply.sh render     # sanity-check the rendered YAML (no cluster changes)
+./apply.sh apply      # kubectl apply -f -   (00-namespace → 10-mongo → 20-config → 30-dokimion → 40-ingress)
+kubectl -n dokimion rollout status statefulset/mongo
+kubectl -n dokimion rollout status deploy/dokimion
 ```
-
-**3. Apply (in order)**
-```bash
-kubectl apply -f deploy/eks/00-namespace.yaml
-kubectl apply -f deploy/eks/10-mongo.yaml          # wait: kubectl -n dokimion rollout status statefulset/mongo
-kubectl apply -f deploy/eks/20-dokimion-config.yaml
-kubectl apply -f deploy/eks/30-dokimion.yaml
-kubectl apply -f deploy/eks/40-ingress.yaml        # LB controller provisions the ALB
-```
+`./apply.sh apply` refuses to run while any value is still a placeholder. The LB controller
+provisions the ALB from the Ingress; `./apply.sh diff` shows a dry-run against the cluster.
 
 **4. Wire DNS + Cognito**
 - `kubectl -n dokimion get ingress dokimion` → point your hostname (Route 53 ALIAS) at the ALB.
