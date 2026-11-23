@@ -1,0 +1,55 @@
+# Dokimion workload. Labelled mongo-client=true so the Mongo NetworkPolicy admits it.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dokimion
+  namespace: dokimion
+  labels: { app: dokimion }
+spec:
+  replicas: 1                           # keep at 1 (single Hazelcast member); see README to scale
+  selector:
+    matchLabels: { app: dokimion }
+  template:
+    metadata:
+      labels:
+        app: dokimion
+        mongo-client: "true"
+    spec:
+      containers:
+        - name: dokimion
+          image: ACCOUNT.dkr.ecr.REGION.amazonaws.com/dokimion:latest   # <-- set your ECR image
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 80 }
+          envFrom:
+            - configMapRef: { name: dokimion-config }
+            - secretRef:    { name: dokimion-secrets }
+          # jetty (:8080) takes time to deploy the war — don't serve until it listens
+          startupProbe:
+            tcpSocket: { port: 8080 }
+            periodSeconds: 10
+            failureThreshold: 30          # up to ~5 min
+          livenessProbe:
+            httpGet: { path: /healthz, port: 80 }
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /healthz, port: 80 }
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests: { cpu: "500m", memory: "1Gi" }
+            limits:   { cpu: "2",    memory: "3Gi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dokimion
+  namespace: dokimion
+  labels: { app: dokimion }
+spec:
+  type: ClusterIP
+  selector: { app: dokimion }
+  ports:
+    - { name: http, port: 80, targetPort: 80 }

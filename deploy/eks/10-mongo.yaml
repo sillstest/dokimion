@@ -1,0 +1,88 @@
+# MongoDB: stock image, STANDALONE (matches production dokimion5, where replication is disabled
+# and the app uses no multi-document transactions), data on an EBS gp3 PVC.
+# Isolated by a NetworkPolicy (only pods labelled mongo-client=true may reach :27017).
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: dokimion-gp3
+provisioner: ebs.csi.aws.com          # requires the EBS CSI driver add-on
+parameters:
+  type: gp3
+  encrypted: "true"
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain                  # keep the volume if the PVC is deleted
+allowVolumeExpansion: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: dokimion
+  labels: { app: mongo }
+spec:
+  clusterIP: None                      # headless -> stable pod DNS: mongo-0.mongo.dokimion.svc.cluster.local
+  selector: { app: mongo }
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: 27017
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  namespace: dokimion
+spec:
+  serviceName: mongo
+  replicas: 1
+  selector:
+    matchLabels: { app: mongo }
+  template:
+    metadata:
+      labels: { app: mongo }
+    spec:
+      securityContext:
+        fsGroup: 999                   # mongodb uid/gid in the official image
+      containers:
+        - name: mongo
+          image: mongo:7
+          args: ["--bind_ip_all"]        # standalone; no --replSet (matches production)
+          ports:
+            - { name: mongo, containerPort: 27017 }
+          volumeMounts:
+            - { name: data, mountPath: /data/db }
+          readinessProbe:
+            exec: { command: ["bash","-c","mongosh --quiet --eval 'db.adminCommand({ping:1})'"] }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits:   { cpu: "1",    memory: "2Gi" }
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: dokimion-gp3
+        resources:
+          requests:
+            storage: 20Gi
+---
+# Only Dokimion may reach Mongo. Requires NetworkPolicy enforcement
+# (EKS VPC CNI network policy enabled, or Calico); otherwise this is inert, not harmful.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mongo-allow-dokimion
+  namespace: dokimion
+spec:
+  podSelector:
+    matchLabels: { app: mongo }
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { mongo-client: "true" }
+      ports:
+        - { protocol: TCP, port: 27017 }

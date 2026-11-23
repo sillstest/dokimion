@@ -1,0 +1,39 @@
+# Rendered at container start by docker-entrypoint.sh (envsubst). Do NOT bake secrets here.
+#Database
+#   Prefer mongo.uri (plain connection string, bypasses the AES-encrypted mongo.password path).
+mongo.uri=${MONGO_URI}
+mongo.replicaSet=${MONGO_REPLICASET}
+mongo.dbname=${MONGO_DBNAME}
+mongo.username=${MONGO_USERNAME}
+mongo.password=${MONGO_PASSWORD}
+#Authentication
+whoru.auth.provider=${WHORU_AUTH_PROVIDER}
+whoru.session.provider=${WHORU_SESSION_PROVIDER}
+stub.login=${STUB_LOGIN}
+auth.domain=${AUTH_DOMAIN}
+auth.session.ttl=${AUTH_SESSION_TTL}
+auth.admin.login=${AUTH_ADMIN_LOGIN}
+# NOTE: auth.admin.password is the AES-CIPHERTEXT of the admin password (see deploy/eks/aes-encrypt.java)
+auth.admin.password=${AUTH_ADMIN_PASSWORD}
+auth.admin.logins=${AUTH_ADMIN_LOGINS}
+#Hazelcast
+entity.lock.ttl.min=${ENTITY_LOCK_TTL_MIN}
+hazelcast.group.name=${HAZELCAST_GROUP_NAME}
+hazelcast.group.password=${HAZELCAST_GROUP_PASSWORD}
+hazelcast.ttl.sec=${HAZELCAST_TTL_SEC}
+hazelcast.port=${HAZELCAST_PORT}
+hazelcast.port.rest=5904
+hazelcast.port.auto.increment=true
+hazelcast.backup.count=${HAZELCAST_BACKUP_COUNT}
+hazelcast.prefer.ipv4.stack=true
+hazelcast.aws.enabled=false
+hazelcast.tcpip.enabled=${HAZELCAST_TCPIP_ENABLED}
+#Providers
+storage.provider=${STORAGE_PROVIDER}
+quack.tracker=${QUACK_TRACKER}
+quack.turnstile.secret=${QUACK_TURNSTILE_SECRET}
+quack.api.endpoint=${QUACK_API_ENDPOINT}
+quack.ui.url=${QUACK_UI_URL}
+quack.multi.organization.mode=${QUACK_MULTI_ORG_MODE}
+quack.organizations.enabled=${QUACK_ORGS_ENABLED}
+quack.organization.default.sessions.capacity=${QUACK_ORG_SESSIONS_CAPACITY}

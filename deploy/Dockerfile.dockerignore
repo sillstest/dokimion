@@ -1,0 +1,12 @@
+.git
+**/node_modules
+**/target
+**/bin
+**/obj
+ui/src/build
+ui/ui.tgz
+*.tgz
+Dokimion_Tests
+docs
+local-run
+**/*.log

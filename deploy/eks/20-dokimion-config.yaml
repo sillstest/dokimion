@@ -1,0 +1,37 @@
+# Non-secret config (ConfigMap) + secret stub (Secret). Env names map 1:1 to the keys the
+# container entrypoint renders into /etc/dokimion/quack.properties.
+#
+# For production, replace the Secret below with an ExternalSecret (External Secrets Operator)
+# that syncs AWS Secrets Manager -> this Secret. See README.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dokimion-config
+  namespace: dokimion
+data:
+  # --- Mongo (plain URI: no AES, no in-DB creds; Mongo is network-isolated) ---
+  MONGO_URI: "mongodb://mongo-0.mongo.dokimion.svc.cluster.local:27017/"
+  MONGO_DBNAME: "dokimion"
+  # --- public identity (CHANGE to your hostname) ---
+  AUTH_DOMAIN: "dokimion.example.org"
+  QUACK_UI_URL: "https://dokimion.example.org"
+  AUTH_ADMIN_LOGIN: "admin"
+  # Cognito is the real login gate, so the UI build uses Turnstile's always-pass test keys:
+  QUACK_TURNSTILE_SECRET: "1x0000000000000000000000000000000AA"
+  # single replica -> single Hazelcast member is fine
+  WHORU_SESSION_PROVIDER: "ru.greatbit.whoru.auth.providers.HazelcastSessionProvider"
+  QUACK_MULTI_ORG_MODE: "false"
+  QUACK_ORGS_ENABLED: "false"
+  JAVA_OPTS: "-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxMetaspaceSize=512m"
+---
+# STUB. auth.admin.password must be the AES-CIPHERTEXT of the admin password:
+#   java deploy/eks/aes-encrypt.java 'YourAdminPassword'   ->   paste the output below
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dokimion-secrets
+  namespace: dokimion
+type: Opaque
+stringData:
+  AUTH_ADMIN_PASSWORD: "REPLACE_WITH_AES_CIPHERTEXT"

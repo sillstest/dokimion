@@ -1,0 +1,40 @@
+# Internet-facing ALB (created by the AWS Load Balancer Controller):
+#   - TLS terminated at the ALB with an ACM cert
+#   - Cognito authentication action -> every request is logged in before it reaches the pods
+#   - HTTP:80 redirected to HTTPS:443
+#
+# Fill in: <ACM_CERT_ARN>, the Cognito userPoolARN / userPoolClientID / userPoolDomain, and host.
+# The Cognito app client's allowed callback URL MUST include: https://<host>/oauth2/idpresponse
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dokimion
+  namespace: dokimion
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: <ACM_CERT_ARN>
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    # --- Cognito authentication (Option A: edge gate) ---
+    alb.ingress.kubernetes.io/auth-type: cognito
+    alb.ingress.kubernetes.io/auth-on-unauthenticated-request: authenticate
+    alb.ingress.kubernetes.io/auth-scope: openid
+    alb.ingress.kubernetes.io/auth-idp-cognito: >-
+      {"userPoolARN":"<COGNITO_USER_POOL_ARN>",
+       "userPoolClientID":"<COGNITO_APP_CLIENT_ID>",
+       "userPoolDomain":"<COGNITO_DOMAIN_PREFIX>"}
+spec:
+  ingressClassName: alb
+  rules:
+    - host: dokimion.example.org          # <-- your hostname
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dokimion
+                port:
+                  number: 80
