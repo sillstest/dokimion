@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 #
-# Local smoke-run of the Dokimion image + a throwaway Mongo. This is the DEV/verify path only —
-# NOT the EKS deployment (no ALB / Cognito / TLS; plain HTTP on :PORT, Mongo data is not persisted).
+# Local smoke-run of the Dokimion image + a Mongo container. This is the DEV/verify path only —
+# NOT the EKS deployment (no ALB / Cognito / TLS; plain HTTP on :PORT). Mongo data PERSISTS in a
+# named Docker volume ($MONGO_VOLUME, default dokimion-mongo-data) across up/rebuild/down.
 #
-#   deploy/run-local.sh up        # (re)create mongo + app from scratch (FRESH db)
+#   deploy/run-local.sh up        # (re)create mongo + app (Mongo data persists in the volume)
 #   deploy/run-local.sh restart   # restart the existing containers (keeps db)
 #   deploy/run-local.sh rebuild   # docker build the image, then `up`
-#   deploy/run-local.sh down      # stop & remove containers + network
+#   deploy/run-local.sh down      # remove containers + network (KEEPS the Mongo volume)
+#   deploy/run-local.sh wipe      # remove containers + network + Mongo volume (FRESH db)
 #   deploy/run-local.sh logs      # follow the app log
 #   deploy/run-local.sh status    # ps + quick health (default)
 #
-# Overridable via env: IMAGE, PORT, DOKIMION_HOST, ADMIN_PLAINTEXT
+# Overridable via env: IMAGE, PORT, DOKIMION_HOST, ADMIN_PLAINTEXT, MONGO_VOLUME
 #
 # ---------------------------------------------------------------------------
 # STARTUP OPTIONS (bringing the stack back up after a stop or `down`)
@@ -18,8 +20,11 @@
 #   Restart stopped containers, Mongo data PRESERVED:
 #       deploy/run-local.sh restart          # or:  docker start dk-mongo dk-app
 #
-#   Recreate from scratch (FRESH Mongo — wipes anything you created):
+#   Recreate the containers (Mongo data PRESERVED in its volume across up/rebuild/down):
 #       deploy/run-local.sh up
+#
+#   Start completely fresh (delete the Mongo volume too):
+#       deploy/run-local.sh wipe && deploy/run-local.sh up
 #
 #   Rebuild the image first (after code changes), then recreate:
 #       deploy/run-local.sh rebuild
@@ -40,7 +45,7 @@ IMAGE="${IMAGE:-dokimion:verify}"
 PORT="${PORT:-8088}"
 HOST_FQDN="${DOKIMION_HOST:-s-dokimion3.psonet}"   # must match how you browse (session cookie domain)
 ADMIN_PLAINTEXT="${ADMIN_PLAINTEXT:-DockerTest1}"  # the admin password; its AES ciphertext is computed below
-NET=dk-net; MONGO=dk-mongo; APP=dk-app
+NET=dk-net; MONGO=dk-mongo; APP=dk-app; VOL="${MONGO_VOLUME:-dokimion-mongo-data}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Re-exec under the docker group if the socket isn't reachable (new group needs a fresh shell).
@@ -54,7 +59,7 @@ fi
 
 cipher() { java "$ROOT/deploy/eks/aes-encrypt.java" "$ADMIN_PLAINTEXT"; }
 
-start_mongo() { docker run -d --name "$MONGO" --network "$NET" mongo:7 --bind_ip_all >/dev/null; }
+start_mongo() { docker run -d --name "$MONGO" --network "$NET" -v "${VOL}:/data/db" mongo:7 --bind_ip_all >/dev/null; }
 start_app() {
   docker run -d --name "$APP" --network "$NET" -p "${PORT}:80" \
     -e MONGO_URI="mongodb://${MONGO}:27017/" -e MONGO_DBNAME=dokimion \
@@ -83,7 +88,13 @@ case "${1:-status}" in
   down)
     docker rm -f "$APP" "$MONGO" >/dev/null 2>&1 || true
     docker network rm "$NET" >/dev/null 2>&1 || true
-    echo "removed containers + network."
+    echo "removed containers + network.  Mongo volume '$VOL' KEPT (data survives) — use 'wipe' to delete it."
+    ;;
+  wipe)
+    docker rm -f "$APP" "$MONGO" >/dev/null 2>&1 || true
+    docker network rm "$NET" >/dev/null 2>&1 || true
+    docker volume rm "$VOL" >/dev/null 2>&1 || true
+    echo "removed containers + network + Mongo volume '$VOL' — next 'up' starts a FRESH db."
     ;;
   logs) exec docker logs -f "$APP" ;;
   status)
@@ -91,5 +102,5 @@ case "${1:-status}" in
     curl -s -o /dev/null -w "  http://localhost:${PORT}/              -> %{http_code}\n" "http://localhost:${PORT}/" || true
     curl -s -o /dev/null -w "  http://localhost:${PORT}/api/user/session -> %{http_code} (401=up)\n" "http://localhost:${PORT}/api/user/session" || true
     ;;
-  *) echo "usage: $0 {up|restart|rebuild|down|logs|status}" >&2; exit 2 ;;
+  *) echo "usage: $0 {up|restart|rebuild|down|wipe|logs|status}" >&2; exit 2 ;;
 esac
