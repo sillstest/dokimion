@@ -1,0 +1,3 @@
+# Keep the mongo build context tiny and secret-free: send only mongod.conf.
+*
+!mongod.conf

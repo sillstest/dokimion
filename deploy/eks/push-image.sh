@@ -60,11 +60,23 @@ do_build() {
 }
 do_push() { echo "==> pushing $ECR_IMAGE" >&2; docker push "$ECR_IMAGE"; }
 
+# --- mongo image (mongo:7 + baked mongod.conf) ---
+MONGO_DOCKERFILE="${MONGO_DOCKERFILE:-$ROOT/deploy/Dockerfile.mongo}"
+mongo_build() {
+  : "${MONGO_IMAGE:?set MONGO_IMAGE in $ENV_FILE}"
+  echo "==> building $MONGO_IMAGE  (platform $PLATFORM)" >&2
+  DOCKER_BUILDKIT=1 docker build --platform "$PLATFORM" -f "$MONGO_DOCKERFILE" -t "$MONGO_IMAGE" "$ROOT/deploy"
+}
+mongo_push() { echo "==> pushing $MONGO_IMAGE" >&2; docker push "$MONGO_IMAGE"; }
+
 case "${1:-all}" in
-  build) do_build ;;
-  login) do_login ;;
-  push)  do_login; do_push ;;
-  all)   do_build; do_login; do_push
-         echo "==> done. Deploy with: ./apply.sh apply" >&2 ;;
-  *) echo "usage: $0 {all|build|login|push}" >&2; exit 2 ;;
+  build)       do_build ;;
+  login)       do_login ;;
+  push)        do_login; do_push ;;
+  mongo-build) mongo_build ;;
+  mongo-push)  do_login; mongo_push ;;
+  mongo)       mongo_build; do_login; mongo_push ;;
+  all)         do_build; mongo_build; do_login; do_push; mongo_push
+               echo "==> done (app + mongo). Deploy with: ./apply.sh apply" >&2 ;;
+  *) echo "usage: $0 {all|build|login|push|mongo|mongo-build|mongo-push}" >&2; exit 2 ;;
 esac

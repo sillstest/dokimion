@@ -14,13 +14,13 @@ ENV_FILE="${ENV_FILE:-deploy.env}"
 case "$ENV_FILE" in /*) ENV_SRC="$ENV_FILE";; *) ENV_SRC="./$ENV_FILE";; esac
 set -a; . "$ENV_SRC"; set +a
 
-VARS='${ECR_IMAGE} ${DOKIMION_HOST} ${QUACK_UI_URL} ${AUTH_ADMIN_PASSWORD_CIPHER} ${ACM_CERT_ARN} ${COGNITO_USER_POOL_ARN} ${COGNITO_APP_CLIENT_ID} ${COGNITO_DOMAIN_PREFIX}'
+VARS='${ECR_IMAGE} ${MONGO_IMAGE} ${DOKIMION_HOST} ${QUACK_UI_URL} ${AUTH_ADMIN_PASSWORD_CIPHER} ${ACM_CERT_ARN} ${COGNITO_USER_POOL_ARN} ${COGNITO_APP_CLIENT_ID} ${COGNITO_DOMAIN_PREFIX}'
 MANIFESTS=(00-namespace.yaml 10-mongo.yaml 20-dokimion-config.yaml 30-dokimion.yaml 40-ingress.yaml)
 
 # fail fast if a required value is still a placeholder (render is exempt so you can preview)
 require_filled() {
   local bad=0 v val
-  for v in ECR_IMAGE DOKIMION_HOST AUTH_ADMIN_PASSWORD_CIPHER ACM_CERT_ARN \
+  for v in ECR_IMAGE MONGO_IMAGE DOKIMION_HOST AUTH_ADMIN_PASSWORD_CIPHER ACM_CERT_ARN \
            COGNITO_USER_POOL_ARN COGNITO_APP_CLIENT_ID COGNITO_DOMAIN_PREFIX; do
     val="${!v:-}"
     case "$val" in

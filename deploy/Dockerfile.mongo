@@ -1,0 +1,10 @@
+# Custom MongoDB image for Dokimion: stock mongo:7 with mongod.conf (patterned after
+# dokimion-mongodb) baked in at build time, so no config mount/ConfigMap is needed.
+#
+# Build context = deploy/ (see Dockerfile.mongo.dockerignore, which keeps only mongod.conf):
+#   DOCKER_BUILDKIT=1 docker build -f deploy/Dockerfile.mongo -t dokimion-mongo:verify deploy
+FROM mongo:7
+COPY mongod.conf /etc/mongod.conf
+# Default command runs standalone with the baked config (equivalent args to the stock image's
+# "mongod", plus --config). Override `args`/CMD to change.
+CMD ["mongod", "--config", "/etc/mongod.conf"]
