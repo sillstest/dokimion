@@ -80,3 +80,7 @@ fabric.properties
 
 .vscode
 
+# --- live config: never commit (secrets / live host values) ---
+config/production/dokimion/quack.properties
+deploy/quack.properties
+deploy/quack.env
