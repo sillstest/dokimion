@@ -51,6 +51,9 @@ spec:
             - { name: mongo, containerPort: 27017 }
           volumeMounts:
             - { name: data, mountPath: /data/db }
+            # /data/configdb is an inherited VOLUME from the mongo image (config-server dir, unused
+            # for a standalone mongod). Back it with an ephemeral emptyDir so it leaves no PVC/state.
+            - { name: configdb, mountPath: /data/configdb }
           readinessProbe:
             exec: { command: ["bash","-c","mongosh --quiet --eval 'db.adminCommand({ping:1})'"] }
             initialDelaySeconds: 10
@@ -58,6 +61,9 @@ spec:
           resources:
             requests: { cpu: "250m", memory: "512Mi" }
             limits:   { cpu: "1",    memory: "2Gi" }
+      volumes:
+        - name: configdb
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: data

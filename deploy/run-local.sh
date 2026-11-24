@@ -79,8 +79,13 @@ build_mongo() {
 }
 # mongod.conf is baked into $MONGO_IMAGE (its CMD runs `mongod --config /etc/mongod.conf`),
 # so no config bind-mount is needed — only the data volume.
+# /data/configdb is an inherited VOLUME from the mongo image (config-server dir, unused for a
+# standalone mongod). Back it with a tmpfs so Docker creates no throwaway anonymous host volume.
 start_mongo() {
-  docker run -d --name "$MONGO" --network "$NET" -v "${VOL}:/data/db" "$MONGO_IMAGE" >/dev/null
+  docker run -d --name "$MONGO" --network "$NET" \
+    -v "${VOL}:/data/db" \
+    --tmpfs /data/configdb \
+    "$MONGO_IMAGE" >/dev/null
 }
 # The app gets ALL its config from the mounted quack.properties (entrypoint skips env-render when
 # the file is present). No -e config vars needed.
