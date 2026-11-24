@@ -59,7 +59,12 @@ fi
 
 cipher() { java "$ROOT/deploy/eks/aes-encrypt.java" "$ADMIN_PLAINTEXT"; }
 
-start_mongo() { docker run -d --name "$MONGO" --network "$NET" -v "${VOL}:/data/db" mongo:7 --bind_ip_all >/dev/null; }
+start_mongo() {
+  docker run -d --name "$MONGO" --network "$NET" \
+    -v "${VOL}:/data/db" \
+    -v "${ROOT}/deploy/mongod.conf:/etc/mongod.conf:ro" \
+    mongo:7 --config /etc/mongod.conf >/dev/null
+}
 start_app() {
   docker run -d --name "$APP" --network "$NET" -p "${PORT}:80" \
     -e MONGO_URI="mongodb://${MONGO}:27017/" -e MONGO_DBNAME=dokimion \

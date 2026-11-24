@@ -14,6 +14,29 @@ volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Retain                  # keep the volume if the PVC is deleted
 allowVolumeExpansion: true
 ---
+# mongod config, patterned after dokimion-mongodb. KEEP IN SYNC with deploy/mongod.conf.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-config
+  namespace: dokimion
+data:
+  mongod.conf: |
+    storage:
+      dbPath: /data/db
+      wiredTiger:
+        engineConfig:
+          cacheSizeGB: 1           # ~50% of the container memory limit (2Gi below); raise with the limit
+    net:
+      port: 27017
+      bindIp: 0.0.0.0             # all interfaces (equivalent to --bind_ip_all)
+    processManagement:
+      timeZoneInfo: /usr/share/zoneinfo
+    # dokimion-mongodb runs WITH auth. To match it, uncomment below AND create the 'dokimion'
+    # user (e.g. via a bootstrap Job / Secret). Off by default so the current setup keeps working.
+    #security:
+    #  authorization: enabled
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -47,11 +70,12 @@ spec:
       containers:
         - name: mongo
           image: mongo:7
-          args: ["--bind_ip_all"]        # standalone; no --replSet (matches production)
+          args: ["--config", "/etc/mongod.conf"]   # standalone; config patterned after dokimion-mongodb
           ports:
             - { name: mongo, containerPort: 27017 }
           volumeMounts:
             - { name: data, mountPath: /data/db }
+            - { name: config, mountPath: /etc/mongod.conf, subPath: mongod.conf, readOnly: true }
           readinessProbe:
             exec: { command: ["bash","-c","mongosh --quiet --eval 'db.adminCommand({ping:1})'"] }
             initialDelaySeconds: 10
@@ -59,6 +83,10 @@ spec:
           resources:
             requests: { cpu: "250m", memory: "512Mi" }
             limits:   { cpu: "1",    memory: "2Gi" }
+      volumes:
+        - name: config
+          configMap:
+            name: mongo-config
   volumeClaimTemplates:
     - metadata:
         name: data
