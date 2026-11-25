@@ -26,29 +26,13 @@ PROTECT_FILES=(
   deploy/quack.env                               # host/port values for the above
 )
 
-# Ignore ONLY these exact paths (a broad config/**/quack.properties rule is avoided so the other,
+# Ignore rules are derived from PROTECT_FILES below (single source of truth) + this header. Only
+# those exact paths are ignored (a broad config/**/quack.properties rule is avoided so the other,
 # intentionally-tracked quack.properties keep working normally).
-GITIGNORE_RULES=(
-  '# --- live config: never commit (secrets / live host values) ---'
-  'config/production/dokimion/quack.properties'
-  'deploy/quack.properties'
-  'deploy/quack.properties.rendered'
-  'deploy/quack.env'
-)
+GITIGNORE_HEADER='# --- live config: never commit (secrets / live host values) ---'
 
-# Files we must NOT remove from git (left here for clarity / safety).
-KEEP_FILES=(
-  config/development/laptop_VM/quack.properties
-  config/production/dokimion1/quack.properties
-  config/production/dokimion2/quack.properties
-  config/production/dokimion3/quack.properties
-  config/staging/s-dokimion1/quack.properties
-  config/staging/s-dokimion2/quack.properties
-  config/staging/s-dokimion3/quack.properties
-  api/src/main/resources/quack.properties
-  assembly/quack.properties
-  dal/src/main/resources/quack.properties
-)
+# NOTE: every OTHER quack.properties in the repo (config/**, src/main/resources, assembly) is
+# intentionally LEFT TRACKED and untouched — this script only acts on PROTECT_FILES above.
 
 tracked() { git ls-files --error-unmatch "$1" >/dev/null 2>&1; }
 
@@ -63,15 +47,14 @@ case "$MODE" in
       else echo "  $f -> not tracked (good); would just ensure the .gitignore rule"; fi
     done
     echo
-    echo "Would add to .gitignore (if missing):"; printf '  %s\n' "${GITIGNORE_RULES[@]}"
+    echo "Would add to .gitignore (if missing):"; printf '  %s\n' "$GITIGNORE_HEADER" "${PROTECT_FILES[@]}"
     echo
-    echo "LEFT ALONE (stay tracked, per project decision):"
-    for f in "${KEEP_FILES[@]}"; do tracked "$f" && echo "  keep  $f" || echo "  (not tracked) $f"; done
+    echo "All other quack.properties in the repo are left tracked and untouched."
     ;;
 
   --apply)
     touch .gitignore
-    for rule in "${GITIGNORE_RULES[@]}"; do
+    for rule in "$GITIGNORE_HEADER" "${PROTECT_FILES[@]}"; do
       grep -qxF "$rule" .gitignore || { printf '%s\n' "$rule" >> .gitignore; echo "gitignore += $rule"; }
     done
     git add .gitignore
