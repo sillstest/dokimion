@@ -46,41 +46,39 @@ mkdir -p /etc/dokimion
 PROPS=/etc/dokimion/quack.properties
 TURN=/etc/dokimion/cloudflareTurnstile.properties
 
-# If a quack.properties is already present (mounted from a file/Secret), USE IT AS-IS and skip
-# env-rendering. Otherwise render it from the env defaults above. This lets a deployment supply
-# the real config file (deploy/quack.properties) instead of env vars.
+# This image generates its config from the baked template + env at startup. Mounting a pre-filled
+# quack.properties is NOT supported: if one is present, refuse to start (don't silently use it).
 if [ -f "$PROPS" ]; then
-  echo "[entrypoint] using provided $PROPS (mounted) — skipping env render"
-else
-  # ---- required (only when rendering from env) ----
-  if [ -z "${MONGO_URI}" ] && [ -z "${MONGO_REPLICASET}" ]; then
-    echo "ERROR: set MONGO_URI (preferred) or MONGO_REPLICASET" >&2; exit 1
-  fi
-  : "${AUTH_ADMIN_PASSWORD:?AUTH_ADMIN_PASSWORD is required (AES ciphertext — see deploy/eks/aes-encrypt.java)}"
-
-  export MONGO_URI MONGO_REPLICASET MONGO_DBNAME MONGO_USERNAME MONGO_PASSWORD \
-    WHORU_AUTH_PROVIDER WHORU_SESSION_PROVIDER STUB_LOGIN AUTH_DOMAIN AUTH_SESSION_TTL \
-    AUTH_ADMIN_LOGIN AUTH_ADMIN_PASSWORD AUTH_ADMIN_LOGINS ENTITY_LOCK_TTL_MIN \
-    HAZELCAST_GROUP_NAME HAZELCAST_GROUP_PASSWORD HAZELCAST_TTL_SEC HAZELCAST_PORT \
-    HAZELCAST_BACKUP_COUNT HAZELCAST_TCPIP_ENABLED STORAGE_PROVIDER QUACK_TRACKER \
-    QUACK_TURNSTILE_SECRET QUACK_API_ENDPOINT QUACK_UI_URL QUACK_MULTI_ORG_MODE \
-    QUACK_ORGS_ENABLED QUACK_ORG_SESSIONS_CAPACITY
-
-  envsubst < /opt/dokimion/quack.properties.tmpl > "$PROPS"
-  chmod 600 "$PROPS"
-  echo "[entrypoint] rendered $PROPS from env (mongo.uri set: $([ -n "$MONGO_URI" ] && echo yes || echo no), domain=${AUTH_DOMAIN})"
+  echo "ERROR: $PROPS already exists (a config file was mounted into the container)." >&2
+  echo "       This image renders its config from /opt/dokimion/quack.properties.tmpl + env vars" >&2
+  echo "       at startup; mounting a quack.properties is not supported. Remove the mount and pass" >&2
+  echo "       config via environment variables instead." >&2
+  exit 1
 fi
+
+# ---- required env ----
+if [ -z "${MONGO_URI}" ] && [ -z "${MONGO_REPLICASET}" ]; then
+  echo "ERROR: set MONGO_URI (preferred) or MONGO_REPLICASET" >&2; exit 1
+fi
+: "${AUTH_ADMIN_PASSWORD:?AUTH_ADMIN_PASSWORD is required (AES ciphertext — see deploy/eks/aes-encrypt.java)}"
+
+export MONGO_URI MONGO_REPLICASET MONGO_DBNAME MONGO_USERNAME MONGO_PASSWORD \
+  WHORU_AUTH_PROVIDER WHORU_SESSION_PROVIDER STUB_LOGIN AUTH_DOMAIN AUTH_SESSION_TTL \
+  AUTH_ADMIN_LOGIN AUTH_ADMIN_PASSWORD AUTH_ADMIN_LOGINS ENTITY_LOCK_TTL_MIN \
+  HAZELCAST_GROUP_NAME HAZELCAST_GROUP_PASSWORD HAZELCAST_TTL_SEC HAZELCAST_PORT \
+  HAZELCAST_BACKUP_COUNT HAZELCAST_TCPIP_ENABLED STORAGE_PROVIDER QUACK_TRACKER \
+  QUACK_TURNSTILE_SECRET QUACK_API_ENDPOINT QUACK_UI_URL QUACK_MULTI_ORG_MODE \
+  QUACK_ORGS_ENABLED QUACK_ORG_SESSIONS_CAPACITY
+
+envsubst < /opt/dokimion/quack.properties.tmpl > "$PROPS"
+chmod 600 "$PROPS"
+echo "[entrypoint] rendered $PROPS from env (mongo.uri set: $([ -n "$MONGO_URI" ] && echo yes || echo no), domain=${AUTH_DOMAIN})"
 
 # TurnstileProperties loads this file in a STATIC initializer and throws if it is missing, which
 # makes UserResource (and every /api/user/* call) 500. It reads app.secret as the Cloudflare
-# Turnstile verify secret. Render it if not already provided; prefer the secret from a mounted
-# quack.properties (its quack.turnstile.secret), else the QUACK_TURNSTILE_SECRET env default.
-if [ ! -f "$TURN" ]; then
-  turn_secret=""
-  [ -f "$PROPS" ] && turn_secret="$(sed -n 's/^[[:space:]]*quack\.turnstile\.secret[[:space:]]*=//p' "$PROPS" | head -1)"
-  printf 'app.secret=%s\n' "${turn_secret:-${QUACK_TURNSTILE_SECRET}}" > "$TURN"
-  chmod 600 "$TURN"
-fi
+# Turnstile verify secret (QUACK_TURNSTILE_SECRET).
+printf 'app.secret=%s\n' "${QUACK_TURNSTILE_SECRET}" > "$TURN"
+chmod 600 "$TURN"
 
 # nginx in the background; if it dies, take the pod down so Kubernetes restarts it
 nginx -g 'daemon off;' &

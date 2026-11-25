@@ -18,12 +18,9 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-# Live config files used by the containers — must stay out of git (hold secrets / live host).
+# Live config file(s) that must stay out of git (hold secrets / live host values).
 PROTECT_FILES=(
   config/production/dokimion/quack.properties   # production container config (live secrets)
-  deploy/quack.properties                        # docker-deploy config template (live secrets)
-  deploy/quack.properties.rendered               # run-local render of the above, mounted into the app
-  deploy/quack.env                               # host/port values for the above
 )
 
 # Ignore rules are derived from PROTECT_FILES below (single source of truth) + this header. Only

@@ -12,10 +12,10 @@
 #   deploy/run-local.sh logs      # follow the app log
 #   deploy/run-local.sh status    # ps + quick health (default)
 #
-# App config now comes from deploy/quack.properties (rendered from deploy/quack.env), mounted into
-# the app container — NOT from env vars. Edit host/port in deploy/quack.env; admin password and
-# other settings live in deploy/quack.properties.
-# Overridable via env: IMAGE, MONGO_IMAGE, PORT, MONGO_VOLUME, RENDERED_PROPS
+# App config is the template BAKED INTO THE IMAGE (/opt/dokimion/quack.properties.tmpl), filled in
+# at container startup by the entrypoint (envsubst) from the env vars passed below — NO host file
+# is used at runtime and NO secrets are baked into the image.
+# Overridable via env: IMAGE, MONGO_IMAGE, PORT, DOKIMION_HOST, ADMIN_PLAINTEXT, MONGO_VOLUME
 #
 # ---------------------------------------------------------------------------
 # STARTUP OPTIONS (bringing the stack back up after a stop or `down`)
@@ -36,7 +36,7 @@
 #   the session cookie matches how you reach it:
 #       DOKIMION_HOST=localhost deploy/run-local.sh up
 #
-#   Open it:   http://<DOKIMION_HOST>:<PORT>/     login:  admin / <auth.admin.password in quack.properties>
+#   Open it:   http://<DOKIMION_HOST>:<PORT>/     login:  admin / <ADMIN_PLAINTEXT>
 #              (defaults: http://s-dokimion3.psonet:8088   admin / DockerTest1)
 #
 #   Remove containers + network entirely when done:
@@ -44,17 +44,13 @@
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# The app reads its config from deploy/quack.properties (rendered from deploy/quack.env), mounted
-# at /etc/dokimion/quack.properties. Source quack.env so host/port here match what goes in the file.
-[ -f "$ROOT/deploy/quack.env" ] && { set -a; . "$ROOT/deploy/quack.env"; set +a; }
-
 IMAGE="${IMAGE:-dokimion:verify}"
 MONGO_IMAGE="${MONGO_IMAGE:-dokimion-mongo:verify}"   # stock mongo:7 + baked mongod.conf
-HOST_FQDN="${DOKIMION_HOST:-s-dokimion3.psonet}"      # from quack.env; cookie domain / browse host
-PORT="${PORT:-${DOKIMION_PORT:-8088}}"                # host publish port; keep == DOKIMION_PORT in quack.env
+PORT="${PORT:-8088}"
+HOST_FQDN="${DOKIMION_HOST:-s-dokimion3.psonet}"   # must match how you browse (session cookie domain)
+ADMIN_PLAINTEXT="${ADMIN_PLAINTEXT:-DockerTest1}"  # admin password; its AES ciphertext is computed below
 NET=dk-net; MONGO=dk-mongo; APP=dk-app; VOL="${MONGO_VOLUME:-dokimion-mongo-data}"
-RENDERED_PROPS="${RENDERED_PROPS:-$ROOT/deploy/quack.properties.rendered}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Re-exec under the docker group if the socket isn't reachable (new group needs a fresh shell).
 if ! docker info >/dev/null 2>&1; then
@@ -65,13 +61,7 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
-# Render deploy/quack.properties (${DOKIMION_HOST}/${DOKIMION_PORT} from quack.env) -> a concrete
-# file we mount into the app. Admin password & turnstile secret come from the file, not env.
-render_props() {
-  command -v envsubst >/dev/null || { echo "ERROR: envsubst not found (gettext-base)." >&2; exit 1; }
-  envsubst '${DOKIMION_HOST} ${DOKIMION_PORT}' < "$ROOT/deploy/quack.properties" > "$RENDERED_PROPS"
-  chmod 600 "$RENDERED_PROPS"
-}
+cipher() { java "$ROOT/deploy/eks/aes-encrypt.java" "$ADMIN_PLAINTEXT"; }
 
 build_mongo() {
   docker image inspect "$MONGO_IMAGE" >/dev/null 2>&1 && return 0
@@ -87,12 +77,13 @@ start_mongo() {
     --tmpfs /data/configdb \
     "$MONGO_IMAGE" >/dev/null
 }
-# The app gets ALL its config from the mounted quack.properties (entrypoint skips env-render when
-# the file is present). No -e config vars needed.
+# The entrypoint renders /etc/dokimion/quack.properties from the baked template using these env
+# vars at startup. No host config file is mounted; no secrets are baked into the image.
 start_app() {
-  render_props
   docker run -d --name "$APP" --network "$NET" -p "${PORT}:80" \
-    -v "${RENDERED_PROPS}:/etc/dokimion/quack.properties:ro" \
+    -e MONGO_URI="mongodb://${MONGO}:27017/" -e MONGO_DBNAME=dokimion \
+    -e AUTH_DOMAIN="$HOST_FQDN" -e QUACK_UI_URL="http://${HOST_FQDN}:${PORT}" \
+    -e AUTH_ADMIN_PASSWORD="$(cipher)" \
     "$IMAGE" >/dev/null
 }
 
@@ -102,7 +93,7 @@ case "${1:-status}" in
     docker network rm "$NET" >/dev/null 2>&1 || true
     docker network create "$NET" >/dev/null
     build_mongo; start_mongo; start_app
-    echo "started.  URL: http://${HOST_FQDN}:${PORT}   login: admin / (password from deploy/quack.properties: auth.admin.password)"
+    echo "started.  URL: http://${HOST_FQDN}:${PORT}   login: admin / ${ADMIN_PLAINTEXT}"
     echo "(jetty ready in ~15-20s — check with: $0 status)"
     ;;
   restart)
